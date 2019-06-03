@@ -1,0 +1,493 @@
+title: IntroStart
+tags: 
+colorID: 2
+position: 13,795
+---
+Francois: Hello, I am Francois and I will be your diet coach.
+
+[[Nice to meet you, Francois.|Social1]]
+[[<Say nothing.>|SilentUser1]]
+[[Goodbye.|EndIntro]]
+===
+title: EndIntro
+tags: 
+colorID: 5
+position: 35,438
+---
+Francois: Okay, talk to you later perhaps?
+
+[EXIT_DIALOGUE]
+===
+title: Social1
+tags: 
+colorID: 2
+position: 170,1141
+---
+Francois: Nice to meet you! As your diet coach I'm here to help you with any food related questions you may have.
+
+[[What kind of food do you like?|DivergeFood1]]
+[[Can I ask about you?|AboutFrancois]]
+[[<Say nothing.>>|SilentUser1]]
+[[Goodbye.|EndIntro]]
+===
+title: SilentUser1
+tags: 
+colorID: 2
+position: 310,799
+---
+Francois: I'm not much of a "healthcare" expert, but I know everything there is to know about healthy, good food!
+
+[[What kind of food do you like?|DivergeFood1]]
+[[Can I ask about you?|AboutFrancois]]
+[[<Say nothing.>|SilentUser2]]
+[[Goodbye.|EndIntro]]
+===
+title: SilentUser2
+tags: 
+colorID: 2
+position: 598,796
+---
+Francois: Just last night I made an incredible beetroot salad, with cashew nuts, small pieces of apple and the most amazing goat's cheese you've ever tasted.
+
+[[Cheese?|SilentUser3]]
+[[Can I ask about you?|AboutFrancois]]
+[[<Say nothing.>>|SilentUser3]]
+[[Goodbye.|EndIntro]]
+===
+title: SilentUser3
+tags: 
+colorID: 2
+position: 899,792
+---
+Francois: You do like cheese, don't you?
+
+[[I love cheese!|LoveCheese]]
+[[It's okay, I'm not a big fan.|OkayCheese]]
+[[I can't stand cheese.|HateCheese]]
+[[<Say nothing.>|SilentCheese]]
+[[Goodbye.|EndIntro]]
+===
+title: LoveCheese
+tags: 
+colorID: 2
+position: 788,1055
+---
+Francois: Ah oui! Who doesn't love cheese?! But tell me, what is your favourite? I love goat's cheese, you can wake me up anytime for a Pouligny-Saint-Pierre, or... or a Crottin de Chavignol. A simple Pélardon from time to time, yes, yes... 
+
+<<Francois seems to be drifting off, staring into the distance.>>
+
+Excusez-moi. What were we talking about?
+
+[[Can I ask something about you?|AboutFrancois]]
+[[<Say nothing.>|CheeseEnding]]
+[[Goodbye.|EndIntro]]
+===
+title: CheeseEnding
+tags: 
+colorID: 2
+position: 790,1341
+---
+Francois: Hmmm, cheese...
+
+<<Francois seems lost in thought again.>>
+
+[[Can I ask about you?|AboutFrancois]]
+[[I have some other questions.|UserQuestions]]
+[[<Say nothing.>|EndIntroNothingToSay]]
+[[Goodbye.|EndIntro]]
+===
+title: OkayCheese
+tags: 
+colorID: 2
+position: 1008,1052
+---
+Francois: Not a big fan? Sacré bleu! Who doesn't love cheese?! I love goat's cheese, you can wake me up anytime for a Pouligny-Saint-Pierre, or... or a Crottin de Chavignol. A simple Pélardon from time to time, yes, yes... But it's obvious we don't share the passion for the white gold.
+
+[[Can I ask something about you?|AboutFrancois]]
+[[<Say nothing.>|CheeseEnding]]
+[[Goodbye.|EndIntro]]
+===
+title: HateCheese
+tags: 
+colorID: 2
+position: 1445,1055
+---
+Francois: Sacrilege! I don't know what to say...
+
+<<Francois seems really upset and walks away.>>
+
+[[<Say nothing.>|EndIntroRude]]
+===
+title: EndIntroRude
+tags: 
+colorID: 5
+position: 591,446
+---
+Francois: Adieu.
+
+[EXIT_DIALOGUE]
+===
+title: SilentCheese
+tags: 
+colorID: 2
+position: 1226,1055
+---
+Francois: Well, not the biggest fan I assume then. Who doesn't love cheese?! I love goat's cheese, you can wake me up anytime for a Pouligny-Saint-Pierre, or... or a Crottin de Chavignol. A simple Pélardon from time to time, yes, yes... But it's obvious we don't share the passion for the white gold.
+
+[[Can I ask about you?|AboutFrancois]]
+[[<Say nothing.>|CheeseEnding]]
+[[Goodbye.|EndIntro]]
+===
+title: AboutFrancois
+tags: 
+colorID: 2
+position: 183,1434
+---
+Francois: Well, it's only me... Francois. What would you like to know about me?
+
+[[Where are you from?|FrancoisOrigin]]
+[[What do you do?|FrancoisRole]]
+[[<Say nothing.>|EndIntroNothingToSay]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFood1
+tags: 
+colorID: 2
+position: -563,1136
+---
+Francois: Ah, Francois loves all types of food! Seafood, salads, a good steak, cheese, ooh don't get me started about food. What about you, do you have a favourite dish?
+
+[[Fish.|DivergeFoodFish]]
+[[Meat.|DivergeFoodMeat]]
+[[Vegetables.|DivergeFoodVegetables]]
+[[Goodbye.|EndIntro]]
+===
+title: UserQuestions
+tags: 
+colorID: 5
+position: 850,447
+---
+[START_USER_QUESTIONS_DIALOGUE]
+===
+title: EndIntroNothingToSay
+tags: 
+colorID: 5
+position: 317,443
+---
+Francois: Well, it was nice talking to you. Let me know when you want to talk again. About cheese perhaps?
+
+[EXIT_DIALOGUE]
+===
+title: FrancoisOrigin
+tags: 
+colorID: 2
+position: -136,1433
+---
+Francois: I was born in a small city at the foot of the French Pyrenees, called Pau. You may have heard of it if you follow the Tour de France.
+
+[[I love the Tour de France!|FrancoisOriginTour1]]
+[[What's the Tour de France?|FrancoisOriginTour1]]
+[[I can't stand the Tour de France!|FrancoisOriginTour1]]
+[[Goodbye.|EndIntro]]
+===
+title: FrancoisOriginPau
+tags: 
+colorID: 2
+position: -135,1949
+---
+Francois: I left Pau when I was 17. My father took me in to work in his kitchen in Paris. That's where I still live.
+
+<<Francois looks a little sad.>>
+
+[[What happened? You look a bit sad.|FrancoisOriginPauDeadEnd]]
+[[Don't you like living in Paris?|FrancoisOriginPauDeadEnd]]
+[[I have some other questions.|AboutFrancois]]
+[[Goodbye.|EndIntro]]
+===
+title: FrancoisOriginTour1
+tags: 
+colorID: 2
+position: -463,1440
+---
+Francois: Oh, don't start about that dreadful event. What's the fun in watching 200 people cycling through the streets at 50 km/h? I will never understand...
+
+[[<Continue.>|FrancoisOriginTour2]]
+===
+title: DivergeFoodFish
+tags: 
+colorID: 2
+position: -945,1135
+---
+Francois: Ah oui! A fresh fish from the mediterranean sea, magnifique!
+
+<<Francois kisses his fingertips and starts looking at the ceiling, seemingly lost in thoughts.>>
+
+[[Hello, Francois?|DivergeFoodFish2]]
+[[<Say nothing>|DivergeFoodFish2]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFoodFish2
+tags: 
+colorID: 2
+position: -1207,1134
+---
+Francois:<<Francois doesn't seem to notice you as he is staring blankly into the distance. As you look closely, it appears as if tears are swelling up in his eyes.>>
+
+[[Helloooo, Francois?!|DivergeFoodFish3]]
+[[<Say nothing>|DivergeFoodFish3]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFoodFish3
+tags: 
+colorID: 2
+position: -1473,1136
+---
+Francois: Oh, excusez-moi! What were we talking about?
+
+[[Fish.|DivergeFoodFish4]]
+[[Can I ask about you?|AboutFrancois]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFoodFish4
+tags: 
+colorID: 2
+position: -1750,1139
+---
+Francois: Ah oui! Magnifique! Ooh, I love fish. It reminds me of my time in Montpellier, when I was learning to become a chef. We would have the best, fresh fish in our restaurant every morning. If I close my eyes, I can almost taste it!
+
+<<Francois closes his eyes, and starts drifting off again.>>
+
+[[Francois!|DivergeFoodFish3]]
+[[Never mind! Can I ask about you?|AboutFrancois]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFoodMeat
+tags: 
+colorID: 2
+position: -945,1373
+---
+Francois: Hmmm yes, a good piece of meat every now and then. Excellent! Although I prefer fish as the healthier choice.
+
+
+[[I don't like fish.|DivergeFoodMeat2]]
+[[I like fish as well.|DivergeFoodFish]]
+[[<Say nothing>|DivergeFoodFish]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFoodVegetables
+tags: 
+colorID: 2
+position: -950,1629
+---
+Francois: Yes yes, very important... at least 250 grams per day! But also delicious. So many incredible recipes with lots of vegetables!
+
+
+[[Could you share a recipe?|DivergeFoodVegetables2]]
+[[<Say nothing>|DivergeFoodVegetables2]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFoodMeat2
+tags: 
+colorID: 2
+position: -1210,1372
+---
+Francois: Hmmm, strange, well... how about your vegetables, and salads? Or do we have an exclusive carnivore here? Hmm?
+
+[[I don't like vegetables either.|DivergeFoodMeat3]]
+[[Yes, I like vegetables|DivergeFoodVegetables]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFoodMeat3
+tags: 
+colorID: 2
+position: -1480,1371
+---
+Francois: Sacre bleu! You're a difficult diner. It looks like we have a thing or two to teach you... where to start, where to start?
+
+<<Francois grabs a cookbook and starts flipping the pages. He looks a bit disappointed.>>
+
+[[Can I ask something about you?|AboutFrancois]]
+[[<Say nothing>|DivergeFoodMeat4]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFoodMeat4
+tags: 
+colorID: 2
+position: -1749,1373
+---
+<<Francois keeps flipping through the pages, seemingly ignoring you.>>
+
+Hmm, fish, fish... hmmm what could we make for this person...
+
+[[Can I ask something about you?|AboutFrancois]]
+[[Goodbye.|EndIntro]]
+===
+title: DivergeFoodVegetables2
+tags: 
+colorID: 2
+position: -1204,1625
+---
+Francois: For example...
+
+<<Francois grabs a cookbook and starts flipping the pages.>>
+
+Francois: Ah, yes! Spinach and Ricotta cheese lasagne. One of my favourites. You do like cheese I hope?
+
+
+[[I love cheese!|LoveCheese]]
+[[Cheese is okay, I guess.|OkayCheese]]
+[[I don't like cheese.|HateCheese]]
+[[Goodbye.|EndIntro]]
+===
+title: FrancoisOriginTour2
+tags: 
+colorID: 2
+position: -459,1689
+---
+Activity Coach: Cycling is healthy, you know!
+
+[[<Continue.>|FrancoisOriginTour3]]
+===
+title: FrancoisOriginTour3
+tags: 
+colorID: 2
+position: -452,1970
+---
+Francois: Mind your own business, <Activity Coach>, I was talking to <User>.
+
+<<Francois throws an angry glance at Ben>> 
+
+What was I saying?
+
+
+[[Actually I agree with <Activity Coach>, cycling is healthy!|AgreeActivityCoach]]
+[[Do you still live in Pau?|FrancoisOriginPau]]
+[[I have some other questions|AboutFrancois]]
+[[Goodbye.|EndIntro]]
+===
+title: FrancoisOriginPauDeadEnd
+tags: 
+colorID: 2
+position: -131,2239
+---
+Francois: I don't want to talk about it now...
+
+<<Francois looks away.>>
+
+[[Continue.|FrancoisOriginPauDeadEnd2]]
+===
+title: FrancoisOriginPauDeadEnd2
+tags: 
+colorID: 2
+position: 166,2244
+---
+Social Coach: It’s okay Francois. You don’t have to talk about it now.
+
+[[Continue.|FrancoisOriginPauDeadEnd3]]
+===
+title: FrancoisOriginPauDeadEnd3
+tags: 
+colorID: 2
+position: 474,2241
+---
+Peer Coach: Maybe it’s better to change the subject? Why don’t you tell us about that cheese thing you made yesterday?
+
+[[Continue.|FrancoisOriginPauDeadEnd4]]
+===
+title: FrancoisOriginPauDeadEnd4
+tags: 
+colorID: 2
+position: 761,2244
+---
+<<Francois seems to lighten up at the though of cheese.>>
+
+[[I have some other questions.|AboutFrancois]]
+[[Goodbye|EndIntroNothingToSay]]
+===
+title: AgreeActivityCoach
+tags: 
+colorID: 2
+position: -769,1954
+---
+Activity Coach: See Francois? Not everyone thinks the world revolves around food!
+
+[[Continue.|AgreeActivityCoach2]]
+===
+title: AgreeActivityCoach2
+tags: 
+colorID: 2
+position: -775,2260
+---
+Francois: Well, at least cycling helps with working up an appetite!
+
+Anyway, what were we talking about?
+
+[[Do you still live in Pau?|FrancoisOriginPau]]
+[[I have some other questions.|AboutFrancois]]
+[[Goodbye.|EndIntro]]
+===
+title: FrancoisRole
+tags: 
+colorID: 2
+position: 185,1734
+---
+Francois: What do I do? Well, I am your diet coach of course!
+
+[[FrancoisRole2]]
+===
+title: FrancoisRole2
+tags: 
+colorID: 2
+position: 458,1730
+---
+Francois: I can help you with any questions you have about food.
+
+[[FrancoisRole3]]
+===
+title: FrancoisRole3
+tags: 
+colorID: 2
+position: 721,1726
+---
+Francois: I can help if you want to lose some weight.
+
+[[FrancoisRole4]]
+===
+title: FrancoisRole4
+tags: 
+colorID: 2
+position: 1003,1726
+---
+Activity Coach: Me too! Ooh I have a great exercise program in mind already!
+
+[[FrancoisRole5]]
+===
+title: FrancoisRole5
+tags: 
+colorID: 2
+position: 1278,1725
+---
+Francois: Ben? The grown-ups are talking...
+
+[[FrancoisRole6]]
+===
+title: FrancoisRole6
+tags: 
+colorID: 2
+position: 1563,1728
+---
+Ben: <<In an exaggerated French accent>> Excusez-moi Monsieur Frrrrancois.
+
+[[FrancoisRole7]]
+===
+title: FrancoisRole7
+tags: 
+colorID: 2
+position: 1855,1732
+---
+Francois: <<Francois shakes his head.>>
+
+Right. Or, if you simply want a good recipe for your dinner? I'm here to help!
+
+[[Thank you Francois!|EndIntroNothingToSay]]
+===

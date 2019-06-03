@@ -1,0 +1,63 @@
+title: IntroStart
+tags: 
+colorID: 2
+position: 13,795
+---
+Francois: Hello, I am Francois and I will be your diet coach.
+
+[[Nice to meet you, Francois.|Social1]]
+[[<Say nothing.>|SilentUser1]]
+[[Goodbye.|EndIntro]]
+===
+title: EndIntro
+tags: 
+colorID: 5
+position: 35,438
+---
+Francois: Okay, talk to you later perhaps?
+
+[EXIT_DIALOGUE]
+===
+title: Social1
+tags: 
+colorID: 2
+position: 170,1141
+---
+Francois: Nice to meet you! Can you tell me if you're a man or a woman?
+
+[[Man|UserHasGenderMan]]
+[[Woman|UserHasGenderWoman]]
+[[<Say nothing.>>|SilentUser1]]
+[[Goodbye.|EndIntro]]
+===
+title: SilentUser1
+tags: 
+colorID: 2
+position: 310,799
+---
+Francois: Well, that's not very helpful..
+
+[[Goodbye.|EndIntro]]
+===
+title: UserHasGenderMan
+tags:
+colorID: 2
+position: 125,111
+---
+Francois: C'est magnifique, monsieur! 
+
+<<set $gender to man>>
+
+[[Goodbye.|EndIntro]]
+===
+title: UserHasGenderWoman
+tags:
+colorID: 2
+position: 125,111
+---
+Francois: C'est magnifique, madame! 
+
+<<set $gender to man>>
+
+[[Goodbye.|EndIntro]]
+===
