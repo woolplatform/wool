@@ -18,7 +18,8 @@ public class StringExpression implements Expression {
 	}
 	
 	@Override
-	public Value evaluate(Map<String, ?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		StringBuilder result = new StringBuilder();
 		for (Segment segment : segments) {
 			if (segment instanceof LiteralSegment) {

@@ -25,7 +25,8 @@ public class InExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		Value needle = operand1.evaluate(variables);
 		Value collection = operand2.evaluate(variables);
 		if (!collection.isString() && !collection.isList()) {

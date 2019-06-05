@@ -6,6 +6,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.expressions.Token.Type;
@@ -53,6 +55,7 @@ public class Tokenizer {
 	
 	public Tokenizer(LineColumnNumberReader reader) {
 		this.reader = reader;
+		fixedTokens.add(new NameOrFixedToken("=", Token.Type.ASSIGN));
 		fixedTokens.add(new NameOrFixedToken("||", Token.Type.OR));
 		fixedTokens.add(new NameOrFixedToken("&&", Token.Type.AND));
 		fixedTokens.add(new NameOrFixedToken("!", Token.Type.NOT));
@@ -131,6 +134,9 @@ public class Tokenizer {
 			} else if (c == '-' || (c >= '0' && c <= '9')) {
 				reader.restoreState(restoreState);
 				return readNumberToken();
+			} else if (c == '$') {
+				buffer.append(c);
+				return readDollarVariableToken();
 			} else {
 				buffer.append(c);
 				throw createParseException("Invalid character: " + c,
@@ -163,6 +169,8 @@ public class Tokenizer {
 	 * Rewinds the {@link LineColumnNumberReader LineColumnNumberReader} so it
 	 * is reset to the same position as before the last call of {@link
 	 * #readToken() readToken()}.
+	 * 
+	 * @throws IOException if an I/O error occurs
 	 */
 	public void rewind() throws IOException {
 		if (lookAheadState == null) {
@@ -288,6 +296,61 @@ public class Tokenizer {
 		}
 		buffer = new StringBuilder();
 		candidateNameOrFixedTokens = null;
+		return result;
+	}
+	
+	/**
+	 * Called when a $ character has been read. It will read the rest of the
+	 * token and return it.
+	 * 
+	 * <p>This method tries to complete a token when the end of input is
+	 * reached, or when a character is found that can't be added to the token.
+	 * If the token can't be completed at that point, then this method throws
+	 * a parse exception.</p>
+	 * 
+	 * @return the token
+	 * @throws LineNumberParseException if a parse error occurs
+	 * @throws IOException if a reading error occurs
+	 */
+	private Token readDollarVariableToken() throws LineNumberParseException,
+			IOException {
+		Pattern regex = Pattern.compile("\\$[_a-zA-Z][_a-zA-Z0-9]*");
+		while (true) {
+			Object restoreState = reader.getRestoreState(1);
+			try {
+				Matcher m = regex.matcher(buffer);
+				boolean currentOk = m.matches();
+				int next = reader.read();
+				if (next == -1) {
+					if (!currentOk) {
+						throw createParseException("Invalid token: " + buffer,
+								currTokenLineNum, currTokenColNum);
+					}
+					return completeDollarVariableToken();
+				}
+				char c = (char)next;
+				m = regex.matcher(buffer.toString() + c);
+				boolean newOk = m.matches();
+				if (newOk) {
+					buffer.append(c);
+				} else if (currentOk) {
+					reader.restoreState(restoreState);
+					return completeDollarVariableToken();
+				} else {
+					throw createParseException("Invalid token: " + buffer,
+							currTokenLineNum, currTokenColNum);
+				}
+			} finally {
+				reader.clearRestoreState(restoreState);
+			}
+		}
+	}
+	
+	private Token completeDollarVariableToken() {
+		Token result = new Token(Token.Type.DOLLAR_VARIABLE, buffer.toString(),
+				currTokenLineNum, currTokenColNum, currTokenPos,
+				new Value(buffer.substring(1)));
+		buffer = new StringBuilder();
 		return result;
 	}
 	

@@ -20,7 +20,8 @@ public class ObjectExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		Map<String,Object> result = new LinkedHashMap<>();
 		for (KeyValue prop : properties) {
 			Value key = prop.key.evaluate(variables);

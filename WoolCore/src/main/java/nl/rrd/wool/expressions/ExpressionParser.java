@@ -10,6 +10,7 @@ import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.exception.ParseException;
 import nl.rrd.wool.expressions.types.AddExpression;
 import nl.rrd.wool.expressions.types.AndExpression;
+import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.expressions.types.DivideExpression;
 import nl.rrd.wool.expressions.types.DotExpression;
 import nl.rrd.wool.expressions.types.EqualExpression;
@@ -42,12 +43,14 @@ import nl.rrd.wool.io.LineColumnNumberReader;
  * @author Dennis Hofs (RRD)
  */
 public class ExpressionParser {
+	private ExpressionParserConfig config = new ExpressionParserConfig();
 	private LineColumnNumberReader reader;
 	private Tokenizer tokenizer;
 	
 	private Object lookAheadState = null;
 
 	public static final Token.Type[][] PRECEDENCE = new Token.Type[][] {
+		new Token.Type[] { Token.Type.ASSIGN },
 		new Token.Type[] { Token.Type.OR },
 		new Token.Type[] { Token.Type.AND },
 		new Token.Type[] { Token.Type.IN },
@@ -84,6 +87,14 @@ public class ExpressionParser {
 		tokenizer.close();
 	}
 	
+	public ExpressionParserConfig getConfig() {
+		return config;
+	}
+
+	public void setConfig(ExpressionParserConfig config) {
+		this.config = config;
+	}
+
 	/**
 	 * Tries to read the next expression. If the end of input is reached, this
 	 * method returns null.
@@ -138,6 +149,8 @@ public class ExpressionParser {
 	 * Rewinds the {@link LineColumnNumberReader LineColumnNumberReader} so it
 	 * is reset to the same position as before the last call of {@link
 	 * #readExpression() readExpression()}.
+	 * 
+	 * @throws IOException if an I/O error occurs
 	 */
 	public void rewind() throws IOException {
 		if (lookAheadState == null) {
@@ -178,6 +191,7 @@ public class ExpressionParser {
 				}
 				switch (token.getType()) {
 					// infix operators
+					case ASSIGN:
 					case OR:
 					case AND:
 					case IN:
@@ -223,6 +237,7 @@ public class ExpressionParser {
 					case NUMBER:
 					case NULL:
 					case NAME:
+					case DOLLAR_VARIABLE:
 						foundEnd = true;
 						break;
 				}
@@ -240,7 +255,7 @@ public class ExpressionParser {
 	}
 	
 	private Expression mergeExpressionElements(List<ExpressionElement> elements,
-			int start, int end) {
+			int start, int end) throws LineNumberParseException {
 		if (end - start == 1) {
 			return elements.get(start).operand;
 		}
@@ -259,8 +274,7 @@ public class ExpressionParser {
 					operand1 = mergeExpressionElements(elements, start, op1);
 				Expression operand2 = mergeExpressionElements(elements,
 						op1 + 1, op2 == -1 ? end : op2);
-				merged = createOperatorExpression(operator.getType(), operand1,
-						operand2);
+				merged = createOperatorExpression(operator, operand1, operand2);
 				op1 = op2;
 			}
 			return merged;
@@ -280,9 +294,12 @@ public class ExpressionParser {
 		return -1;
 	}
 	
-	private Expression createOperatorExpression(Token.Type operator,
-			Expression operand1, Expression operand2) {
-		switch (operator) {
+	private Expression createOperatorExpression(Token operator,
+			Expression operand1, Expression operand2)
+			throws LineNumberParseException {
+		switch (operator.getType()) {
+			case ASSIGN:
+				return new AssignExpression(operand1, operator, operand2);
 			case OR:
 				return new OrExpression(operand1, operand2);
 			case AND:
@@ -316,6 +333,11 @@ public class ExpressionParser {
 	
 	private Expression doReadOperand(boolean require)
 			throws LineNumberParseException, IOException {
+		return doReadOperand(require, false);
+	}
+	
+	private Expression doReadOperand(boolean require, boolean overrideAllowName)
+			throws LineNumberParseException, IOException {
 		Token token = tokenizer.readToken();
 		if (token == null) {
 			if (!require) {
@@ -326,6 +348,7 @@ public class ExpressionParser {
 			}
 		}
 		switch (token.getType()) {
+			case ASSIGN:
 			case OR:
 			case AND:
 			case IN:
@@ -375,8 +398,23 @@ public class ExpressionParser {
 			case BOOLEAN:
 			case NUMBER:
 			case NULL:
-			case NAME:
 				return new ValueExpression(token);
+			case NAME:
+				if (overrideAllowName || config.isAllowPlainVariables()) {
+					return new ValueExpression(token);
+				} else {
+					throw createParseException(
+							"Variable token without $ not allowed: " +
+							token.getText(), token);
+				}
+			case DOLLAR_VARIABLE:
+				if (config.isAllowDollarVariables()) {
+					return new ValueExpression(token);
+				} else {
+					throw createParseException(
+							"Variable token with $ not allowed: " +
+							token.getText(), token);
+				}
 		}
 		throw new RuntimeException("Unknown token type: " + token.getType());
 	}
@@ -459,7 +497,7 @@ public class ExpressionParser {
 			throw createParseException("Expected '.', found: " +
 					token.getText(), token);
 		}
-		Expression parsed = doReadOperand(true);
+		Expression parsed = doReadOperand(true, true);
 		return new DotExpression(parentOperand, parsed);
 	}
 	

@@ -24,7 +24,8 @@ public class AndExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		Value val1 = operand1.evaluate(variables);
 		if (!val1.asBoolean())
 			return new Value(false);

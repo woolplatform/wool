@@ -24,7 +24,8 @@ public class LessThanExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		Value[] vals = new Value[2];
 		vals[0] = operand1.evaluate(variables);
 		vals[1] = operand2.evaluate(variables);

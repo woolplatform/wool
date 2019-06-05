@@ -25,7 +25,8 @@ public class IndexExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		Value parentVal = parentOperand.evaluate(variables);
 		if (!parentVal.isString() && !parentVal.isList() &&
 				!parentVal.isMap()) {

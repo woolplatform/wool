@@ -192,6 +192,19 @@ public class LineColumnNumberReader extends Reader {
 		return restoreState;
 	}
 	
+	public void reinitRestoreState(Object state) {
+		RestoreState restoreState = (RestoreState)state;
+		restoreState.markPos = position;
+		restoreState.markState.set(this.state);
+		if (state instanceof RestoreDynamicState) {
+			RestoreDynamicState dynState = (RestoreDynamicState)state;
+			dynState.markBuffer.delete(0, dynState.markBuffer.length());
+		} else {
+			RestoreFixedState fixedState = (RestoreFixedState)state;
+			fixedState.markOff = 0;
+		}
+	}
+	
 	public void clearRestoreState(Object savedState) {
 		restoreStates.remove(savedState);
 	}
@@ -317,6 +330,10 @@ public class LineColumnNumberReader extends Reader {
 		}
 		
 		public State(State other) {
+			set(other);
+		}
+		
+		public void set(State other) {
 			isPrevCR = other.isPrevCR;
 			lineNum = other.lineNum;
 			colNum = other.colNum;

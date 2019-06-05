@@ -29,12 +29,13 @@ import java.util.Map;
 public interface Expression {
 	
 	/**
-	 * Evaluates this expression using the specified variable values.
+	 * Evaluates this expression using the specified variable values. The
+	 * variable map may be modified as a result of an "assign" expression.
 	 * 
 	 * @param variables the variable values (can be null)
 	 * @return the value of the expression
 	 * @throws EvaluationException if the expression can't be evaluted with
 	 * the specified variables
 	 */
-	Value evaluate(Map<String,?> variables) throws EvaluationException;
+	Value evaluate(Map<String,Object> variables) throws EvaluationException;
 }

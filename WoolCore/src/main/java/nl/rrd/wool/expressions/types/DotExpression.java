@@ -25,7 +25,8 @@ public class DotExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		Value parent = parentOperand.evaluate(variables);
 		if (!parent.isMap()) {
 			throw new EvaluationException(

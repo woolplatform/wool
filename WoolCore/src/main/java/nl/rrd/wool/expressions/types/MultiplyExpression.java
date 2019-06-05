@@ -24,7 +24,8 @@ public class MultiplyExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		Number val1 = operand1.evaluate(variables).asNumber();
 		Number val2 = operand2.evaluate(variables).asNumber();
 		if (Value.isIntNumber(val1) && Value.isIntNumber(val2)) {

@@ -5,6 +5,7 @@ import nl.rrd.wool.json.JsonObject;
 public class Token {
 	public enum Type {
 		// operator tokens
+		ASSIGN,
 		OR,
 		AND,
 		NOT,
@@ -36,7 +37,8 @@ public class Token {
 		BOOLEAN,
 		NUMBER,
 		NULL,
-		NAME
+		NAME,
+		DOLLAR_VARIABLE
 	}
 	
 	private Type type;

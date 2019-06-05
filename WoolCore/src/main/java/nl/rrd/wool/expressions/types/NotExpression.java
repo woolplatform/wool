@@ -18,7 +18,8 @@ public class NotExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		return new Value(!operand.evaluate(variables).asBoolean());
 	}
 	

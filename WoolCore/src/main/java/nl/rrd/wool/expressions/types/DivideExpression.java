@@ -24,7 +24,8 @@ public class DivideExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		Number num1 = operand1.evaluate(variables).asNumber();
 		Number num2 = operand2.evaluate(variables).asNumber();
 		if (Value.isIntNumber(num1) && Value.isIntNumber(num2)) {

@@ -19,8 +19,10 @@ public class ValueExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
-		if (token.getType() == Token.Type.NAME) {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
+		if (token.getType() == Token.Type.NAME ||
+				token.getType() == Token.Type.DOLLAR_VARIABLE) {
 			if (variables == null)
 				return new Value(null);
 			else

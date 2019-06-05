@@ -20,7 +20,8 @@ public class ListExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		List<Object> result = new ArrayList<>();
 		for (Expression expr : elements) {
 			result.add(expr.evaluate(variables).getValue());

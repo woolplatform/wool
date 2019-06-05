@@ -25,7 +25,8 @@ public class SubtractExpression implements Expression {
 	}
 
 	@Override
-	public Value evaluate(Map<String,?> variables) throws EvaluationException {
+	public Value evaluate(Map<String,Object> variables)
+			throws EvaluationException {
 		Value val1 = operand1.evaluate(variables);
 		Value val2 = operand2.evaluate(variables);
 		if (val1.isMap()) {
