@@ -7,13 +7,13 @@ import nl.rrd.wool.exception.WoolUnknownVariableException;
 
 public class DefaultWoolVariableStore extends WoolVariableStore {
 		
-	private Map<String,String> variableMap;
+	private Map<String,Object> variableMap;
 	
 	/**
 	 * Creates an instance of an empty {@link DefaultWoolVariableStore}.
 	 */
 	public DefaultWoolVariableStore() {
-		this.variableMap = new HashMap<String,String>();
+		this.variableMap = new HashMap<>();
 	}
 	
 	@Override
@@ -26,7 +26,7 @@ public class DefaultWoolVariableStore extends WoolVariableStore {
 	}
 
 	@Override
-	public String getValue(String name) throws WoolUnknownVariableException {
+	public Object getValue(String name) throws WoolUnknownVariableException {
 		if(variableMap.keySet().contains(name)) {
 			return variableMap.get(name);
 		} else {
@@ -34,7 +34,7 @@ public class DefaultWoolVariableStore extends WoolVariableStore {
 		}
 	}
 	
-	public Map<String,String> getVariableMap() {
+	public Map<String,Object> getVariableMap() {
 		return this.variableMap;
 	}
 }

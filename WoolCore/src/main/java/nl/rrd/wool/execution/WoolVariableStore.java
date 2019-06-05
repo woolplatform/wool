@@ -48,9 +48,9 @@ public abstract class WoolVariableStore extends Observable {
 	 * Retrieves the variable identified by the given {@code name}, or throws an {@link WoolUnknownVariableException} if no
 	 * such variable is known.
 	 * @param name the name of the variable to retrieve.
-	 * @return the associated value of the variable as a {@link String}.
+	 * @return the associated value of the variable ({@link String}, {@link Number}, {@link Boolean}, null)
 	 * @throws WoolUnknownVariableException in case no value is available for the given variable {@code name}.
 	 */
-	public abstract String getValue(String name) throws WoolUnknownVariableException;
+	public abstract Object getValue(String name) throws WoolUnknownVariableException;
 	
 }

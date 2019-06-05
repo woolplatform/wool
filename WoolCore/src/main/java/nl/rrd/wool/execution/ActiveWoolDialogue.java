@@ -251,8 +251,8 @@ public class ActiveWoolDialogue {
 				
 				String instantiatedReply = woolReplyBasic.getStatement();
 				for (String variable : variables) {
-					String storedValue = this.woolVariableStore.getValue(variable);
-					instantiatedReply = instantiatedReply.replaceAll("\\$" + variable, storedValue);
+					Object storedValue = this.woolVariableStore.getValue(variable);
+					instantiatedReply = instantiatedReply.replaceAll("\\$" + variable, storedValue.toString());
 				}
 				woolReplyBasic.setStatement(instantiatedReply);
 			}
@@ -269,8 +269,8 @@ public class ActiveWoolDialogue {
 				Set<String> variables = woolStatementBasic.getVariables();
 				String instantiatedStatement = woolStatementBasic.getStatement();
 				for (String variable : variables) {
-					String storedValue = this.woolVariableStore.getValue(variable);
-					instantiatedStatement = instantiatedStatement.replaceAll("\\$" + variable, storedValue);
+					Object storedValue = this.woolVariableStore.getValue(variable);
+					instantiatedStatement = instantiatedStatement.replaceAll("\\$" + variable, storedValue.toString());
 				}
 				woolStatementBasic.setStatement(instantiatedStatement);
 			}
@@ -282,8 +282,8 @@ public class ActiveWoolDialogue {
 				Set<String> variables = woolStatementBasicIdentified.getVariables();
 				String instantiatedStatement = woolStatementBasicIdentified.getStatement();
 				for (String variable : variables) {
-					String storedValue = woolVariableStore.getValue(variable);
-					instantiatedStatement = instantiatedStatement.replaceAll("\\$" + variable, storedValue);
+					Object storedValue = woolVariableStore.getValue(variable);
+					instantiatedStatement = instantiatedStatement.replaceAll("\\$" + variable, storedValue.toString());
 				}
 				woolStatementBasicIdentified.setStatement(instantiatedStatement);
 			}
