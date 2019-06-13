@@ -1,5 +1,9 @@
 package nl.rrd.wool.parser;
 
+import java.util.List;
+
+import nl.rrd.wool.utils.CurrentIterator;
+
 public class WoolBodyToken {
 	public enum Type {
 		/**
@@ -68,5 +72,55 @@ public class WoolBodyToken {
 
 	public void setValue(Object value) {
 		this.value = value;
+	}
+
+	public static void trimWhitespace(List<WoolBodyToken> tokens) {
+		removeLeadingWhitespace(tokens);
+		removeTrailingWhitespace(tokens);
+	}
+	
+	public static void removeLeadingWhitespace(List<WoolBodyToken> tokens) {
+		while (!tokens.isEmpty()) {
+			WoolBodyToken token = tokens.get(0);
+			if (token.getType() != WoolBodyToken.Type.TEXT)
+				return;
+			String text = (String)token.getValue();
+			text = text.replaceAll("^\\s+", "");
+			token.setValue(text);
+			if (text.length() > 0)
+				return;
+			tokens.remove(0);
+		}
+	}
+	
+	public static void removeTrailingWhitespace(List<WoolBodyToken> tokens) {
+		while (!tokens.isEmpty()) {
+			WoolBodyToken token = tokens.get(tokens.size() - 1);
+			if (token.getType() != WoolBodyToken.Type.TEXT)
+				return;
+			String text = (String)token.getValue();
+			text = text.replaceAll("\\s+$", "");
+			token.setValue(text);
+			if (text.length() > 0)
+				return;
+			tokens.remove(tokens.size() - 1);
+		}
+	}
+
+	/**
+	 * Moves to the next token that is not a text token with only whitespace.
+	 * 
+	 * @param tokens the tokens
+	 */
+	public static void skipWhitespace(CurrentIterator<WoolBodyToken> tokens) {
+		while (tokens.getCurrent() != null) {
+			WoolBodyToken token = tokens.getCurrent();
+			if (token.getType() != WoolBodyToken.Type.TEXT)
+				return;
+			String text = (String)token.getValue();
+			if (!text.trim().isEmpty())
+				return;
+			tokens.moveNext();
+		}
 	}
 }

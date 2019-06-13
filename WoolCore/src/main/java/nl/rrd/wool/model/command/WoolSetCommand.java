@@ -35,7 +35,8 @@ public class WoolSetCommand extends WoolCommand {
 		return "<<set " + expression + ">>";
 	}
 
-	public static WoolActionCommand parse(CurrentIterator<WoolBodyToken> tokens)
+	public static WoolActionCommand parse(WoolBodyToken cmdStartToken,
+			CurrentIterator<WoolBodyToken> tokens)
 			throws LineNumberParseException {
 		// TODO
 		return null;

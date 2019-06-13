@@ -92,7 +92,8 @@ public class WoolIfCommand extends WoolCommand {
 		return result.toString();
 	}
 
-	public static WoolActionCommand parse(CurrentIterator<WoolBodyToken> tokens)
+	public static WoolActionCommand parse(WoolBodyToken cmdStartToken,
+			CurrentIterator<WoolBodyToken> tokens)
 			throws LineNumberParseException {
 		// TODO
 		return null;

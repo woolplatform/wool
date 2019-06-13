@@ -21,6 +21,7 @@ public class WoolCommandParser {
 			throws LineNumberParseException {
 		WoolBodyToken startToken = tokens.getCurrent();
 		tokens.moveNext();
+		WoolBodyToken.skipWhitespace(tokens);
 		WoolBodyToken token = tokens.getCurrent();
 		if (token == null) {
 			throw new LineNumberParseException("Command not terminated",
@@ -31,26 +32,22 @@ public class WoolCommandParser {
 					"Expected command name, found token: " + token.getType(),
 					token.getLineNum(), token.getColNum());
 		}
-		String name = (String)token.getValue();
-		for (int i = 0; i < name.length(); i++) {
-			if (Character.isWhitespace(name.charAt(i))) {
-				name = name.substring(0, i);
-				break;
-			}
-		}
-		if (!validCommands.contains(name.toLowerCase())) {
+		String name = ((String)token.getValue()).trim();
+		String[] split = name.split("\\s+", 2);
+		name = split[0];
+		if (!validCommands.contains(name)) {
 			throw new LineNumberParseException("Unexpected command: " + name,
 					token.getLineNum(), token.getColNum());
 		}
-		switch (name.toLowerCase()) {
+		switch (name) {
 		case "action":
-			return WoolActionCommand.parse(tokens);
+			return WoolActionCommand.parse(startToken, tokens);
 		case "if":
-			return WoolIfCommand.parse(tokens);
+			return WoolIfCommand.parse(startToken, tokens);
 		case "input":
-			return WoolInputCommand.parse(tokens);
+			return WoolInputCommand.parse(startToken, tokens);
 		case "set":
-			return WoolSetCommand.parse(tokens);
+			return WoolSetCommand.parse(startToken, tokens);
 		default:
 			throw new LineNumberParseException("Unknown command: " + name,
 					token.getLineNum(), token.getColNum());

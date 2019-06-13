@@ -109,6 +109,16 @@ public class WoolReply {
 	public void setCommands(List<WoolCommand> commands) {
 		this.commands = commands;
 	}
+	
+	/**
+	 * Adds a command that should be executed when this reply is chosen.
+	 * 
+	 * @param command the command that should be executed when this reply is
+	 * chosen
+	 */
+	public void addCommand(WoolCommand command) {
+		commands.add(command);
+	}
 
 	@Override
 	public String toString() {

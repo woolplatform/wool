@@ -21,16 +21,9 @@ import nl.rrd.wool.model.WoolDialogue;
 import nl.rrd.wool.model.WoolNode;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolNodeHeader;
-import nl.rrd.wool.model.WoolReply;
-import nl.rrd.wool.model.WoolVariableString;
-import nl.rrd.wool.model.command.WoolCommand;
-import nl.rrd.wool.model.nodepointer.WoolNodePointer;
-import nl.rrd.wool.model.nodepointer.WoolNodePointerExternal;
-import nl.rrd.wool.model.nodepointer.WoolNodePointerInternal;
-import nl.rrd.wool.utils.CurrentIterator;
 
 public class WoolParser {
-	private static final String NODE_NAME_REGEX = "[A-Za-z0-9_-]+";
+	public static final String NODE_NAME_REGEX = "[A-Za-z0-9_-]+";
 	
 	private LineColumnNumberReader reader;
 	
@@ -106,7 +99,6 @@ public class WoolParser {
 					reader.getLineNum(), reader.getColNum());
 		}
 		WoolNodeHeader header = createHeader(headerMap, lineNum);
-		WoolNodeBody body = new WoolNodeBody();
 		boolean inBody = true;
 		WoolBodyTokenizer tokenizer = new WoolBodyTokenizer();
 		lineNum = reader.getLineNum();
@@ -122,7 +114,9 @@ public class WoolParser {
 				line = readLine();
 			}
 		}
-		parseBodyTokens(bodyTokens, body, Arrays.asList("action", "if", "set"));
+		WoolBodyParser bodyParser = new WoolBodyParser();
+		WoolNodeBody body = bodyParser.parse(bodyTokens,
+				Arrays.asList("action", "if", "set"));
 		return new WoolNode(header, body);
 	}
 	
@@ -188,178 +182,6 @@ public class WoolParser {
 		return header;
 	}
 	
-	private void parseBodyTokens(List<WoolBodyToken> tokens, WoolNodeBody body,
-			List<String> validCommands) throws LineNumberParseException {
-		CurrentIterator<WoolBodyToken> it = new CurrentIterator<>(
-				tokens.iterator());
-		it.moveNext();
-		while (it.getCurrent() != null) {
-			WoolBodyToken token = it.getCurrent();
-			switch (token.getType()) {
-			case TEXT:
-			case VARIABLE:
-				WoolVariableString text = parseTextSegment(it);
-				if (body.getReplies().isEmpty()) {
-					body.addSegment(new WoolNodeBody.TextSegment(text));
-				} else if (!text.isWhitespace()) {
-					throw new LineNumberParseException(
-							"Found content between replies", token.getLineNum(),
-							token.getColNum());
-				}
-				break;
-			case COMMAND_START:
-				if (!body.getReplies().isEmpty()) {
-					throw new LineNumberParseException(
-							"Found << between replies", token.getLineNum(),
-							token.getColNum());
-				}
-				WoolCommandParser cmdParser = new WoolCommandParser(
-						validCommands);
-				WoolCommand command = cmdParser.parse(it);
-				body.addSegment(new WoolNodeBody.CommandSegment(command));
-				break;
-			case REPLY_START:
-				body.addReply(parseReplySegment(it));
-				break;
-			default:
-				// If we get here, there must be a bug
-				throw new LineNumberParseException("Unexpected token type: " +
-						token.getType(), token.getLineNum(), token.getColNum());
-			}
-		}
-		body.trimWhitespace();
-	}
-	
-	private WoolVariableString parseTextSegment(
-			CurrentIterator<WoolBodyToken> tokens) {
-		WoolVariableString string = new WoolVariableString();
-		boolean foundEnd = false;
-		while (!foundEnd && tokens.getCurrent() != null) {
-			WoolBodyToken token = tokens.getCurrent();
-			switch (token.getType()) {
-			case TEXT:
-				string.addSegment(new WoolVariableString.TextSegment(
-						(String)token.getValue()));
-				break;
-			case VARIABLE:
-				string.addSegment(new WoolVariableString.VariableSegment(
-						(String)token.getValue()));
-				break;
-			default:
-				foundEnd = true;
-			}
-			if (!foundEnd)
-				tokens.moveNext();
-		}
-		return string;
-	}
-	
-	private class ReplySection {
-		private List<WoolBodyToken> tokens = new ArrayList<>();
-		private int endLineNum;
-		private int endColNum;
-	}
-	
-	private WoolReply parseReplySegment(CurrentIterator<WoolBodyToken> tokens)
-			throws LineNumberParseException {
-		int maxSections = 3;
-		WoolBodyToken startToken = tokens.getCurrent();
-		tokens.moveNext();
-		List<ReplySection> sections = new ArrayList<>();
-		ReplySection currSection = new ReplySection();
-		sections.add(currSection);
-		boolean foundEnd = false;
-		while (!foundEnd && tokens.getCurrent() != null) {
-			WoolBodyToken token = tokens.getCurrent();
-			switch (token.getType()) {
-			case REPLY_SEPARATOR:
-				if (sections.size() == maxSections) {
-					throw new LineNumberParseException(String.format(
-							"Exceeded maximum number of %s sections",
-							maxSections), token.getLineNum(),
-							token.getColNum());
-				}
-				currSection.endLineNum = token.getLineNum();
-				currSection.endColNum = token.getColNum();
-				currSection = new ReplySection();
-				sections.add(currSection);
-				break;
-			case REPLY_END:
-				currSection.endLineNum = token.getLineNum();
-				currSection.endColNum = token.getColNum();
-				foundEnd = true;
-				break;
-			default:
-				currSection.tokens.add(token);
-			}
-			tokens.moveNext();
-		}
-		if (!foundEnd) {
-			throw new LineNumberParseException("Reply not terminated",
-					startToken.getLineNum(), startToken.getColNum());
-		}
-		ReplySection statementSection = null;
-		ReplySection nodePointerSection = null;
-		ReplySection commandSection = null;
-		if (sections.size() == 1) {
-			nodePointerSection = sections.get(0);
-		} else if (sections.size() == 2) {
-			statementSection = sections.get(0);
-			nodePointerSection = sections.get(1);
-		} else {
-			statementSection = sections.get(0);
-			nodePointerSection = sections.get(1);
-			commandSection = sections.get(2);
-		}
-		WoolNodeBody statement = null;
-		if (statementSection != null) {
-			statement = new WoolNodeBody();
-			parseBodyTokens(statementSection.tokens, statement,
-					Arrays.asList("input"));
-			if (statement.getSegments().isEmpty())
-				statement = null;
-		}
-		trimWhitespace(nodePointerSection.tokens);
-		if (nodePointerSection.tokens.size() == 0) {
-			throw new LineNumberParseException("Empty node pointer in reply",
-					nodePointerSection.endLineNum,
-					nodePointerSection.endColNum);
-		}
-		WoolBodyToken nodePointerToken = nodePointerSection.tokens.get(0);
-		if (nodePointerSection.tokens.size() != 1 ||
-				nodePointerToken.getType() != WoolBodyToken.Type.TEXT) {
-			StringBuilder text = new StringBuilder();
-			for (WoolBodyToken token : nodePointerSection.tokens) {
-				text.append(token.getText());
-			}
-			throw new LineNumberParseException(
-					"Invalid node pointer in reply: " + text,
-					nodePointerToken.getLineNum(),
-					nodePointerToken.getColNum());
-		}
-		String nodePointerStr = (String)nodePointerToken.getValue();
-		if (!nodePointerStr.matches(NODE_NAME_REGEX +
-				"(\\." + NODE_NAME_REGEX + ")?")) {
-			throw new LineNumberParseException(
-					"Invalid node pointer in reply: " + nodePointerStr,
-					nodePointerToken.getLineNum(),
-					nodePointerToken.getColNum());
-		}
-		int sep = nodePointerStr.indexOf('.');
-		WoolNodePointer nodePointer;
-		if (sep == -1) {
-			nodePointer = new WoolNodePointerInternal(nodePointerStr);
-		} else {
-			nodePointer = new WoolNodePointerExternal(
-					nodePointerStr.substring(0, sep),
-					nodePointerStr.substring(sep + 1));
-		}
-		if (commandSection != null) {
-			// TODO parse command, remove text tokens with only whitespace
-		}
-		return new WoolReply(statement, nodePointer);
-	}
-	
 	/**
 	 * Removes a possible comment, and leading and trailing white space from a
 	 * string. This should not be used for body lines, because this method does
@@ -385,7 +207,7 @@ public class WoolParser {
 	 * @param start the start index
 	 * @return the number of whitespace characters
 	 */
-	private int skipWhitespace(String s, int start) {
+	public static int skipWhitespace(String s, int start) {
 		int result = 0;
 		for (int i = start; i < s.length(); i++) {
 			char c = s.charAt(i);
@@ -394,39 +216,6 @@ public class WoolParser {
 			result++;
 		}
 		return result;
-	}
-	
-	private void trimWhitespace(List<WoolBodyToken> tokens) {
-		removeLeadingWhitespace(tokens);
-		removeTrailingWhitespace(tokens);
-	}
-	
-	private void removeLeadingWhitespace(List<WoolBodyToken> tokens) {
-		while (!tokens.isEmpty()) {
-			WoolBodyToken token = tokens.get(0);
-			if (token.getType() != WoolBodyToken.Type.TEXT)
-				return;
-			String text = (String)token.getValue();
-			text = text.replaceAll("^\\s+", "");
-			token.setValue(text);
-			if (text.length() > 0)
-				return;
-			tokens.remove(0);
-		}
-	}
-	
-	private void removeTrailingWhitespace(List<WoolBodyToken> tokens) {
-		while (!tokens.isEmpty()) {
-			WoolBodyToken token = tokens.get(tokens.size() - 1);
-			if (token.getType() != WoolBodyToken.Type.TEXT)
-				return;
-			String text = (String)token.getValue();
-			text = text.replaceAll("\\s+$", "");
-			token.setValue(text);
-			if (text.length() > 0)
-				return;
-			tokens.remove(tokens.size() - 1);
-		}
 	}
 	
 	private String readLine() throws IOException {

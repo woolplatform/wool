@@ -1,6 +1,8 @@
 package nl.rrd.wool.model.command;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import nl.rrd.wool.exception.LineNumberParseException;
@@ -19,10 +21,13 @@ import nl.rrd.wool.utils.CurrentIterator;
  * 
  * @author Dennis Hofs (RRD)
  */
-public class WoolActionCommand extends WoolCommand {
+public class WoolActionCommand extends WoolAttributesCommand {
 	public static final String TYPE_IMAGE = "image";
 	public static final String TYPE_VIDEO = "video";
 	public static final String TYPE_GENERIC = "generic";
+	
+	private static final List<String> VALID_TYPES = Arrays.asList(
+			TYPE_IMAGE, TYPE_VIDEO, TYPE_GENERIC);
 	
 	private String type;
 	private WoolVariableString value;
@@ -75,9 +80,25 @@ public class WoolActionCommand extends WoolCommand {
 		return result.toString();
 	}
 	
-	public static WoolActionCommand parse(CurrentIterator<WoolBodyToken> tokens)
+	public static WoolActionCommand parse(WoolBodyToken cmdStartToken,
+			CurrentIterator<WoolBodyToken> tokens)
 			throws LineNumberParseException {
-		// TODO
-		return null;
+		Map<String,WoolBodyToken> attrs = parseAttributesCommand(cmdStartToken,
+				tokens);
+		String type = readPlainTextAttr("type", attrs, cmdStartToken, true);
+		WoolBodyToken token = attrs.get("type");
+		if (!VALID_TYPES.contains(type)) {
+			throw new LineNumberParseException(
+					"Invalid value for attribute \"type\": " + type,
+					token.getLineNum(), token.getColNum());
+		}
+		WoolVariableString value = readAttr("value", attrs, cmdStartToken,
+				true);
+		WoolActionCommand command = new WoolActionCommand(type, value);
+		for (String attr : attrs.keySet()) {
+			token = attrs.get(attr);
+			command.addParameter(attr, (WoolVariableString)token.getValue());
+		}
+		return command;
 	}
 }

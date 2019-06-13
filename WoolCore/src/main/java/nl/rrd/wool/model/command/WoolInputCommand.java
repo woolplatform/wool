@@ -1,5 +1,9 @@
 package nl.rrd.wool.model.command;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.parser.WoolBodyToken;
@@ -11,9 +15,12 @@ import nl.rrd.wool.utils.CurrentIterator;
  * 
  * @author Dennis Hofs (RRD)
  */
-public class WoolInputCommand extends WoolCommand {
+public class WoolInputCommand extends WoolAttributesCommand {
 	public static final String TYPE_TEXT = "text";
 	public static final String TYPE_NUMERIC = "numeric";
+	
+	private static final List<String> VALID_TYPES = Arrays.asList(
+			TYPE_TEXT, TYPE_NUMERIC);
 	
 	private String type;
 	private String variableName;
@@ -69,9 +76,27 @@ public class WoolInputCommand extends WoolCommand {
 		return result;
 	}
 
-	public static WoolActionCommand parse(CurrentIterator<WoolBodyToken> tokens)
+	public static WoolInputCommand parse(WoolBodyToken cmdStartToken,
+			CurrentIterator<WoolBodyToken> tokens)
 			throws LineNumberParseException {
-		// TODO
-		return null;
+		Map<String,WoolBodyToken> attrs = parseAttributesCommand(cmdStartToken,
+				tokens);
+		String type = readPlainTextAttr("type", attrs, cmdStartToken, true);
+		WoolBodyToken token = attrs.get("type");
+		if (!VALID_TYPES.contains(type)) {
+			throw new LineNumberParseException(
+					"Invalid value for attribute \"type\": " + type,
+					token.getLineNum(), token.getColNum());
+		}
+		String variableName = readVariableAttr("value", attrs, cmdStartToken,
+				true);
+		WoolInputCommand command = new WoolInputCommand(type, variableName);
+		Integer min = readIntAttr("min", attrs, cmdStartToken, false, null,
+				null);
+		command.setMin(min);
+		Integer max = readIntAttr("max", attrs, cmdStartToken, false, null,
+				null);
+		command.setMax(max);
+		return command;
 	}
 }
