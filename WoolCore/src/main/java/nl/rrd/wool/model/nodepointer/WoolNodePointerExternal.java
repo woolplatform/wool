@@ -29,13 +29,6 @@ public class WoolNodePointerExternal extends WoolNodePointer {
 	
 	@Override
 	public String toString() {
-		String result = this.dialogueId + "." + this.nodeId;
-		return result;
-	}
-	
-	@Override
-	public String toFriendlyString() {
-		String result = this.dialogueId + "." + this.nodeId;
-		return result;
+		return this.dialogueId + "." + this.nodeId;
 	}
 }

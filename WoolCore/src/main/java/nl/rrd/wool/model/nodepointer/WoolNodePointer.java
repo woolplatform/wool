@@ -42,11 +42,4 @@ public abstract class WoolNodePointer {
 	public void setNodeId(String nodeId) {
 		this.nodeId = nodeId;
 	}
-	
-	// ---------- Functions:
-	
-	public abstract String toString();
-		
-	public abstract String toFriendlyString();
-	
 }

@@ -208,10 +208,10 @@ public class ActiveWoolDialogue {
 		WoolNode processedNode = new WoolNode();
 		processedNode.setHeader(woolNode.getHeader());
 		
-		ArrayList<WoolStatement> processedStatements = new ArrayList<WoolStatement>();
+		ArrayList<WoolNodeBody> processedStatements = new ArrayList<WoolNodeBody>();
 		ArrayList<WoolReply> processedReplies = new ArrayList<WoolReply>();
 		
-		for (WoolStatement statement : woolNode.getBody().getStatements()) {
+		for (WoolNodeBody statement : woolNode.getBody().getStatements()) {
 			if (statement instanceof WoolStatementBasic || statement instanceof WoolStatementBasicIdentified) {
 				processedStatements.add(this.replaceVariablesByValuesInStatement(statement));
 			} 
@@ -261,8 +261,8 @@ public class ActiveWoolDialogue {
 		else return reply;
 	}
 	
-	private WoolStatement replaceVariablesByValuesInStatement(WoolStatement statement) throws WoolUnknownVariableException{
-		WoolStatement returnStatement = statement;
+	private WoolNodeBody replaceVariablesByValuesInStatement(WoolNodeBody statement) throws WoolUnknownVariableException{
+		WoolNodeBody returnStatement = statement;
 		if (statement instanceof WoolStatementBasic) {
 			WoolStatementBasic woolStatementBasic = new WoolStatementBasic((WoolStatementBasic)statement);
 			if (woolStatementBasic.getVariables().size() > 0) {
@@ -304,7 +304,7 @@ public class ActiveWoolDialogue {
 		try {
 			if (ifStatement.getExpression().evaluate(((DefaultWoolVariableStore) woolVariableStore).getVariableMap()).asBoolean()) {
 				if(ifStatement.getIfBody().getStatements().size() > 0) {
-					for (WoolStatement statementInIf : ifStatement.getIfBody().getStatements()) {
+					for (WoolNodeBody statementInIf : ifStatement.getIfBody().getStatements()) {
 						if (statementInIf instanceof WoolStatementBasic || statementInIf instanceof WoolStatementBasicIdentified) {
 							ifBodyFlattened.addStatement(this.replaceVariablesByValuesInStatement(statementInIf));
 						}
@@ -314,7 +314,7 @@ public class ActiveWoolDialogue {
 						}
 						else if (statementInIf instanceof WoolStatementCommandIf) {
 							WoolStatementCommandBody ifBodyExtracted = this.evaluateWoolStatementCommandIf((WoolStatementCommandIf) statementInIf);;
-							for (WoolStatement statement : ifBodyExtracted.getStatements()) {
+							for (WoolNodeBody statement : ifBodyExtracted.getStatements()) {
 								ifBodyFlattened.addStatement(statement);
 							}
 							for (WoolReply reply : ifBodyExtracted.getReplies()) {

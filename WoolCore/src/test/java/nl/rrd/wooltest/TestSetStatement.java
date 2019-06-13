@@ -25,7 +25,7 @@ public class TestSetStatement {
 	
 	@Test
 	public void testSetStatement() throws WoolInvalidNodeLinkException, ParseException, IOException {
-		WoolParser woolParser = new WoolParser();
-		woolParser.createWoolDialogue(this.file);
+		WoolParser woolParser = new WoolParser(this.file);
+		woolParser.readDialogue();
 	}
 }

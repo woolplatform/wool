@@ -28,8 +28,8 @@ public class TestBasicStatements {
 	
 	@Test
 	public void testDialogueCreation() throws WoolInvalidNodeLinkException, ParseException, IOException {
-		WoolParser woolParser = new WoolParser();
-		this.woolDialogue = woolParser.createWoolDialogue(this.file);
+		WoolParser woolParser = new WoolParser(this.file);
+		this.woolDialogue = woolParser.readDialogue();
 		assertNotNull(woolDialogue);
 
 		/**for (int i = 0; i < woolDialogue.getNodes().size(); i++) {

@@ -38,7 +38,7 @@ public class WoolDefinitionScanner {
 				report.addWarning("Wool Node '"+woolNode.getTitle()+"' contains more than one statement - consider splitting into multiple nodes.");
 			}
 			
-			for(WoolStatement statement : woolNode.getBody().getStatements()) {
+			for(WoolNodeBody statement : woolNode.getBody().getStatements()) {
 				if(statement instanceof WoolStatementBasic) {
 					report.addWarning("Wool Node '"+woolNode.getTitle()+"' contains statement without specified speaker.");
 				} else if(statement instanceof WoolStatementBasicIdentified) {

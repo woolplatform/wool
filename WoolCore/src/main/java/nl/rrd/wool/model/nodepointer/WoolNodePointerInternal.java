@@ -18,9 +18,4 @@ public class WoolNodePointerInternal extends WoolNodePointer {
 	public String toString() {
 		return this.nodeId;
 	}
-	
-	@Override
-	public String toFriendlyString() {
-		return this.nodeId;
-	}
 }
