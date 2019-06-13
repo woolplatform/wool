@@ -119,22 +119,34 @@ public class WoolIfCommand extends WoolExpressionCommand {
 			} else {
 				command.setElseClause(bodyParse.body);
 			}
-			content = readCommandContent(bodyParse.ifClauseStartToken, tokens);
-			switch (bodyParse.ifClauseName) {
+			WoolBodyToken clauseStartToken = bodyParse.ifClauseStartToken;
+			String clauseName = bodyParse.ifClauseName;
+			content = readCommandContent(clauseStartToken, tokens);
+			switch (clauseName) {
 			case "elseif":
-				parsedIf = parseCommandContentExpression(
-						bodyParse.ifClauseStartToken, content,
-						bodyParse.ifClauseName);
-				checkNoAssignment(bodyParse.ifClauseStartToken, parsedIf.name,
+				if (command.elseClause != null) {
+					throw new LineNumberParseException(
+							"Found \"elseif\" after \"else\"",
+							clauseStartToken.getLineNum(),
+							clauseStartToken.getColNum());
+				}
+				parsedIf = parseCommandContentExpression(clauseStartToken,
+						content, clauseName);
+				checkNoAssignment(clauseStartToken, parsedIf.name,
 						parsedIf.expression);
 				break;
 			case "else":
-				parsedIf = parseCommandContentName(bodyParse.ifClauseStartToken,
-						content, bodyParse.ifClauseName);
+				if (command.elseClause != null) {
+					throw new LineNumberParseException(
+							"Found more than one \"else\"",
+							clauseStartToken.getLineNum(),
+							clauseStartToken.getColNum());
+				}
+				parsedIf = parseCommandContentName(clauseStartToken, content,
+						clauseName);
 				break;
 			case "endif":
-				parseCommandContentName(bodyParse.ifClauseStartToken,
-						content, bodyParse.ifClauseName);
+				parseCommandContentName(clauseStartToken, content, clauseName);
 				return command;
 			}
 		}
