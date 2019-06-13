@@ -130,6 +130,7 @@ public class WoolReplyParser {
 			throws LineNumberParseException {
 		CurrentIterator<WoolBodyToken> it = new CurrentIterator<>(
 				commandSection.tokens.iterator());
+		it.moveNext();
 		WoolBodyToken.skipWhitespace(it);
 		while (it.getCurrent() != null) {
 			WoolBodyToken token = it.getCurrent();

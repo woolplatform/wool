@@ -1,6 +1,10 @@
 package nl.rrd.wool.expressions.types;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.expressions.Expression;
@@ -35,6 +39,33 @@ public class MultiplyExpression implements Expression {
 			return new Value(Value.normalizeNumber(
 					val1.doubleValue() * val2.doubleValue()));
 		}
+	}
+
+	@Override
+	public List<Expression> getChildren() {
+		List<Expression> result = new ArrayList<>();
+		result.add(operand1);
+		result.add(operand2);
+		return result;
+	}
+
+	@Override
+	public List<Expression> getDescendants() {
+		List<Expression> result = new ArrayList<>();
+		for (Expression child : getChildren()) {
+			result.add(child);
+			result.addAll(child.getDescendants());
+		}
+		return result;
+	}
+
+	@Override
+	public Set<String> getVariableNames() {
+		Set<String> result = new HashSet<>();
+		for (Expression child : getChildren()) {
+			result.addAll(child.getVariableNames());
+		}
+		return result;
 	}
 	
 	@Override

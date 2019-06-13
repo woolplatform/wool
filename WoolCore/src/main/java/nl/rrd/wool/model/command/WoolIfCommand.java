@@ -15,7 +15,7 @@ import nl.rrd.wool.utils.CurrentIterator;
  * 
  * @author Dennis Hofs (RRD)
  */
-public class WoolIfCommand extends WoolCommand {
+public class WoolIfCommand extends WoolExpressionCommand {
 	private List<Clause> ifClauses = new ArrayList<>();
 	private WoolNodeBody elseClause = null;
 
@@ -95,6 +95,9 @@ public class WoolIfCommand extends WoolCommand {
 	public static WoolActionCommand parse(WoolBodyToken cmdStartToken,
 			CurrentIterator<WoolBodyToken> tokens)
 			throws LineNumberParseException {
+		ReadContentResult content = readCommandContent(cmdStartToken, tokens);
+		ParseContentResult parsedIf = parseCommandContentExpression(
+				cmdStartToken, content, "if");
 		// TODO
 		return null;
 	}

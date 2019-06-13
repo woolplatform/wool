@@ -2,6 +2,7 @@ package nl.rrd.wool.model.command;
 
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.expressions.Expression;
+import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolReply;
 import nl.rrd.wool.parser.WoolBodyToken;
@@ -15,7 +16,7 @@ import nl.rrd.wool.utils.CurrentIterator;
  * 
  * @author Dennis Hofs (RRD)
  */
-public class WoolSetCommand extends WoolCommand {
+public class WoolSetCommand extends WoolExpressionCommand {
 	private Expression expression;
 	
 	public WoolSetCommand(Expression expression) {
@@ -35,10 +36,17 @@ public class WoolSetCommand extends WoolCommand {
 		return "<<set " + expression + ">>";
 	}
 
-	public static WoolActionCommand parse(WoolBodyToken cmdStartToken,
+	public static WoolSetCommand parse(WoolBodyToken cmdStartToken,
 			CurrentIterator<WoolBodyToken> tokens)
 			throws LineNumberParseException {
-		// TODO
-		return null;
+		ReadContentResult content = readCommandContent(cmdStartToken, tokens);
+		ParseContentResult parsed = parseCommandContentExpression(cmdStartToken,
+				content, "set");
+		if (!(parsed.expression instanceof AssignExpression)) {
+			throw new LineNumberParseException(
+					"Expression in \"set\" command is not an assignment",
+					cmdStartToken.getLineNum(), cmdStartToken.getColNum());
+		}
+		return new WoolSetCommand(parsed.expression);
 	}
 }

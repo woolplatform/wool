@@ -92,8 +92,10 @@ public class WoolActionCommand extends WoolAttributesCommand {
 					"Invalid value for attribute \"type\": " + type,
 					token.getLineNum(), token.getColNum());
 		}
+		attrs.remove("type");
 		WoolVariableString value = readAttr("value", attrs, cmdStartToken,
 				true);
+		attrs.remove("value");
 		WoolActionCommand command = new WoolActionCommand(type, value);
 		for (String attr : attrs.keySet()) {
 			token = attrs.get(attr);

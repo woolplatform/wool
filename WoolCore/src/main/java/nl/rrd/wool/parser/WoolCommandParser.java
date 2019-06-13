@@ -32,7 +32,7 @@ public class WoolCommandParser {
 					"Expected command name, found token: " + token.getType(),
 					token.getLineNum(), token.getColNum());
 		}
-		String name = ((String)token.getValue()).trim();
+		String name = token.getText().trim();
 		String[] split = name.split("\\s+", 2);
 		name = split[0];
 		if (!validCommands.contains(name)) {

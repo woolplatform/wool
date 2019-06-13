@@ -129,6 +129,20 @@ public class WoolNodeBody {
 			segments.remove(segments.size() - 1);
 		}
 	}
+	
+	@Override
+	public String toString() {
+		String newline = System.getProperty("line.separator");
+		StringBuilder builder = new StringBuilder();
+		for (Segment segment : segments) {
+			builder.append(segment.toString());
+		}
+		for (WoolReply reply : replies) {
+			builder.append(newline);
+			builder.append(reply);
+		}
+		return builder.toString();
+	}
 
 	public static abstract class Segment {
 	}

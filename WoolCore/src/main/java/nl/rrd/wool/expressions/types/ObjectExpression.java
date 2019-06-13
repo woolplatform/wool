@@ -1,8 +1,11 @@
 package nl.rrd.wool.expressions.types;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.expressions.Expression;
@@ -34,6 +37,35 @@ public class ObjectExpression implements Expression {
 			result.put(key.toString(), val.getValue());
 		}
 		return new Value(result);
+	}
+
+	@Override
+	public List<Expression> getChildren() {
+		List<Expression> result = new ArrayList<>();
+		for (KeyValue prop : properties) {
+			result.add(prop.key);
+			result.add(prop.value);
+		}
+		return result;
+	}
+
+	@Override
+	public List<Expression> getDescendants() {
+		List<Expression> result = new ArrayList<>();
+		for (Expression child : getChildren()) {
+			result.add(child);
+			result.addAll(child.getDescendants());
+		}
+		return result;
+	}
+
+	@Override
+	public Set<String> getVariableNames() {
+		Set<String> result = new HashSet<>();
+		for (Expression child : getChildren()) {
+			result.addAll(child.getVariableNames());
+		}
+		return result;
 	}
 	
 	@Override

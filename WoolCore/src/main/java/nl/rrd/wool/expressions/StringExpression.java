@@ -3,8 +3,10 @@ package nl.rrd.wool.expressions;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.exception.ParseException;
@@ -34,6 +36,37 @@ public class StringExpression implements Expression {
 		return new Value(result.toString());
 	}
 	
+	@Override
+	public List<Expression> getChildren() {
+		List<Expression> result = new ArrayList<>();
+		for (Segment segment : segments) {
+			if (segment instanceof ExpressionSegment) {
+				ExpressionSegment expr = (ExpressionSegment)segment;
+				result.add(expr.expression);
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public List<Expression> getDescendants() {
+		List<Expression> result = new ArrayList<>();
+		for (Expression child : getChildren()) {
+			result.add(child);
+			result.addAll(child.getDescendants());
+		}
+		return result;
+	}
+
+	@Override
+	public Set<String> getVariableNames() {
+		Set<String> result = new HashSet<>();
+		for (Expression child : getChildren()) {
+			result.addAll(child.getVariableNames());
+		}
+		return result;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();

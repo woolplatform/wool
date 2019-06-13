@@ -1,6 +1,10 @@
 package nl.rrd.wool.expressions.types;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.expressions.Expression;
@@ -30,6 +34,26 @@ public class ValueExpression implements Expression {
 		} else {
 			return token.getValue();
 		}
+	}
+
+	@Override
+	public List<Expression> getChildren() {
+		return new ArrayList<>();
+	}
+
+	@Override
+	public List<Expression> getDescendants() {
+		return new ArrayList<>();
+	}
+
+	@Override
+	public Set<String> getVariableNames() {
+		Set<String> result = new HashSet<>();
+		if (token.getType() == Token.Type.NAME ||
+				token.getType() == Token.Type.DOLLAR_VARIABLE) {
+			result.add(token.getValue().toString());
+		}
+		return result;
 	}
 	
 	@Override

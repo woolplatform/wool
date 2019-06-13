@@ -8,7 +8,7 @@ import nl.rrd.wool.model.WoolVariableString;
 import nl.rrd.wool.utils.ReferenceParameter;
 
 public class WoolBodyTokenizer {
-	private BodyState bodyState;
+	private BodyState bodyState = new BodyState();
 
 	/**
 	 * Reads the body tokens from the specified line. The line should end with a
@@ -262,7 +262,7 @@ public class WoolBodyTokenizer {
 			}
 		}
 		throw new LineNumberParseException("Quoted string not terminated",
-				lineNum, start);
+				lineNum, start + 1);
 	}
 	
 	private void startBodyTextBuffer(int colNum) {

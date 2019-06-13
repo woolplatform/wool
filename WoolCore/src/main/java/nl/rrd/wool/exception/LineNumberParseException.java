@@ -10,6 +10,7 @@ package nl.rrd.wool.exception;
 public class LineNumberParseException extends ParseException {
 	private static final long serialVersionUID = 1L;
 	
+	private String error;
 	private int lineNum;
 	private int colNum;
 
@@ -38,8 +39,18 @@ public class LineNumberParseException extends ParseException {
 			Exception cause) {
 		super(message + String.format(" (line %d, column %d)", lineNum,
 				colNum), cause);
+		this.error = message;
 		this.lineNum = lineNum;
 		this.colNum = colNum;
+	}
+
+	/**
+	 * Returns the error message without the line and column number.
+	 * 
+	 * @return the error message without the line and column number
+	 */
+	public String getError() {
+		return error;
 	}
 
 	/**

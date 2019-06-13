@@ -2,6 +2,7 @@ package nl.rrd.wool.expressions;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An expression is some code that can be evaluated as a {@link Value Value}.
@@ -38,4 +39,26 @@ public interface Expression {
 	 * the specified variables
 	 */
 	Value evaluate(Map<String,Object> variables) throws EvaluationException;
+
+	/**
+	 * Returns the child expressions of this expression.
+	 * 
+	 * @return the child expressions
+	 */
+	List<Expression> getChildren();
+	
+	/**
+	 * Returns all descendant expressions of this expression.
+	 * 
+	 * @return the descendant expressions
+	 */
+	List<Expression> getDescendants();
+
+	/**
+	 * Returns all variable names that occur in this expression and its
+	 * descendants.
+	 * 
+	 * @return the variable names
+	 */
+	Set<String> getVariableNames();
 }

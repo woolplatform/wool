@@ -1,6 +1,10 @@
 package nl.rrd.wool.expressions.types;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.expressions.EvaluationException;
@@ -51,6 +55,32 @@ public class AssignExpression implements Expression {
 		Value result = valueOperand.evaluate(variables);
 		if (variables != null)
 			variables.put(variableName, result.getValue());
+		return result;
+	}
+
+	@Override
+	public List<Expression> getChildren() {
+		List<Expression> result = new ArrayList<>();
+		result.add(variableOperand);
+		result.add(valueOperand);
+		return result;
+	}
+
+	@Override
+	public List<Expression> getDescendants() {
+		List<Expression> result = new ArrayList<>();
+		for (Expression child : getChildren()) {
+			result.add(child);
+			result.addAll(child.getDescendants());
+		}
+		return result;
+	}
+
+	@Override
+	public Set<String> getVariableNames() {
+		Set<String> result = new HashSet<>();
+		result.add(variableName);
+		result.addAll(valueOperand.getVariableNames());
 		return result;
 	}
 	
