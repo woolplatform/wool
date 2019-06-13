@@ -141,7 +141,7 @@ public class WoolReplyParser {
 			}
 			WoolCommandParser cmdParser = new WoolCommandParser(
 					Arrays.asList("action", "set"));
-			reply.addCommand(cmdParser.parse(it));
+			reply.addCommand(cmdParser.parseFromStart(it));
 			WoolBodyToken.skipWhitespace(it);
 		}
 	}

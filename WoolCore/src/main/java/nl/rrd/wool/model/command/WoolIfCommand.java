@@ -1,11 +1,14 @@
 package nl.rrd.wool.model.command;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.expressions.Expression;
+import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.model.WoolNodeBody;
+import nl.rrd.wool.parser.WoolBodyParser;
 import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.utils.CurrentIterator;
 
@@ -92,14 +95,64 @@ public class WoolIfCommand extends WoolExpressionCommand {
 		return result.toString();
 	}
 
-	public static WoolActionCommand parse(WoolBodyToken cmdStartToken,
+	public static WoolIfCommand parse(WoolBodyToken cmdStartToken,
 			CurrentIterator<WoolBodyToken> tokens)
 			throws LineNumberParseException {
+		WoolIfCommand command = new WoolIfCommand();
 		ReadContentResult content = readCommandContent(cmdStartToken, tokens);
 		ParseContentResult parsedIf = parseCommandContentExpression(
 				cmdStartToken, content, "if");
-		// TODO
-		return null;
+		checkNoAssignment(cmdStartToken, parsedIf.name, parsedIf.expression);
+		while (true) {
+			WoolBodyParser bodyParser = new WoolBodyParser();
+			WoolBodyParser.ParseUntilIfClauseResult bodyParse =
+					bodyParser.parseUntilIfClause(tokens, Arrays.asList(
+					"action", "if", "set"));
+			if (bodyParse.ifClauseStartToken == null) {
+				throw new LineNumberParseException(
+						"Command \"if\" not terminated",
+						cmdStartToken.getLineNum(), cmdStartToken.getColNum());
+			}
+			if (parsedIf.name.equals("if") || parsedIf.name.equals("elseif")) {
+				command.addIfClause(new Clause(parsedIf.expression,
+						bodyParse.body));
+			} else {
+				command.setElseClause(bodyParse.body);
+			}
+			content = readCommandContent(bodyParse.ifClauseStartToken, tokens);
+			switch (bodyParse.ifClauseName) {
+			case "elseif":
+				parsedIf = parseCommandContentExpression(
+						bodyParse.ifClauseStartToken, content,
+						bodyParse.ifClauseName);
+				checkNoAssignment(bodyParse.ifClauseStartToken, parsedIf.name,
+						parsedIf.expression);
+				break;
+			case "else":
+				parsedIf = parseCommandContentName(bodyParse.ifClauseStartToken,
+						content, bodyParse.ifClauseName);
+				break;
+			case "endif":
+				parseCommandContentName(bodyParse.ifClauseStartToken,
+						content, bodyParse.ifClauseName);
+				return command;
+			}
+		}
+	}
+	
+	private static void checkNoAssignment(WoolBodyToken cmdStartToken,
+			String name, Expression expression)
+			throws LineNumberParseException {
+		List<Expression> list = new ArrayList<>();
+		list.add(expression);
+		list.addAll(expression.getDescendants());
+		for (Expression expr : list) {
+			if (expr instanceof AssignExpression) {
+				throw new LineNumberParseException(String.format(
+						"Found assignment expression in \"%s\" command", name),
+						cmdStartToken.getLineNum(), cmdStartToken.getColNum());
+			}
+		}
 	}
 
 	/**

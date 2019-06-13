@@ -11,18 +11,32 @@ import nl.rrd.wool.utils.CurrentIterator;
 public class WoolBodyParser {
 	public WoolNodeBody parse(List<WoolBodyToken> tokens,
 			List<String> validCommands) throws LineNumberParseException {
-		WoolNodeBody body = new WoolNodeBody();
 		CurrentIterator<WoolBodyToken> it = new CurrentIterator<>(
 				tokens.iterator());
 		it.moveNext();
-		while (it.getCurrent() != null) {
+		ParseUntilIfClauseResult result = parseUntilIfClause(it, validCommands);
+		if (result.ifClauseStartToken != null) {
 			WoolBodyToken token = it.getCurrent();
+			throw new LineNumberParseException(String.format(
+					"Unexpected command \"%s\"", result.ifClauseName),
+					token.getLineNum(), token.getColNum());
+		}
+		return result.body;
+	}
+	
+	public ParseUntilIfClauseResult parseUntilIfClause(
+			CurrentIterator<WoolBodyToken> tokens, List<String> validCommands)
+			throws LineNumberParseException {
+		ParseUntilIfClauseResult result = new ParseUntilIfClauseResult();
+		result.body = new WoolNodeBody();
+		while (result.ifClauseStartToken == null && tokens.getCurrent() != null) {
+			WoolBodyToken token = tokens.getCurrent();
 			switch (token.getType()) {
 			case TEXT:
 			case VARIABLE:
-				WoolVariableString text = parseTextSegment(it);
-				if (body.getReplies().isEmpty()) {
-					body.addSegment(new WoolNodeBody.TextSegment(text));
+				WoolVariableString text = parseTextSegment(tokens);
+				if (result.body.getReplies().isEmpty()) {
+					result.body.addSegment(new WoolNodeBody.TextSegment(text));
 				} else if (!text.isWhitespace()) {
 					throw new LineNumberParseException(
 							"Found content between replies", token.getLineNum(),
@@ -30,19 +44,26 @@ public class WoolBodyParser {
 				}
 				break;
 			case COMMAND_START:
-				if (!body.getReplies().isEmpty()) {
+				if (!result.body.getReplies().isEmpty()) {
 					throw new LineNumberParseException(
 							"Found << between replies", token.getLineNum(),
 							token.getColNum());
 				}
 				WoolCommandParser cmdParser = new WoolCommandParser(
 						validCommands);
-				WoolCommand command = cmdParser.parse(it);
-				body.addSegment(new WoolNodeBody.CommandSegment(command));
+				String name = cmdParser.readCommandName(tokens);
+				if (name.equals("elseif") || name.equals("else") ||
+						name.equals("endif")) {
+					result.ifClauseStartToken = token;
+					result.ifClauseName = name;
+				} else {
+					WoolCommand command = cmdParser.parseFromName(token, tokens);
+					result.body.addSegment(new WoolNodeBody.CommandSegment(command));
+				}
 				break;
 			case REPLY_START:
 				WoolReplyParser replyParser = new WoolReplyParser();
-				body.addReply(replyParser.parse(it));
+				result.body.addReply(replyParser.parse(tokens));
 				break;
 			default:
 				// If we get here, there must be a bug
@@ -50,10 +71,16 @@ public class WoolBodyParser {
 						token.getType(), token.getLineNum(), token.getColNum());
 			}
 		}
-		body.trimWhitespace();
-		return body;
+		result.body.trimWhitespace();
+		return result;
 	}
-
+	
+	public class ParseUntilIfClauseResult {
+		public WoolNodeBody body;
+		public WoolBodyToken ifClauseStartToken = null;
+		public String ifClauseName = null;
+	}
+	
 	private WoolVariableString parseTextSegment(
 			CurrentIterator<WoolBodyToken> tokens) {
 		WoolVariableString string = new WoolVariableString();

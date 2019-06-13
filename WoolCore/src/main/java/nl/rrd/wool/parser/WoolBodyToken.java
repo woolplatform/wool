@@ -1,5 +1,6 @@
 package nl.rrd.wool.parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import nl.rrd.wool.utils.CurrentIterator;
@@ -111,16 +112,21 @@ public class WoolBodyToken {
 	 * Moves to the next token that is not a text token with only whitespace.
 	 * 
 	 * @param tokens the tokens
+	 * @return the skipped tokens
 	 */
-	public static void skipWhitespace(CurrentIterator<WoolBodyToken> tokens) {
+	public static List<WoolBodyToken> skipWhitespace(
+			CurrentIterator<WoolBodyToken> tokens) {
+		List<WoolBodyToken> result = new ArrayList<>();
 		while (tokens.getCurrent() != null) {
 			WoolBodyToken token = tokens.getCurrent();
 			if (token.getType() != WoolBodyToken.Type.TEXT)
-				return;
+				return result;
 			String text = (String)token.getValue();
 			if (!text.trim().isEmpty())
-				return;
+				return result;
+			result.add(token);
 			tokens.moveNext();
 		}
+		return result;
 	}
 }
