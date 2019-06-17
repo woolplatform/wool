@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import nl.rrd.wool.exception.LineNumberParseException;
+import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolReply;
 import nl.rrd.wool.model.WoolVariableString;
@@ -74,6 +75,19 @@ public class WoolActionCommand extends WoolAttributesCommand {
 		for (WoolVariableString paramVals : parameters.values()) {
 			paramVals.getReadVariableNames(varNames);
 		}
+	}
+
+	@Override
+	public void executeBodyCommand(Map<String, Object> variables,
+			WoolNodeBody processedBody) throws EvaluationException {
+		WoolActionCommand processedCommand = new WoolActionCommand(type,
+				value.execute(variables));
+		for (String param : parameters.keySet()) {
+			WoolVariableString value = parameters.get(param);
+			processedCommand.addParameter(param, value.execute(variables));
+		}
+		processedBody.addSegment(new WoolNodeBody.CommandSegment(
+				processedCommand));
 	}
 
 	@Override

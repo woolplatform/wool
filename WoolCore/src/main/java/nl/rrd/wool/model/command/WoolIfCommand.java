@@ -3,10 +3,13 @@ package nl.rrd.wool.model.command;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import nl.rrd.wool.exception.LineNumberParseException;
+import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.expressions.Expression;
+import nl.rrd.wool.expressions.Value;
 import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.parser.WoolBodyParser;
@@ -85,6 +88,20 @@ public class WoolIfCommand extends WoolExpressionCommand {
 		}
 		if (elseClause != null)
 			elseClause.getReadVariableNames(varNames);
+	}
+
+	@Override
+	public void executeBodyCommand(Map<String, Object> variables,
+			WoolNodeBody processedBody) throws EvaluationException {
+		for (Clause clause : ifClauses) {
+			Value clauseEval = clause.expression.evaluate(variables);
+			if (clauseEval.asBoolean()) {
+				clause.statement.execute(variables, processedBody);
+				return;
+			}
+		}
+		if (elseClause != null)
+			elseClause.execute(variables, processedBody);
 	}
 
 	@Override

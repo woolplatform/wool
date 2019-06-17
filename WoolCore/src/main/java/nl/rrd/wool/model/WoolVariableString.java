@@ -3,7 +3,10 @@ package nl.rrd.wool.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import nl.rrd.wool.expressions.Value;
 
 /**
  * This class represents a text with possible variables. It is modelled as a
@@ -47,6 +50,46 @@ public class WoolVariableString {
 		for (Segment segment : segments) {
 			addSegment(segment);
 		}
+	}
+
+	/**
+	 * Executes this variable string with respect to the specified variables.
+	 * The result will be a string with 0 or 1 text segments. Undefined
+	 * variables will be evaluated as string "null".
+	 * 
+	 * @param variables the variable map (can be null)
+	 * @return the processed variable string
+	 */
+	public WoolVariableString execute(Map<String,Object> variables) {
+		WoolVariableString result = new WoolVariableString();
+		for (Segment segment : segments) {
+			if (segment instanceof TextSegment) {
+				result.addSegment(segment);
+			} else {
+				VariableSegment varSegment = (VariableSegment)segment;
+				Object valueObj = null;
+				if (variables != null)
+					valueObj = variables.get(varSegment.variableName);
+				Value value = new Value(valueObj);
+				result.addSegment(new TextSegment(value.toString()));
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Evaluates this variable string with respect to the specified variables.
+	 * Undefined variables will be evaluated as string "null".
+	 * 
+	 * @param variables the variable map (can be null)
+	 * @return the evaluated string
+	 */
+	public String evaluate(Map<String,Object> variables) {
+		WoolVariableString varStr = execute(variables);
+		if (varStr.segments.isEmpty())
+			return "";
+		TextSegment segment = (TextSegment)varStr.segments.get(0);
+		return segment.text;
 	}
 	
 	/**

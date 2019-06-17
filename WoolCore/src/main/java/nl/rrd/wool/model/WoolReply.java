@@ -2,8 +2,10 @@ package nl.rrd.wool.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.model.command.WoolActionCommand;
 import nl.rrd.wool.model.command.WoolCommand;
 import nl.rrd.wool.model.command.WoolInputCommand;
@@ -155,6 +157,29 @@ public class WoolReply {
 		for (WoolCommand command : commands) {
 			command.getReadVariableNames(varNames);
 		}
+	}
+	
+	/**
+	 * Executes the statement in this reply with respect to the specified
+	 * variable map. It executes commands and resolves variables, so that only
+	 * content that should be sent to the client, remains in the resulting
+	 * reply statement. This content can be text or client commands, with all
+	 * variables resolved.
+	 * 
+	 * @param variables the variable map
+	 * @param processedBody the processed body
+	 * @throws EvaluationException if an expression cannot be evaluated
+	 */
+	public WoolReply execute(Map<String,Object> variables)
+			throws EvaluationException {
+		if (statement != null)
+			return this;
+		WoolNodeBody processedStatement = new WoolNodeBody();
+		statement.execute(variables, processedStatement);
+		WoolReply result = new WoolReply(replyId, processedStatement,
+				nodePointer);
+		result.commands = commands;
+		return result;
 	}
 
 	@Override

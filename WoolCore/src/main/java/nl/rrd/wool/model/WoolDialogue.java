@@ -20,7 +20,6 @@ import nl.rrd.wool.model.nodepointer.WoolNodePointerExternal;
 public class WoolDialogue {
 	
 	private String dialogueName;
-	private WoolNode startNode;
 	// map from lower-case node titles to nodes
 	private Map<String,WoolNode> nodes = new LinkedHashMap<>();
 	private Set<String> speakers = new HashSet<>();
@@ -58,7 +57,7 @@ public class WoolDialogue {
 	 * @return the starting {@link WoolNode} for this {@link WoolDialogue}.
 	 */
 	public WoolNode getStartNode() {
-		return this.startNode;
+		return nodes.get("start");
 	}
 	
 	/**

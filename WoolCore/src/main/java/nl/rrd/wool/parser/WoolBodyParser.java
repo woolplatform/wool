@@ -70,6 +70,7 @@ public class WoolBodyParser {
 			case REPLY_START:
 				WoolReplyParser replyParser = new WoolReplyParser(nodeState);
 				result.body.addReply(replyParser.parse(tokens));
+				// TODO check only one autoforward reply allowed
 				break;
 			default:
 				// If we get here, there must be a bug

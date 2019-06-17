@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import nl.rrd.wool.exception.LineNumberParseException;
+import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.parser.WoolNodeState;
@@ -68,6 +69,12 @@ public class WoolInputCommand extends WoolAttributesCommand {
 	
 	@Override
 	public void getReadVariableNames(Set<String> varNames) {
+	}
+
+	@Override
+	public void executeBodyCommand(Map<String, Object> variables,
+			WoolNodeBody processedBody) throws EvaluationException {
+		processedBody.addSegment(new WoolNodeBody.CommandSegment(this));
 	}
 
 	@Override

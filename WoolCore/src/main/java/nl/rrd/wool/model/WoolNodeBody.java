@@ -3,8 +3,10 @@ package nl.rrd.wool.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.model.command.WoolActionCommand;
 import nl.rrd.wool.model.command.WoolCommand;
 import nl.rrd.wool.model.command.WoolIfCommand;
@@ -52,8 +54,7 @@ import nl.rrd.wool.model.nodepointer.WoolNodePointer;
  * <li>{@link WoolIfCommand WoolIfCommand}: Contains clauses, each with a {@link
  * WoolNodeBody WoolNodeBody} specifying conditional statements, replies and
  * commands.</li>
- * <li>{@link WoolSetCommand WoolSetCommand}: Sets a variable value. This is
- * in most cases more useful as a reply command.</li>
+ * <li>{@link WoolSetCommand WoolSetCommand}: Sets a variable value.</li>
  * </ul></p>
  * 
  * <p>As part of a reply (remember the earlier remarks about commands in a
@@ -101,6 +102,14 @@ public class WoolNodeBody {
 	public List<WoolReply> getReplies() {
 		return replies;
 	}
+	
+	public WoolReply getReplyById(int replyId) {
+		for (WoolReply reply : replies) {
+			if (reply.getReplyId() == replyId)
+				return reply;
+		}
+		return null;
+	}
 
 	public void addReply(WoolReply reply) {
 		replies.add(reply);
@@ -119,6 +128,46 @@ public class WoolNodeBody {
 		for (WoolReply reply : replies) {
 			reply.getReadVariableNames(varNames);
 		}
+	}
+	
+	/**
+	 * Executes the statement in this body with respect to the specified
+	 * variable map. It executes commands and resolves variables. Any resulting
+	 * body content that should be sent to the client, is added to
+	 * "processedBody". This content can be text or client commands, with all
+	 * variables resolved.
+	 * 
+	 * @param variables the variable map
+	 * @param processedBody the processed body
+	 * @throws EvaluationException if an expression cannot be evaluated
+	 */
+	public void execute(Map<String,Object> variables,
+			WoolNodeBody processedBody) throws EvaluationException {
+		for (Segment segment : segments) {
+			if (segment instanceof TextSegment) {
+				executeTextSegment((TextSegment)segment, variables,
+						processedBody);
+			} else {
+				executeCommandSegment((CommandSegment)segment, variables,
+						processedBody);
+			}
+		}
+		for (WoolReply reply : replies) {
+			processedBody.addReply(reply.execute(variables));
+		}
+	}
+	
+	private void executeTextSegment(TextSegment segment,
+			Map<String,Object> variables, WoolNodeBody processedBody) {
+		TextSegment processedText = new TextSegment(
+				segment.text.execute(variables));
+		processedBody.addSegment(processedText);
+	}
+	
+	private void executeCommandSegment(CommandSegment segment,
+			Map<String,Object> variables, WoolNodeBody processedBody)
+			throws EvaluationException {
+		segment.command.executeBodyCommand(variables, processedBody);
 	}
 	
 	public List<WoolNodePointer> getNodePointers() {

@@ -1,28 +1,20 @@
 package nl.rrd.wool.execution;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import nl.rrd.wool.exception.WoolUnknownVariableException;
 import nl.rrd.wool.execution.WoolVariableStore.VariableSource;
 import nl.rrd.wool.expressions.EvaluationException;
+import nl.rrd.wool.expressions.Value;
 import nl.rrd.wool.model.WoolDialogue;
 import nl.rrd.wool.model.WoolNode;
 import nl.rrd.wool.model.WoolNodeBody;
+import nl.rrd.wool.model.WoolReply;
+import nl.rrd.wool.model.command.WoolCommand;
+import nl.rrd.wool.model.command.WoolInputCommand;
+import nl.rrd.wool.model.command.WoolSetCommand;
 import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 import nl.rrd.wool.model.nodepointer.WoolNodePointerInternal;
-import nl.rrd.wool.model.reply.WoolReply;
-import nl.rrd.wool.model.reply.WoolReplyAutoForward;
-import nl.rrd.wool.model.reply.WoolReplyBasic;
-import nl.rrd.wool.model.reply.WoolReplyInput;
-import nl.rrd.wool.model.statement.WoolStatement;
-import nl.rrd.wool.model.statement.WoolStatementBasic;
-import nl.rrd.wool.model.statement.WoolStatementBasicIdentified;
-import nl.rrd.wool.model.statement.WoolStatementCommandBody;
-import nl.rrd.wool.model.statement.WoolStatementCommandIf;
-import nl.rrd.wool.model.statement.WoolStatementCommandSet;
-import nl.rrd.wool.model.statement.WoolStatementMultimedia;
 
 /**
  * An {@link ActiveWoolDialogue} is a wrapper around a {@link WoolDialogue}, which contains
@@ -103,9 +95,9 @@ public class ActiveWoolDialogue {
 	 * "Starts" this {@link ActiveWoolDialogue}, returning the start node and updating
 	 * its internal state.
 	 * @return the initial {@link WoolNode}.
-	 * @throws WoolUnknownVariableException 
+	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode startDialogue() throws WoolUnknownVariableException {
+	public WoolNode startDialogue() throws EvaluationException {
 		this.dialogueState = DialogueState.ACTIVE;
 		WoolNode nextNode = dialogueDefinition.getStartNode();
 		this.currentNode = nextNode;
@@ -119,9 +111,9 @@ public class ActiveWoolDialogue {
 	 * "Starts" this {@link ActiveWoolDialogue} at the provided {@WoolNode}, returning that first node
 	 * and updating the dialogue's internal state.
 	 * @return the first {@link WoolNode}.
-	 * @throws WoolUnknownVariableException
+	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode startDialogue(String nodeId) throws WoolUnknownVariableException {
+	public WoolNode startDialogue(String nodeId) throws EvaluationException {
 		this.dialogueState = DialogueState.ACTIVE;
 		WoolNode nextNode = dialogueDefinition.getNodeById(nodeId);
 		this.currentNode = nextNode;
@@ -136,15 +128,19 @@ public class ActiveWoolDialogue {
 	 * @param replyId
 	 * @return WoolNodePointer nodePointer to next (dialogue and) node. 
 	 */
-	public WoolNodePointer processReplyAndGetNodePointer(int replyId) {
-		WoolReply selectedWoolReply = currentNode.getBody().getReplyById(replyId);
-		Map<String, String> variablesToSet = selectedWoolReply.getVariablesToSet();
-		
-		for(String variableName : variablesToSet.keySet()) {
-			this.woolVariableStore.setValue(variableName, variablesToSet.get(variableName), VariableSource.CORE);
+	public WoolNodePointer processReplyAndGetNodePointer(int replyId)
+			throws EvaluationException {
+		WoolReply selectedWoolReply = currentNode.getBody().getReplyById(
+				replyId);
+		Map<String,Object> variableMap = woolVariableStore.getModifiableMap(
+				VariableSource.CORE);
+		for (WoolCommand command : selectedWoolReply.getCommands()) {
+			if (command instanceof WoolSetCommand) {
+				WoolSetCommand setCommand = (WoolSetCommand)command;
+				setCommand.getExpression().evaluate(variableMap);
+			}
 		}
-		WoolNodePointer nodePointer = selectedWoolReply.getNodePointer();
-		return nodePointer;
+		return selectedWoolReply.getNodePointer();
 	}
 	
 	/**
@@ -152,9 +148,10 @@ public class ActiveWoolDialogue {
 	 * If there is a next node, then returns the executed version of that next {@link WoolNode} which results from a call to the {@link #executeWoolNode(WoolNode)} function. 
 	 * @param selectedWoolReply
 	 * @return the next {@link WoolNode} that follows on the selected reply.  
-	 * @throws WoolUnknownVariableException
+	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode progressDialogue(WoolNodePointerInternal nodePointer) throws WoolUnknownVariableException {
+	public WoolNode progressDialogue(WoolNodePointerInternal nodePointer)
+			throws EvaluationException {
 		WoolNode nextNode = null;
 		nextNode = dialogueDefinition.getNodeById(nodePointer.getNodeId());
 		if(nextNode != null) {
@@ -169,170 +166,53 @@ public class ActiveWoolDialogue {
 		}
 	}
 	
-	public void storeReplyInput(int replyId, String input) {
-		WoolReply inputReply = this.currentNode.getBody().getReplyById(replyId);
-		if(inputReply instanceof WoolReplyInput) {
-			String variableName = ((WoolReplyInput) inputReply).getInputVariable();
-			this.woolVariableStore.setValue(variableName, input, VariableSource.CORE);
-		}
-	}
-	
 	/**
 	 * The user's client returned the given {@code replyId} - what was the statement that was
 	 * uttered by the user?
 	 * @param replyId
 	 * @return 
-	 * @throws WoolUnknownVariableException 
 	 */
-	public String getUserStatementFromReplyId(int replyId) throws WoolUnknownVariableException {
-		WoolReply selectedWoolReply = currentNode.getBody().getReplyById(replyId);
-		if(selectedWoolReply instanceof WoolReplyBasic) {
-			return ((WoolReplyBasic)selectedWoolReply).getStatement();
-		} 
-		else if(selectedWoolReply instanceof WoolReplyAutoForward) {
+	public String getUserStatementFromReplyId(int replyId) {
+		WoolReply selectedReply = currentNode.getBody().getReplyById(replyId);
+		if (selectedReply.getStatement() == null)
 			return "AUTOFORWARD";
-		} 
-		else if(selectedWoolReply instanceof WoolReplyInput) {
-			return ((WoolReplyInput)selectedWoolReply).getBeforeInputStatement() + this.woolVariableStore.getValue(((WoolReplyInput)selectedWoolReply).getInputVariable())+ ((WoolReplyInput)selectedWoolReply).getAfterInputStatement(); 
+		StringBuilder result = new StringBuilder();
+		List<WoolNodeBody.Segment> segments = selectedReply.getStatement()
+				.getSegments();
+		for (WoolNodeBody.Segment segment : segments) {
+			if (segment instanceof WoolNodeBody.TextSegment) {
+				WoolNodeBody.TextSegment textSegment =
+						(WoolNodeBody.TextSegment)segment;
+				result.append(textSegment.getText().evaluate(null));
+			} else {
+				WoolNodeBody.CommandSegment cmdSegment =
+						(WoolNodeBody.CommandSegment)segment;
+				// a reply statement can only contain an "input" command
+				WoolInputCommand command =
+						(WoolInputCommand)cmdSegment.getCommand();
+				Value value = new Value(woolVariableStore.getValue(
+						command.getVariableName()));
+				result.append(value.toString());
+			}
 		}
-		else return null;
+		return result.toString();
 	}
 	
 	/**
 	 * Executes the WoolNode (i.e. evaluates the command statements and returns a flattened 1-level of statements node).
 	 * @param WoolNode a node to execute
 	 * @return WoolNode an executed WoolNode (i.e. all ifs and sets etc. are set and evaluated and removed accordingly) 
-	 * @throws WoolUnknownVariableException 
+	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	private WoolNode executeWoolNode(WoolNode woolNode) throws WoolUnknownVariableException {
+	private WoolNode executeWoolNode(WoolNode woolNode)
+			throws EvaluationException {
 		WoolNode processedNode = new WoolNode();
 		processedNode.setHeader(woolNode.getHeader());
-		
-		ArrayList<WoolNodeBody> processedStatements = new ArrayList<WoolNodeBody>();
-		ArrayList<WoolReply> processedReplies = new ArrayList<WoolReply>();
-		
-		for (WoolNodeBody statement : woolNode.getBody().getStatements()) {
-			if (statement instanceof WoolStatementBasic || statement instanceof WoolStatementBasicIdentified) {
-				processedStatements.add(this.replaceVariablesByValuesInStatement(statement));
-			} 
-			else if (statement instanceof WoolStatementCommandSet) {
-				WoolStatementCommandSet setStatement = (WoolStatementCommandSet)statement;
-				woolVariableStore.setValue(setStatement.getVariableName(), setStatement.getVariableValue(), VariableSource.CORE);
-			}
-			else if (statement instanceof WoolStatementCommandIf) {
-				WoolStatementCommandIf ifStatement = (WoolStatementCommandIf)statement;
-				WoolStatementCommandBody ifBodyEvaluated = evaluateWoolStatementCommandIf(ifStatement);
-				processedStatements.addAll(ifBodyEvaluated.getStatements());
-				processedReplies.addAll(ifBodyEvaluated.getReplies());
-			}
-			else if (statement instanceof WoolStatementMultimedia) {
-				processedStatements.add(statement);
-			}
-		}
-		
-		processedReplies.addAll(woolNode.getBody().getReplies());
-		ArrayList<WoolReply> processedAndUpdatedReplies = new ArrayList<WoolReply>();
-		for (WoolReply reply : processedReplies) {
-			if (reply instanceof WoolReplyBasic) {
-				reply = this.replaceVariablesByValuesInReply(reply); 
-			}
-			processedAndUpdatedReplies.add(reply);
-		}
-		
-		processedNode.setBody(new WoolNodeBody(processedStatements, processedAndUpdatedReplies));
+		WoolNodeBody processedBody = new WoolNodeBody();
+		Map<String,Object> variables = woolVariableStore.getModifiableMap(
+				VariableSource.CORE);
+		woolNode.getBody().execute(variables, processedBody);
+		processedNode.setBody(processedBody);
 		return processedNode;
-	}
-	
-	private WoolReply replaceVariablesByValuesInReply(WoolReply reply) throws WoolUnknownVariableException {
-		if (reply instanceof WoolReplyBasic) {
-			WoolReplyBasic woolReplyBasic = new WoolReplyBasic((WoolReplyBasic) reply);
-			if (woolReplyBasic.getVariablesInStatement().size() > 0) {
-				Set<String> variables = woolReplyBasic.getVariablesInStatement();
-				
-				String instantiatedReply = woolReplyBasic.getStatement();
-				for (String variable : variables) {
-					Object storedValue = this.woolVariableStore.getValue(variable);
-					instantiatedReply = instantiatedReply.replaceAll("\\$" + variable, storedValue.toString());
-				}
-				woolReplyBasic.setStatement(instantiatedReply);
-			}
-			return woolReplyBasic;
-		}
-		else return reply;
-	}
-	
-	private WoolNodeBody replaceVariablesByValuesInStatement(WoolNodeBody statement) throws WoolUnknownVariableException{
-		WoolNodeBody returnStatement = statement;
-		if (statement instanceof WoolStatementBasic) {
-			WoolStatementBasic woolStatementBasic = new WoolStatementBasic((WoolStatementBasic)statement);
-			if (woolStatementBasic.getVariables().size() > 0) {
-				Set<String> variables = woolStatementBasic.getVariables();
-				String instantiatedStatement = woolStatementBasic.getStatement();
-				for (String variable : variables) {
-					Object storedValue = this.woolVariableStore.getValue(variable);
-					instantiatedStatement = instantiatedStatement.replaceAll("\\$" + variable, storedValue.toString());
-				}
-				woolStatementBasic.setStatement(instantiatedStatement);
-			}
-			returnStatement = woolStatementBasic;
-		}
-		else if (statement instanceof WoolStatementBasicIdentified) {
-			WoolStatementBasicIdentified woolStatementBasicIdentified = new WoolStatementBasicIdentified((WoolStatementBasicIdentified)statement);
-			if (woolStatementBasicIdentified.getVariables().size() > 0) {
-				Set<String> variables = woolStatementBasicIdentified.getVariables();
-				String instantiatedStatement = woolStatementBasicIdentified.getStatement();
-				for (String variable : variables) {
-					Object storedValue = woolVariableStore.getValue(variable);
-					instantiatedStatement = instantiatedStatement.replaceAll("\\$" + variable, storedValue.toString());
-				}
-				woolStatementBasicIdentified.setStatement(instantiatedStatement);
-			}
-			returnStatement = woolStatementBasicIdentified;
-		} 
-		return returnStatement;
-	}
-	
-	/**
-	 * Evaluates the if statements in a WoolNode.
-	 * @param ifStatement a WoolStatementCommandIf
-	 * @return WoolStatementCommmandBody 
-	 * @throws WoolUnknownVariableException
-	 */
-	private WoolStatementCommandBody evaluateWoolStatementCommandIf(WoolStatementCommandIf ifStatement) throws WoolUnknownVariableException {
-		WoolStatementCommandBody ifBodyFlattened = new WoolStatementCommandBody();
-		
-		try {
-			if (ifStatement.getExpression().evaluate(((DefaultWoolVariableStore) woolVariableStore).getVariableMap()).asBoolean()) {
-				if(ifStatement.getIfBody().getStatements().size() > 0) {
-					for (WoolNodeBody statementInIf : ifStatement.getIfBody().getStatements()) {
-						if (statementInIf instanceof WoolStatementBasic || statementInIf instanceof WoolStatementBasicIdentified) {
-							ifBodyFlattened.addStatement(this.replaceVariablesByValuesInStatement(statementInIf));
-						}
-						else if (statementInIf instanceof WoolStatementCommandSet) {
-							WoolStatementCommandSet setStatement = (WoolStatementCommandSet)statementInIf;
-							woolVariableStore.setValue(setStatement.getVariableName(), setStatement.getVariableValue(), VariableSource.CORE);
-						}
-						else if (statementInIf instanceof WoolStatementCommandIf) {
-							WoolStatementCommandBody ifBodyExtracted = this.evaluateWoolStatementCommandIf((WoolStatementCommandIf) statementInIf);;
-							for (WoolNodeBody statement : ifBodyExtracted.getStatements()) {
-								ifBodyFlattened.addStatement(statement);
-							}
-							for (WoolReply reply : ifBodyExtracted.getReplies()) {
-								ifBodyFlattened.addReply(reply);
-							}
-						}
-					}
-				}
-				if (ifStatement.getIfBody().getReplies().size() > 0) {
-					for (WoolReply reply : ifStatement.getIfBody().getReplies()) {
-						ifBodyFlattened.addReply(reply);
-					}
-				}
-			}
-		} catch (EvaluationException e) {
-			throw new RuntimeException(e);
-		}
-		return ifBodyFlattened;
-	}
-	
+	}	
 }

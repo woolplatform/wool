@@ -1,8 +1,10 @@
 package nl.rrd.wool.model.command;
 
+import java.util.Map;
 import java.util.Set;
 
 import nl.rrd.wool.exception.LineNumberParseException;
+import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolReply;
@@ -36,6 +38,12 @@ public class WoolSetCommand extends WoolExpressionCommand {
 	@Override
 	public void getReadVariableNames(Set<String> varNames) {
 		varNames.addAll(expression.getValueOperand().getVariableNames());
+	}
+
+	@Override
+	public void executeBodyCommand(Map<String, Object> variables,
+			WoolNodeBody processedBody) throws EvaluationException {
+		expression.evaluate(variables);
 	}
 
 	@Override
