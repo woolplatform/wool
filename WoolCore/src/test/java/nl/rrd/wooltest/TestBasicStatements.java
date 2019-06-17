@@ -10,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import nl.rrd.wool.exception.ParseException;
-import nl.rrd.wool.exception.WoolInvalidNodeLinkException;
 import nl.rrd.wool.model.WoolDialogue;
 import nl.rrd.wool.parser.WoolParser;
 
@@ -27,7 +26,7 @@ public class TestBasicStatements {
 	}
 	
 	@Test
-	public void testDialogueCreation() throws WoolInvalidNodeLinkException, ParseException, IOException {
+	public void testDialogueCreation() throws ParseException, IOException {
 		WoolParser woolParser = new WoolParser(this.file);
 		this.woolDialogue = woolParser.readDialogue();
 		assertNotNull(woolDialogue);

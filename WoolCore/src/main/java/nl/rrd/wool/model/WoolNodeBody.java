@@ -10,6 +10,7 @@ import nl.rrd.wool.model.command.WoolCommand;
 import nl.rrd.wool.model.command.WoolIfCommand;
 import nl.rrd.wool.model.command.WoolInputCommand;
 import nl.rrd.wool.model.command.WoolSetCommand;
+import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 
 /**
  * A node body can occur in three different contexts inside a {@link WoolNode
@@ -118,6 +119,14 @@ public class WoolNodeBody {
 		for (WoolReply reply : replies) {
 			reply.getReadVariableNames(varNames);
 		}
+	}
+	
+	public List<WoolNodePointer> getNodePointers() {
+		List<WoolNodePointer> result = new ArrayList<>();
+		for (WoolReply reply : replies) {
+			result.add(reply.getNodePointer());
+		}
+		return result;
 	}
 
 	public void trimWhitespace() {

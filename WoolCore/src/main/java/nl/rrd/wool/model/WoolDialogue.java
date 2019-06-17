@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import nl.rrd.wool.model.nodepointer.WoolNodePointer;
+import nl.rrd.wool.model.nodepointer.WoolNodePointerExternal;
+
 /**
  * Object representation of a Wool Dialogue definition. A Wool Dialogue has a name, an
  * (unordered) list of {@link WoolNode}s and a specific start node.
@@ -71,7 +74,13 @@ public class WoolDialogue {
 		nodes.put(node.getTitle().toLowerCase(), node);
 		speakers.add(node.getHeader().getSpeaker());
 		node.getBody().getReadVariableNames(variablesNeeded);
-		// TODO get dialogues referenced
+		for (WoolNodePointer nodePointer : node.getBody().getNodePointers()) {
+			if (!(nodePointer instanceof WoolNodePointerExternal))
+				continue;
+			WoolNodePointerExternal extPointer =
+					(WoolNodePointerExternal)nodePointer;
+			dialoguesReferenced.add(extPointer.getDialogueId());
+		}
 	}
 	
 	public Set<String> getSpeakers() {
