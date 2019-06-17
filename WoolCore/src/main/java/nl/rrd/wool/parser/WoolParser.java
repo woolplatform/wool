@@ -27,6 +27,7 @@ import nl.rrd.wool.parser.WoolNodeState.NodePointerToken;
 public class WoolParser {
 	public static final String NODE_NAME_REGEX = "[A-Za-z0-9_-]+";
 	
+	private String dialogueName;
 	private LineColumnNumberReader reader;
 	
 	private WoolDialogue dialogue = null;
@@ -37,27 +38,36 @@ public class WoolParser {
 	}
 	
 	public WoolParser(File file) throws FileNotFoundException {
-		this(new FileInputStream(file));
+		init(file);
 	}
 	
-	public WoolParser(InputStream input) {
-		init(input);
+	public WoolParser(String dialogueName, InputStream input) {
+		init(dialogueName, input);
 	}
 	
-	public WoolParser(Reader reader) {
-		init(new LineColumnNumberReader(reader));
+	public WoolParser(String dialogueName, Reader reader) {
+		init(dialogueName, new LineColumnNumberReader(reader));
 	}
 	
-	private void init(InputStream input) {
+	private void init(File file) throws FileNotFoundException {
+		String name = file.getName();
+		int extSep = name.lastIndexOf('.');
+		if (extSep != -1)
+			name = name.substring(0, extSep);
+		init(name, new FileInputStream(file));
+	}
+	
+	private void init(String dialogueName, InputStream input) {
 		try {
-			init(new InputStreamReader(input, "UTF-8"));
+			init(dialogueName, new InputStreamReader(input, "UTF-8"));
 		} catch (UnsupportedEncodingException ex) {
 			throw new RuntimeException("UTF-8 not supported: " +
 					ex.getMessage(), ex);
 		}
 	}
 	
-	private void init(Reader reader) {
+	private void init(String dialogueName, Reader reader) {
+		this.dialogueName = dialogueName;
 		if (reader instanceof LineColumnNumberReader) {
 			this.reader = (LineColumnNumberReader)reader;
 		} else if (reader instanceof BufferedReader) {
@@ -74,7 +84,11 @@ public class WoolParser {
 	
 	public WoolDialogue readDialogue() throws LineNumberParseException,
 			IOException {
-		WoolDialogue result = new WoolDialogue();
+		if (!dialogueName.matches("[A-Za-z0-9_-]+")) {
+			throw new LineNumberParseException("Invalid dialogue name: " +
+					dialogueName, 1, 1);
+		}
+		WoolDialogue result = new WoolDialogue(dialogueName);
 		dialogue = result;
 		nodePointerTokens = new ArrayList<>();
 		WoolNode node;
