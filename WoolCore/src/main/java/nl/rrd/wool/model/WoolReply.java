@@ -2,6 +2,7 @@ package nl.rrd.wool.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import nl.rrd.wool.model.command.WoolActionCommand;
 import nl.rrd.wool.model.command.WoolCommand;
@@ -29,6 +30,7 @@ import nl.rrd.wool.model.nodepointer.WoolNodePointer;
  * @author Dennis Hofs (RRD)
  */
 public class WoolReply {
+	private int replyId;
 	private WoolNodeBody statement = null;
 	private WoolNodePointer nodePointer;
 	private List<WoolCommand> commands = new ArrayList<>();
@@ -39,7 +41,9 @@ public class WoolReply {
 	 * @param statement the statement or null (auto-forward reply)
 	 * @param nodePointer the next node when the reply is chosen
 	 */
-	public WoolReply(WoolNodeBody statement, WoolNodePointer nodePointer) {
+	public WoolReply(int replyId, WoolNodeBody statement,
+			WoolNodePointer nodePointer) {
+		this.replyId = replyId;
 		this.statement = statement;
 		this.nodePointer = nodePointer;
 	}
@@ -49,8 +53,27 @@ public class WoolReply {
 	 * 
 	 * @param nodePointer the next node when the reply is chosen
 	 */
-	public WoolReply(WoolNodePointer nodePointer) {
+	public WoolReply(int replyId, WoolNodePointer nodePointer) {
+		this.replyId = replyId;
 		this.nodePointer = nodePointer;
+	}
+
+	/**
+	 * Returns the reply ID. The ID is unique within a node.
+	 * 
+	 * @return the reply ID
+	 */
+	public int getReplyId() {
+		return replyId;
+	}
+
+	/**
+	 * Sets the reply ID. The ID is unique within a node.
+	 * 
+	 * @param replyId the reply ID
+	 */
+	public void setReplyId(int replyId) {
+		this.replyId = replyId;
 	}
 
 	/**
@@ -118,6 +141,20 @@ public class WoolReply {
 	 */
 	public void addCommand(WoolCommand command) {
 		commands.add(command);
+	}
+	
+	/**
+	 * Retrieves all variable names that are read in this reply and adds them to
+	 * the specified set.
+	 * 
+	 * @param varNames the set to which the variable names are added
+	 */
+	public void getReadVariableNames(Set<String> varNames) {
+		if (statement != null)
+			statement.getReadVariableNames(varNames);
+		for (WoolCommand command : commands) {
+			command.getReadVariableNames(varNames);
+		}
 	}
 
 	@Override

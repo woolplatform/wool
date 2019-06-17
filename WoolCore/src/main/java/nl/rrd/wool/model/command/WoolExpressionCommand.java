@@ -12,7 +12,7 @@ import nl.rrd.wool.io.LineColumnNumberReader;
 import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.utils.CurrentIterator;
 
-public class WoolExpressionCommand extends WoolCommand {
+public abstract class WoolExpressionCommand extends WoolCommand {
 
 	/**
 	 * Reads the content of a command as a code string. When this method

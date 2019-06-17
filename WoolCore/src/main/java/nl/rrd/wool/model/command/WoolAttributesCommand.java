@@ -9,7 +9,7 @@ import nl.rrd.wool.model.WoolVariableString;
 import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.utils.CurrentIterator;
 
-public class WoolAttributesCommand extends WoolCommand {
+public abstract class WoolAttributesCommand extends WoolCommand {
 
 	/**
 	 * Parses a command that is formatted like:<br />

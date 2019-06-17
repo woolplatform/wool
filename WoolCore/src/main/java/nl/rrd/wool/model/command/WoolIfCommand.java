@@ -3,6 +3,7 @@ package nl.rrd.wool.model.command;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.expressions.Expression;
@@ -10,6 +11,7 @@ import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.parser.WoolBodyParser;
 import nl.rrd.wool.parser.WoolBodyToken;
+import nl.rrd.wool.parser.WoolNodeState;
 import nl.rrd.wool.utils.CurrentIterator;
 
 /**
@@ -76,6 +78,16 @@ public class WoolIfCommand extends WoolExpressionCommand {
 	}
 	
 	@Override
+	public void getReadVariableNames(Set<String> varNames) {
+		for (Clause clause : ifClauses) {
+			varNames.addAll(clause.expression.getVariableNames());
+			clause.statement.getReadVariableNames(varNames);
+		}
+		if (elseClause != null)
+			elseClause.getReadVariableNames(varNames);
+	}
+
+	@Override
 	public String toString() {
 		String newline = System.getProperty("line.separator");
 		Clause clause = ifClauses.get(0);
@@ -96,7 +108,7 @@ public class WoolIfCommand extends WoolExpressionCommand {
 	}
 
 	public static WoolIfCommand parse(WoolBodyToken cmdStartToken,
-			CurrentIterator<WoolBodyToken> tokens)
+			CurrentIterator<WoolBodyToken> tokens, WoolNodeState nodeState)
 			throws LineNumberParseException {
 		WoolIfCommand command = new WoolIfCommand();
 		ReadContentResult content = readCommandContent(cmdStartToken, tokens);
@@ -104,7 +116,7 @@ public class WoolIfCommand extends WoolExpressionCommand {
 				cmdStartToken, content, "if");
 		checkNoAssignment(cmdStartToken, parsedIf.name, parsedIf.expression);
 		while (true) {
-			WoolBodyParser bodyParser = new WoolBodyParser();
+			WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
 			WoolBodyParser.ParseUntilIfClauseResult bodyParse =
 					bodyParser.parseUntilIfClause(tokens, Arrays.asList(
 					"action", "if", "set"));

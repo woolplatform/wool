@@ -9,6 +9,12 @@ import nl.rrd.wool.model.command.WoolCommand;
 import nl.rrd.wool.utils.CurrentIterator;
 
 public class WoolBodyParser {
+	private WoolNodeState nodeState;
+	
+	public WoolBodyParser(WoolNodeState nodeState) {
+		this.nodeState = nodeState;
+	}
+	
 	public WoolNodeBody parse(List<WoolBodyToken> tokens,
 			List<String> validCommands) throws LineNumberParseException {
 		CurrentIterator<WoolBodyToken> it = new CurrentIterator<>(
@@ -50,7 +56,7 @@ public class WoolBodyParser {
 							token.getColNum());
 				}
 				WoolCommandParser cmdParser = new WoolCommandParser(
-						validCommands);
+						validCommands, nodeState);
 				String name = cmdParser.readCommandName(tokens);
 				if (name.equals("elseif") || name.equals("else") ||
 						name.equals("endif")) {
@@ -62,7 +68,7 @@ public class WoolBodyParser {
 				}
 				break;
 			case REPLY_START:
-				WoolReplyParser replyParser = new WoolReplyParser();
+				WoolReplyParser replyParser = new WoolReplyParser(nodeState);
 				result.body.addReply(replyParser.parse(tokens));
 				break;
 			default:

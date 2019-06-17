@@ -1,7 +1,9 @@
 package nl.rrd.wool.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import nl.rrd.wool.model.command.WoolActionCommand;
 import nl.rrd.wool.model.command.WoolCommand;
@@ -27,7 +29,8 @@ import nl.rrd.wool.model.command.WoolSetCommand;
  * a {@link WoolReply WoolReply}.</li>
  * </ul></p>
  * 
- * <p>The body contains a list of segments where each segment is one of:</p>
+ * <p>The body contains a statement as a list of segments where each segment is
+ * one of:</p>
  * 
  * <p><ul>
  * <li>{@link WoolNodeBody.TextSegment TextSegment}: a {@link WoolVariableString
@@ -66,8 +69,13 @@ public class WoolNodeBody {
 	private List<Segment> segments = new ArrayList<>();
 	private List<WoolReply> replies = new ArrayList<>();
 	
+	/**
+	 * Returns the segments as an unmodifiable list.
+	 * 
+	 * @return the segments as an unmodifiable list
+	 */
 	public List<Segment> getSegments() {
-		return segments;
+		return Collections.unmodifiableList(segments);
 	}
 
 	public void addSegment(Segment segment) {
@@ -95,6 +103,21 @@ public class WoolNodeBody {
 
 	public void addReply(WoolReply reply) {
 		replies.add(reply);
+	}
+	
+	/**
+	 * Retrieves all variable names that are read in this body and adds them to
+	 * the specified set.
+	 * 
+	 * @param varNames the set to which the variable names are added
+	 */
+	public void getReadVariableNames(Set<String> varNames) {
+		for (Segment segment : segments) {
+			segment.getReadVariableNames(varNames);
+		}
+		for (WoolReply reply : replies) {
+			reply.getReadVariableNames(varNames);
+		}
 	}
 
 	public void trimWhitespace() {
@@ -145,6 +168,14 @@ public class WoolNodeBody {
 	}
 
 	public static abstract class Segment {
+
+		/**
+		 * Retrieves all variable names that are read in this segment and adds
+		 * them to the specified set.
+		 * 
+		 * @param varNames the set to which the variable names are added
+		 */
+		public abstract void getReadVariableNames(Set<String> varNames);
 	}
 	
 	public static class TextSegment extends Segment {
@@ -163,6 +194,11 @@ public class WoolNodeBody {
 		}
 		
 		@Override
+		public void getReadVariableNames(Set<String> varNames) {
+			text.getReadVariableNames(varNames);
+		}
+
+		@Override
 		public String toString() {
 			return text.toString();
 		}
@@ -177,6 +213,11 @@ public class WoolNodeBody {
 
 		public WoolCommand getCommand() {
 			return command;
+		}
+		
+		@Override
+		public void getReadVariableNames(Set<String> varNames) {
+			command.getReadVariableNames(varNames);
 		}
 		
 		@Override

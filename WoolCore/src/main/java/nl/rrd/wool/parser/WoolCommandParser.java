@@ -12,9 +12,12 @@ import nl.rrd.wool.utils.CurrentIterator;
 
 public class WoolCommandParser {
 	private List<String> validCommands;
+	private WoolNodeState nodeState;
 	
-	public WoolCommandParser(List<String> validCommands) {
+	public WoolCommandParser(List<String> validCommands,
+			WoolNodeState nodeState) {
 		this.validCommands = validCommands;
+		this.nodeState = nodeState;
 	}
 
 	/**
@@ -59,13 +62,13 @@ public class WoolCommandParser {
 		}
 		switch (name) {
 		case "action":
-			return WoolActionCommand.parse(startToken, tokens);
+			return WoolActionCommand.parse(startToken, tokens, nodeState);
 		case "if":
-			return WoolIfCommand.parse(startToken, tokens);
+			return WoolIfCommand.parse(startToken, tokens, nodeState);
 		case "input":
-			return WoolInputCommand.parse(startToken, tokens);
+			return WoolInputCommand.parse(startToken, tokens, nodeState);
 		case "set":
-			return WoolSetCommand.parse(startToken, tokens);
+			return WoolSetCommand.parse(startToken, tokens, nodeState);
 		default:
 			throw new LineNumberParseException("Unknown command: " + name,
 					token.getLineNum(), token.getColNum());

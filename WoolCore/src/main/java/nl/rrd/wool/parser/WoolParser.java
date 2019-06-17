@@ -21,11 +21,16 @@ import nl.rrd.wool.model.WoolDialogue;
 import nl.rrd.wool.model.WoolNode;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolNodeHeader;
+import nl.rrd.wool.model.nodepointer.WoolNodePointerInternal;
+import nl.rrd.wool.parser.WoolNodeState.NodePointerToken;
 
 public class WoolParser {
 	public static final String NODE_NAME_REGEX = "[A-Za-z0-9_-]+";
 	
 	private LineColumnNumberReader reader;
+	
+	private WoolDialogue dialogue = null;
+	private List<NodePointerToken> nodePointerTokens = null;
 	
 	public WoolParser(String filename) throws FileNotFoundException {
 		this(new File(filename));
@@ -69,12 +74,35 @@ public class WoolParser {
 	
 	public WoolDialogue readDialogue() throws LineNumberParseException,
 			IOException {
-		WoolDialogue dialogue = new WoolDialogue();
+		WoolDialogue result = new WoolDialogue();
+		dialogue = result;
+		nodePointerTokens = new ArrayList<>();
 		WoolNode node;
 		while ((node = readNode()) != null) {
-			dialogue.getNodes().add(node);
+			result.addNode(node);
 		}
-		return dialogue;
+		if (!dialogue.nodeExists("Start")) {
+			throw new LineNumberParseException(
+					"Node with title \"Start\" not found",
+					reader.getLineNum(), reader.getColNum());
+		}
+		for (WoolNodeState.NodePointerToken pointerToken : nodePointerTokens) {
+			if (!(pointerToken.getPointer() instanceof WoolNodePointerInternal))
+				continue;
+			WoolNodePointerInternal pointer =
+					(WoolNodePointerInternal)pointerToken.getPointer();
+			if (pointer.getNodeId().toLowerCase().equals("end") ||
+					dialogue.nodeExists(pointer.getNodeId())) {
+				continue;
+			}
+			WoolBodyToken token = pointerToken.getToken();
+			throw new LineNumberParseException(
+					"Found reply with pointer to non-existing node: " +
+					pointer.getNodeId(), token.getLineNum(), token.getColNum());
+		}
+		dialogue = null;
+		nodePointerTokens = null;
+		return result;
 	}
 	
 	private WoolNode readNode() throws LineNumberParseException, IOException {
@@ -114,9 +142,11 @@ public class WoolParser {
 				line = readLine();
 			}
 		}
-		WoolBodyParser bodyParser = new WoolBodyParser();
+		WoolNodeState nodeState = new WoolNodeState();
+		WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
 		WoolNodeBody body = bodyParser.parse(bodyTokens,
 				Arrays.asList("action", "if", "set"));
+		nodePointerTokens.addAll(nodeState.getNodePointerTokens());
 		return new WoolNode(header, body);
 	}
 	
@@ -154,6 +184,11 @@ public class WoolParser {
 			if (!value.matches(NODE_NAME_REGEX)) {
 				throw new LineNumberParseException(
 						"Invalid node title: " + value, lineNum, valueIndex);
+			}
+			if (dialogue.nodeExists(value)) {
+				throw new LineNumberParseException(
+						"Found duplicate node title: " + value, lineNum,
+						valueIndex);
 			}
 		} else if (key.equals("speaker")) {
 			if (value.length() == 0) {

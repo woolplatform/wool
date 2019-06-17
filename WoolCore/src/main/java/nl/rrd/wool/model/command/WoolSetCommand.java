@@ -1,11 +1,13 @@
 package nl.rrd.wool.model.command;
 
+import java.util.Set;
+
 import nl.rrd.wool.exception.LineNumberParseException;
-import nl.rrd.wool.expressions.Expression;
 import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolReply;
 import nl.rrd.wool.parser.WoolBodyToken;
+import nl.rrd.wool.parser.WoolNodeState;
 import nl.rrd.wool.utils.CurrentIterator;
 
 /**
@@ -17,27 +19,32 @@ import nl.rrd.wool.utils.CurrentIterator;
  * @author Dennis Hofs (RRD)
  */
 public class WoolSetCommand extends WoolExpressionCommand {
-	private Expression expression;
+	private AssignExpression expression;
 	
-	public WoolSetCommand(Expression expression) {
+	public WoolSetCommand(AssignExpression expression) {
 		this.expression = expression;
 	}
 
-	public Expression getExpression() {
+	public AssignExpression getExpression() {
 		return expression;
 	}
 
-	public void setExpression(Expression expression) {
+	public void setExpression(AssignExpression expression) {
 		this.expression = expression;
 	}
 	
+	@Override
+	public void getReadVariableNames(Set<String> varNames) {
+		varNames.addAll(expression.getValueOperand().getVariableNames());
+	}
+
 	@Override
 	public String toString() {
 		return "<<set " + expression + ">>";
 	}
 
 	public static WoolSetCommand parse(WoolBodyToken cmdStartToken,
-			CurrentIterator<WoolBodyToken> tokens)
+			CurrentIterator<WoolBodyToken> tokens, WoolNodeState nodeState)
 			throws LineNumberParseException {
 		ReadContentResult content = readCommandContent(cmdStartToken, tokens);
 		ParseContentResult parsed = parseCommandContentExpression(cmdStartToken,
@@ -47,6 +54,6 @@ public class WoolSetCommand extends WoolExpressionCommand {
 					"Expression in \"set\" command is not an assignment",
 					cmdStartToken.getLineNum(), cmdStartToken.getColNum());
 		}
-		return new WoolSetCommand(parsed.expression);
+		return new WoolSetCommand((AssignExpression)parsed.expression);
 	}
 }

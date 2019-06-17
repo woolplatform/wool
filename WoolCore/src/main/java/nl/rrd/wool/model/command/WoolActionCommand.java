@@ -4,12 +4,14 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolReply;
 import nl.rrd.wool.model.WoolVariableString;
 import nl.rrd.wool.parser.WoolBodyToken;
+import nl.rrd.wool.parser.WoolNodeState;
 import nl.rrd.wool.utils.CurrentIterator;
 
 /**
@@ -67,6 +69,14 @@ public class WoolActionCommand extends WoolAttributesCommand {
 	}
 	
 	@Override
+	public void getReadVariableNames(Set<String> varNames) {
+		value.getReadVariableNames(varNames);
+		for (WoolVariableString paramVals : parameters.values()) {
+			paramVals.getReadVariableNames(varNames);
+		}
+	}
+
+	@Override
 	public String toString() {
 		char[] escapes = new char[] { '"' };
 		StringBuilder result = new StringBuilder(
@@ -81,7 +91,7 @@ public class WoolActionCommand extends WoolAttributesCommand {
 	}
 	
 	public static WoolActionCommand parse(WoolBodyToken cmdStartToken,
-			CurrentIterator<WoolBodyToken> tokens)
+			CurrentIterator<WoolBodyToken> tokens, WoolNodeState nodeState)
 			throws LineNumberParseException {
 		Map<String,WoolBodyToken> attrs = parseAttributesCommand(cmdStartToken,
 				tokens);

@@ -13,16 +13,23 @@ import nl.rrd.wool.model.nodepointer.WoolNodePointerInternal;
 import nl.rrd.wool.utils.CurrentIterator;
 
 public class WoolReplyParser {
+	private WoolNodeState nodeState;
+	
 	private ReplySection statementSection;
 	private ReplySection nodePointerSection;
 	private ReplySection commandSection;
+	
+	public WoolReplyParser(WoolNodeState nodeState) {
+		this.nodeState = nodeState;
+	}
 	
 	public WoolReply parse(CurrentIterator<WoolBodyToken> tokens)
 			throws LineNumberParseException {
 		readSections(tokens);
 		WoolNodeBody statement = parseStatement();
 		WoolNodePointer nodePointer = parseNodePointer();
-		WoolReply reply = new WoolReply(statement, nodePointer);
+		WoolReply reply = new WoolReply(nodeState.createNextReplyId(),
+				statement, nodePointer);
 		if (commandSection != null)
 			parseCommands(reply);
 		return reply;
@@ -84,7 +91,7 @@ public class WoolReplyParser {
 	private WoolNodeBody parseStatement() throws LineNumberParseException {
 		if (statementSection == null)
 			return null;
-		WoolBodyParser bodyParser = new WoolBodyParser();
+		WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
 		WoolNodeBody result = bodyParser.parse(statementSection.tokens,
 				Arrays.asList("input"));
 		if (result.getSegments().isEmpty())
@@ -117,13 +124,16 @@ public class WoolReplyParser {
 					nodePointerToken.getColNum());
 		}
 		int sep = nodePointerStr.indexOf('.');
+		WoolNodePointer result;
 		if (sep == -1) {
-			return new WoolNodePointerInternal(nodePointerStr);
+			result = new WoolNodePointerInternal(nodePointerStr);
 		} else {
-			return new WoolNodePointerExternal(
+			result = new WoolNodePointerExternal(
 					nodePointerStr.substring(0, sep),
 					nodePointerStr.substring(sep + 1));
 		}
+		nodeState.addNodePointerToken(result, nodePointerToken);
+		return result;
 	}
 	
 	private void parseCommands(WoolReply reply)
@@ -140,7 +150,7 @@ public class WoolReplyParser {
 						token.getLineNum(), token.getColNum());
 			}
 			WoolCommandParser cmdParser = new WoolCommandParser(
-					Arrays.asList("action", "set"));
+					Arrays.asList("action", "set"), nodeState);
 			reply.addCommand(cmdParser.parseFromStart(it));
 			WoolBodyToken.skipWhitespace(it);
 		}

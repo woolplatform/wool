@@ -1,7 +1,9 @@
 package nl.rrd.wool.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class represents a text with possible variables. It is modelled as a
@@ -15,8 +17,13 @@ import java.util.List;
 public class WoolVariableString {
 	private List<Segment> segments = new ArrayList<>();
 	
+	/**
+	 * Returns the segments as an unmodifiable list.
+	 * 
+	 * @return the segments as an unmodifiable list
+	 */
 	public List<Segment> getSegments() {
-		return segments;
+		return Collections.unmodifiableList(segments);
 	}
 	
 	public void addSegment(Segment segment) {
@@ -39,6 +46,21 @@ public class WoolVariableString {
 	public void addSegments(Iterable<Segment> segments) {
 		for (Segment segment : segments) {
 			addSegment(segment);
+		}
+	}
+	
+	/**
+	 * Retrieves all variable names that are read in this variable string and
+	 * adds them to the specified set.
+	 * 
+	 * @param varNames the set to which the variable names are added
+	 */
+	public void getReadVariableNames(Set<String> varNames) {
+		for (Segment segment : segments) {
+			if (!(segment instanceof VariableSegment))
+				continue;
+			VariableSegment varSegment = (VariableSegment)segment;
+			varNames.add(varSegment.variableName);
 		}
 	}
 	
