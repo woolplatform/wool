@@ -4,6 +4,7 @@ import java.util.List;
 
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.model.WoolNodeBody;
+import nl.rrd.wool.model.WoolReply;
 import nl.rrd.wool.model.WoolVariableString;
 import nl.rrd.wool.model.command.WoolCommand;
 import nl.rrd.wool.utils.CurrentIterator;
@@ -69,8 +70,14 @@ public class WoolBodyParser {
 				break;
 			case REPLY_START:
 				WoolReplyParser replyParser = new WoolReplyParser(nodeState);
-				result.body.addReply(replyParser.parse(tokens));
-				// TODO check only one autoforward reply allowed
+				WoolReply reply = replyParser.parse(tokens);
+				if (reply.getStatement() == null &&
+						hasAutoForwardReply(result.body)) {
+					throw new LineNumberParseException(
+							"Found more than one autoforward reply",
+							token.getLineNum(), token.getColNum());
+				}
+				result.body.addReply(reply);
 				break;
 			default:
 				// If we get here, there must be a bug
@@ -80,6 +87,14 @@ public class WoolBodyParser {
 		}
 		result.body.trimWhitespace();
 		return result;
+	}
+	
+	private boolean hasAutoForwardReply(WoolNodeBody body) {
+		for (WoolReply reply : body.getReplies()) {
+			if (reply.getStatement() == null)
+				return true;
+		}
+		return false;
 	}
 	
 	public class ParseUntilIfClauseResult {

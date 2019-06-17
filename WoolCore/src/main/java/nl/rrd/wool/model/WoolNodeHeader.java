@@ -1,7 +1,6 @@
 package nl.rrd.wool.model;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class WoolNodeHeader {
@@ -61,17 +60,15 @@ public class WoolNodeHeader {
 	}
 	
 	public String toString() {
-		String result = "";
-		result+="title: "+this.getTitle()+"\n";
-		result+="speaker: "+this.getSpeaker()+"\n";
-		
-		Iterator<String> iterator = optionalTags.keySet().iterator();
-		while(iterator.hasNext()) {
-			String key = iterator.next();
+		String newline = System.getProperty("line.separator");
+		StringBuilder result = new StringBuilder();
+		result.append("title: " + title);
+		result.append(newline + "speaker: " + speaker);
+		for (String key : optionalTags.keySet()) {
 			String value = optionalTags.get(key);
-			result+=key+": "+value+"\n";
+			result.append(newline + key + ": " + value);
 		}
-		return result;
+		return result.toString();
 	}
 
 }

@@ -51,4 +51,9 @@ public class WoolNode {
 		else return null;
 	}
 	
+	@Override
+	public String toString() {
+		String newline = System.getProperty("line.separator");
+		return header + newline + "---" + newline + body;
+	}
 }

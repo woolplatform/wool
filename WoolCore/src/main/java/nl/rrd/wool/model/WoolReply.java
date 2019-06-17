@@ -172,7 +172,7 @@ public class WoolReply {
 	 */
 	public WoolReply execute(Map<String,Object> variables)
 			throws EvaluationException {
-		if (statement != null)
+		if (statement == null)
 			return this;
 		WoolNodeBody processedStatement = new WoolNodeBody();
 		statement.execute(variables, processedStatement);
