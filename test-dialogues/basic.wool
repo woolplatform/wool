@@ -1,0 +1,72 @@
+title: Start
+tags: 
+speaker: Bob
+colorID: 0
+position: 921,182
+---
+Hi, my name is Bob, and this is the Default WOOL Test dialogue.
+
+[[Nice to meet you Bob.|Continue]]
+[[Goodbye.|End]]
+===
+title: End
+tags: 
+speaker: Bob
+colorID: 5
+position: 915,586
+---
+I'm sad to say that this is the end of our dialogue.
+===
+title: Continue
+tags: 
+speaker: Bob
+colorID: 0
+position: 1223,180
+---
+This dialogue is very basic, and shows only dialogue flow and ending.
+
+[[DialogueMenu]]
+===
+title: DialogueReplies
+tags: 
+speaker: Bob
+colorID: 0
+position: 1847,177
+---
+Any node can have zero or more reply options. When there are none, the dialogue is over.
+
+[[Tell me more.|DialogueMenu]]
+[[Dialogue over?|DialogueEnding]]
+[[Goodbye.|End]]
+===
+title: DialogueMenu
+tags: 
+speaker: Bob
+colorID: 0
+position: 1518,182
+---
+We deal with statements, reply options, and ending dialogues.
+
+[[Tell me about statements.|DialogueStatements]]
+[[Reply Options?|DialogueReplies]]
+[[How do you end a dialogue?|DialogueEnding]]
+===
+title: DialogueEnding
+tags: 
+speaker: Bob
+colorID: 0
+position: 1519,523
+---
+When a statement has no reply options left, the dialogue will end.
+
+[[How does that work?|DialogueEnding2]]
+[[Goodbye.|End]]
+===
+title: DialogueEnding2
+tags: 
+speaker: Bob
+colorID: 5
+position: 1520,838
+---
+Well, like this.
+===
