@@ -88,7 +88,23 @@ var Utils =
 		return new Date().getTime();
 	},
 
+	// throttle is buggy, it sometimes forgets to call functions. So we have
+	// this replacement which simply calls the callback after the given
+	// timeout.
 	throttle: function(func, wait, options) {
+		var context = this;
+		var args = arguments;
+		var timeout=null;
+		var later = function() {
+			result = func.apply(context, args);
+		}
+		return function() {
+			timeout = setTimeout(later, wait);
+			return null;
+		}
+	},
+
+	throttle_old_buggy: function(func, wait, options) {
 		var self = this;
 		var context, args, result;
 		var timeout = null;

@@ -1,4 +1,4 @@
-var FILETYPE = { JSON: "json", XML: "xml", TWEE: "twee", TWEE2: "tw2", UNKNOWN: "none", YARNTEXT: "yarn.txt" };
+var FILETYPE = { JSON: "json", XML: "xml", TWEE: "twee", TWEE2: "tw2", UNKNOWN: "none", YARNTEXT: "yarn.txt", WOOL: "wool" };
 
 var data =
 {
@@ -6,8 +6,14 @@ var data =
 	editingType: ko.observable(""),
 	editingFolder: ko.observable(null),
 
-	readFile: function(e, filename, clearNodes)
-	{
+	filename: "file",
+
+	readFile: function(e, filename, clearNodes, element) {
+		console.log(filename);
+		var filebase = filename.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
+		if (filebase) {
+			data.filename = filebase[1];
+		}
 		if (app.fs != undefined)
 		{
 			if (app.fs.readFile(filename, "utf-8", function(error, contents)
@@ -32,7 +38,17 @@ var data =
 		}
 		else
 		{
-			alert("Unable to load file from your browser");
+			var reader = new FileReader();
+			reader.onerror = function(e) {
+				alert("Error reading file");
+			}
+			reader.onload = function(e) {
+				var type = data.getFileType(filename);
+				data.editingPath(filename);
+				data.editingType(type);
+				data.loadData(e.target.result, type, clearNodes);
+			}
+			reader.readAsText(element[0].files[0]);
 		}
 		/*
 		else if (window.File && window.FileReader && window.FileList && window.Blob && e.target && e.target.files && e.target.files.length > 0)
@@ -56,9 +72,9 @@ var data =
 		*/
 	},
 
-	openFile: function(e, filename)
+	openFile: function(e, filename, element)
 	{
-		data.readFile(e, filename, true);
+		data.readFile(e, filename, true, element);
 
 		app.refreshWindowTitle(filename);
 	},
@@ -69,9 +85,9 @@ var data =
 		alert("openFolder not yet implemented e: " + e + " foldername: " + foldername);
 	},
 
-	appendFile: function(e, filename)
+	appendFile: function(e, filename, element)
 	{
-		data.readFile(e, filename, false);
+		data.readFile(e, filename, false, element);
 	},
 
 	getFileType: function(filename)
@@ -80,6 +96,8 @@ var data =
 
 		if (filename.toLowerCase().indexOf(".json") > -1)
 			return FILETYPE.JSON;
+		else if (filename.toLowerCase().indexOf(".wool") > -1)
+			return FILETYPE.WOOL;
 		else if (filename.toLowerCase().indexOf(".yarn.txt") > -1)
 			return FILETYPE.YARNTEXT;
 		else if (filename.toLowerCase().indexOf(".xml") > -1)
@@ -119,36 +137,50 @@ var data =
 
 		var objects = [];
 		var i = 0;
+		var warnings=[];
 		if (type == FILETYPE.JSON)
 		{
 			content = JSON.parse(content);
 			for (i = 0; i < content.length; i ++)
 				objects.push(content[i]);
 		}
-		else if (type == FILETYPE.YARNTEXT)
-		{
+		else if (type == FILETYPE.YARNTEXT
+		||       type == FILETYPE.WOOL) {
+			var convertSpeaker = type == FILETYPE.YARNTEXT;
+			console.log("YARN: "+convertSpeaker);
 			var lines = content.split("\n");
 			var obj = null;
 			var index  = 0;
 			var readingBody = false;
-			for  (var i = 0; i < lines.length; i ++)
-			{
+			for  (var i = 0; i < lines.length; i ++) {
+				// chop off any /r characters
+				lines[i] = lines[i].trim();
 
-				if (lines[i].trim() == "===")
-				{
+				if (lines[i].trim() == "===") {
 					readingBody = false;
 					if (obj != null)
 					{
 						objects.push(obj);
 						obj = null;
 					}
-				}
-				else if (readingBody)
-				{
+				} else if (readingBody) {
+					if (convertSpeaker) {
+						matches = lines[i].match(/^([a-zA-Z]+):\s*(.*)\s*$/);
+						if (matches) {
+							if (obj.speaker && matches[1]!=obj.speaker) {
+								warnings.push("Line "+(i+1)
+								+": Different speakers found in body: "
+								+obj.speaker+" and "+matches[1]);
+							}
+							obj.speaker = matches[1];
+							lines[i] = matches[2];
+						}
+					}
 					obj.body += lines[i] + "\n";
-				}
-				else
-				{
+				} else {
+					// XXX do proper key:value parsing. Currently, there can
+					// be a string before the key, and the value offset does
+					// not match the ending position of the key
 					if (lines[i].indexOf("title:") > -1)
 					{
 						if (obj == null)
@@ -174,6 +206,12 @@ var data =
 							obj = {}
 						obj.tags = lines[i].substr(6, lines[i].length-6);
 					}
+					else if (lines[i].indexOf("speaker:") > -1)
+					{
+						if (obj == null)
+							obj = {}
+						obj.speaker = lines[i].substr(9, lines[i].length-9);
+					}
 					else if (lines[i].trim() == "---")
 					{
 						readingBody = true;
@@ -188,6 +226,7 @@ var data =
 		}
 		else if (type == FILETYPE.TWEE || type == FILETYPE.TWEE2)
 		{
+			// XXX not updated, remove support?
 			var lines = content.split("\n");
 			var obj = null;
 			var index  = 0;
@@ -283,6 +322,8 @@ var data =
 				node.body(object.body);
 			if (object.tags != undefined)
 				node.tags(object.tags);
+			if (object.speaker != undefined)
+				node.speaker(object.speaker);
 			if (object.position != undefined && object.position.x != undefined)
 			{
 				node.x(object.position.x);
@@ -305,6 +346,7 @@ var data =
 
 		$(".arrows").css({ opacity: 0 }).transition({ opacity: 1 }, 500);
 		app.updateNodeLinks();
+		if (warnings.length) alert(warnings.join("\n"));
 	},
 
 	getSaveData: function(type)
@@ -318,6 +360,7 @@ var data =
 			content.push({
 				"title": nodes[i].title(), 
 				"tags": nodes[i].tags(), 
+				"speaker": nodes[i].speaker(), 
 				"body": nodes[i].body(),
 				"position": { "x": nodes[i].x(), "y": nodes[i].y() },
 				"colorID": nodes[i].colorID()
@@ -328,12 +371,13 @@ var data =
 		{
 			output = JSON.stringify(content, null, "\t");
 		}
-		else if (type == FILETYPE.YARNTEXT)
+		else if (type == FILETYPE.WOOL)
 		{
 			for (i = 0; i < content.length; i++)
 			{
 				output += "title: " + content[i].title + "\n";
 				output += "tags: " + content[i].tags + "\n";
+				output += "speaker: " + content[i].speaker + "\n";
 				output += "colorID: " + content[i].colorID + "\n";
 				output += "position: " + content[i].position.x + "," + content[i].position.y + "\n";
 				output += "---\n";
@@ -406,7 +450,7 @@ var data =
 		dialog.bind("change", function(e)
 		{
 			// make callback
-			callback(e, dialog.val());
+			callback(e, dialog.val(), dialog);
 
 			// replace input field with a new identical one, with the value cleared
 			// (html can't edit file field values)
@@ -425,9 +469,8 @@ var data =
 		dialog.trigger("click");
 	},
 
-	saveFileDialog: function(dialog, type, content)
-	{
-		var file = 'file.' + type;
+	saveFileDialog: function(dialog, type, content) {
+		var file = data.filename + "." + type;
 
 		if (app.fs)
 		{
@@ -448,10 +491,13 @@ var data =
 					content = "data:text/xml," + content;
 					break;
 				default:
-					content = "data:text/plain," + content;
+					content = "data:text/plain," + encodeURIComponent(content);
 					break;
 			}
-			window.open(content, "_blank");
+			dialog.download = file;
+			dialog.href = content;
+			return true;
+			//window.open(content, "_blank");
 		}
 	},
 

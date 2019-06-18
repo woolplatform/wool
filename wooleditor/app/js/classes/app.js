@@ -29,7 +29,7 @@ var App = function(name, version)
 	this.shifted = false;
   	this.isNwjs = false;
     
-	this.UPDATE_ARROWS_THROTTLE_MS = 25;
+	this.UPDATE_ARROWS_THROTTLE_MS = 50;
 
 	//this.editingPath = ko.observable(null);
 
@@ -64,6 +64,7 @@ var App = function(name, version)
 
 		self.canvas = $(".arrows")[0];
 		self.context = self.canvas.getContext('2d');
+		// XXX load old defs here
 		self.newNode().title("Start");
 
 		if (osName != "Windows" && osName != "Linux" && self.gui != undefined)
@@ -790,8 +791,9 @@ var App = function(name, version)
 
 	this.updateNodeLinks = function()
 	{
-		for  (var i in self.nodes())
+		for  (var i in self.nodes()) {
 			self.nodes()[i].updateLinks();
+		}
 	}
 
 	this.updateArrows = function()
@@ -848,6 +850,7 @@ var App = function(name, version)
 					self.context.moveTo(from.x, from.y);
 					self.context.lineTo(to.x, to.y);
 					self.context.stroke();
+					//console.log("Line: "+from.x+" "+from.y+" "+to.x+" "+to.y);
 
 					// draw arrow
 					self.context.beginPath();
@@ -1110,6 +1113,8 @@ var App = function(name, version)
 			speed || 0,
 			"easeInQuad",
 			function() {
+				// the finished function may be called just before the
+				// animation is finished.
 				clearInterval(updateArrowsInterval);
 				self.updateArrowsThrottled();
 			}

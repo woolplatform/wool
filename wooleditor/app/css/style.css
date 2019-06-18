@@ -474,8 +474,9 @@ a:hover { color: #000;}
 
 .node-editor .form input[type="text"]
 {
+	display: block-inline;
 	box-sizing: border-box;
-	width: 100%;
+	width: calc(100% - 120px);
 	font-size: 1.2em;
 	color: #666;
 	padding: 10px 0px 10px 0px;
@@ -490,7 +491,7 @@ a:hover { color: #000;}
 {
 	margin-top: 20px;
 	width: 100%;
-	height: calc(100% - 120px);
+	height: calc(100% - 200px);
 	float: left;
 }
 

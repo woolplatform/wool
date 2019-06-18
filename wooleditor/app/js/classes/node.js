@@ -10,7 +10,8 @@ var Node = function()
 	// primary values
 	this.index = ko.observable(globalNodeIndex++);
 	this.title = ko.observable("Node" + this.index());
-	this.tags = ko.observable("")
+	this.tags = ko.observable("");
+	this.speaker = ko.observable("");
 	this.body = ko.observable("Empty Text");
 	//this.x = ko.observable(128);
 	//this.y = ko.observable(128);
@@ -354,7 +355,8 @@ var Node = function()
 			{
 				var other = app.nodes()[index];
 				for (var i = 0; i < links.length; i ++)
-					if (other != self && other.title().toLowerCase() == links[i])
+					if (other != self 
+					&& other.title().toLowerCase().trim() == links[i].trim())
 						self.linkedTo.push(other);
 			}
 		}
