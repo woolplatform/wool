@@ -317,4 +317,64 @@ public class WoolParser {
 			}
 		}
 	}
+	
+	private static void showUsage() {
+		System.out.println("Usage:");
+		System.out.println("java " + WoolParser.class.getName() + " [options] <woolfile>");
+		System.out.println("    Parse a .wool file and print a summary of the dialogue");
+		System.out.println("");
+		System.out.println("Options:");
+		System.out.println("-h -? --help");
+		System.out.println("    Print this usage message");
+	}
+
+	public static void main(String[] args) {
+		String filename = null;
+		int i = 0;
+		while (i < args.length) {
+			String arg = args[i++];
+			if (arg.equals("-h") || arg.equals("-?") || arg.equals("--help")) {
+				showUsage();
+				return;
+			} else {
+				filename = arg;
+			}
+		}
+		if (filename == null) {
+			showUsage();
+			System.exit(1);
+			return;
+		}
+		File file = new File(filename);
+		if (!file.exists()) {
+			System.err.println("ERROR: File not found: " + filename);
+			System.exit(1);
+			return;
+		}
+		try {
+			file = file.getCanonicalFile();
+		} catch (IOException ex) {}
+		if (!file.isFile()) {
+			System.err.println("ERROR: Path is not a file: " + file.getAbsolutePath());
+			System.exit(1);
+			return;
+		}
+		WoolDialogue dialogue;
+		try {
+			WoolParser parser = new WoolParser(file);
+			dialogue = parser.readDialogue();
+		} catch (LineNumberParseException ex) {
+			System.err.println("ERROR: Failed to parse file: " +
+					file.getAbsolutePath() + ": " + ex.getMessage());
+			System.exit(1);
+			return;
+		} catch (IOException ex) {
+			System.err.println("ERROR: Can't read file: " +
+					file.getAbsolutePath() + ": " + ex.getMessage());
+			System.exit(1);
+			return;
+		}
+		System.out.println("Finished parsing dialogue from file: " + file.getAbsolutePath());
+		System.out.println(dialogue);
+	}
 }
