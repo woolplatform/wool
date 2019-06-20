@@ -188,6 +188,28 @@ public class ActiveWoolDialogue {
 		}
 	}
 	
+	public void storeReplyInput(int replyId, Object input) {
+		WoolInputCommand inputCmd = findInputCommand(replyId);
+		if (inputCmd == null)
+			return;
+		String variableName = inputCmd.getVariableName();
+		this.woolVariableStore.setValue(variableName, input, VariableSource.CORE);
+	}
+	
+	private WoolInputCommand findInputCommand(int replyId) {
+		WoolReply reply = this.currentNode.getBody().getReplyById(replyId);
+		WoolNodeBody body = reply.getStatement();
+		for (WoolNodeBody.Segment segment : body.getSegments()) {
+			if (!(segment instanceof WoolNodeBody.CommandSegment))
+				continue;
+			WoolNodeBody.CommandSegment cmdSegment =
+					(WoolNodeBody.CommandSegment)segment;
+			if (cmdSegment.getCommand() instanceof WoolInputCommand)
+				return (WoolInputCommand)cmdSegment.getCommand();
+		}
+		return null;
+	}
+
 	/**
 	 * The user's client returned the given {@code replyId} - what was the statement that was
 	 * uttered by the user?
@@ -221,9 +243,15 @@ public class ActiveWoolDialogue {
 	}
 	
 	/**
-	 * Executes the WoolNode (i.e. evaluates the command statements and returns a flattened 1-level of statements node).
-	 * @param WoolNode a node to execute
-	 * @return WoolNode an executed WoolNode (i.e. all ifs and sets etc. are set and evaluated and removed accordingly) 
+	 * Executes the agent statement and reply statements in the specified node
+	 * with respect to the specified variable map. It executes ("if" and "set")
+	 * commands and resolves variables. Any resulting body content that should
+	 * be sent to the client, is added to the statement body in the resulting
+	 * node. This content can be text or client commands, with all variables
+	 * resolved.
+	 * 
+	 * @param woolNode a node to execute
+	 * @return the executed WoolNode
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
 	private WoolNode executeWoolNode(WoolNode woolNode)

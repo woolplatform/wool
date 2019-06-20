@@ -154,10 +154,10 @@ public class WoolNodeBody {
 	
 	/**
 	 * Executes the statement in this body with respect to the specified
-	 * variable map. It executes commands and resolves variables. Any resulting
-	 * body content that should be sent to the client, is added to
-	 * "processedBody". This content can be text or client commands, with all
-	 * variables resolved.
+	 * variable map. It executes ("if" and "set") commands and resolves
+	 * variables. Any resulting body content that should be sent to the client,
+	 * is added to "processedBody". This content can be text or client commands,
+	 * with all variables resolved.
 	 * 
 	 * @param variables the variable map
 	 * @param processedBody the processed body
