@@ -86,6 +86,8 @@ public class Tokenizer {
 		fixedTokens.add(new NameOrFixedToken("<=", Token.Type.LESS_EQUAL));
 		fixedTokens.add(new NameOrFixedToken("==", Token.Type.EQUAL));
 		fixedTokens.add(new NameOrFixedToken("!=", Token.Type.NOT_EQUAL));
+		fixedTokens.add(new NameOrFixedToken("===", Token.Type.STRICT_EQUAL));
+		fixedTokens.add(new NameOrFixedToken("!==", Token.Type.NOT_STRICT_EQUAL));
 		fixedTokens.add(new NameOrFixedToken(">=", Token.Type.GREATER_EQUAL));
 		fixedTokens.add(new NameOrFixedToken(">", Token.Type.GREATER_THAN));
 		fixedTokens.add(new NameOrFixedToken("+", Token.Type.ADD));

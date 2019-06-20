@@ -47,8 +47,10 @@ import nl.rrd.wool.expressions.types.ListExpression;
 import nl.rrd.wool.expressions.types.MultiplyExpression;
 import nl.rrd.wool.expressions.types.NotEqualExpression;
 import nl.rrd.wool.expressions.types.NotExpression;
+import nl.rrd.wool.expressions.types.NotStrictEqualExpression;
 import nl.rrd.wool.expressions.types.ObjectExpression;
 import nl.rrd.wool.expressions.types.OrExpression;
+import nl.rrd.wool.expressions.types.StrictEqualExpression;
 import nl.rrd.wool.expressions.types.SubtractExpression;
 import nl.rrd.wool.expressions.types.ValueExpression;
 import nl.rrd.wool.io.LineColumnNumberReader;
@@ -76,7 +78,8 @@ public class ExpressionParser {
 		new Token.Type[] { Token.Type.OR },
 		new Token.Type[] { Token.Type.AND },
 		new Token.Type[] { Token.Type.IN },
-		new Token.Type[] { Token.Type.EQUAL, Token.Type.NOT_EQUAL },
+		new Token.Type[] { Token.Type.EQUAL, Token.Type.NOT_EQUAL,
+				Token.Type.STRICT_EQUAL, Token.Type.NOT_STRICT_EQUAL },
 		new Token.Type[] { Token.Type.LESS_THAN, Token.Type.LESS_EQUAL,
 				Token.Type.GREATER_EQUAL, Token.Type.GREATER_THAN },
 		new Token.Type[] { Token.Type.ADD, Token.Type.SUBTRACT },
@@ -221,6 +224,8 @@ public class ExpressionParser {
 					case LESS_EQUAL:
 					case EQUAL:
 					case NOT_EQUAL:
+					case STRICT_EQUAL:
+					case NOT_STRICT_EQUAL:
 					case GREATER_EQUAL:
 					case GREATER_THAN:
 					case ADD:
@@ -336,6 +341,10 @@ public class ExpressionParser {
 				return new EqualExpression(operand1, operand2);
 			case NOT_EQUAL:
 				return new NotEqualExpression(operand1, operand2);
+			case STRICT_EQUAL:
+				return new StrictEqualExpression(operand1, operand2);
+			case NOT_STRICT_EQUAL:
+				return new NotStrictEqualExpression(operand1, operand2);
 			case GREATER_EQUAL:
 				return new GreaterEqualExpression(operand1, operand2);
 			case GREATER_THAN:
@@ -378,6 +387,8 @@ public class ExpressionParser {
 			case LESS_EQUAL:
 			case EQUAL:
 			case NOT_EQUAL:
+			case STRICT_EQUAL:
+			case NOT_STRICT_EQUAL:
 			case GREATER_EQUAL:
 			case GREATER_THAN:
 			case ADD:

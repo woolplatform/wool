@@ -303,6 +303,19 @@ public class Value {
 	}
 	
 	/**
+	 * Returns whether this value is strictly equal to another value. In
+	 * contrast to {@link #isEqual(Value) isEqual()}, this method also checks
+	 * whether the two values have the same type. In the case of lists and maps,
+	 * the elements are also tested for strict equality.
+	 * 
+	 * @param other the other value
+	 * @return true if the values are equal, false otherwise
+	 */
+	public boolean isStrictEqual(Value other) {
+		return isStrictEqual(this, other);
+	}
+	
+	/**
 	 * Returns a string that describes the value type. This is one of: null,
 	 * string, number, boolean, list, map.
 	 * 
@@ -430,6 +443,59 @@ public class Value {
 			Value val1 = new Value(map1.get(key));
 			Value val2 = new Value(map2.get(key));
 			if (!val1.isEqual(val2))
+				return false;
+		}
+		return true;
+	}
+	
+	private static boolean isStrictEqual(Value val1, Value val2) {
+		if (val1.isNull()) {
+			return val2.isNull();
+		} else if (val1.isBoolean()) {
+			return val2.isBoolean() && val1.asBoolean() == val2.asBoolean();
+		} else if (val1.isString()) {
+			return val2.isString() && val1.toString().equals(val2.toString());
+		} else if (val1.isNumber()) {
+			try {
+				return val2.isNumber() && val1.asNumber().equals(
+						val2.asNumber());
+			} catch (EvaluationException ex) {
+				throw new RuntimeException("Unexpected error: " +
+						ex.getMessage(), ex);
+			}
+		} else if (val1.isList()) {
+			return val2.isList() && isStrictEqualLists((List<?>)val1.value,
+					(List<?>)val2.value);
+		} else {
+			// val1 is a map
+			return val2.isMap() && isStrictEqualMaps((Map<?,?>)val1.value,
+					(Map<?,?>)val2.value);
+		}
+	}
+	
+	private static boolean isStrictEqualLists(List<?> list1, List<?> list2) {
+		if (list1.size() != list2.size())
+			return false;
+		Iterator<?> it1 = list1.iterator();
+		Iterator<?> it2 = list2.iterator();
+		while (it1.hasNext()) {
+			Value val1 = new Value(it1.next());
+			Value val2 = new Value(it2.next());
+			if (!val1.isStrictEqual(val2))
+				return false;
+		}
+		return true;
+	}
+	
+	private static boolean isStrictEqualMaps(Map<?,?> map1, Map<?,?> map2) {
+		if (map1.size() != map1.size())
+			return false;
+		for (Object key : map1.keySet()) {
+			if (!map2.containsKey(key))
+				return false;
+			Value val1 = new Value(map1.get(key));
+			Value val2 = new Value(map2.get(key));
+			if (!val1.isStrictEqual(val2))
 				return false;
 		}
 		return true;
