@@ -118,12 +118,12 @@ public class WoolIfCommand extends WoolExpressionCommand {
 		for (Clause clause : ifClauses) {
 			Value clauseEval = clause.expression.evaluate(variables);
 			if (clauseEval.asBoolean()) {
-				clause.statement.execute(variables, processedBody);
+				clause.statement.execute(variables, false, processedBody);
 				return;
 			}
 		}
 		if (elseClause != null)
-			elseClause.execute(variables, processedBody);
+			elseClause.execute(variables, false, processedBody);
 	}
 
 	@Override

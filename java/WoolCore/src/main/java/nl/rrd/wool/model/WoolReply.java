@@ -197,7 +197,7 @@ public class WoolReply {
 		if (statement == null)
 			return this;
 		WoolNodeBody processedStatement = new WoolNodeBody();
-		statement.execute(variables, processedStatement);
+		statement.execute(variables, false, processedStatement);
 		WoolReply result = new WoolReply(replyId, processedStatement,
 				nodePointer);
 		result.commands = commands;

@@ -24,6 +24,7 @@ package nl.rrd.wool.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -120,6 +121,68 @@ public class WoolNodeBody {
 			segments.add(segment);
 		}
 	}
+	
+	/**
+	 * Normalizes whitespace in the text segments. It removes empty lines and
+	 * makes sure that lines end with "\n". Within each line, it trims
+	 * whitespace from the start and end, and it replaces any sequence of
+	 * spaces and tabs with one space.
+	 * 
+	 * <p>This method should only be called if all variables in the text
+	 * segments have been resolved.</p>
+	 * 
+	 * @param trimText true if trailing new lines should be trimmed, false if
+	 * they should be preserved
+	 */
+	private void normalizeWhitespace(boolean trimText) {
+		TextSegment lastText = null;
+		String currLine = null;
+		Iterator<Segment> it = segments.iterator();
+		while (it.hasNext()) {
+			Segment segment = it.next();
+			if (!(segment instanceof TextSegment))
+				continue;
+			TextSegment textSegment = (TextSegment)segment;
+			lastText = textSegment;
+			String text = textSegment.text.evaluate(null);
+			text = text.replaceAll("[\r\n]+", "\n")
+					.replaceAll("[\t ]+", " ");
+			StringBuilder normText = new StringBuilder();
+			int start = 0;
+			int index;
+			while ((index = text.indexOf('\n', start)) != -1) {
+				String line = text.substring(start, index).trim();
+				if (currLine != null && line.isEmpty()) {
+					normText.append("\n");
+				} else if (currLine != null) {
+					normText.append(" " + line + "\n");
+				} else if (!line.isEmpty()) {
+					normText.append(line + "\n");
+				}
+				currLine = null;
+				start = index + 1;
+			}
+			String line = text.substring(start).trim();
+			if (!line.isEmpty()) {
+				if (currLine != null) {
+					currLine += " " + line;
+					normText.append(" " + line);
+				} else {
+					currLine = line;
+					normText.append(line);
+				}
+			}
+			if (normText.length() == 0) {
+				it.remove();
+			} else {
+				textSegment.text = new WoolVariableString(normText.toString());
+			}
+		}
+		if (trimText && lastText != null) {
+			String text = lastText.text.evaluate(null).replaceAll("\\s+$", "");
+			lastText.text = new WoolVariableString(text);
+		}
+	}
 
 	public List<WoolReply> getReplies() {
 		return replies;
@@ -159,11 +222,23 @@ public class WoolNodeBody {
 	 * is added to "processedBody". This content can be text or client commands,
 	 * with all variables resolved.
 	 * 
+	 * <p>This method also normalizes whitespace in the text segments. It
+	 * removes empty lines and makes sure that lines end with "\n". Within each
+	 * line, it trims whitespace from the start and end, and it replaces any
+	 * sequence of spaces and tabs with one space.</p>
+	 * 
+	 * <p>This method should only be called if all variables in the text
+	 * segments have been resolved.</p>
+	 *  
 	 * @param variables the variable map
+	 * @param trimText true if trailing new lines should be trimmed, false if
+	 * they should be preserved. This should be set to true for the body that is
+	 * directly in the node. If the body is in an "if" clause or in a reply, it
+	 * should be set to false.
 	 * @param processedBody the processed body
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public void execute(Map<String,Object> variables,
+	public void execute(Map<String,Object> variables, boolean trimText,
 			WoolNodeBody processedBody) throws EvaluationException {
 		for (Segment segment : segments) {
 			if (segment instanceof TextSegment) {
@@ -177,6 +252,7 @@ public class WoolNodeBody {
 		for (WoolReply reply : replies) {
 			processedBody.addReply(reply.execute(variables));
 		}
+		processedBody.normalizeWhitespace(trimText);
 	}
 	
 	private void executeTextSegment(TextSegment segment,

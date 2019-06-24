@@ -42,6 +42,13 @@ import nl.rrd.wool.expressions.Value;
 public class WoolVariableString {
 	private List<Segment> segments = new ArrayList<>();
 	
+	public WoolVariableString() {
+	}
+	
+	public WoolVariableString(String text) {
+		segments.add(new TextSegment(text));
+	}
+	
 	/**
 	 * Returns the segments as an unmodifiable list.
 	 * 

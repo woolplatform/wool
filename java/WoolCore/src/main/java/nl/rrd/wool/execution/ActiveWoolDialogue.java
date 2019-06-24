@@ -261,7 +261,7 @@ public class ActiveWoolDialogue {
 		WoolNodeBody processedBody = new WoolNodeBody();
 		Map<String,Object> variables = woolVariableStore.getModifiableMap(
 				VariableSource.CORE);
-		woolNode.getBody().execute(variables, processedBody);
+		woolNode.getBody().execute(variables, true, processedBody);
 		processedNode.setBody(processedBody);
 		return processedNode;
 	}	
