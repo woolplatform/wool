@@ -104,23 +104,57 @@ public class WoolParser {
 		reader.close();
 	}
 	
-	public WoolDialogue readDialogue() throws LineNumberParseException,
-			IOException {
+	public class ReadResult {
+		private WoolDialogue dialogue = null;
+		private List<LineNumberParseException> parseErrors = new ArrayList<>();
+		
+		private ReadResult() {
+		}
+
+		public WoolDialogue getDialogue() {
+			return dialogue;
+		}
+
+		public List<LineNumberParseException> getParseErrors() {
+			return parseErrors;
+		}
+	}
+
+	/**
+	 * Tries to read the dialogue file. If a reading error occurs, it throws an
+	 * {@link IOException IOException}. Otherwise it returns a result object
+	 * where either the dialogue is set, or one or more parse errors are set.
+	 * 
+	 * @return the read result
+	 * @throws IOException if a reading error occurs
+	 */
+	public ReadResult readDialogue() throws IOException {
+		ReadResult result = new ReadResult();
 		if (!dialogueName.matches("[A-Za-z0-9_-]+")) {
-			throw new LineNumberParseException("Invalid dialogue name: " +
-					dialogueName, 1, 1);
+			result.parseErrors.add(new LineNumberParseException(
+					"Invalid dialogue name: " + dialogueName, 1, 1));
 		}
-		WoolDialogue result = new WoolDialogue(dialogueName);
-		dialogue = result;
+		WoolDialogue dialogue = new WoolDialogue(dialogueName);
+		this.dialogue = dialogue;
 		nodePointerTokens = new ArrayList<>();
-		WoolNode node;
-		while ((node = readNode()) != null) {
-			result.addNode(node);
+		boolean foundNodeError = false;
+		ReadWoolNodeResult readResult;
+		while ((readResult = readNode()) != null) {
+			if (readResult.node != null) {
+				dialogue.addNode(readResult.node);
+			} else {
+				foundNodeError = true;
+				result.parseErrors.add(readResult.parseException);
+				if (!readResult.readNodeEnd)
+					moveToNextNode();
+			}
 		}
+		if (foundNodeError)
+			return result;
 		if (!dialogue.nodeExists("Start")) {
-			throw new LineNumberParseException(
+			result.parseErrors.add(new LineNumberParseException(
 					"Node with title \"Start\" not found",
-					reader.getLineNum(), reader.getColNum());
+					reader.getLineNum(), reader.getColNum()));
 		}
 		for (WoolNodeState.NodePointerToken pointerToken : nodePointerTokens) {
 			if (!(pointerToken.getPointer() instanceof WoolNodePointerInternal))
@@ -132,60 +166,100 @@ public class WoolParser {
 				continue;
 			}
 			WoolBodyToken token = pointerToken.getToken();
-			throw new LineNumberParseException(
+			result.parseErrors.add(new LineNumberParseException(
 					"Found reply with pointer to non-existing node: " +
-					pointer.getNodeId(), token.getLineNum(), token.getColNum());
+					pointer.getNodeId(), token.getLineNum(),
+					token.getColNum()));
 		}
-		dialogue = null;
+		if (!result.parseErrors.isEmpty())
+			return result;
+		result.dialogue = dialogue;
+		this.dialogue = null;
 		nodePointerTokens = null;
 		return result;
 	}
 	
-	private WoolNode readNode() throws LineNumberParseException, IOException {
-		Map<String,String> headerMap = new LinkedHashMap<>();
-		boolean inHeader = true;
-		int lineNum = reader.getLineNum();
-		String line = readLine();
-		while (line != null && inHeader) {
-			if (getContent(line).equals("---")) {
-				inHeader = false;
-			} else {
-				parseHeaderLine(headerMap, line, lineNum);
-				lineNum = reader.getLineNum();
-				line = readLine();
-			}
-		}
-		if (inHeader) {
-			if (headerMap.isEmpty())
-				return null;
-			throw new LineNumberParseException(
-					"Found incomplete node at end of file",
-					reader.getLineNum(), reader.getColNum());
-		}
-		WoolNodeHeader header = createHeader(headerMap, lineNum);
-		boolean inBody = true;
-		WoolBodyTokenizer tokenizer = new WoolBodyTokenizer();
-		lineNum = reader.getLineNum();
-		line = readLine();
-		List<WoolBodyToken> bodyTokens = new ArrayList<>();
-		while (line != null && inBody) {
-			if (getContent(line).equals("===")) {
-				inBody = false;
-			} else {
-				bodyTokens.addAll(tokenizer.readBodyTokens(line + "\n",
-						lineNum));
-				lineNum = reader.getLineNum();
-				line = readLine();
-			}
-		}
-		WoolNodeState nodeState = new WoolNodeState();
-		WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
-		WoolNodeBody body = bodyParser.parse(bodyTokens,
-				Arrays.asList("action", "if", "set"));
-		nodePointerTokens.addAll(nodeState.getNodePointerTokens());
-		return new WoolNode(header, body);
+	private class ReadWoolNodeResult {
+		public WoolNode node = null;
+		public LineNumberParseException parseException = null;
+		public boolean readNodeEnd = false;
 	}
 	
+	/**
+	 * Tries to read the next node. The reader should be positioned at the start
+	 * of a node. If there are no more nodes, this method returns null. If a
+	 * reading error occurs, it throws an {@link IOException IOException}.
+	 * Otherwise it returns a result object, where either "node" or
+	 * "parseException" is set. The property "readNodeEnd" is set if the end of
+	 * the node (===) has been read. This can be used to skip to the next node
+	 * in case of a parse exception.
+	 * 
+	 * @return the result or null
+	 * @throws IOException if a reading error occurs
+	 */
+	private ReadWoolNodeResult readNode() throws IOException {
+		ReadWoolNodeResult result = new ReadWoolNodeResult();
+		WoolNodeHeader header;
+		WoolNodeBody body;
+		try {
+			Map<String,String> headerMap = new LinkedHashMap<>();
+			boolean inHeader = true;
+			int lineNum = reader.getLineNum();
+			String line = readLine();
+			while (line != null && inHeader) {
+				if (getContent(line).equals("---")) {
+					inHeader = false;
+				} else {
+					parseHeaderLine(headerMap, line, lineNum);
+					lineNum = reader.getLineNum();
+					line = readLine();
+				}
+			}
+			if (inHeader) {
+				if (headerMap.isEmpty())
+					return null;
+				throw new LineNumberParseException(
+						"Found incomplete node at end of file",
+						reader.getLineNum(), reader.getColNum());
+			}
+			header = createHeader(headerMap, lineNum);
+			boolean inBody = true;
+			WoolBodyTokenizer tokenizer = new WoolBodyTokenizer();
+			lineNum = reader.getLineNum();
+			line = readLine();
+			List<WoolBodyToken> bodyTokens = new ArrayList<>();
+			while (line != null && inBody) {
+				if (getContent(line).equals("===")) {
+					inBody = false;
+					result.readNodeEnd = true;
+				} else {
+					bodyTokens.addAll(tokenizer.readBodyTokens(line + "\n",
+							lineNum));
+					lineNum = reader.getLineNum();
+					line = readLine();
+				}
+			}
+			WoolNodeState nodeState = new WoolNodeState();
+			WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
+			body = bodyParser.parse(bodyTokens, Arrays.asList(
+					"action", "if", "set"));
+			nodePointerTokens.addAll(nodeState.getNodePointerTokens());
+			result.node = new WoolNode(header, body);
+			return result;
+		} catch (LineNumberParseException ex) {
+			result.parseException = ex;
+			return result;
+		}
+	}
+	
+	private void moveToNextNode() throws IOException {
+		String line;
+		while ((line = readLine()) != null) {
+			if (getContent(line).equals("==="))
+				return;
+		}
+	}
+
 	private void parseHeaderLine(Map<String,String> headerMap, String line,
 			int lineNum) throws LineNumberParseException {
 		int commentSep = line.indexOf("//");
@@ -359,22 +433,26 @@ public class WoolParser {
 			System.exit(1);
 			return;
 		}
-		WoolDialogue dialogue;
+		ReadResult readResult;
 		try {
 			WoolParser parser = new WoolParser(file);
-			dialogue = parser.readDialogue();
-		} catch (LineNumberParseException ex) {
-			System.err.println("ERROR: Failed to parse file: " +
-					file.getAbsolutePath() + ": " + ex.getMessage());
-			System.exit(1);
-			return;
+			readResult = parser.readDialogue();
 		} catch (IOException ex) {
 			System.err.println("ERROR: Can't read file: " +
 					file.getAbsolutePath() + ": " + ex.getMessage());
 			System.exit(1);
 			return;
 		}
+		if (!readResult.parseErrors.isEmpty()) {
+			System.err.println("ERROR: Failed to parse file: " +
+					file.getAbsolutePath());
+			for (LineNumberParseException ex : readResult.parseErrors) {
+				System.err.println(ex.getMessage());
+			}
+			System.exit(1);
+			return;
+		}
 		System.out.println("Finished parsing dialogue from file: " + file.getAbsolutePath());
-		System.out.println(dialogue);
+		System.out.println(readResult.dialogue);
 	}
 }

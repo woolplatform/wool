@@ -73,11 +73,6 @@ public class WoolBodyParser {
 				}
 				break;
 			case COMMAND_START:
-				if (!result.body.getReplies().isEmpty()) {
-					throw new LineNumberParseException(
-							"Found << between replies", token.getLineNum(),
-							token.getColNum());
-				}
 				WoolCommandParser cmdParser = new WoolCommandParser(
 						validCommands, nodeState);
 				String name = cmdParser.readCommandName(tokens);
@@ -85,9 +80,16 @@ public class WoolBodyParser {
 						name.equals("endif")) {
 					result.ifClauseStartToken = token;
 					result.ifClauseName = name;
+				} else if (!name.equals("if") &&
+						!result.body.getReplies().isEmpty()) {
+					throw new LineNumberParseException(
+							"Found << between replies", token.getLineNum(),
+							token.getColNum());
 				} else {
-					WoolCommand command = cmdParser.parseFromName(token, tokens);
-					result.body.addSegment(new WoolNodeBody.CommandSegment(command));
+					WoolCommand command = cmdParser.parseFromName(token,
+							tokens);
+					result.body.addSegment(new WoolNodeBody.CommandSegment(
+							command));
 				}
 				break;
 			case REPLY_START:
