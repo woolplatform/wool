@@ -34,6 +34,7 @@ import nl.rrd.wool.expressions.Expression;
 import nl.rrd.wool.expressions.Value;
 import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.model.WoolNodeBody;
+import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 import nl.rrd.wool.parser.WoolBodyParser;
 import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.parser.WoolNodeState;
@@ -110,6 +111,19 @@ public class WoolIfCommand extends WoolExpressionCommand {
 		}
 		if (elseClause != null)
 			elseClause.getReadVariableNames(varNames);
+	}
+
+	@Override
+	public void getWriteVariableNames(Set<String> varNames) {
+	}
+
+	@Override
+	public void getNodePointers(Set<WoolNodePointer> pointers) {
+		for (Clause clause : ifClauses) {
+			clause.statement.getNodePointers(pointers);
+		}
+		if (elseClause != null)
+			elseClause.getNodePointers(pointers);
 	}
 
 	@Override

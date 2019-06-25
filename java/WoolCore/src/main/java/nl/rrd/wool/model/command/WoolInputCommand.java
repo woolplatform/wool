@@ -30,6 +30,7 @@ import java.util.Set;
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.model.WoolNodeBody;
+import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.parser.WoolNodeState;
 import nl.rrd.wool.utils.CurrentIterator;
@@ -91,6 +92,15 @@ public class WoolInputCommand extends WoolAttributesCommand {
 	
 	@Override
 	public void getReadVariableNames(Set<String> varNames) {
+	}
+
+	@Override
+	public void getWriteVariableNames(Set<String> varNames) {
+		varNames.add(variableName);
+	}
+
+	@Override
+	public void getNodePointers(Set<WoolNodePointer> pointers) {
 	}
 
 	@Override

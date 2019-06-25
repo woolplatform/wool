@@ -22,14 +22,18 @@
 
 package nl.rrd.wool.model.command;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.expressions.EvaluationException;
+import nl.rrd.wool.expressions.Expression;
 import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolReply;
+import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.parser.WoolNodeState;
 import nl.rrd.wool.utils.CurrentIterator;
@@ -63,6 +67,15 @@ public class WoolSetCommand extends WoolExpressionCommand {
 	}
 
 	@Override
+	public void getWriteVariableNames(Set<String> varNames) {
+		varNames.add(expression.getVariableName());
+	}
+
+	@Override
+	public void getNodePointers(Set<WoolNodePointer> pointers) {
+	}
+
+	@Override
 	public void executeBodyCommand(Map<String, Object> variables,
 			WoolNodeBody processedBody) throws EvaluationException {
 		expression.evaluate(variables);
@@ -84,6 +97,22 @@ public class WoolSetCommand extends WoolExpressionCommand {
 					"Expression in \"set\" command is not an assignment",
 					cmdStartToken.getLineNum(), cmdStartToken.getColNum());
 		}
-		return new WoolSetCommand((AssignExpression)parsed.expression);
+		AssignExpression assignExpr = (AssignExpression)parsed.expression;
+		checkNoAssignment(cmdStartToken, assignExpr.getValueOperand());
+		return new WoolSetCommand(assignExpr);
+	}
+
+	private static void checkNoAssignment(WoolBodyToken cmdStartToken,
+			Expression expression) throws LineNumberParseException {
+		List<Expression> list = new ArrayList<>();
+		list.add(expression);
+		list.addAll(expression.getDescendants());
+		for (Expression expr : list) {
+			if (expr instanceof AssignExpression) {
+				throw new LineNumberParseException(
+						"Found assignment expression in value operand of \"set\" command",
+						cmdStartToken.getLineNum(), cmdStartToken.getColNum());
+			}
+		}
 	}
 }

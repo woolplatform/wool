@@ -22,6 +22,9 @@
 
 package nl.rrd.wool.model.nodepointer;
 
+import nl.rrd.wool.model.WoolDialogue;
+import nl.rrd.wool.model.WoolReply;
+
 /**
  * A pointer to a node that is part of a different dialogue than the dialogue of which the node that is being referred from is a part. 
  * 
@@ -52,5 +55,22 @@ public class WoolNodePointerExternal extends WoolNodePointer {
 	@Override
 	public String toString() {
 		return this.dialogueId + "." + this.nodeId;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + dialogueId.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!super.equals(obj))
+			return false;
+		WoolNodePointerExternal other = (WoolNodePointerExternal)obj;
+		if (!dialogueId.equals(other.dialogueId))
+			return false;
+		return true;
 	}
 }

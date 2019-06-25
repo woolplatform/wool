@@ -27,6 +27,7 @@ import java.util.Set;
 
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.model.WoolNodeBody;
+import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 
 /**
  * Base class for commands that are specified with &lt;&lt;...&gt;&gt; in Wool
@@ -43,6 +44,22 @@ public abstract class WoolCommand {
 	 * @param varNames the set to which the variable names are added
 	 */
 	public abstract void getReadVariableNames(Set<String> varNames);
+	
+	/**
+	 * Retrieves all variable names that are written in this command and adds
+	 * them to the specified set.
+	 * 
+	 * @param varNames the set to which the variable names are added
+	 */
+	public abstract void getWriteVariableNames(Set<String> varNames);
+	
+	/**
+	 * Retrieves all node pointers that occur in this command and adds them to
+	 * the specified list.
+	 * 
+	 * @param pointers the list to which the node pointers are added
+	 */
+	public abstract void getNodePointers(Set<WoolNodePointer> pointers);
 
 	/**
 	 * This method is called if this command occurs in a statement body. It

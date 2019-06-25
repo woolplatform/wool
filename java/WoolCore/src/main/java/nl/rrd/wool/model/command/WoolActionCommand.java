@@ -33,6 +33,7 @@ import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolReply;
 import nl.rrd.wool.model.WoolVariableString;
+import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.parser.WoolNodeState;
 import nl.rrd.wool.utils.CurrentIterator;
@@ -97,6 +98,14 @@ public class WoolActionCommand extends WoolAttributesCommand {
 		for (WoolVariableString paramVals : parameters.values()) {
 			paramVals.getReadVariableNames(varNames);
 		}
+	}
+
+	@Override
+	public void getWriteVariableNames(Set<String> varNames) {
+	}
+
+	@Override
+	public void getNodePointers(Set<WoolNodePointer> pointers) {
 	}
 
 	@Override

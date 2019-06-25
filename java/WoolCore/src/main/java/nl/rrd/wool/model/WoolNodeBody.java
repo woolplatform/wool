@@ -24,6 +24,8 @@ package nl.rrd.wool.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,8 @@ import nl.rrd.wool.model.command.WoolIfCommand;
 import nl.rrd.wool.model.command.WoolInputCommand;
 import nl.rrd.wool.model.command.WoolSetCommand;
 import nl.rrd.wool.model.nodepointer.WoolNodePointer;
+import nl.rrd.wool.model.nodepointer.WoolNodePointerExternal;
+import nl.rrd.wool.model.nodepointer.WoolNodePointerInternal;
 
 /**
  * A node body can occur in three different contexts inside a {@link WoolNode
@@ -199,6 +203,19 @@ public class WoolNodeBody {
 	public void addReply(WoolReply reply) {
 		replies.add(reply);
 	}
+
+	/**
+	 * Retrieves all variable names that are read in this body.
+	 * 
+	 * @return the variable names that are read in this body
+	 */
+	public List<String> getReadVariableNames() {
+		Set<String> set = new HashSet<>();
+		getReadVariableNames(set);
+		List<String> result = new ArrayList<>(set);
+		Collections.sort(result);
+		return result;
+	}
 	
 	/**
 	 * Retrieves all variable names that are read in this body and adds them to
@@ -212,6 +229,78 @@ public class WoolNodeBody {
 		}
 		for (WoolReply reply : replies) {
 			reply.getReadVariableNames(varNames);
+		}
+	}
+
+	/**
+	 * Retrieves all variable names that are written in this body.
+	 * 
+	 * @return the variable names that are written in this body
+	 */
+	public List<String> getWriteVariableNames() {
+		Set<String> set = new HashSet<>();
+		getWriteVariableNames(set);
+		List<String> result = new ArrayList<>(set);
+		Collections.sort(result);
+		return result;
+	}
+
+	/**
+	 * Retrieves all variable names that are written in this body and adds them
+	 * to the specified set.
+	 * 
+	 * @param varNames the set to which the variable names are added
+	 */
+	public void getWriteVariableNames(Set<String> varNames) {
+		for (Segment segment : segments) {
+			segment.getWriteVariableNames(varNames);
+		}
+		for (WoolReply reply : replies) {
+			reply.getWriteVariableNames(varNames);
+		}
+	}
+	
+	public List<WoolNodePointer> getNodePointers() {
+		Set<WoolNodePointer> set = new HashSet<>();
+		getNodePointers(set);
+		List<WoolNodePointer> result = new ArrayList<>(set);
+		Collections.sort(result, new Comparator<WoolNodePointer>() {
+			@Override
+			public int compare(WoolNodePointer o1, WoolNodePointer o2) {
+				return compareNodePointers(o1, o2);
+			}
+		});
+		return result;
+	}
+	
+	private int compareNodePointers(WoolNodePointer o1, WoolNodePointer o2) {
+		if (o1 instanceof WoolNodePointerInternal) {
+			if (o2 instanceof WoolNodePointerExternal)
+				return -1;
+			WoolNodePointerInternal p1 = (WoolNodePointerInternal)o1;
+			WoolNodePointerInternal p2 = (WoolNodePointerInternal)o2;
+			return p1.getNodeId().compareTo(p2.getNodeId());
+		} else {
+			if (o2 instanceof WoolNodePointerInternal)
+				return -1;
+			WoolNodePointerExternal p1 = (WoolNodePointerExternal)o1;
+			WoolNodePointerExternal p2 = (WoolNodePointerExternal)o2;
+			int result = p1.getDialogueId().compareTo(p2.getDialogueId());
+			if (result != 0)
+				return result;
+			return p1.getNodeId().compareTo(p2.getNodeId());
+		}
+	}
+	
+	public void getNodePointers(Set<WoolNodePointer> pointers) {
+		for (Segment segment : segments) {
+			if (!(segment instanceof CommandSegment))
+				continue;
+			WoolCommand command = ((CommandSegment)segment).command;
+			command.getNodePointers(pointers);
+		}
+		for (WoolReply reply : replies) {
+			pointers.add(reply.getNodePointer());
 		}
 	}
 	
@@ -266,14 +355,6 @@ public class WoolNodeBody {
 			Map<String,Object> variables, WoolNodeBody processedBody)
 			throws EvaluationException {
 		segment.command.executeBodyCommand(variables, processedBody);
-	}
-	
-	public List<WoolNodePointer> getNodePointers() {
-		List<WoolNodePointer> result = new ArrayList<>();
-		for (WoolReply reply : replies) {
-			result.add(reply.getNodePointer());
-		}
-		return result;
 	}
 
 	public void trimWhitespace() {
@@ -332,6 +413,14 @@ public class WoolNodeBody {
 		 * @param varNames the set to which the variable names are added
 		 */
 		public abstract void getReadVariableNames(Set<String> varNames);
+		
+		/**
+		 * Retrieves all variable names that are written in this segment and
+		 * adds them to the specified set.
+		 * 
+		 * @param varNames the set to which the variable names are added
+		 */
+		public abstract void getWriteVariableNames(Set<String> varNames);
 	}
 	
 	public static class TextSegment extends Segment {
@@ -355,6 +444,10 @@ public class WoolNodeBody {
 		}
 
 		@Override
+		public void getWriteVariableNames(Set<String> varNames) {
+		}
+
+		@Override
 		public String toString() {
 			return text.toString();
 		}
@@ -374,6 +467,11 @@ public class WoolNodeBody {
 		@Override
 		public void getReadVariableNames(Set<String> varNames) {
 			command.getReadVariableNames(varNames);
+		}
+
+		@Override
+		public void getWriteVariableNames(Set<String> varNames) {
+			command.getWriteVariableNames(varNames);
 		}
 		
 		@Override

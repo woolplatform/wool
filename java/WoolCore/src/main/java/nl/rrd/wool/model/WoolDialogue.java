@@ -46,6 +46,7 @@ public class WoolDialogue {
 	private Map<String,WoolNode> nodes = new LinkedHashMap<>();
 	private Set<String> speakers = new HashSet<>();
 	private Set<String> variablesNeeded = new HashSet<>();
+	private Set<String> variablesWritten = new HashSet<>();
 	private Set<String> dialoguesReferenced = new HashSet<>();
 	
 	// ---------- Constructors:
@@ -95,7 +96,10 @@ public class WoolDialogue {
 		nodes.put(node.getTitle().toLowerCase(), node);
 		speakers.add(node.getHeader().getSpeaker());
 		node.getBody().getReadVariableNames(variablesNeeded);
-		for (WoolNodePointer nodePointer : node.getBody().getNodePointers()) {
+		node.getBody().getWriteVariableNames(variablesWritten);
+		Set<WoolNodePointer> nodePointers = new HashSet<>();
+		node.getBody().getNodePointers(nodePointers);
+		for (WoolNodePointer nodePointer : nodePointers) {
 			if (!(nodePointer instanceof WoolNodePointerExternal))
 				continue;
 			WoolNodePointerExternal extPointer =
@@ -116,6 +120,10 @@ public class WoolDialogue {
 
 	public Set<String> getVariablesNeeded() {
 		return Collections.unmodifiableSet(variablesNeeded);
+	}
+	
+	public Set<String> getVariablesWritten() {
+		return Collections.unmodifiableSet(variablesWritten);
 	}
 	
 	public Set<String> getDialoguesReferenced() {
@@ -175,6 +183,14 @@ public class WoolDialogue {
 	}
 	
 	/**
+	 * Returns the total number of different variables written in executing this {@link WoolDialogue}.
+	 * @return the total number of different variables written in executing this {@link WoolDialogue}.
+	 */
+	public int getVariablesWrittenCount() {
+		return variablesWritten.size();
+	}
+	
+	/**
 	 * Returns a human readable multi-line summary string, representing the contents of this {@link WoolDialogue}.
 	 */
 	public String toString() {
@@ -190,13 +206,24 @@ public class WoolDialogue {
 			summaryString += "  - " + s + "\n";
 		}
 		
-		summaryString += "Dialogues Referenced ("+getDialoguesReferencedCount()+"):\n";
-		for(String s : getDialoguesReferenced()) {
+		summaryString += "Dialogues referenced ("+getDialoguesReferencedCount()+"):\n";
+		List<String> names = new ArrayList<>(getDialoguesReferenced());
+		Collections.sort(names);
+		for(String s : names) {
 			summaryString += "  - " + s + "\n";
 		}
 		
-		summaryString += "Variables Needed ("+getVariablesNeededCount()+"):\n";
-		for(String s : getVariablesNeeded()) {
+		summaryString += "Variables needed ("+getVariablesNeededCount()+"):\n";
+		names = new ArrayList<>(getVariablesNeeded());
+		Collections.sort(names);
+		for(String s : names) {
+			summaryString += "  - " + s + "\n";
+		}
+		
+		summaryString += "Variables written ("+getVariablesWrittenCount()+"):\n";
+		names = new ArrayList<>(getVariablesWritten());
+		Collections.sort(names);
+		for(String s : names) {
 			summaryString += "  - " + s + "\n";
 		}
 		

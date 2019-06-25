@@ -182,6 +182,20 @@ public class WoolReply {
 	}
 	
 	/**
+	 * Retrieves all variable names that are written in this reply and adds them
+	 * to the specified set.
+	 * 
+	 * @param varNames the set to which the variable names are added
+	 */
+	public void getWriteVariableNames(Set<String> varNames) {
+		if (statement != null)
+			statement.getWriteVariableNames(varNames);
+		for (WoolCommand command : commands) {
+			command.getWriteVariableNames(varNames);
+		}
+	}
+	
+	/**
 	 * Executes the statement in this reply with respect to the specified
 	 * variable map. It executes commands and resolves variables, so that only
 	 * content that should be sent to the client, remains in the resulting

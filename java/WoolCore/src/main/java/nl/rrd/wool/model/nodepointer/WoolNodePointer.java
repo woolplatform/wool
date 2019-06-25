@@ -64,4 +64,23 @@ public abstract class WoolNodePointer {
 	public void setNodeId(String nodeId) {
 		this.nodeId = nodeId;
 	}
+
+	@Override
+	public int hashCode() {
+		return nodeId.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		WoolNodePointer other = (WoolNodePointer)obj;
+		if (!nodeId.equals(other.nodeId))
+			return false;
+		return true;
+	}
 }
