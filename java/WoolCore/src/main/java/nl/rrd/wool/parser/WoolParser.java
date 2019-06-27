@@ -163,10 +163,8 @@ public class WoolParser {
 				continue;
 			WoolNodePointerInternal pointer =
 					(WoolNodePointerInternal)pointerToken.getPointer();
-			if (pointer.getNodeId().toLowerCase().equals("end") ||
-					dialogue.nodeExists(pointer.getNodeId())) {
+			if (dialogue.nodeExists(pointer.getNodeId()))
 				continue;
-			}
 			WoolBodyToken token = pointerToken.getToken();
 			LineNumberParseException parseEx = new LineNumberParseException(
 					"Found reply with pointer to non-existing node: " +
@@ -247,6 +245,8 @@ public class WoolParser {
 			WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
 			body = bodyParser.parse(bodyTokens, Arrays.asList(
 					"action", "if", "set"));
+			if (header.getTitle().toLowerCase().equals("end"))
+				validateEndNode(header, body, bodyTokens);
 			nodePointerTokens.addAll(nodeState.getNodePointerTokens());
 			result.node = new WoolNode(header, body);
 			return result;
@@ -255,6 +255,16 @@ public class WoolParser {
 					headerMap.get("title"), ex);
 			return result;
 		}
+	}
+	
+	private void validateEndNode(WoolNodeHeader header, WoolNodeBody body,
+			List<WoolBodyToken> tokens) throws LineNumberParseException {
+		if (body.getSegments().isEmpty() && body.getReplies().isEmpty())
+			return;
+		WoolBodyToken token = tokens.get(0);
+		throw new LineNumberParseException(String.format(
+				"Node \"%s\" must have an empty body", header.getTitle()),
+				token.getLineNum(), token.getColNum());
 	}
 	
 	/**
@@ -316,11 +326,6 @@ public class WoolParser {
 			if (!value.matches(NODE_NAME_REGEX)) {
 				throw new LineNumberParseException(
 						"Invalid node title: " + value, lineNum, valueIndex);
-			}
-			if (value.toLowerCase().equals("end")) {
-				throw new LineNumberParseException(String.format(
-						"Node title \"%s\" is reserved", value), lineNum,
-						valueIndex);
 			}
 			if (dialogue.nodeExists(value)) {
 				throw new LineNumberParseException(
