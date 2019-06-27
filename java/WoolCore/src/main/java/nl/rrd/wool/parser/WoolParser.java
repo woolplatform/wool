@@ -200,30 +200,31 @@ public class WoolParser {
 	 */
 	private ReadWoolNodeResult readNode() throws IOException {
 		ReadWoolNodeResult result = new ReadWoolNodeResult();
-		Map<String,String> headerMap = new LinkedHashMap<>();
-		WoolNodeHeader header;
-		WoolNodeBody body;
+		WoolNodeState nodeState = new WoolNodeState();
 		try {
 			boolean inHeader = true;
+			Map<String,String> headerMap = new LinkedHashMap<>();
 			int lineNum = reader.getLineNum();
 			String line = readLine();
 			while (line != null && inHeader) {
 				if (getContent(line).equals("---")) {
 					inHeader = false;
 				} else {
-					parseHeaderLine(headerMap, line, lineNum);
+					parseHeaderLine(headerMap, line, lineNum, nodeState);
 					lineNum = reader.getLineNum();
 					line = readLine();
 				}
 			}
 			if (inHeader) {
-				if (headerMap.isEmpty())
+				if (nodeState.getTitle() == null &&
+						nodeState.getSpeaker() == null && headerMap.isEmpty()) {
 					return null;
+				}
 				throw new LineNumberParseException(
 						"Found incomplete node at end of file",
 						reader.getLineNum(), reader.getColNum());
 			}
-			header = createHeader(headerMap, lineNum);
+			WoolNodeHeader header = createHeader(headerMap, lineNum, nodeState);
 			boolean inBody = true;
 			WoolBodyTokenizer tokenizer = new WoolBodyTokenizer();
 			lineNum = reader.getLineNum();
@@ -240,10 +241,8 @@ public class WoolParser {
 					line = readLine();
 				}
 			}
-			WoolNodeState nodeState = new WoolNodeState();
-			nodeState.setNodeTitle(header.getTitle());
 			WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
-			body = bodyParser.parse(bodyTokens, Arrays.asList(
+			WoolNodeBody body = bodyParser.parse(bodyTokens, Arrays.asList(
 					"action", "if", "set"));
 			if (header.getTitle().toLowerCase().equals("end"))
 				validateEndNode(header, body, bodyTokens);
@@ -252,7 +251,7 @@ public class WoolParser {
 			return result;
 		} catch (LineNumberParseException ex) {
 			result.parseException = createWoolNodeParseException(
-					headerMap.get("title"), ex);
+					nodeState.getTitle(), ex);
 			return result;
 		}
 	}
@@ -293,7 +292,8 @@ public class WoolParser {
 	}
 
 	private void parseHeaderLine(Map<String,String> headerMap, String line,
-			int lineNum) throws LineNumberParseException {
+			int lineNum, WoolNodeState nodeState)
+			throws LineNumberParseException {
 		int commentSep = line.indexOf("//");
 		if (commentSep != -1)
 			line = line.substring(0, commentSep);
@@ -311,9 +311,7 @@ public class WoolParser {
 			keyIndex += skipWhitespace(keyUntrimmed, 0);
 		String valueUntrimmed = line.substring(sep + 1);
 		String value = valueUntrimmed.trim();
-		int valueIndex = sep + 2;
-		if (!value.isEmpty())
-			valueIndex += skipWhitespace(valueUntrimmed, 0);
+		int valueCol = sep + 2 + skipWhitespace(valueUntrimmed, 0);
 		if (key.length() == 0) {
 			throw new LineNumberParseException("Found empty header name",
 					lineNum, 0);
@@ -325,39 +323,48 @@ public class WoolParser {
 		if (key.equals("title")) {
 			if (!value.matches(NODE_NAME_REGEX)) {
 				throw new LineNumberParseException(
-						"Invalid node title: " + value, lineNum, valueIndex);
+						"Invalid node title: " + value, lineNum, valueCol);
 			}
 			if (dialogue.nodeExists(value)) {
 				throw new LineNumberParseException(
 						"Found duplicate node title: " + value, lineNum,
-						valueIndex);
+						valueCol);
 			}
+			nodeState.setTitle(value);
 		} else if (key.equals("speaker")) {
-			if (value.length() == 0) {
-				throw new LineNumberParseException("Found empty speaker",
-						lineNum, valueIndex);
-			}
+			nodeState.setSpeaker(value);
+			nodeState.setSpeakerLine(lineNum);
+			nodeState.setSpeakerColumn(valueCol);
+		} else {
+			headerMap.put(key, value);
 		}
-		headerMap.put(key, value);
 	}
 	
 	private WoolNodeHeader createHeader(Map<String,String> headerMap,
-			int lineNum) throws LineNumberParseException {
-		Map<String,String> optionalTags = new LinkedHashMap<>(headerMap);
-		if (!optionalTags.containsKey("title")) {
+			int lineNum, WoolNodeState nodeState)
+			throws LineNumberParseException {
+		String title = nodeState.getTitle();
+		if (title == null) {
 			throw new LineNumberParseException(
 					"Required header \"title\" not found",
 					lineNum, 1);
 		}
-		String title = optionalTags.remove("title");
-		if (!title.toLowerCase().equals("end") &&
-				!optionalTags.containsKey("speaker")) {
-			throw new LineNumberParseException(
-					"Required header \"speaker\" not found",
-					lineNum, 1);
+		String speaker = nodeState.getSpeaker();
+		if (nodeState.getTitle().toLowerCase().equals("end")) {
+			speaker = null;
+		} else {
+			if (speaker == null) {
+				throw new LineNumberParseException(
+						"Required header \"speaker\" not found",
+						lineNum, 1);
+			}
+			if (speaker.length() == 0) {
+				throw new LineNumberParseException("Found empty speaker",
+						nodeState.getSpeakerLine(),
+						nodeState.getSpeakerColumn());
+			}
 		}
-		String speaker = optionalTags.remove("speaker");
-		WoolNodeHeader header = new WoolNodeHeader(title, optionalTags);
+		WoolNodeHeader header = new WoolNodeHeader(title, headerMap);
 		header.setSpeaker(speaker);
 		return header;
 	}

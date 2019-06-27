@@ -28,16 +28,43 @@ import java.util.List;
 import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 
 public class WoolNodeState {
-	private String nodeTitle;
+	private String title = null;
+	private String speaker = null;
+	private int speakerLine = 0;
+	private int speakerColumn = 0;
 	private int nextReplyId = 1;
 	private List<NodePointerToken> nodePointerTokens = new ArrayList<>();
-	
-	public String getNodeTitle() {
-		return nodeTitle;
+
+	public String getTitle() {
+		return title;
 	}
 
-	public void setNodeTitle(String nodeTitle) {
-		this.nodeTitle = nodeTitle;
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getSpeaker() {
+		return speaker;
+	}
+
+	public void setSpeaker(String speaker) {
+		this.speaker = speaker;
+	}
+
+	public int getSpeakerLine() {
+		return speakerLine;
+	}
+
+	public void setSpeakerLine(int speakerLine) {
+		this.speakerLine = speakerLine;
+	}
+
+	public int getSpeakerColumn() {
+		return speakerColumn;
+	}
+
+	public void setSpeakerColumn(int speakerColumn) {
+		this.speakerColumn = speakerColumn;
 	}
 
 	public int createNextReplyId() {
@@ -50,7 +77,7 @@ public class WoolNodeState {
 	
 	public void addNodePointerToken(WoolNodePointer pointer,
 			WoolBodyToken token) {
-		nodePointerTokens.add(new NodePointerToken(nodeTitle, pointer, token));
+		nodePointerTokens.add(new NodePointerToken(title, pointer, token));
 	}
 
 	public static class NodePointerToken {
