@@ -94,7 +94,8 @@ public class WoolDialogue {
 	
 	public void addNode(WoolNode node) {
 		nodes.put(node.getTitle().toLowerCase(), node);
-		speakers.add(node.getHeader().getSpeaker());
+		if (node.getHeader().getSpeaker() != null)
+			speakers.add(node.getHeader().getSpeaker());
 		node.getBody().getReadVariableNames(variablesNeeded);
 		node.getBody().getWriteVariableNames(variablesWritten);
 		Set<WoolNodePointer> nodePointers = new HashSet<>();

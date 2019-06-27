@@ -343,19 +343,22 @@ public class WoolParser {
 	
 	private WoolNodeHeader createHeader(Map<String,String> headerMap,
 			int lineNum) throws LineNumberParseException {
-		List<String> requiredHeaders = Arrays.asList("title", "speaker");
 		Map<String,String> optionalTags = new LinkedHashMap<>(headerMap);
-		for (String requiredHeader : requiredHeaders) {
-			if (!headerMap.containsKey(requiredHeader)) {
-				throw new LineNumberParseException(String.format(
-						"Required header \"%s\" not found", requiredHeader),
-						lineNum, 1);
-			}
-			optionalTags.remove(requiredHeader);
+		if (!optionalTags.containsKey("title")) {
+			throw new LineNumberParseException(
+					"Required header \"title\" not found",
+					lineNum, 1);
 		}
-		WoolNodeHeader header = new WoolNodeHeader(headerMap.get("title"),
-				optionalTags);
-		header.setSpeaker(headerMap.get("speaker"));
+		String title = optionalTags.remove("title");
+		if (!title.toLowerCase().equals("end") &&
+				!optionalTags.containsKey("speaker")) {
+			throw new LineNumberParseException(
+					"Required header \"speaker\" not found",
+					lineNum, 1);
+		}
+		String speaker = optionalTags.remove("speaker");
+		WoolNodeHeader header = new WoolNodeHeader(title, optionalTags);
+		header.setSpeaker(speaker);
 		return header;
 	}
 	

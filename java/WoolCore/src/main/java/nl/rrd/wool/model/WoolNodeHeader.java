@@ -85,7 +85,8 @@ public class WoolNodeHeader {
 		String newline = System.getProperty("line.separator");
 		StringBuilder result = new StringBuilder();
 		result.append("title: " + title);
-		result.append(newline + "speaker: " + speaker);
+		if (speaker != null)
+			result.append(newline + "speaker: " + speaker);
 		for (String key : optionalTags.keySet()) {
 			String value = optionalTags.get(key);
 			result.append(newline + key + ": " + value);
