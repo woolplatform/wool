@@ -20,61 +20,48 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-package nl.rrd.wool.parser;
+package nl.rrd.wool.exception;
 
-import java.util.ArrayList;
-import java.util.List;
+/**
+ * This exception indicates a parse error within a node.
+ * 
+ * @author Dennis Hofs (RRD)
+ */
+public class WoolNodeParseException extends ParseException {
+	private static final long serialVersionUID = 5095774410463182542L;
 
-import nl.rrd.wool.model.nodepointer.WoolNodePointer;
-
-public class WoolNodeState {
 	private String nodeTitle;
-	private int nextReplyId = 1;
-	private List<NodePointerToken> nodePointerTokens = new ArrayList<>();
-	
+
+	/**
+	 * Constructs a new exception in the specified node. If the node title is
+	 * unknown, it can be set to null.
+	 * 
+	 * @param message the message
+	 * @param nodeTitle the node title or null
+	 * @param cause the parse error
+	 */
+	public WoolNodeParseException(String message, String nodeTitle,
+			LineNumberParseException cause) {
+		super(message, cause);
+		this.nodeTitle = nodeTitle;
+	}
+
+	/**
+	 * Returns the node title. If the title is unknown, this method returns
+	 * null.
+	 * 
+	 * @return the node title or null
+	 */
 	public String getNodeTitle() {
 		return nodeTitle;
 	}
 
-	public void setNodeTitle(String nodeTitle) {
-		this.nodeTitle = nodeTitle;
-	}
-
-	public int createNextReplyId() {
-		return nextReplyId++;
-	}
-	
-	public List<NodePointerToken> getNodePointerTokens() {
-		return nodePointerTokens;
-	}
-	
-	public void addNodePointerToken(WoolNodePointer pointer,
-			WoolBodyToken token) {
-		nodePointerTokens.add(new NodePointerToken(nodeTitle, pointer, token));
-	}
-
-	public static class NodePointerToken {
-		private String nodeTitle;
-		private WoolNodePointer pointer;
-		private WoolBodyToken token;
-		
-		public NodePointerToken(String nodeTitle, WoolNodePointer pointer,
-				WoolBodyToken token) {
-			this.nodeTitle = nodeTitle;
-			this.pointer = pointer;
-			this.token = token;
-		}
-		
-		public String getNodeTitle() {
-			return nodeTitle;
-		}
-
-		public WoolNodePointer getPointer() {
-			return pointer;
-		}
-
-		public WoolBodyToken getToken() {
-			return token;
-		}
+	/**
+	 * Returns the parse error in the node.
+	 * 
+	 * @return the parse error in the node
+	 */
+	public LineNumberParseException getLineNumberParseException() {
+		return (LineNumberParseException)getCause();
 	}
 }

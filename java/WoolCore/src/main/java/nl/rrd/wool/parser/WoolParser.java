@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 
 import nl.rrd.wool.exception.LineNumberParseException;
+import nl.rrd.wool.exception.ParseException;
+import nl.rrd.wool.exception.WoolNodeParseException;
 import nl.rrd.wool.io.LineColumnNumberReader;
 import nl.rrd.wool.model.WoolDialogue;
 import nl.rrd.wool.model.WoolNode;
@@ -106,7 +108,7 @@ public class WoolParser {
 	
 	public class ReadResult {
 		private WoolDialogue dialogue = null;
-		private List<LineNumberParseException> parseErrors = new ArrayList<>();
+		private List<ParseException> parseErrors = new ArrayList<>();
 		
 		private ReadResult() {
 		}
@@ -115,7 +117,7 @@ public class WoolParser {
 			return dialogue;
 		}
 
-		public List<LineNumberParseException> getParseErrors() {
+		public List<ParseException> getParseErrors() {
 			return parseErrors;
 		}
 	}
@@ -131,8 +133,8 @@ public class WoolParser {
 	public ReadResult readDialogue() throws IOException {
 		ReadResult result = new ReadResult();
 		if (!dialogueName.matches("[A-Za-z0-9_-]+")) {
-			result.parseErrors.add(new LineNumberParseException(
-					"Invalid dialogue name: " + dialogueName, 1, 1));
+			result.parseErrors.add(new ParseException(
+					"Invalid dialogue name: " + dialogueName));
 		}
 		WoolDialogue dialogue = new WoolDialogue(dialogueName);
 		this.dialogue = dialogue;
@@ -166,10 +168,11 @@ public class WoolParser {
 				continue;
 			}
 			WoolBodyToken token = pointerToken.getToken();
-			result.parseErrors.add(new LineNumberParseException(
+			LineNumberParseException parseEx = new LineNumberParseException(
 					"Found reply with pointer to non-existing node: " +
-					pointer.getNodeId(), token.getLineNum(),
-					token.getColNum()));
+					pointer.getNodeId(), token.getLineNum(), token.getColNum());
+			result.parseErrors.add(createWoolNodeParseException(
+					pointerToken.getNodeTitle(), parseEx));
 		}
 		if (!result.parseErrors.isEmpty())
 			return result;
@@ -181,7 +184,7 @@ public class WoolParser {
 	
 	private class ReadWoolNodeResult {
 		public WoolNode node = null;
-		public LineNumberParseException parseException = null;
+		public WoolNodeParseException parseException = null;
 		public boolean readNodeEnd = false;
 	}
 	
@@ -199,10 +202,10 @@ public class WoolParser {
 	 */
 	private ReadWoolNodeResult readNode() throws IOException {
 		ReadWoolNodeResult result = new ReadWoolNodeResult();
+		Map<String,String> headerMap = new LinkedHashMap<>();
 		WoolNodeHeader header;
 		WoolNodeBody body;
 		try {
-			Map<String,String> headerMap = new LinkedHashMap<>();
 			boolean inHeader = true;
 			int lineNum = reader.getLineNum();
 			String line = readLine();
@@ -240,6 +243,7 @@ public class WoolParser {
 				}
 			}
 			WoolNodeState nodeState = new WoolNodeState();
+			nodeState.setNodeTitle(header.getTitle());
 			WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
 			body = bodyParser.parse(bodyTokens, Arrays.asList(
 					"action", "if", "set"));
@@ -247,9 +251,27 @@ public class WoolParser {
 			result.node = new WoolNode(header, body);
 			return result;
 		} catch (LineNumberParseException ex) {
-			result.parseException = ex;
+			result.parseException = createWoolNodeParseException(
+					headerMap.get("title"), ex);
 			return result;
 		}
+	}
+	
+	/**
+	 * Creates a WoolNodeParseException with message "Error in node ..." If the
+	 * node title is unknown, it can be set to null.
+	 * 
+	 * @param nodeTitle the node title or null
+	 * @param ex the parse error
+	 * @return the WoolNodeParseException
+	 */
+	private WoolNodeParseException createWoolNodeParseException(
+			String nodeTitle, LineNumberParseException ex) {
+		String msg = "Error in node";
+		if (nodeTitle != null)
+			msg += " " + nodeTitle;
+		return new WoolNodeParseException(msg + ": " + ex.getMessage(),
+				nodeTitle, ex);
 	}
 	
 	private void moveToNextNode() throws IOException {
@@ -294,6 +316,11 @@ public class WoolParser {
 			if (!value.matches(NODE_NAME_REGEX)) {
 				throw new LineNumberParseException(
 						"Invalid node title: " + value, lineNum, valueIndex);
+			}
+			if (value.toLowerCase().equals("end")) {
+				throw new LineNumberParseException(String.format(
+						"Node title \"%s\" is reserved", value), lineNum,
+						valueIndex);
 			}
 			if (dialogue.nodeExists(value)) {
 				throw new LineNumberParseException(
@@ -446,7 +473,7 @@ public class WoolParser {
 		if (!readResult.parseErrors.isEmpty()) {
 			System.err.println("ERROR: Failed to parse file: " +
 					file.getAbsolutePath());
-			for (LineNumberParseException ex : readResult.parseErrors) {
+			for (ParseException ex : readResult.parseErrors) {
 				System.err.println(ex.getMessage());
 			}
 			System.exit(1);

@@ -201,6 +201,8 @@ public class ActiveWoolDialogue {
 	private WoolInputCommand findInputCommand(int replyId) {
 		WoolReply reply = this.currentNode.getBody().getReplyById(replyId);
 		WoolNodeBody body = reply.getStatement();
+		if (body == null)
+			return null;
 		for (WoolNodeBody.Segment segment : body.getSegments()) {
 			if (!(segment instanceof WoolNodeBody.CommandSegment))
 				continue;
