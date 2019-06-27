@@ -68,7 +68,7 @@ public class WoolBodyParser {
 					result.body.addSegment(new WoolNodeBody.TextSegment(text));
 				} else if (!text.isWhitespace()) {
 					throw new LineNumberParseException(
-							"Found content between replies", token.getLineNum(),
+							"Found content after reply", token.getLineNum(),
 							token.getColNum());
 				}
 				break;
@@ -83,7 +83,7 @@ public class WoolBodyParser {
 				} else if (!name.equals("if") &&
 						!result.body.getReplies().isEmpty()) {
 					throw new LineNumberParseException(
-							"Found << between replies", token.getLineNum(),
+							"Found << after reply", token.getLineNum(),
 							token.getColNum());
 				} else {
 					WoolCommand command = cmdParser.parseFromName(token,
