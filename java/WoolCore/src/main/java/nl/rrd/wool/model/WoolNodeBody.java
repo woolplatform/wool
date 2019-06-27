@@ -305,11 +305,12 @@ public class WoolNodeBody {
 	}
 	
 	/**
-	 * Executes the statement in this body with respect to the specified
-	 * variable map. It executes ("if" and "set") commands and resolves
-	 * variables. Any resulting body content that should be sent to the client,
-	 * is added to "processedBody". This content can be text or client commands,
-	 * with all variables resolved.
+	 * Executes the agent statement and reply statements in this body with
+	 * respect to the specified variable map. It executes ("if" and "set")
+	 * commands and resolves variables. Any resulting body content that should
+	 * be sent to the client, is added to agent and reply statements in
+	 * "processedBody". This content can be text or client commands, with all
+	 * variables resolved.
 	 * 
 	 * <p>This method also normalizes whitespace in the text segments. It
 	 * removes empty lines and makes sure that lines end with "\n". Within each

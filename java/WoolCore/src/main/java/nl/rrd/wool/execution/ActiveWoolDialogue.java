@@ -147,7 +147,9 @@ public class ActiveWoolDialogue {
 	
 	/**
 	 * Retrieves the next dialogue and node Ids based on the provided reply id.
-	 * @param replyId
+	 * It also performs any "set" actions associated with the reply.
+	 * 
+	 * @param replyId the reply ID
 	 * @return WoolNodePointer nodePointer to next (dialogue and) node. 
 	 */
 	public WoolNodePointer processReplyAndGetNodePointer(int replyId)
@@ -246,9 +248,9 @@ public class ActiveWoolDialogue {
 	 * Executes the agent statement and reply statements in the specified node
 	 * with respect to the specified variable map. It executes ("if" and "set")
 	 * commands and resolves variables. Any resulting body content that should
-	 * be sent to the client, is added to the statement body in the resulting
-	 * node. This content can be text or client commands, with all variables
-	 * resolved.
+	 * be sent to the client, is added to the (agent or reply) statement body in
+	 * the resulting node. This content can be text or client commands, with all
+	 * variables resolved.
 	 * 
 	 * @param woolNode a node to execute
 	 * @return the executed WoolNode
