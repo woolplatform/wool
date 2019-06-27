@@ -207,7 +207,11 @@ public class WoolParser {
 			int lineNum = reader.getLineNum();
 			String line = readLine();
 			while (line != null && inHeader) {
-				if (getContent(line).equals("---")) {
+				if (getContent(line).equals("===")) {
+					result.readNodeEnd = true;
+					throw new LineNumberParseException(
+							"End of header not found", lineNum, 1);
+				} else if (getContent(line).equals("---")) {
 					inHeader = false;
 				} else {
 					parseHeaderLine(headerMap, line, lineNum, nodeState);
