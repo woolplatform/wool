@@ -154,7 +154,8 @@ var data =
 			var readingBody = false;
 			for  (var i = 0; i < lines.length; i ++) {
 				// chop off any /r characters
-				lines[i] = lines[i].trim();
+				lines[i] = lines[i].replace("\r","");
+				//lines[i] = lines[i].trim();
 
 				if (lines[i].trim() == "===") {
 					readingBody = false;
@@ -232,7 +233,8 @@ var data =
 			var index  = 0;
 			for  (var i = 0; i < lines.length; i ++)
 			{
-				lines[i] = lines[i].trim();
+				lines[i] = lines[i].replace("\r","");
+				//lines[i] = lines[i].trim();
 				if (lines[i].substr(0, 2) == "::")
 				{
 					if (obj != null)
@@ -499,6 +501,30 @@ var data =
 			return true;
 			//window.open(content, "_blank");
 		}
+	},
+	saveToBuffer: function(dialog, type, content) {
+		var content = data.getSaveData(FILETYPE.WOOL);
+		if (localStorage) {
+			localStorage.setItem(app.LOCALSTORAGEPREFIX+"buffer",content);
+		}
+	},
+	// returns true = data loaded
+	loadFromBuffer: function(dialog, type, content) {
+		if (localStorage) {
+			var loaddata=localStorage.getItem(app.LOCALSTORAGEPREFIX+"buffer");
+			if (loaddata) {
+				data.loadData(loaddata, FILETYPE.WOOL, /*clearNodes*/true);
+				return true;
+			}
+		}
+		return false;
+	},
+
+	tryClearData: function() {
+		if (!confirm("Clear all nodes?")) return;
+		app.nodes.removeAll();
+		app.newNode().title("Start");
+		app.updateArrows();
 	},
 
 	tryOpenFile: function()

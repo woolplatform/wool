@@ -31,6 +31,8 @@ var App = function(name, version)
     
 	this.UPDATE_ARROWS_THROTTLE_MS = 50;
 
+	this.LOCALSTORAGEPREFIX="wooleditor_";
+
 	//this.editingPath = ko.observable(null);
 
 	this.nodeSelection = [];
@@ -59,20 +61,27 @@ var App = function(name, version)
 		if (osName == "Windows")
 			self.zoomSpeed = .1;
 
+		if (osName == "Linux")
+			self.zoomSpeed = .1;
+
 		$("#app").show();
 		ko.applyBindings(self, $("#app")[0]);
 
 		self.canvas = $(".arrows")[0];
 		self.context = self.canvas.getContext('2d');
 		// XXX load old defs here
-		self.newNode().title("Start");
+		if (!data.loadFromBuffer()) {
+			self.newNode().title("Start");
+		}
+
+		self.refreshWindowTitle(null);
 
 		if (osName != "Windows" && osName != "Linux" && self.gui != undefined)
 		{
 			var win = self.gui.Window.get();
 			var nativeMenuBar = new self.gui.Menu({ type: "menubar" });
 			if(nativeMenuBar.createMacBuiltin) {
-				nativeMenuBar.createMacBuiltin("Yarn");
+				nativeMenuBar.createMacBuiltin("Wool");
 			}
 			win.menu = nativeMenuBar;
 		}
@@ -150,10 +159,10 @@ var App = function(name, version)
 			$(".nodes").on("mousemove", function(e)
 			{
 				
-				if (dragging)
-				{
-					if (e.altKey || e.button === 1)
-					{
+				if (dragging) {
+					// We added shiftKey because altKey interferes with
+					// xfce metakey
+					if (e.shiftKey || e.altKey || e.button === 1) {
 						//prevents jumping straight back to standard dragging
 						if(MarqueeOn)
 						{
@@ -335,8 +344,8 @@ var App = function(name, version)
 				var x = self.transformOrigin[0] * -1 / self.cachedScale,
 					y = self.transformOrigin[1] * -1 / self.cachedScale;
 
-				x += event.pageX / self.cachedScale;
-				y += event.pageY / self.cachedScale;
+				x += e.pageX / self.cachedScale;
+				y += e.pageY / self.cachedScale;
 
 				self.newNodeAt(x, y); 
 			} 
@@ -360,17 +369,19 @@ var App = function(name, version)
 		});
                 
         $(document).on('keydown', function(e) {
+			// XXX Is this supposed to be node-webkit only? It works in the
+			// browser but interferes with metakeys.
             if (self.isNwjs === false) { return; }
             
             if (e.ctrlKey || e.metaKey) {
                 if (e.shiftKey) {
                     switch(e.keyCode)
                     {
-                        case 83: 
-                            data.trySave(FILETYPE.JSON);
-                            self.fileKeyPressed = true;
-                        break;
-                        case 65:
+                        //case 83: // 's'
+                        //    data.trySave(FILETYPE.JSON);
+                        //    self.fileKeyPressed = true;
+                        //break;
+                        case 65: // 'a'
                             data.tryAppend();
                             self.fileKeyPressed = true;
                         break;
@@ -378,23 +389,23 @@ var App = function(name, version)
                 } else if(e.altKey) {
                     switch(e.keyCode)
                     {
-                        case 83: 
-                            data.trySave(FILETYPE.YARNTEXT);
+                        case 83:  // 's'
+                            data.trySave(FILETYPE.WOOL);
                             self.fileKeyPressed = true;
                         break;
                     }  
                 } else {
                     switch(e.keyCode)
                     {
-                        case 83: 
-                            if (data.editingPath() != null) {
-                                data.trySaveCurrent();     
-                            } else {
-                                data.trySave(FILETYPE.JSON);
-                            }
-                            self.fileKeyPressed = true;
-                        break;
-                        case 79:
+                       // case 83: // 's'
+                       //     if (data.editingPath() != null) {
+                       //         data.trySaveCurrent();     
+                       //     } else {
+                       //         data.trySave(FILETYPE.JSON);
+                       //     }
+                       //     self.fileKeyPressed = true;
+                       // break;
+                        case 79: // 'o'
                             data.tryOpenFile();
                             self.fileKeyPressed = true;
                         break;                        
@@ -450,7 +461,7 @@ var App = function(name, version)
 			self.translate(100);
 		} );
 
-		$(window).on('resize', self.updateArrowsThrottled);
+		$(window).on('resize', self.updateArrows);
 
 		$(document).on('keyup keydown mousedown mouseup', function(e) {
 			if(self.editing() != null)
@@ -507,8 +518,11 @@ var App = function(name, version)
 		}
 	}
 
-	this.refreshWindowTitle = function(editingPath)
-	{
+	this.refreshWindowTitle = function(editingPath) {
+		if (!editingPath) {
+			editingPath = localStorage.getItem(app.LOCALSTORAGEPREFIX+"path");
+			if (!editingPath) return;
+		}
 		var gui = require('nw.gui');
 
 		if (!gui) return;
@@ -516,7 +530,9 @@ var App = function(name, version)
 		// Get the current window
 		var win = gui.Window.get();
 
-		win.title = "Yarn - [" + editingPath + "] ";// + (self.dirty?"*":"");
+		win.title = "Wool - [" + editingPath + "] ";// + (self.dirty?"*":"");
+		// XXX it's complicated
+		//localStorage.setItem(app.LOCALSTORAGEPREFIX+"path",editingPath);
 	}
 
 	this.recordNodeAction = function(action, node)
@@ -746,9 +762,9 @@ var App = function(name, version)
 		}
 	}
 
-	this.updateSearch = function()
-	{
+	this.updateSearch = function() {
 		var search = self.$searchField.val().toLowerCase();
+		var speaker= $(".search-speaker input").is(':checked');
 		var title = $(".search-title input").is(':checked');
 		var body = $(".search-body input").is(':checked');
 		var tags = $(".search-tags input").is(':checked');
@@ -756,32 +772,26 @@ var App = function(name, version)
 		var on = 1;
 		var off = 0.25;
 
-		for (var i = 0; i < app.nodes().length; i ++)
-		{
+		for (var i = 0; i < app.nodes().length; i ++) {
 			var node = app.nodes()[i];
 			var element = $(node.element);
 
-			if (search.length > 0 && (title || body || tags))
-			{
+			if (search.length > 0 && (speaker || title || body || tags)) {
+				var matchSpeaker = (speaker && node.speaker().toLowerCase().indexOf(search) >= 0);
 				var matchTitle = (title && node.title().toLowerCase().indexOf(search) >= 0);
 				var matchBody = (body && node.body().toLowerCase().indexOf(search) >= 0);
 				var matchTags = (tags && node.tags().toLowerCase().indexOf(search) >= 0);
 
-				if (matchTitle || matchBody || matchTags)
-				{
+				if (matchSpeaker || matchTitle || matchBody || matchTags) {
 					node.active(true);
 					element.clearQueue();
 					element.transition({opacity: on}, 500);
-				}
-				else
-				{
+				} else {
 					node.active(false);
 					element.clearQueue();
 					element.transition({opacity: off}, 500);
 				}
-			}
-			else
-			{
+			} else {
 				node.active(true);
 				element.clearQueue();
 				element.transition({opacity: on}, 500);
@@ -798,6 +808,7 @@ var App = function(name, version)
 
 	this.updateArrows = function()
 	{
+		console.log("updateArrows");
 		self.canvas.width = $(window).width();
 		self.canvas.height = $(window).height();
 
@@ -1095,8 +1106,19 @@ var App = function(name, version)
 		self.translate(200);
 	}
 
-	this.translate = function(speed)
-	{
+	this.translate = function(speed) {
+		$(".nodes-holder").css('transform',
+				"matrix(" +
+					self.cachedScale + ",0,0," +
+					self.cachedScale + "," +
+					self.transformOrigin[0] +"," +
+					self.transformOrigin[1] +
+				")"
+		);
+		self.updateArrows();
+		
+		return;
+		// XXX this part doesn't work so I disabled it
 		var updateArrowsInterval = setInterval(self.updateArrowsThrottled, 16);
 
 		$(".nodes-holder").transition(

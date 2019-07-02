@@ -160,6 +160,7 @@ a:hover { color: #000;}
 	display: block;
 	width: 100%;
 	padding: 10px;
+	color: #000;
 }
 
 .app-menu .dropdown .item:hover
@@ -337,10 +338,11 @@ a:hover { color: #000;}
 	line-height: 40px;
 	background: #eee;
 	color: #666;
-	font-size: 0.9em;
+	font-size: 0.8em;
 	font-weight: bold;
 	transition: color 0.25s, background 0.25s;
 	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .node .body
@@ -476,7 +478,7 @@ a:hover { color: #000;}
 {
 	display: block-inline;
 	box-sizing: border-box;
-	width: calc(100% - 120px);
+	width: calc(33% - 65px);
 	font-size: 1.2em;
 	color: #666;
 	padding: 10px 0px 10px 0px;

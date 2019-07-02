@@ -67,7 +67,7 @@ var Node = function()
 		self.y(-parent.offset().top + $(window).height() / 2 - 100);
 
 
-		var updateArrowsInterval = setInterval(app.updateArrowsThrottled, 16);
+		//var updateArrowsInterval = setInterval(app.updateArrowsThrottled, 16);
 
 		$(self.element)
 			.css({opacity: 0, scale: 0.8, y: "-=80px", rotate: "45deg"})
@@ -81,11 +81,11 @@ var Node = function()
 				250,
 				"easeInQuad",
 				function() {
-					clearInterval(updateArrowsInterval);
-					app.updateArrowsThrottled();
+					//clearInterval(updateArrowsInterval);
+					app.updateArrows();
 				}
 			);
-		self.drag();
+		self.initDrag();
 
 		$(self.element).on("dblclick", function()
 		{
@@ -196,18 +196,19 @@ var Node = function()
 		$(self.element).transition({opacity: 0, scale: 0.8, y: "-=80px", rotate: "-45deg"}, 250, "easeInQuad", function()
 		{
 			app.removeNode(self);
-			app.updateArrowsThrottled();
+			app.updateArrows();
 		});
 		app.deleting(null);
 	}
 
-	this.drag = function()
-	{
+	this.initDrag = function() {
 		var dragging = false;
 		var groupDragging = false;
 
 		var offset = [0, 0];
 		var moved = false;
+
+		// XXX the global event handlers are not removed when a node is deleted
 
 		$(document.body).on("mousemove", function(e) 
 		{
@@ -248,7 +249,7 @@ var Node = function()
 
 
 				//app.refresh();
-				app.updateArrowsThrottled();
+				app.updateArrows();
 			}
 		});
 
@@ -289,22 +290,27 @@ var Node = function()
 			dragging = false;
 			groupDragging = false;
 			moved = false;
-
-			app.updateArrowsThrottled();
+			// XXX this call causes a huge number of updates, slowing down the
+			// system. Moreover, there is a memory leak which causes the
+			// number of calls to increase if new files are loaded.
+			//app.updateArrows();
 		});
 	}
 
-	this.moveTo = function(newX, newY)
-	{
+	this.moveTo = function(newX, newY) {
+		console.log("moveTo");
 		$(self.element).clearQueue();
-		$(self.element).transition(
+		$(self.element).css('x',newX);
+		$(self.element).css('y',newY);
+		app.updateArrows();
+		/*$(self.element).transition(
 			{
 				x: newX,
 				y: newY
 			},
-			app.updateArrowsThrottled,
+			app.updateArrows,
 			500
-		);
+		);*/
 	}
 
 	this.isConnectedTo = function(otherNode, checkBack)

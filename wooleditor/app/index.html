@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Yarn</title>
+		<title>Wool editor</title>
 		<link rel="stylesheet" href="css/normalize.css">
 		<link rel="stylesheet" href="css/style.css">
 
@@ -34,7 +34,12 @@
 
 			<!-- search form -->
 			<div class="app-search">
+				Search: 
 				<input type="text" class="search-field"/>
+				<div class="search-speaker search-item">
+					<input type="checkbox" id="search-speaker" />
+					<label for="search-speaker">Speaker</label>
+				</div>
 				<div class="search-title search-item">
 					<input type="checkbox" checked="checked" id="search-title" />
 					<label for="search-title">Title</label>
@@ -73,12 +78,20 @@
 				</div>
 
 				<div class="menu">
+					<span class="title">Buffer</span>
+					<div class="dropdown">
+						<a class="item" download="file.wool" href='#' onclick="data.saveToBuffer();">Save</a>
+						<span class="item" data-bind="click: data.loadFromBuffer">Reload</span>
+					</div>
+				</div>
+				<div class="menu">
 					<span class="title">File</span>
 					<div class="dropdown">
+						<span class="item" data-bind="click: data.tryClearData">New project...</span>
 						<span class="item" data-bind="click: data.tryOpenFile">Open...</span>
 						<!--<span class="item" data-bind="click: data.tryOpenFolder">Open Folder...</span>-->
 						<span class="item" data-bind="click: data.tryAppend">Append...</span>
-						<a class="item" download="file.wool" href='#' onclick="data.saveFileDialog(this,FILETYPE.WOOL,data.getSaveData(FILETYPE.WOOL));">Save</a>
+						<a class="item" download="file.wool" href='#' onclick="data.saveFileDialog(this,FILETYPE.WOOL,data.getSaveData(FILETYPE.WOOL));">Save...</a>
 						<!-- ko if:data.editingPath() != null -->
 						<!--
 						<span class="item" data-bind="click: data.trySaveCurrent">Save</span>
@@ -105,7 +118,7 @@
 			<div class="nodes">
 				<div class="nodes-holder" data-bind="foreach: { data: app.nodes, as: 'node' }">
 					<div class="node" data-bind="nodeBind: true, css: { inactive: !node.active()}" >
-						<div class="title" data-bind="text: node.title, style: {background:
+						<div class="title" data-bind="text: node.speaker()+':&nbsp;'+node.title(), style: {background:
 						node.colorID() == 1 ? '#6EA5E0' :
 						node.colorID() == 2 ? '#9EDE74' :
 						node.colorID() == 3 ? '#FFE374' :
@@ -128,12 +141,12 @@
 			<div class="node-editor" data-bind="mousedown:app.saveNode">
 
 				<div class="form" data-bind="preventBubble: 'click', preventBubble: 'mousedown'">
-					<br>Title:
-					<input type="text" class="title" data-bind="value: app.editing().title">
-					<br>Tags:
-					<input type="text" data-bind="value: app.editing().tags">
 					<br>Speaker:
 					<input type="text" data-bind="value: app.editing().speaker">
+					Title:
+					<input type="text" class="title" data-bind="value: app.editing().title">
+					Tags:
+					<input type="text" data-bind="value: app.editing().tags">
 					<div class="editor-container">
 						<div class="editor" id="editor"
 							data-bind="
@@ -198,7 +211,7 @@
 
 		<!-- start it all up! -->
 		<script type="text/javascript">
-			var app = new App("Yarn", "0.2.1");
+			var app = new App("Wool Editor", "1.0");
 			app.run();
 		</script>
 
