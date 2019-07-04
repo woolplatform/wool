@@ -36,9 +36,10 @@ import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 
 /**
  * A reply option within a {@link WoolNodeBody WoolNodeBody}. A reply always has
- * a pointer to the next node when the reply is chosen. It usually has a
- * statement that is shown in the UI, but a node may have at most one reply
- * without a statement, which is known as an auto-forward reply.
+ * a pointer to the next node when the reply is chosen. This might be a pointer
+ * to the end node. The reply usually has a statement that is shown in the UI,
+ * but a node may have at most one reply without a statement, which is known as
+ * an auto-forward reply.
  * 
  * <p>The statement may contain a {@link WoolInputCommand WoolInputCommand} (see
  * {@link WoolNodeBody WoolNodeBody}).</p>
@@ -121,7 +122,8 @@ public class WoolReply {
 	}
 
 	/**
-	 * Returns the next node when this reply is chosen.
+	 * Returns the next node when this reply is chosen. This might be the end
+	 * node.
 	 * 
 	 * @return the next node when this reply is chosen
 	 */

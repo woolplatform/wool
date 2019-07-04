@@ -146,11 +146,12 @@ public class ActiveWoolDialogue {
 	}
 	
 	/**
-	 * Retrieves the next dialogue and node Ids based on the provided reply id.
-	 * It also performs any "set" actions associated with the reply.
+	 * Retrieves the pointer to the next node based on the provided reply id.
+	 * This might be a pointer to the end node. This method also performs any
+	 * "set" actions associated with the reply.
 	 * 
 	 * @param replyId the reply ID
-	 * @return WoolNodePointer nodePointer to next (dialogue and) node. 
+	 * @return WoolNodePointer the pointer to the next node
 	 */
 	public WoolNodePointer processReplyAndGetNodePointer(int replyId)
 			throws EvaluationException {
@@ -168,26 +169,31 @@ public class ActiveWoolDialogue {
 	}
 	
 	/**
-	 * Takes the selected reply and selects the next {@link WoolNode} based on the replies in the current {@link WoolNode}. 
-	 * If there is a next node, then returns the executed version of that next {@link WoolNode} which results from a call to the {@link #executeWoolNode(WoolNode)} function. 
-	 * @param selectedWoolReply
-	 * @return the next {@link WoolNode} that follows on the selected reply.  
+	 * Takes the next node pointer from the selected reply and determines the
+	 * next node. The pointer might point to the end note, which means that
+	 * there is no next node. If there is no next node, or the next node has no
+	 * reply options, then the dialogue is considered finished.
+	 * 
+	 * <p>If there is a next node, then it returns the executed version of that
+	 * next {@link WoolNode} which results from a call to the {@link
+	 * #executeWoolNode(WoolNode)} function.</p>
+	 *  
+	 * @param nodePointer the next node pointer from the selected reply
+	 * @return the next {@link WoolNode} that follows on the selected reply or
+	 * null  
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
 	public WoolNode progressDialogue(WoolNodePointerInternal nodePointer)
 			throws EvaluationException {
 		WoolNode nextNode = null;
-		nextNode = dialogueDefinition.getNodeById(nodePointer.getNodeId());
-		if(nextNode != null) {
-			this.currentNode = nextNode;
-			if(this.currentNode.getBody().getReplies().size() == 0) {
-				this.dialogueState = DialogueState.FINISHED;
-			}
+		if (!nodePointer.getNodeId().toLowerCase().equals("end"))
+			nextNode = dialogueDefinition.getNodeById(nodePointer.getNodeId());
+		this.currentNode = nextNode;
+		if (nextNode == null || nextNode.getBody().getReplies().isEmpty())
+			this.dialogueState = DialogueState.FINISHED;
+		if (nextNode != null)
 			this.currentNode = executeWoolNode(nextNode);
-			return currentNode;
-		} else {
-			return null;
-		}
+		return currentNode;
 	}
 	
 	public void storeReplyInput(int replyId, Object input) {
