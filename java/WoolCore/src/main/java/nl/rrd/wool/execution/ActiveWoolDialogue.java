@@ -25,6 +25,7 @@ package nl.rrd.wool.execution;
 import java.util.List;
 import java.util.Map;
 
+import nl.rrd.wool.exception.WoolException;
 import nl.rrd.wool.execution.WoolVariableStore.VariableSource;
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.expressions.Value;
@@ -114,14 +115,41 @@ public class ActiveWoolDialogue {
 	// ---------- Functions:
 	
 	/**
-	 * "Starts" this {@link ActiveWoolDialogue}, returning the start node and updating
-	 * its internal state.
+	 * "Starts" this {@link ActiveWoolDialogue}, returning the start node and
+	 * updating its internal state.
+	 * 
 	 * @return the initial {@link WoolNode}.
+	 * @throws WoolException if the request is invalid
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode startDialogue() throws EvaluationException {
+	public WoolNode startDialogue() throws WoolException, EvaluationException {
+		return startDialogue(null);
+	}
+	
+	/**
+	 * "Starts" this {@link ActiveWoolDialogue} at the provided {@WoolNode},
+	 * returning that first node and updating the dialogue's internal state.
+	 * If you set the nodeId to null, it will return the start node.
+	 * 
+	 * @return nodeId the node ID or null
+	 * @return the first {@link WoolNode}
+	 * @throws WoolException if the request is invalid
+	 * @throws EvaluationException if an expression cannot be evaluated
+	 */
+	public WoolNode startDialogue(String nodeId) throws WoolException,
+			EvaluationException {
 		this.dialogueState = DialogueState.ACTIVE;
-		WoolNode nextNode = dialogueDefinition.getStartNode();
+		WoolNode nextNode;
+		if (nodeId == null) {
+			nextNode = dialogueDefinition.getStartNode();
+		} else {
+			nextNode = dialogueDefinition.getNodeById(nodeId);
+			if (nextNode == null) {
+				throw new WoolException(WoolException.Type.NODE_NOT_FOUND,
+						String.format("Node \"%s\" not found in dialogue \"%s\"",
+								nodeId, dialogueDefinition.getDialogueName()));
+			}
+		}
 		this.currentNode = nextNode;
 		if(this.currentNode.getBody().getReplies().size() == 0) {
 			this.dialogueState = DialogueState.FINISHED;
@@ -130,27 +158,12 @@ public class ActiveWoolDialogue {
 	}
 	
 	/**
-	 * "Starts" this {@link ActiveWoolDialogue} at the provided {@WoolNode}, returning that first node
-	 * and updating the dialogue's internal state.
-	 * @return the first {@link WoolNode}.
-	 * @throws EvaluationException if an expression cannot be evaluated
-	 */
-	public WoolNode startDialogue(String nodeId) throws EvaluationException {
-		this.dialogueState = DialogueState.ACTIVE;
-		WoolNode nextNode = dialogueDefinition.getNodeById(nodeId);
-		this.currentNode = nextNode;
-		if(this.currentNode.getBody().getReplies().size() == 0) {
-			this.dialogueState = DialogueState.FINISHED;
-		}
-		return executeWoolNode(nextNode);
-	}
-	
-	/**
-	 * Retrieves the next dialogue and node Ids based on the provided reply id.
-	 * It also performs any "set" actions associated with the reply.
+	 * Retrieves the pointer to the next node based on the provided reply id.
+	 * This might be a pointer to the end node. This method also performs any
+	 * "set" actions associated with the reply.
 	 * 
 	 * @param replyId the reply ID
-	 * @return WoolNodePointer nodePointer to next (dialogue and) node. 
+	 * @return WoolNodePointer the pointer to the next node
 	 */
 	public WoolNodePointer processReplyAndGetNodePointer(int replyId)
 			throws EvaluationException {
@@ -168,26 +181,31 @@ public class ActiveWoolDialogue {
 	}
 	
 	/**
-	 * Takes the selected reply and selects the next {@link WoolNode} based on the replies in the current {@link WoolNode}. 
-	 * If there is a next node, then returns the executed version of that next {@link WoolNode} which results from a call to the {@link #executeWoolNode(WoolNode)} function. 
-	 * @param selectedWoolReply
-	 * @return the next {@link WoolNode} that follows on the selected reply.  
+	 * Takes the next node pointer from the selected reply and determines the
+	 * next node. The pointer might point to the end note, which means that
+	 * there is no next node. If there is no next node, or the next node has no
+	 * reply options, then the dialogue is considered finished.
+	 * 
+	 * <p>If there is a next node, then it returns the executed version of that
+	 * next {@link WoolNode} which results from a call to the {@link
+	 * #executeWoolNode(WoolNode)} function.</p>
+	 *  
+	 * @param nodePointer the next node pointer from the selected reply
+	 * @return the next {@link WoolNode} that follows on the selected reply or
+	 * null  
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
 	public WoolNode progressDialogue(WoolNodePointerInternal nodePointer)
 			throws EvaluationException {
 		WoolNode nextNode = null;
-		nextNode = dialogueDefinition.getNodeById(nodePointer.getNodeId());
-		if(nextNode != null) {
-			this.currentNode = nextNode;
-			if(this.currentNode.getBody().getReplies().size() == 0) {
-				this.dialogueState = DialogueState.FINISHED;
-			}
+		if (!nodePointer.getNodeId().toLowerCase().equals("end"))
+			nextNode = dialogueDefinition.getNodeById(nodePointer.getNodeId());
+		this.currentNode = nextNode;
+		if (nextNode == null || nextNode.getBody().getReplies().isEmpty())
+			this.dialogueState = DialogueState.FINISHED;
+		if (nextNode != null)
 			this.currentNode = executeWoolNode(nextNode);
-			return currentNode;
-		} else {
-			return null;
-		}
+		return currentNode;
 	}
 	
 	public void storeReplyInput(int replyId, Object input) {
@@ -220,8 +238,14 @@ public class ActiveWoolDialogue {
 	 * @param replyId
 	 * @return 
 	 */
-	public String getUserStatementFromReplyId(int replyId) {
+	public String getUserStatementFromReplyId(int replyId) throws WoolException {
 		WoolReply selectedReply = currentNode.getBody().getReplyById(replyId);
+		if (selectedReply == null) {
+			throw new WoolException(WoolException.Type.REPLY_NOT_FOUND,
+					String.format("Reply with ID %s not found in dialogue \"%s\", node \"%s\"",
+					replyId, dialogueDefinition.getDialogueName(),
+					currentNode.getTitle()));
+		}
 		if (selectedReply.getStatement() == null)
 			return "AUTOFORWARD";
 		StringBuilder result = new StringBuilder();

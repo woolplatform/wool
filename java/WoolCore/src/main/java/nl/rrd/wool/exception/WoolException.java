@@ -23,11 +23,29 @@
 package nl.rrd.wool.exception;
 
 public class WoolException extends Exception {
-
 	private static final long serialVersionUID = -8591019315920219483L;
+
+	public enum Type {
+		AGENT_NOT_FOUND,
+		DIALOGUE_NOT_FOUND,
+		NODE_NOT_FOUND,
+		REPLY_NOT_FOUND,
+		NO_ACTIVE_DIALOGUE
+	}
 	
-	public WoolException(String message) {
+	private Type type;
+	
+	public WoolException(Type type, String message) {
 		super(message);
+		this.type = type;
+	}
+	
+	public WoolException(Type type, String message, Throwable cause) {
+		super(message, cause);
+		this.type = type;
 	}
 
+	public Type getType() {
+		return type;
+	}
 }
