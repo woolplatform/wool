@@ -25,6 +25,7 @@ package nl.rrd.wool.execution;
 import java.util.List;
 import java.util.Map;
 
+import nl.rrd.wool.exception.WoolException;
 import nl.rrd.wool.execution.WoolVariableStore.VariableSource;
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.expressions.Value;
@@ -114,30 +115,41 @@ public class ActiveWoolDialogue {
 	// ---------- Functions:
 	
 	/**
-	 * "Starts" this {@link ActiveWoolDialogue}, returning the start node and updating
-	 * its internal state.
+	 * "Starts" this {@link ActiveWoolDialogue}, returning the start node and
+	 * updating its internal state.
+	 * 
 	 * @return the initial {@link WoolNode}.
+	 * @throws WoolException if the request is invalid
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode startDialogue() throws EvaluationException {
-		this.dialogueState = DialogueState.ACTIVE;
-		WoolNode nextNode = dialogueDefinition.getStartNode();
-		this.currentNode = nextNode;
-		if(this.currentNode.getBody().getReplies().size() == 0) {
-			this.dialogueState = DialogueState.FINISHED;
-		}
-		return executeWoolNode(nextNode);
+	public WoolNode startDialogue() throws WoolException, EvaluationException {
+		return startDialogue(null);
 	}
 	
 	/**
-	 * "Starts" this {@link ActiveWoolDialogue} at the provided {@WoolNode}, returning that first node
-	 * and updating the dialogue's internal state.
-	 * @return the first {@link WoolNode}.
+	 * "Starts" this {@link ActiveWoolDialogue} at the provided {@WoolNode},
+	 * returning that first node and updating the dialogue's internal state.
+	 * If you set the nodeId to null, it will return the start node.
+	 * 
+	 * @return nodeId the node ID or null
+	 * @return the first {@link WoolNode}
+	 * @throws WoolException if the request is invalid
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode startDialogue(String nodeId) throws EvaluationException {
+	public WoolNode startDialogue(String nodeId) throws WoolException,
+			EvaluationException {
 		this.dialogueState = DialogueState.ACTIVE;
-		WoolNode nextNode = dialogueDefinition.getNodeById(nodeId);
+		WoolNode nextNode;
+		if (nodeId == null) {
+			nextNode = dialogueDefinition.getStartNode();
+		} else {
+			nextNode = dialogueDefinition.getNodeById(nodeId);
+			if (nextNode == null) {
+				throw new WoolException(WoolException.Type.NODE_NOT_FOUND,
+						String.format("Node \"%s\" not found in dialogue \"%s\"",
+								nodeId, dialogueDefinition.getDialogueName()));
+			}
+		}
 		this.currentNode = nextNode;
 		if(this.currentNode.getBody().getReplies().size() == 0) {
 			this.dialogueState = DialogueState.FINISHED;
@@ -226,8 +238,14 @@ public class ActiveWoolDialogue {
 	 * @param replyId
 	 * @return 
 	 */
-	public String getUserStatementFromReplyId(int replyId) {
+	public String getUserStatementFromReplyId(int replyId) throws WoolException {
 		WoolReply selectedReply = currentNode.getBody().getReplyById(replyId);
+		if (selectedReply == null) {
+			throw new WoolException(WoolException.Type.REPLY_NOT_FOUND,
+					String.format("Reply with ID %s not found in dialogue \"%s\", node \"%s\"",
+					replyId, dialogueDefinition.getDialogueName(),
+					currentNode.getTitle()));
+		}
 		if (selectedReply.getStatement() == null)
 			return "AUTOFORWARD";
 		StringBuilder result = new StringBuilder();
