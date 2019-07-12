@@ -45,6 +45,29 @@ if (config.background!==null)
 
 directServerLoadDialogue("dialogue",params.code);
 
+var errorsFound=false;
+var errors = {};
+for (var i=0; i<directServer.dialogues["dialogue"].nodes.length; i++) {
+	var node = directServer.dialogues["dialogue"].nodes[i];
+	if (node.errors.length) {
+		errorsFound=true;
+		errors[node.param.title] = [];
+		for (var j=0; j<node.errors.length; j++) {
+			var err = node.errors[j];
+			errors[node.param.title].push(
+				(err.line!==null ? "Line "+(err.line+1)+":" : "")
+				+err.msg+" ("+err.level+")");
+		}
+	}
+}
+if (errorsFound) {
+	showingInDebug="errors";
+	var dbox = document.getElementById("debugarea");
+	dbox.parentNode.style.display="block";
+	dbox.innerHTML = "Errors were found while parsing.\n"
+		+"A list of nodes with errors found in each node follows.\n\n"
+		+JSON.stringify(errors,null,2);
+}
 
 // edit functions ---------------------------------------------------------
 

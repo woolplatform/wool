@@ -133,10 +133,6 @@ _signupURL = _baseURL +  "auth/signup?user=" + _userName + "&password=" + _passw
 */
 
 
-function logWarn(msg) {
-	console.log("Warning: "+msg);
-}
-
 // is passed to eval'ed code as C
 // vars: associative array
 function YarrdnNodeContext(vars) {
@@ -166,6 +162,7 @@ function YarrdnNodeContext(vars) {
 	}
 	this.addInputReply = function(optid,beforeText,inputtype,inputvar,
 	afterText,action,min,max) {
+		// TODO support multiple input replies
 		if (this.inputreply) directServer.logError("Multiple input replies");
 		this.inputreply = {
 			optid: optid,
@@ -190,14 +187,25 @@ function YarrdnNodeContext(vars) {
 
 function YarrdnNode(dialogue,lines) {
 	console.log("Created node! Lines:"+lines.length);
+	var self=this;
+	// compile time errors
+	// level - notice, warning, error, fatal
+	// line = line in body, or null if N/A
+	function logError(level,line,msg) {
+		self.errors.push({level:level,line:line,msg:msg});
+		console.log("Logged error: "+level+" "+line+" "+msg);
+	}
+
 	this.head = [];
 	this.body = [];
 	this.param = []; // key-value pairs from head
+	this.errors = []; // array of {level, line, msg}
 	var inBody=false;
 	for (var i=0; i<lines.length; i++) {
 		var line = lines[i];
 		if (line == "---") {
-			if (inBody) logWarn("Encountered '---' twice in node, ignoring");
+			if (inBody) logError("warning", i,
+				"Encountered '---' twice in node, ignoring");
 			inBody = true;
 			continue;
 		}
@@ -212,7 +220,19 @@ function YarrdnNode(dialogue,lines) {
 			return "C.vars."+p1;
 		});
 	}
-	if (this.body.length==0) logWarn("Node has no body");
+	// parse space separated list of key="value" pairs
+	function parseKeyValList(expr) {
+		var ret = {};
+		var regex = /^\s*([a-zA-Z0-9_]+)\s*=\s*"([^"]+)"/;
+		while (true) {
+			var matches = regex.exec(expr);
+			if (!matches) break; // XXX report stray characters
+			ret[matches[1]] = matches[2];
+			expr = expr.replace(regex,"");
+		}
+		return ret;
+	}
+	if (this.body.length==0) logError("error",null,"Node has no body");
 	// get key-value pairs from head
 	for (var i=0; i<this.head.length; i++) {
 		if (this.head[i] == "") continue;
@@ -220,7 +240,7 @@ function YarrdnNode(dialogue,lines) {
 		if (matches) {
 			this.param[matches[1]] = matches[2];
 		} else {
-			logWarn("Encountered unparseable line in head: "+this.head[i]);
+			logError("error",null,"Encountered unparseable line in head: "+this.head[i]);
 		}
 	}
 	if (this.param.speaker) dialogue.speakers[speaker] = this.param.speaker;
@@ -312,61 +332,36 @@ function YarrdnNode(dialogue,lines) {
 				if (matches) {
 					action = "C.vars."+matches[1]+" = "+matches[2]+";";
 				} else {
-					console.log("Cannot parse action "+action);
+					logError("error",i,"Cannot parse action "+action);
 					action = null;
 				}
 				if (action) {
 					action = "function(C) { "+action+" }";
 				}
 			}
-			// TODO should be input type="text|numeric", but no examples
-			var matches = /^(.*)<<(\w+)Input->[$]([a-zA-Z0-9_]+)>>(.*)$/
-				.exec(desc);
+			var matches = /^(.*)<<input\s+(.+)\s*>>(.*)$/.exec(desc);
 			if (matches) {
 				var beforeText = matches[1];
-				var inputtype = matches[2];
-				var inputvar = matches[3];
-				var afterText = matches[4];
+				var inputparams = matches[2];
+				var afterText = matches[3];
+				inputparams = parseKeyValList(inputparams);
 				this.body[i] = "C.addInputReply('"
 					+optid+"',"
 					+JSON.stringify(beforeText)+",'"
-					+inputtype+"','"
-					+inputvar+"',"
+					+inputparams.type+"','"
+					+inputparams.value.substring(1)+"',"
 					+JSON.stringify(afterText)+","
 					+action
+					+(inputparams.min ? ",'"+inputparams.min+"'":"")
+					+(inputparams.max ? ",'"+inputparams.max+"'":"")
 					+");";
 				continue;
 			} else {
-				// note: java parser assumes 1st term is alwayx min, second is
-				// always max. So this parser is more strict.
-				var matches = 
-/^(.*)<<(\w+)Input->[$]([a-zA-Z0-9_]+)\s+min=([0-9]+)\s+max=([0-9]+)>>(.*)$/
-					.exec(desc);
-				if (matches) {
-					var beforeText = matches[1];
-					var inputtype = matches[2];
-					var inputvar = matches[3];
-					var inputmin = matches[4];
-					var inputmax = matches[5];
-					var afterText = matches[6];
-					this.body[i] = "C.addInputReply('"
-						+optid+"',"
-						+JSON.stringify(beforeText)+",'"
-						+inputtype+"','"
-						+inputvar+"',"
-						+JSON.stringify(afterText)+","
-						+action+",'"
-						+inputmin+"','"
-						+inputmax
-						+"');";
-					continue;
-				} else {
-					this.body[i] = "C.addReplyChoice("
-						+JSON.stringify(optid)+","
-						+JSON.stringify(desc)+","
-						+action+");";
-					continue;
-				}
+				this.body[i] = "C.addReplyChoice("
+					+JSON.stringify(optid)+","
+					+JSON.stringify(desc)+","
+					+action+");";
+				continue;
 			}
 		}
 		// plain line
@@ -391,8 +386,7 @@ function YarrdnNode(dialogue,lines) {
 	try {
 		this.func = new Function("C", this.body.join("\n") );
 	} catch (e) {
-		directServer.logError("Syntax error:");
-		directServer.logError(e);
+		logError("fatal",null, "JS error: "+e);
 		console.log(e);
 	}
 	dialogue.nodeMap[this.param.title] = this;

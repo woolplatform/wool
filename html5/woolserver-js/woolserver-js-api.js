@@ -5,6 +5,7 @@ var directServer = {
 	// function to call if dialogues are loaded
 	nrDialoguesLoaded: 0,
 	allDataLoaded: false,
+	// runtime errors
 	errors: [],
 	ui_settings: { language: "nl_NL" },
 	// state
