@@ -1,0 +1,33 @@
+<html>
+<head>
+<link rel="stylesheet" href="../lib/svgbackgrounds/backgrounds.css">
+<link rel="stylesheet" href="css/dialogue.css">
+<link rel="stylesheet" href="css/simplewoolclient.css">
+<script src="../lib/polyfills.js"></script>
+<script src="../lib/utils.js"></script>
+<script src="../lib/avataaars/avataaars-pure.js"></script>
+<script src="../lib/avataaars/genavataaar.js"></script>
+<script src="../lib/i18n/gettext.js"></script>
+<script src="../lib/i18n/i18n.js"></script>
+<script src="../woolserver-js/woolserver-js.js"></script>
+<script src="../woolserver-js/woolserver-js-api.js"></script>
+</head>
+<body>
+	<div class='maincontainer'>
+		<div class='agentBox'>
+			<div class='statement-box agent'>
+				<div>
+					<p id='agent-name' class='name'>
+					<p id='agent-statement' class='statement'>
+				</div>
+			</div>
+			<div id='user-reply' class='reply-box'>
+				<p id='user-name'>You:</p>
+				<p id='user-instruction'>Your Response:</p>
+			</div>
+		</div>
+		<div id='agent_object'></div>
+	</div>
+	<script src="main.js"></script>
+</body>
+</html>

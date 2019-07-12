@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+
+	<head>
+		<title>Avataaars demo</title>
+		<style>
+			div.avatar {
+				display: inline-block;
+				width: 250px;
+			}
+		</style>
+		<!-- Polyfills for IE8-11 -->
+		<script src="../polyfills.js"></script>
+		<script src="avataaars-pure.js"></script>
+		<script src="genavataaar.js"></script>
+	</head>
+
+	<body style='text-align: center;'>
+		<div id='avatar' class='avatar'></div>
+		<script>
+			params = window.location.search.substring(1).split("&")
+			.reduce(function(res, i) {
+				if (i.split("=")[0]) {
+					res[i.split("=")[0]] = i.split("=")[1];
+				}
+				return res;
+			}, {});
+			if (!params.seed) params.seed=0;
+			console.log(params);
+			GenAvataaar(document.getElementById("avatar"),params.seed);
+			document.body.innerHTML +=
+				 "<br><a href='?seed="+(Math.floor(params.seed)-1)+"'>&lt;&lt; Previous</a>"
+				+"&nbsp;&nbsp;&nbsp;<a href='?seed="+(Math.floor(params.seed)+1)+"'>Next &gt;&gt;</a>"
+				+"<br>";
+		</script>
+	</body>
+
+</html>

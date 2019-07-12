@@ -1,0 +1,557 @@
+@charset "UTF-8";
+@import url("text-fading.css");
+
+
+html, body {
+	margin: 0; 
+	width: 100%;
+	height: 100%;	
+}
+
+body {
+	font-family: "Open Sans", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	background-size: auto 100%;
+	margin: 0;
+	padding: 0;
+}
+
+.maincontainer {
+	width: 84%;
+	margin: 0;
+	height: 100%;
+	padding: 0 8% 0 8%;
+    align-items: center;
+    display: flex;
+}
+
+@media only screen and (min-width: 960px){
+	
+	.maincontainer {
+		width: 960px;
+		margin: 0 auto;	
+		padding: 0 60px 0 60px;
+	}
+	
+}
+
+
+#agent_object {
+	width: 450px;
+ 	height: 450px;
+ 	position: absolute;
+ 	right: 50px;
+ 	bottom: 27px;
+}
+
+@media only screen and (min-width: 600px){
+ 	
+ 	#agent_object {
+ 		height: 450px;
+ 	}
+} 
+
+.agentBox {
+	display: block;
+	width: 100%;
+	line-height: 1.5;
+	float: left;
+}
+
+@media only screen and (min-width: 960px){
+	
+	.agentBox {
+		max-width: 75%;
+	}
+	
+}
+
+.statement-box {
+  	position: relative;
+	float: right;
+	width:70%;
+	margin-bottom: 80px;
+ 	padding: 35px;
+    font-size: 1em;
+	border: 1px solid #ce8b15;
+	background: #fff;
+	-webkit-border-radius: 40px 40px 5px 40px;
+	-moz-border-radius: 40px 40px 5px 40px;
+	border-radius: 40px 40px 5px 40px; 	 
+	background-repeat: no-repeat; 
+	background-position-x: 33px;
+	background-position-y: 37px;
+	 animation: fadein 0.8s;
+    -moz-animation: fadein 0.8s; /* Firefox */
+    -webkit-animation: fadein 0.8s; /* Safari and Chrome */
+    -o-animation: fadein 0.8s; /* Opera */
+}
+
+.statement-box.agent {
+	margin-left: 10%;
+}
+
+.statement {
+	margin-bottom: 0px;
+	margin-top: 0px;
+
+}
+
+.statement-box .name,
+.reply-box p:first-child {
+	position: absolute;
+	left: 35px;
+	top: -50px;
+	font-size: 0.85em;
+	font-weight: 600;
+}
+
+.name {
+	color: #4ca5c3;
+	margin-bottom: 10px;
+}
+
+.statement-box .name,
+.reply-box p:first-child{
+	position: relative;
+	top: 0;
+	left: 0;
+	padding-left: 50px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid #d3cfc7;
+}
+
+.reply-box p:nth-child(2){
+	text-align: center;
+}
+
+.reply-box {
+	display: block;
+	float: left;
+	position: relative;
+  	background-color: #2d2d2d;
+	border: 4px solid #1c1c1c;
+	margin: 0 10px 10px 0;
+	padding: 40px;
+	-webkit-border-radius: 25px 25px 25px 5px;
+	-moz-border-radius: 25px 25px 25px 5px;
+	border-radius: 25px 25px 25px 5px;
+	background-repeat: no-repeat; 
+	background-position-x: 33px;
+	background-position-y: 37px;
+	color: #fff;
+	 animation: fadein 0.8s;
+    -moz-animation: fadein 0.8s; /* Firefox */
+    -webkit-animation: fadein 0.8s; /* Safari and Chrome */
+    -o-animation: fadein 0.8s; /* Opera */
+}
+
+.reply-box-footer {
+	animation: fadein 0.8s;
+    -moz-animation: fadein 0.8s; /* Firefox */
+    -webkit-animation: fadein 0.8s; /* Safari and Chrome */
+    -o-animation: fadein 0.8s; /* Opera */
+}
+
+.reply-box-footer #input-box {
+	position: relative;
+	width: 96%;
+	display: flex;
+    justify-content: center;
+    border: 4px solid #0b7b99;
+    background: #fff;
+    color: #000;
+    min-width: 350px;
+    margin: 0 0 10px 0;
+    padding: 10px 15px 10px 15px;
+    -webkit-border-radius: 25px 25px 25px 5px;
+    -moz-border-radius: 25px 25px 25px 5px;
+    border-radius: 25px 25px 25px 5px;
+    font-family: "Open Sans", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    font-size: 0.9em;
+    text-align: center;
+    overflow: hidden;
+}
+.reply-box-footer input.reply {
+	margin-bottom: 0;
+}
+
+.reply-box-footer p.before_statement {
+	margin-top: 10px!important;
+	position: relative!important;
+	float: left!important;
+	left: 0!important;
+	margin-right: 10px!important;
+}
+
+.reply-box-footer p.after_statement {
+	float: right;
+	margin-top: 10px!important;	
+}
+
+.reply-box-footer input.submit { 
+	position: absolute;
+	right: 0;
+	top: 0;
+	height: 100%;
+	border-radius: 0px;
+}
+
+.reply-box-footer.reply-box-auto-forward, .reply-box-auto-forward {
+	background: none;	
+	border: none;
+}
+
+.reply-box-auto-forward p {
+	display: none;
+}
+
+.reply-box-footer button.reply {
+	min-width: 150px;
+	width: auto;
+	min-height: 60px;
+	max-width: 400px;
+}
+
+button.reply {
+	width: 100%;
+	float: left;
+	clear: both;
+	margin: 0 10px 10px 0;
+	padding: 15px 40px 15px 40px;
+	-webkit-border-radius: 25px 25px 25px 5px;
+	-moz-border-radius: 25px 25px 25px 5px;
+	border-radius: 25px 25px 25px 5px; 	
+    font-family: "Open Sans", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    font-size:0.9em;
+    text-align: center;
+	border: 4px solid #0b7b99;
+	background: #fff;
+	color: #000;
+	min-width: 350px;
+}
+
+button:hover {
+	cursor: pointer;
+	border: 1px solid #eee;
+	background: #fff;
+	color: #000;
+}
+
+button.reply:last-of-type{
+	border: 1px solid #4ca5c3;
+	background: #4ca5c3;
+}
+
+button.reply:last-of-type:before {
+    font-family: FontAwesome;
+	content: "\f057";
+	font-size: 2em;
+	vertical-align: bottom;
+	position: absolute;
+	left: 13px;
+	bottom: 21px;
+}
+
+div.statement-box, button {
+	border-width: 4px;
+	-webkit-box-shadow: 3px 3px 17px -1px rgba(50, 50, 50, 0.8);
+	-moz-box-shadow:    3px 3px 17px -1px rgba(50, 50, 50, 0.8);
+	box-shadow:         3px 3px 17px -1px rgba(50, 50, 50, 0.8);
+}
+ 
+.statement {
+	margin-top: 30px;
+}
+
+button.reply:hover, button.reply:last-of-type:hover{
+	border: 4px solid #a9d2db;
+	background: #dff0f4;
+}
+
+button.reply:last-of-type{
+	border: 4px solid #0b7b99;
+	background: #fff;
+	color: #000;
+}
+
+button.reply:last-of-type:before {
+ 	content: "";
+}
+
+button.reply-auto-forward {
+	background: #2889A3;
+	float: right;
+	padding: 10px 15px 10px 15px;
+	-webkit-border-radius: 5px 5px 5px 5px;
+	-moz-border-radius:  5px 5px 5px 5px;
+	border-radius: 5px 5px 5px 5px;
+	border: 4px solid #2889A3;
+	color: #fff;
+    font-family: "Open Sans", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    font-size:0.9em;
+    text-align: center;
+    clear: both;
+}
+
+button.reply-auto-forward:before {
+    font-family: FontAwesome;
+	content: "\f061";
+	margin-right: 5px;
+}
+
+button.reply-auto-forward:hover{
+	border: 4px solid #a9d2db;
+	background: #dff0f4;
+	color: #000;
+}
+
+
+input.reply {
+	border: 4px solid #0b7b99;
+	background: #fff;
+	color: #000;
+	min-width: 350px;
+	float: left;
+ 	margin: 0 0 10px 0;
+	padding: 15px 15px 15px 15px;
+	-webkit-border-radius: 25px 0px 0px 5px;
+	-moz-border-radius: 25px 0px 0px 5px;
+	border-radius: 25px 0px 0px 5px; 	
+    font-family: "Open Sans", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    font-size:0.9em;
+    text-align: center;	
+}
+
+
+.reply-box-footer input.reply {
+	float: none; 
+	min-width: 200px;
+	background: #f5f5f5;
+    color: #000;
+	border: 2px solid #ccc;
+	padding: 5px;
+	-webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    height: 23px;
+}
+
+input.reply:focus{
+	background-color: #eee;
+}
+
+input.invalid {
+	border: 4px solid #cc3c3c;
+}
+
+input.submit {
+	background: #2889A3;
+	float: right;
+	font-weight: 600;
+	padding: 15px 15px 15px 15px;
+	-webkit-border-radius: 0px 25px 25px 0px;
+	-moz-border-radius:  0px 25px 25px 0px;
+	border-radius: 0px 25px 25px 0px;
+	border: 4px solid #2889A3;
+	color: #fff;
+    font-family: "Open Sans", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    font-size:0.9em;
+    text-align: center;
+}
+
+input.submit:hover {
+	border: 4px solid #a9d2db;
+	background: #dff0f4;
+	color: #000;
+}
+
+input.reply_with_after_statement {
+	-webkit-border-radius: 25px;
+	-moz-border-radius: 25px;
+	border-radius: 25px;
+	min-width: 80px;
+	max-width: 125px;
+}
+
+input.submit_with_after_statement {
+	-webkit-border-radius: 25px;
+	-moz-border-radius: 25px;
+	border-radius: 25px;
+}
+
+
+
+p.before_statement{
+	font-style: italic;
+	display: block;
+	float: left;
+	margin-right: 10px;
+}
+
+p.after_statement {
+	font-style: italic;
+	display: block;
+	float: left;
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+#error_message {
+	text-align: center;
+	border: 1px solid #fff;
+	padding: 8px;
+	-webkit-border-radius: 8px;
+	-moz-border-radius:  8px;
+	border-radius: 8px;
+	font-size: 0.85em;
+	color: #fff;
+	background-color: #cc3c3c;
+	margin-bottom: 25px;
+	font-weight: 600;
+	width: 100%;
+	float: left;
+}
+
+/** ----------------------------------------- Multimedia ----------------------------------------- **/
+.multimedia {
+	width: 42%;
+	display: block;
+	float: left;
+	-webkit-border-radius: 32px 5px 5px 32px;
+	-moz-border-radius: 32px 5px 5px 32px;
+	border-radius: 32px 5px 5px 32px;
+	margin: 1%;
+	height: 100%;
+}
+
+.statement-box.multi-media {
+	padding: 0;
+	overflow:hidden;
+    width: 100%;
+    float: none;
+	background-position-x: 52%;
+}
+
+.statement-box.multi-media>div {
+	width: 45%;
+ 	float: left;
+ 	margin: 5%;
+}
+
+#timer {
+	margin-top: 30px;
+	float: left;
+	border-top: 1px dotted #ccc;
+	width: 100%;
+}
+
+#timer-text {
+	float: left;
+	font-weight: 600;
+	margin-top: 10px;
+	width: 100%;
+	min-height: 30px;
+}
+
+.timer-finished {
+	color: red;
+}
+
+.timer-button::before{
+	font-family: FontAwesome;
+	margin-right: 5px;
+	font-size: 1.5em;
+	float: left;
+	margin-top:-5px;
+	margin-left: 5px;	
+	font-weight: 400;
+}
+
+.timer-button {
+	background-color: #2d2d2d;
+	color: #fff;
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+	padding: 5px 10px 0px 5px;
+	float: left;
+	font-size: 0.85em;
+	font-weight: 600;
+	text-align: center;
+	margin-right: 10px;
+}
+
+.timer-button:hover {
+	background-color: #ccc;
+	color: #2d2d2d;
+	cursor: pointer;
+}
+
+#timer-start::before {
+	content: '\f017';
+}
+
+#timer-stop {
+	display: none;
+}
+
+#timer-stop::before {
+	content: '\f04d';
+}
+
+#timer-pause {
+	display: none;
+}
+
+#timer-pause::before {
+	content: '\f04c'; 
+}
+
+#timer-continue {
+	display: none;
+}
+
+#timer-continue::before {
+	content: '\f04b';
+}
+
+
+/** ----------------------------------------- Multi agent ----------------------------------------- **/
+
+#all_agents_box {
+	width: 100%;
+	position: absolute;
+	bottom: 0;
+}
+/** ----------------------------------------- Instructions ----------------------------------------- **/
+
+div.instruction {
+	margin-top: 20px;
+	color: #ce8b15;
+}
+
+div.instruction::before {
+	content: '\f075';
+	font-family: FontAwesome;
+	margin-right: 5px;
+	font-size: 1.5em;
+	float: left;
+}
+
+div.instruction p::before{
+	content: '"';
+
+}
+
+div.instruction p {
+	 margin: 7px 0 0 20px;
+	 font-weight: 600;
+	 display: block;
+	 float:left;
+	 width: 90%;
+}
+
+div.instruction p::after {
+	content: '"';
+}
+

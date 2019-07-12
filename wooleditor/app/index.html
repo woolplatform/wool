@@ -74,6 +74,9 @@
 			<!-- navigation / menu -->
 			<div class="app-menu">
 				<div class="menu">
+					<span class="title" data-bind="click:app.runDialogue">Run</span>
+				</div>
+				<div class="menu">
 					<span class="title" data-bind="click:app.newNode">+ Node</span>
 				</div>
 
@@ -205,13 +208,19 @@
 			<input type="file" id="save-file" nwsaveas="filename.txt" />
 		</div>
 
+		<div id="woolclient-popup" class="woolclient-popup"
+		onclick="this.style.display='none';">
+			<iframe id="woolclient-popup-iframe"
+			src="../../html5/simplewoolclient/index.html"></iframe>
+		</div>
+
 		<!-- templates container (they get loaded into this) -->
 		<div class="templates">
 		</div>
 
 		<!-- start it all up! -->
 		<script type="text/javascript">
-			var app = new App("Wool Editor", "1.0");
+			var app = new App("Wool Editor", "1.1");
 			app.run();
 		</script>
 

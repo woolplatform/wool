@@ -1,0 +1,19 @@
+.editbox {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	background-color: #fff9;
+	color: #000;
+}
+
+.incrementbutton {
+	width: 20px;
+	height: 20px;
+	font-size: 20px;
+	line-height: 20px;
+	font-weight: bold;
+	text-align: center;
+	display: inline-block;
+	background-color: #fff;
+	margin: 2px;
+}

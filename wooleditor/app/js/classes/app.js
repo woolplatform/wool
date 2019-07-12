@@ -1324,4 +1324,16 @@ var App = function(name, version)
 		$(".editor-footer .row-index").html(cursor.row);
 		$(".editor-footer .column-index").html(cursor.column);
 	}
+
+	this.runDialogue = function() {
+		//document.getElementById('woolclient-popup-iframe').contentWindow.location.reload();
+		var elem = document.getElementById("woolclient-popup");
+		elem.style.display="block";
+		elem = document.getElementById("woolclient-popup-iframe");
+		elem.src = "../../html5/simplewoolclient/index.html?editable=true&rand="
+			+Math.random()+"&code="+encodeURIComponent(
+				data.getSaveData(FILETYPE.WOOL)
+			);
+	}
+
 }
