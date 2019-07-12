@@ -1,8 +1,10 @@
 .editbox {
 	position: absolute;
-	bottom: 0px;
-	left: 0px;
-	background-color: #fff9;
+	bottom: 5px;
+	left: 5px;
+	background-color: #ccc9;
+	border: 1px solid black;
+	border-radius: 8px;
 	color: #000;
 }
 
@@ -16,4 +18,40 @@
 	display: inline-block;
 	background-color: #fff;
 	margin: 2px;
+	border-radius: 5px;
+	border: 1px solid black;
+	cursor: pointer;
 }
+
+.commandbutton {
+	height: 20px;
+	font-size: 16px;
+	line-height: 20px;
+	text-align: center;
+	display: inline-block;
+	background-color: #fff;
+	padding: 3px;
+	margin: 2px;
+	cursor: pointer;
+	border: 1px solid black;
+	border-radius: 4px;
+}
+
+.debugbox {
+	display: none;
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	width: 300px;
+	height: 80%;
+	background-color: #ccc9;
+	color: #000;
+	border: 1px solid black;
+	border-radius: 8px;
+}
+.debugbox textarea {
+	width: 100%;
+	height: 90%;
+	font-size: 11px;
+}
+

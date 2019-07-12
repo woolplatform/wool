@@ -295,7 +295,7 @@ button.reply-auto-forward {
 
 button.reply-auto-forward:before {
     font-family: FontAwesome;
-	content: "\f061";
+	/*content: "\f061";*/
 	margin-right: 5px;
 }
 

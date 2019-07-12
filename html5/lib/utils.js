@@ -33,7 +33,15 @@ Utils._ajax = function(method,url,body,success,failure) {
 	xhr.send(body);
 }
 
-
+Utils.getUrlParameters = function() {
+	return window.location.search.substring(1).split("&")
+	.reduce(function(res, i) {
+		if (i.split("=")[0]) {
+			res[i.split("=")[0]] = decodeURIComponent(i.split("=")[1]);
+		}
+		return res;
+	}, {});
+}
 
 // helper function
 // from: http://stackoverflow.com/questions/19491336/get-url-parameter-jquery

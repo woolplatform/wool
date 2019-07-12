@@ -204,15 +204,16 @@ function _directServer_start_dialogue(par) {
 function _directServer_progress_dialogue(par) {
 	// do actions first
 	var replyId = par.replyId;
-	var replydef = null;
+	var replydef = typeof par.replyIndex != 'undefined'
+		? directServer.currentnodectx.choices[par.replyIndex]
+		: null;
+	/*var replydef = null;
 	for (var i=0; i<directServer.currentnodectx.choices.length; i++) {
 		var rd = directServer.currentnodectx.choices[i];
 		if (rd.optid == replyId) replydef = rd;
-	}
+	}*/
 	if (replydef) {
 		if (replydef.action) replydef.action(directServer.currentnodectx);
-	} else if (!directServer.currentnodectx.afreply) {
-		console.log("Runtime error: Could not find reply "+replyId);
 	}
 	if (par.textInput) {
 		var ctx = directServer.currentnodectx;

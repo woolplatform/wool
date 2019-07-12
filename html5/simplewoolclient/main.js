@@ -4,19 +4,12 @@
 // editable - if defined, make display config editable
 
 // get params and config ------------------------------------------------
-var params = window.location.search.substring(1).split("&")
-.reduce(function(res, i) {
-	if (i.split("=")[0]) {
-		res[i.split("=")[0]] = i.split("=")[1];
-	}
-	return res;
-}, {});
+var params = Utils.getUrlParameters();
+
+//localStorage.removeItem("simplewoolclient_config");
 
 var config = {
-	"avatars": {
-		"John": 16,
-		"Lisa": 36,
-	},
+	"avatars": { },
 	"background": 12,
 };
 
@@ -50,7 +43,7 @@ if (config.background!==null)
 	document.body.className = "pattern"+config.background;
 
 
-directServerLoadDialogue("dialogue",decodeURIComponent(params.code));
+directServerLoadDialogue("dialogue",params.code);
 
 
 // edit functions ---------------------------------------------------------
@@ -72,6 +65,27 @@ function incBackground(amount) {
 	document.body.className = "pattern"+config.background;
 }
 
+var showingInDebug=null;
+
+function showUrl() {
+	showingInDebug="URL";
+	var dbox = document.getElementById("debugarea");
+	dbox.parentNode.style.display="block";
+	var params = Utils.getUrlParameters();
+
+	dbox.innerHTML = window.location.protocol + "//" +
+		window.location.host + window.location.pathname
+		+ "?config=" + encodeURIComponent(JSON.stringify(config))
+		+ "&code=" + encodeURIComponent(params.code);
+}
+
+function showVariables() {
+	showingInDebug="variables";
+	var dbox = document.getElementById("debugarea");
+	dbox.parentNode.style.display="block";
+	dbox.innerHTML = JSON.stringify(directServer.currentnodectx.vars,null,2);
+}
+
 if (params.editable) {
 	document.body.innerHTML +=
 		"<div class='editbox'>Avatar: "
@@ -80,33 +94,38 @@ if (params.editable) {
 		+"<br>Background: "
 		+"<div class='incrementbutton' onclick='incBackground(1);'>+</div>"
 		+"<div class='incrementbutton' onclick='incBackground(-1);'>-</div>"
+		+"<br><div class='commandbutton' onclick='showUrl();'>Get URL</div>"
+		+"<div class='commandbutton' onclick='showVariables();'>Variables</div>"
 		+"</div>";
 }
 
 
 // helper functions ---------------------------------------------------
 
-function handleBasicReply(id) {
-	handleDirectServerCall("GET", null,null,
-		"progress_dialogue/?replyId="+id,
-			updateNodeUI);
-}
-
-function handleTextReply(id) {
-	var value = document.getElementById(id+"_content").value;
+// index=null indicates autoforward reply (no index)
+function handleBasicReply(id,index) {
 	handleDirectServerCall("GET", null,null,
 		"progress_dialogue/?replyId="+id
+		+(index!==null ? "&replyIndex="+index : ""),
+		updateNodeUI);
+}
+
+function handleTextReply(id,index) {
+	var value = document.getElementById(id+"_content").value;
+	handleDirectServerCall("GET", null,null,
+		"progress_dialogue/?replyId="+id+"&replyIndex="+index
 		+"&textInput="+encodeURIComponent(value),
 			updateNodeUI);
 }
 
-function handleNumericReply(id,min,max) {
+function handleNumericReply(id,index,min,max) {
 	// TODO
-	handleTextReply(id);
+	handleTextReply(id,index);
 }
 
 function updateNodeUI(node) {
 	console.log(node);
+	if (showingInDebug=="variables") showVariables();
 	if (node.speaker && node.speaker!="UNKNOWN") {
 		if (typeof config.avatars[node.speaker] == 'undefined') {
 			config.avatars[node.speaker] = Math.floor(Math.random()*1000);
@@ -139,12 +158,13 @@ function updateNodeUI(node) {
 			replyelem.className = "reply-box";
 			replyelem.innerHTML +=
 				"<button class='reply' onclick='handleBasicReply(\""
-					+reply.replyId+"\")'>"+reply.statement+"</button>"
+					+reply.replyId+"\",\""+i+"\")'>"
+					+reply.statement+"</button>"
 		} else if (reply.replyType=="AUTOFORWARD") {
 			replyelem.className = "reply-box-auto-forward";
 			replyelem.innerHTML +=
 				"<button class='reply-auto-forward' onclick='handleBasicReply(\""
-					+reply.replyId+"\")'>"+__("Continue")+"</button>"
+					+reply.replyId+"\",null)'>"+__("Continue")+"</button>"
 		} else if (reply.replyType=="TEXTINPUT"
 		||         reply.replyType=="NUMERICINPUT") {
 			var replyclass = "reply";
@@ -164,7 +184,7 @@ function updateNodeUI(node) {
 				+"></input>"
 				+"<input class='"+submitclass+"'"
 				+" onclick='"+func+"(\""
-					+reply.replyId+"\")' value='"+__("Send")+"'></input>";
+					+reply.replyId+"\",\""+i+"\")' value='"+__("Send")+"'></input>";
 			if (reply.afterStatement) {
 				replyelem.innerHTML += '<p class="after_statement">' 
 					+ reply.afterStatement + '</p>';
