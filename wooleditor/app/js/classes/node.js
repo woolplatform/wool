@@ -375,6 +375,13 @@ var Node = function()
 			return 1;
 		}
 	}
+	this.compile = function() {
+		var nodesource = data.getSaveData(FILETYPE.WOOL,this);
+		directServerLoadDialogue("dialogue",nodesource);
+		var err = directServer.dialogues["dialogue"].nodes[0].errors;
+		document.getElementById("node-errors").innerText = JSON.stringify(err);
+	}
+
 }
 
 ko.bindingHandlers.nodeBind = 

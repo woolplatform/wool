@@ -722,10 +722,8 @@ var App = function(name, version)
 		self.updateNodeLinks();
 	}
 
-	this.editNode = function(node)
-	{
-		if (node.active())
-		{
+	this.editNode = function(node) {
+		if (node.active()) {
 			self.editing(node);
 
 			$(".node-editor").css({ opacity: 0 }).transition({ opacity: 1 }, 250);
@@ -736,6 +734,7 @@ var App = function(name, version)
 			//spell_check();
 
 			self.updateEditorStats();
+			self.editing().compile();
 		}
 	}
 
@@ -1311,8 +1310,7 @@ var App = function(name, version)
 	}
 
 
-	this.updateEditorStats = function()
-	{
+	this.updateEditorStats = function() {
 		var editor = ace.edit('editor');
 		var text = editor.getSession().getValue();
 		var cursor = editor.getCursorPosition();

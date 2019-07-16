@@ -351,11 +351,10 @@ var data =
 		if (warnings.length) alert(warnings.join("\n"));
 	},
 
-	getSaveData: function(type)
-	{
+	getSaveData: function(type,node) {
 		var output = "";
 		var content = [];
-		var nodes = app.nodes();
+		var nodes = node ? [ node ] : app.nodes();
 
 		for (var i = 0; i < nodes.length; i ++)
 		{

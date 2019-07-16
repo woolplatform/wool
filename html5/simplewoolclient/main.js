@@ -146,6 +146,13 @@ function handleNumericReply(id,index,min,max) {
 	handleTextReply(id,index);
 }
 
+function startDialogue() {
+	handleDirectServerCall("GET", null,null,
+		"start_dialogue/?dialogueId=dialogue",
+			updateNodeUI);
+}
+
+
 function updateNodeUI(node) {
 	console.log(node);
 	if (showingInDebug=="variables") showVariables();
@@ -166,7 +173,7 @@ function updateNodeUI(node) {
 		document.getElementById("agent-statement").innerHTML = "End Dialogue";
 		replyelem.className = "reply-box-auto-forward";
 		replyelem.innerHTML =
-			"<button class='reply-auto-forward' onclick='handleRestart()'>"
+			"<button class='reply-auto-forward' onclick='startDialogue()'>"
 				+__("Restart")+"</button>"
 		return;
 	}
@@ -219,7 +226,6 @@ function updateNodeUI(node) {
 
 // start dialogue --------------------------------------------------
 
-handleDirectServerCall("GET", null,null,
-	"start_dialogue/?dialogueId=dialogue",
-		updateNodeUI);
+startDialogue();
+
 

@@ -23,6 +23,9 @@
 		<script type="text/javascript" src="js/classes/data.js"></script>
 		<script type="text/javascript" src="js/classes/utils.js"></script>
 		<script type="text/javascript" src="js/classes/node.js"></script>
+
+		<script type="text/javascript" src="../../html5/woolserver-js/woolserver-js-api.js"></script>
+		<script type="text/javascript" src="../../html5/woolserver-js/woolserver-js.js"></script>
 	</head>
 	<body>
 
@@ -144,6 +147,8 @@
 			<div class="node-editor" data-bind="mousedown:app.saveNode">
 
 				<div class="form" data-bind="preventBubble: 'click', preventBubble: 'mousedown'">
+					<button onclick='app.editing().compile();'>Compile</button>
+					<span id="node-errors" class="node-errors"></span>
 					<br>Speaker:
 					<input type="text" data-bind="value: app.editing().speaker">
 					Title:
@@ -210,6 +215,7 @@
 
 		<div id="woolclient-popup" class="woolclient-popup"
 		onclick="this.style.display='none';">
+			<div class="closebutton" onclick="this.parentNode.style.display='none';">X</div>
 			<iframe id="woolclient-popup-iframe"
 			src="../../html5/simplewoolclient/index.html"></iframe>
 		</div>
