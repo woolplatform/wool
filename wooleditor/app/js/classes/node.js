@@ -23,7 +23,7 @@ var Node = function()
 	this.colorID = ko.observable(0);
 	this.checked = false;
 	this.selected = false;
-
+	this.lastCompiled = new Date().getTime() - 1000000;
 	// clipped values for display
 	this.clippedTags = ko.computed(function() 
 	{
@@ -376,10 +376,50 @@ var Node = function()
 		}
 	}
 	this.compile = function() {
+		var now = new Date().getTime();
+		if (now - self.lastCompiled < 2000) return;
+		self.lastCompiled = now;
 		var nodesource = data.getSaveData(FILETYPE.WOOL,this);
 		directServerLoadDialogue("dialogue",nodesource);
-		var err = directServer.dialogues["dialogue"].nodes[0].errors;
-		document.getElementById("node-errors").innerText = JSON.stringify(err);
+		var errs = directServer.dialogues["dialogue"].nodes[0].errors;
+		var errannot = [];
+		var errtexts = [];
+		for (var i=0; i<errs.length; i++) {
+			var err = errs[i];
+			console.log(err);
+			if (err.line!==null) {
+				var errtype;
+				var errtype = "error";
+				if (err.level=="fatal") {
+					errtype = "error";
+				} else if (err.level=="error") {
+					errtype = "error";
+				} else if (err.level=="warning") {
+					errtype = "warning";
+				} else if (err.level=="notice") {
+					errtype = "info";
+				}
+				errannot.push({
+					row: err.line,
+					column: 0,
+					text: err.level+": "+err.msg,
+					type: errtype,
+				});
+			} else {
+				errtexts.push(err.level+": "+err.msg);
+			}
+		}
+		//app.editor.getSession().addMarker(new Range(1,2,1,10),"myclass","line",false);
+		app.editor.getSession().setAnnotations(errannot);
+		document.getElementById("node-errors").innerHTML =
+			errannot.length || errtexts.length ? "There are errors." : "";
+		for (var i=0; i<errtexts.length; i++) {
+			var div = document.createElement("div");
+			div.innerText = errtexts[i];
+			document.getElementById("node-errors").appendChild(div);
+		}
+		//app.editor.getSession().addMarker(new Range(1,2,1,2),"mycssclass",
+		//	"background",false);
 	}
 
 }

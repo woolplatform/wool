@@ -639,3 +639,15 @@ a:hover { color: #000;}
 		margin-top: 20px;
 	}
 }
+
+.node-errors {
+	color: #f00;
+	font-weight: bold;
+	height: 65px;
+	overflow: hidden;
+}
+.node-errors div {
+	font-size: 14px;
+	line-height: 16px;
+}
+

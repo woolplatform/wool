@@ -387,7 +387,7 @@ function YarrdnNode(dialogue,lines) {
 		this.func = new Function("C", this.body.join("\n") );
 	} catch (e) {
 		logError("fatal",null,
-			"Script error (indicates misplaced if/then/else or errors in expressions): "+e);
+			"Script error: "+e);
 		console.log(e);
 	}
 	dialogue.nodeMap[this.param.title] = this;

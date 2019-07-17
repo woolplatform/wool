@@ -7,6 +7,7 @@ var App = function(name, version)
 	this.name = ko.observable(name);
 	this.version = ko.observable(version);
 	this.editing = ko.observable(null);
+	this.editor = null; // ace editor object
 	this.deleting = ko.observable(null);
 	this.nodes = ko.observableArray([]);
 	this.cachedScale = 1;
@@ -734,7 +735,9 @@ var App = function(name, version)
 			//spell_check();
 
 			self.updateEditorStats();
-			self.editing().compile();
+			//self.editor.on("change",function() {
+			//	self.updateEditorStats();
+			//});
 		}
 	}
 
@@ -1311,9 +1314,9 @@ var App = function(name, version)
 
 
 	this.updateEditorStats = function() {
-		var editor = ace.edit('editor');
-		var text = editor.getSession().getValue();
-		var cursor = editor.getCursorPosition();
+		self.editor = ace.edit('editor');
+		var text = self.editor.getSession().getValue();
+		var cursor = self.editor.getCursorPosition();
 
 		var lines = text.split("\n");
 
@@ -1321,6 +1324,7 @@ var App = function(name, version)
 		$(".editor-footer .line-count").html(lines.length);
 		$(".editor-footer .row-index").html(cursor.row);
 		$(".editor-footer .column-index").html(cursor.column);
+		self.editing().compile();
 	}
 
 	this.runDialogue = function() {

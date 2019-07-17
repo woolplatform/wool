@@ -147,9 +147,9 @@
 			<div class="node-editor" data-bind="mousedown:app.saveNode">
 
 				<div class="form" data-bind="preventBubble: 'click', preventBubble: 'mousedown'">
-					<button onclick='app.editing().compile();'>Compile</button>
-					<span id="node-errors" class="node-errors"></span>
-					<br>Speaker:
+					<!--<button onclick='app.editing().compile();'>Compile</button>-->
+					<div id="node-errors" class="node-errors"></div>
+					Speaker:
 					<input type="text" data-bind="value: app.editing().speaker">
 					Title:
 					<input type="text" class="title" data-bind="value: app.editing().title">

@@ -16,6 +16,7 @@ var directServer = {
 };
 
 
+// type is fatal, error, warning, notice
 directServer.logError = function (obj) {
 	directServer.errors.push(obj);
 }
