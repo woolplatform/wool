@@ -69,6 +69,8 @@ var Node = function()
 
 		//var updateArrowsInterval = setInterval(app.updateArrowsThrottled, 16);
 
+		// replacement if transition goes wrong
+		//$(self.element).css({opacity: 1, scale: 1});
 		$(self.element)
 			.css({opacity: 0, scale: 0.8, y: "-=80px", rotate: "45deg"})
 			.transition(

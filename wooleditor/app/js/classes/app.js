@@ -41,11 +41,10 @@ var App = function(name, version)
 	this.$searchField = $(".search-field");
 
 	// node-webkit
-	if (typeof(require) == "function")
-	{
+	if (typeof(require) == "function") {
 		this.gui = require('nw.gui');
 		this.fs = require('fs');
-    this.isNwjs = true;
+		this.isNwjs = true;
 	}
 
 	this.run = function()
@@ -470,6 +469,8 @@ var App = function(name, version)
 				self.updateEditorStats();
 			}
 		});
+		//self.transformOrigin += 100;
+		self.translate();
 		// apple command key
 		//$(window).on('keydown', function(e) { if (e.keyCode == 91 || e.keyCode == 93) { self.appleCmdKey = true; } });
 		//$(window).on('keyup', function(e) { if (e.keyCode == 91 || e.keyCode == 93) { self.appleCmdKey = false; } });
@@ -1117,7 +1118,11 @@ var App = function(name, version)
 					self.transformOrigin[1] +
 				")"
 		);
+		console.log("Translating to ...");
+		console.log(self.transformOrigin);
 		self.updateArrows();
+
+		self.storeUIState();
 		
 		return;
 		// XXX this part doesn't work so I disabled it
@@ -1199,6 +1204,20 @@ var App = function(name, version)
 			var y = referenceNode.y() + (SPACING * (i + 1));
 			node.moveTo(referenceNode.x(), y);
 		});
+	}
+
+	this.center = function() {
+		self.resetUIState();
+		var avgx=0;
+		var avgy=0;
+		var nrNodes = self.nodes().length;
+		for (var i=0; i<nrNodes; i++) {
+			var node = self.nodes()[i];
+			avgx += node.x();
+			avgy += node.y();
+		}
+		if (nrNodes>0)
+			self.warpToNodeXY(avgx / nrNodes, avgy/nrNodes);
 	}
 
 	this.arrangeSpiral = function()
@@ -1337,5 +1356,41 @@ var App = function(name, version)
 				data.getSaveData(FILETYPE.WOOL)
 			);
 	}
+
+	this.resetUIState = function() {
+		self.cachedScale = 1;
+		self.transformOrigin = [
+			0,
+			0
+		];
+		self.translate();
+	}
+
+	this.loadUIState = function() {
+		var uistate = localStorage.getItem(self.LOCALSTORAGEPREFIX+"uistate");
+		if (uistate) {
+			console.log("Loaded uistate:");
+			console.log(uistate);
+			uistate = JSON.parse(uistate);
+			self.transformOrigin = uistate.transformOrigin;
+			self.transformOrigin[0] = parseFloat(self.transformOrigin[0]);
+			self.transformOrigin[1] = parseFloat(self.transformOrigin[1]);
+			self.cachedScale = parseFloat(uistate.cachedScale);
+		}
+	}
+
+	this.storeUIState = function() {
+		var uistate = {
+			transformOrigin: self.transformOrigin,
+			cachedScale: self.cachedScale,
+		};
+		console.log("Storing ui state:");
+		console.log(uistate);
+		localStorage.setItem(app.LOCALSTORAGEPREFIX+"uistate",
+			JSON.stringify(uistate));
+	}
+
+	this.loadUIState();
+
 
 }

@@ -285,7 +285,7 @@ function YarrdnNode(dialogue,lines) {
 			this.body[i] = "}";
 			continue;
 		}
-		var matches = /^<<set\s+[$](\w+)\s+[=]\s+(.+)\s*>>$/.exec(line);
+		var matches = /^<<set\s+[$](\w+)\s*[=]\s*(.+)\s*>>$/.exec(line);
 		if (matches) {
 			this.body[i] = "C.vars."+matches[1]+" = "+matches[2]+";";
 			continue;
@@ -305,7 +305,7 @@ function YarrdnNode(dialogue,lines) {
 			this.body[i] = "C.addMultimedia('timer','"+matches[1]+"');";
 			continue;
 		}
-		// is nu aparte node "End"
+		// Oude spec. Is nu aparte node "End"
 		var matches = /^\s*\[EXIT_DIALOGUE\]\s*$/.exec(line);
 		if (matches) {
 			this.body[i] = "C.setNodeType('exit');";
@@ -314,7 +314,7 @@ function YarrdnNode(dialogue,lines) {
 		// autoforward reply, no '|'
 		var matches = /^\[\[\s*([^|\]]+)\s*\]\]$/.exec(line);
 		if (matches) {
-			optid = matches[1];
+			var optid = matches[1];
 			this.body[i] = "C.addAutoForwardReply('"+optid+"');";
 			continue;
 		}
@@ -322,21 +322,35 @@ function YarrdnNode(dialogue,lines) {
 		var matches = /^\[\[\s*([^|\]]+)\s*\|\s*([a-zA-Z0-9_.-]+)\s*(|.*)?\]\]$/.exec(line);
 		if (matches) {
 			// XXX textinput also accepts min, max
-			desc = matches[1];
-			optid = matches[2];
-			action = matches[3];
-			// TODO parse multiple actions on one line
-			if (action) {
-				action = action.substring(1);
-				var matches=/^<<set\s+[$](\w+)\s+[=]\s+(.+)\s*>>$/.exec(action);
-				if (matches) {
-					action = "C.vars."+matches[1]+" = "+matches[2]+";";
+			var desc = matches[1];
+			var optid = matches[2];
+			var actionsstr = matches[3];
+			var action=null;
+			if (actionsstr) {
+				actionsstr = actionsstr.substring(1); // chop leading '|'
+				// chop leading and trailing brackets
+				matches = /^\s*<<(.*)>>\s*$/.exec(actionsstr);
+				if (!matches) {
+					logError("error",i,"Cannot parse action "+actionstr);
 				} else {
-					logError("error",i,"Cannot parse action "+action);
-					action = null;
-				}
-				if (action) {
-					action = "function(C) { "+action+" }";
+					actionsstr = matches[1];
+					// XXX brackets in quotes not parsed properly
+					var actions = actionsstr.split(/>>\s*<</);
+					var actfunc = "";
+					for (var j=0; j<actions.length; j++) {
+						var actionstr = "<<"+actions[j]+">>";
+						var matches=/^<<set\s+[$](\w+)\s*[=]\s*(.+)\s*>>$/.exec(actionstr);
+						if (matches) {
+							actfunc += "C.vars."+matches[1]+" = "+matches[2]+";";
+						} else {
+							logError("error",i,"Cannot parse action "+actionstr);
+						}
+					}
+					if (actfunc) {
+						action = "function(C) { "+actfunc+" }";
+					} else {
+						action = null;
+					}
 				}
 			}
 			var matches = /^(.*)<<input\s+(.+)\s*>>(.*)$/.exec(desc);

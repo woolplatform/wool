@@ -72,10 +72,10 @@ var data =
 		*/
 	},
 
-	openFile: function(e, filename, element)
-	{
+	openFile: function(e, filename, element) {
 		data.readFile(e, filename, true, element);
 
+		app.resetUIState();
 		app.refreshWindowTitle(filename);
 	},
 
@@ -85,8 +85,7 @@ var data =
 		alert("openFolder not yet implemented e: " + e + " foldername: " + foldername);
 	},
 
-	appendFile: function(e, filename, element)
-	{
+	appendFile: function(e, filename, element) {
 		data.readFile(e, filename, false, element);
 	},
 
@@ -129,7 +128,7 @@ var data =
 		*/
 	},
 
-	loadData: function(content, type, clearNodes)
+	loadData: function(content, type, clearNodes, doNotCenter)
 	{
 		// clear all content
 		if (clearNodes)
@@ -341,8 +340,7 @@ var data =
 				node.colorID(object.colorID);
 		}
 
-		if (numAvg > 0)
-		{
+		if (numAvg > 0 && !doNotCenter) {
 			app.warpToNodeXY(avgX/numAvg, avgY/numAvg);
 		}
 
@@ -512,7 +510,8 @@ var data =
 		if (localStorage) {
 			var loaddata=localStorage.getItem(app.LOCALSTORAGEPREFIX+"buffer");
 			if (loaddata) {
-				data.loadData(loaddata, FILETYPE.WOOL, /*clearNodes*/true);
+				data.loadData(loaddata, FILETYPE.WOOL, /*clearNodes*/true,
+				true);
 				return true;
 			}
 		}
@@ -521,6 +520,7 @@ var data =
 
 	tryClearData: function() {
 		if (!confirm("Clear all nodes?")) return;
+		app.resetUIState();
 		app.nodes.removeAll();
 		app.newNode().title("Start");
 		app.updateArrows();
