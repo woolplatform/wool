@@ -198,7 +198,7 @@ function _directServer_start_dialogue(par) {
 	}
 	directServer.currentnode = node;	
 	// pass kb variables here
-	directServer.currentnodectx = new YarrdnNodeContext({});
+	directServer.currentnodectx = new WoolNodeContext({});
 	directServer.currentnode.func(directServer.currentnodectx);
 	return directServer.getNode();
 }
@@ -224,7 +224,7 @@ function _directServer_progress_dialogue(par) {
 		}
 	}
 	directServer.currentnode = directServer.currentdialogue.nodeMap[replyId];
-	directServer.currentnodectx = new YarrdnNodeContext(
+	directServer.currentnodectx = new WoolNodeContext(
 		directServer.currentnodectx.vars
 	);
 	directServer.currentnode.func(directServer.currentnodectx);

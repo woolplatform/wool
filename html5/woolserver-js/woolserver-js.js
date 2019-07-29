@@ -135,7 +135,7 @@ _signupURL = _baseURL +  "auth/signup?user=" + _userName + "&password=" + _passw
 
 // is passed to eval'ed code as C
 // vars: associative array
-function YarrdnNodeContext(vars) {
+function WoolNodeContext(vars) {
 	this.vars = vars;
 	// no speaker defined: speaker = "UNKNOWN";
 	this.speakers = [];
@@ -185,7 +185,7 @@ function YarrdnNodeContext(vars) {
 }
 
 
-function YarrdnNode(dialogue,lines) {
+function WoolNode(dialogue,lines) {
 	console.log("Created node! Lines:"+lines.length);
 	var self=this;
 	// compile time errors
@@ -407,7 +407,7 @@ function YarrdnNode(dialogue,lines) {
 	dialogue.nodeMap[this.param.title] = this;
 }
 
-function YarrdnDialogue(yarnsource) {
+function WoolDialogue(yarnsource) {
 	this.source = yarnsource.split(/\r?\n/);
 	this.nodes = [];
 	this.speakers = {};
@@ -418,7 +418,7 @@ function YarrdnDialogue(yarnsource) {
 		var line = this.source[i].trim();
 		if (line == "===") {
 			if (nodelines.length > 0) {
-				this.nodes.push(new YarrdnNode(this,nodelines));
+				this.nodes.push(new WoolNode(this,nodelines));
 			}
 			nodelines = [];
 		} else {
@@ -435,7 +435,7 @@ function YarrdnDialogue(yarnsource) {
 function directServerLoadDialogue(dialogueID,data) {
 	//var data = localStorage.getItem(storageKey);
 	//if (data) {
-		directServer.dialogues[dialogueID] = new YarrdnDialogue(data);
+		directServer.dialogues[dialogueID] = new WoolDialogue(data);
 		//return true;
 	//}
 	//return false;
@@ -460,7 +460,7 @@ function directServerLoadFile(i,filename,callback) {
 		url: "../woolserver-js/"+filename,
 		type: 'get',
 		success: function(data) {
-			directServer.dialogues[basename] = new YarrdnDialogue(data);
+			directServer.dialogues[basename] = new WoolDialogue(data);
 			directServer.availableDialogues[i] = {
 				dialogueId: basename,
 				dialogueName: basename,

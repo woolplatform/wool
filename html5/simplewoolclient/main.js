@@ -3,8 +3,11 @@
 // code - source code of dialogue
 // editable - if defined, make display config editable
 
+var LOCALSTORAGEPREFIX="wool_js_";
+
 // get params and config ------------------------------------------------
 var params = Utils.getUrlParameters();
+
 
 //localStorage.removeItem("simplewoolclient_config");
 
@@ -24,6 +27,7 @@ function saveConfig() {
 	localStorage.setItem("simplewoolclient_config",JSON.stringify(config));
 }
 
+
 saveConfig();
 
 // init ---------------------------------------------------------------
@@ -42,8 +46,11 @@ _i18n.setLocale("en");
 if (config.background!==null)
 	document.body.className = "pattern"+config.background;
 
+var sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
 
-directServerLoadDialogue("dialogue",params.code);
+if (params.code) sourceCode = params.code;
+
+directServerLoadDialogue("dialogue",sourceCode);
 
 var errorsFound=false;
 var errors = {};
@@ -99,7 +106,7 @@ function showUrl() {
 	dbox.innerHTML = window.location.protocol + "//" +
 		window.location.host + window.location.pathname
 		+ "?config=" + encodeURIComponent(JSON.stringify(config))
-		+ "&code=" + encodeURIComponent(params.code);
+		+ "&code=" + encodeURIComponent(sourceCode);
 }
 
 function showVariables() {
@@ -110,6 +117,16 @@ function showVariables() {
 }
 
 if (params.editable) {
+	var edithtml = "";
+	if (params.editurl) {
+		edithtml =
+			"<br><div class='commandbutton'>"
+			+"<a href='"+params.editurl+"'>Back to editor</a>"
+			+"</div>"
+			+"<div class='commandbutton'>"
+			+"<a id='editnodeurl' href='"+params.editurl+"'>Edit Node</a>"
+			+"</div>";
+	}
 	document.body.innerHTML +=
 		"<div class='editbox'>Avatar: "
 		+"<div class='incrementbutton' onclick='incCurrentAvatar(1);'>+</div>"
@@ -119,6 +136,7 @@ if (params.editable) {
 		+"<div class='incrementbutton' onclick='incBackground(-1);'>-</div>"
 		+"<br><div class='commandbutton' onclick='showUrl();'>Get URL</div>"
 		+"<div class='commandbutton' onclick='showVariables();'>Variables</div>"
+		+edithtml
 		+"</div>";
 }
 
@@ -155,6 +173,9 @@ function startDialogue() {
 
 function updateNodeUI(node) {
 	console.log(node);
+	var editnodelink = document.getElementById("editnodeurl");
+	if (editnodelink) editnodelink.href = 
+		params.editurl+"?editnode="+encodeURIComponent(node.id);
 	if (showingInDebug=="variables") showVariables();
 	if (node.speaker && node.speaker!="UNKNOWN") {
 		if (typeof config.avatars[node.speaker] == 'undefined') {

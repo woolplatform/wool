@@ -32,7 +32,7 @@ var App = function(name, version)
     
 	this.UPDATE_ARROWS_THROTTLE_MS = 50;
 
-	this.LOCALSTORAGEPREFIX="wooleditor_";
+	this.LOCALSTORAGEPREFIX="wool_js_";
 
 	//this.editingPath = ko.observable(null);
 
@@ -1348,14 +1348,24 @@ var App = function(name, version)
 
 	this.runDialogue = function() {
 		//document.getElementById('woolclient-popup-iframe').contentWindow.location.reload();
-		var elem = document.getElementById("woolclient-popup");
-		elem.style.display="block";
-		elem = document.getElementById("woolclient-popup-iframe");
-		elem.src = "../../html5/simplewoolclient/index.html?editable=true&rand="
-			+Math.random()+"&code="+encodeURIComponent(
-				data.getSaveData(FILETYPE.WOOL)
-			);
+		data.saveToBuffer();
+		//var elem = document.getElementById("woolclient-popup");
+		//elem.style.display="block";
+		//elem = document.getElementById("woolclient-popup-iframe");
+		//elem.src = "../../html5/simplewoolclient/index.html?editable=true&rand="
+		//	+Math.random()+"&code="+encodeURIComponent(
+		//		data.getSaveData(FILETYPE.WOOL)
+		//	);
+		location.href = "../../html5/simplewoolclient/index.html?editable=true&rand="
+			+Math.random()
+			+"&editurl="+encodeURIComponent("../../wooleditor/app/index.html")
+			//+"&code="+encodeURIComponent(
+			//	data.getSaveData(FILETYPE.WOOL)
+			//)
+			;
 	}
+
+	// also store history, other info?
 
 	this.resetUIState = function() {
 		self.cachedScale = 1;
