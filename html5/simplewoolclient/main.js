@@ -52,6 +52,7 @@ if (params.code) sourceCode = params.code;
 
 directServerLoadDialogue("dialogue",sourceCode);
 
+
 var errorsFound=false;
 var errors = {};
 for (var i=0; i<directServer.dialogues["dialogue"].nodes.length; i++) {
@@ -172,11 +173,14 @@ function startDialogue() {
 
 
 function updateNodeUI(node) {
-	console.log(node);
 	var editnodelink = document.getElementById("editnodeurl");
 	if (editnodelink) editnodelink.href = 
 		params.editurl+"?editnode="+encodeURIComponent(node.id);
 	if (showingInDebug=="variables") showVariables();
+	if (directServer.errors.length > 0) {
+		alert(JSON.stringify(directServer.errors));
+		directServer.errors = [];
+	}
 	if (node.speaker && node.speaker!="UNKNOWN") {
 		if (typeof config.avatars[node.speaker] == 'undefined') {
 			config.avatars[node.speaker] = Math.floor(Math.random()*1000);
@@ -243,10 +247,19 @@ function updateNodeUI(node) {
 
 		}
 	}
+	localStorage.setItem("simplewoolclient_dialoguestate",directServer.getState());
 }
 
 // start dialogue --------------------------------------------------
 
-startDialogue();
+var prevstate = localStorage.getItem("simplewoolclient_dialoguestate");
+if (params.docontinue) {
+	if (prevstate) {
+		directServer.setState(prevstate);
+		updateNodeUI(directServer.getNode());
+	}
+} else {
+	startDialogue();
+}
 
 

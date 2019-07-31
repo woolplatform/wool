@@ -79,6 +79,10 @@
 			<div class="app-menu">
 				<div class="menu">
 					<span class="title" data-bind="click:app.runDialogue">Run</span>
+					<div class="dropdown">
+						<span class="item" data-bind="click: app.runDialogue">Restart</span>
+						<span class="item" data-bind="click: app.contDialogue">Continue</span>
+					</div>
 				</div>
 				<div class="menu">
 					<span class="title" data-bind="click:app.newNode">+ Node</span>
@@ -217,8 +221,7 @@
 		<div id="woolclient-popup" class="woolclient-popup"
 		onclick="this.style.display='none';">
 			<div class="closebutton" onclick="this.parentNode.style.display='none';">X</div>
-			<iframe id="woolclient-popup-iframe"
-			src="../../html5/simplewoolclient/index.html"></iframe>
+			<iframe id="woolclient-popup-iframe"></iframe>
 		</div>
 
 		<!-- templates container (they get loaded into this) -->

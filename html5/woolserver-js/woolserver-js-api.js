@@ -30,6 +30,32 @@ directServer.substituteVars = function(ctx,text) {
 	return text;
 }
 
+directServer.getState = function() {
+	return JSON.stringify({
+		currentdialogueId: directServer.currentdialogueId,
+		currentnodeid: directServer.currentnode.param.title,
+		currentnodectxvars: directServer.currentnodectx.vars,
+	});
+}
+
+directServer.setState = function(json) {
+	var state = JSON.parse(json);
+	directServer.currentdialogueId = state.currentdialogueId;
+	directServer.currentdialogue = directServer.dialogues[directServer.currentdialogueId];
+	var idx = directServer.findNodeIdx(state.currentnodeid);
+	directServer.currentnode = directServer.currentdialogue.nodes[idx];
+	directServer.currentnodectx = new WoolNodeContext(state.currentnodectxvars);
+	directServer.currentnode.func(directServer.currentnodectx);
+}
+
+directServer.findNodeIdx = function(id) {
+	for (var i=0; i<directServer.currentdialogue.nodes.length; i++) {
+		var n = directServer.currentdialogue.nodes[i];
+		if (n.param.title==id) return i;
+	}
+	return null;
+}
+
 
 /* convert current node and node ctx into node spec for the client, following:
 String id; // node id
@@ -192,10 +218,8 @@ function _directServer_start_dialogue(par) {
 	directServer.currentdialogue = directServer.dialogues[par.dialogueId];
 	// start node is node named "Start", otherwise first node
 	var node = directServer.currentdialogue.nodes[0];
-	for (var i=0; i<directServer.currentdialogue.nodes.length; i++) {
-		var n = directServer.currentdialogue.nodes[i];
-		if (n.param.title=="Start") node = n;
-	}
+	var idx = directServer.findNodeIdx("Start");
+	if (idx!==null) node = directServer.currentdialogue.nodes[idx];
 	directServer.currentnode = node;	
 	// pass kb variables here
 	directServer.currentnodectx = new WoolNodeContext({});
@@ -227,7 +251,11 @@ function _directServer_progress_dialogue(par) {
 	directServer.currentnodectx = new WoolNodeContext(
 		directServer.currentnodectx.vars
 	);
-	directServer.currentnode.func(directServer.currentnodectx);
+	if (typeof directServer.currentnode.func == 'function' ) {
+		directServer.currentnode.func(directServer.currentnodectx);
+	} else {
+		directServer.logError("Node "+directServer.currentnode.param["title"]+": script error.");
+	}
 	return directServer.getNode();
 }
 

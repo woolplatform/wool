@@ -30,6 +30,8 @@ var App = function(name, version)
 	this.shifted = false;
   	this.isNwjs = false;
     
+	this.urlParameters = Utils.getUrlParameters();
+
 	this.UPDATE_ARROWS_THROTTLE_MS = 50;
 
 	this.LOCALSTORAGEPREFIX="wool_js_";
@@ -47,8 +49,7 @@ var App = function(name, version)
 		this.isNwjs = true;
 	}
 
-	this.run = function()
-	{
+	this.run = function() {
 		//TODO(Al):
 		// delete mutliple nodes at the same time
 
@@ -470,11 +471,28 @@ var App = function(name, version)
 			}
 		});
 		//self.transformOrigin += 100;
-		self.translate();
 		// apple command key
 		//$(window).on('keydown', function(e) { if (e.keyCode == 91 || e.keyCode == 93) { self.appleCmdKey = true; } });
 		//$(window).on('keyup', function(e) { if (e.keyCode == 91 || e.keyCode == 93) { self.appleCmdKey = false; } });
-	}
+
+
+		// init after nodes loaded
+
+		if (this.urlParameters.editnode) {
+			var nodes = this.nodes();
+			for (var i=0; i<nodes.length; i++) {
+				var node = nodes[i];
+				if (node.title() == this.urlParameters.editnode) {
+					this.warpToNodeXY(node.assignedx,node.assignedy);
+					app.editNode(node);
+					break;
+				}
+			}
+		}
+
+		self.translate();
+
+	} // this.run()
 
 	this.getNodesConnectedTo = function(toNode)
 	{
@@ -1284,9 +1302,8 @@ var App = function(name, version)
 		}
 	}
 
-	this.warpToNodeXY = function(x, y)
-	{
-		//alert("warp to x, y: " + x + ", " + y);
+	this.warpToNodeXY = function(x, y) {
+		console.log("warp to x, y: " + x + ", " + y);
 		const nodeWidth = 100, nodeHeight = 100;
 		var nodeXScaled = -( x * self.cachedScale ),
 			nodeYScaled = -( y * self.cachedScale ),
@@ -1346,7 +1363,15 @@ var App = function(name, version)
 		self.editing().compile();
 	}
 
+	this.contDialogue = function() {
+		self.doRunDialogue(true);
+	}
+
 	this.runDialogue = function() {
+		self.doRunDialogue(false);
+	}
+
+	this.doRunDialogue = function(doContinue) {
 		//document.getElementById('woolclient-popup-iframe').contentWindow.location.reload();
 		data.saveToBuffer();
 		//var elem = document.getElementById("woolclient-popup");
@@ -1359,6 +1384,7 @@ var App = function(name, version)
 		location.href = "../../html5/simplewoolclient/index.html?editable=true&rand="
 			+Math.random()
 			+"&editurl="+encodeURIComponent("../../wooleditor/app/index.html")
+			+(doContinue ? "&docontinue=true" : "")
 			//+"&code="+encodeURIComponent(
 			//	data.getSaveData(FILETYPE.WOOL)
 			//)
@@ -1401,6 +1427,5 @@ var App = function(name, version)
 	}
 
 	this.loadUIState();
-
 
 }

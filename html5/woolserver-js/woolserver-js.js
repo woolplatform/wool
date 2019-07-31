@@ -407,12 +407,11 @@ function WoolNode(dialogue,lines) {
 	dialogue.nodeMap[this.param.title] = this;
 }
 
-function WoolDialogue(yarnsource) {
-	this.source = yarnsource.split(/\r?\n/);
+function WoolDialogue(woolsource) {
+	this.source = woolsource.split(/\r?\n/);
 	this.nodes = [];
 	this.speakers = {};
 	this.nodeMap = {};
-	console.log("yjs created! Lines:"+this.source.length);
 	var nodelines = [];
 	for (var i=0; i<this.source.length; i++) {
 		var line = this.source[i].trim();

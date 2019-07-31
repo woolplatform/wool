@@ -26,6 +26,18 @@ var Utils =
 			element.css("z-index", highZ + 1);
 	},
 
+	// Merge with html5/lib/utils.js
+	getUrlParameters: function() {
+		return window.location.search.substring(1).split("&")
+		.reduce(function(res, i) {
+			if (i.split("=")[0]) {
+				res[i.split("=")[0]] = decodeURIComponent(i.split("=")[1]);
+			}
+			return res;
+		}, {});
+	},
+
+	// Merge with html5/lib/utils.js?
 	stripHtml: function(html)
 	{
 		while (html.indexOf("<") >= 0)

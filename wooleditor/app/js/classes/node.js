@@ -3,8 +3,7 @@ const NodeExpandWidth = 300;
 const NodeExpandHeight = 150;
 const ClipNodeTextLength = 1024;
 
-var Node = function()
-{
+var Node = function() {
 	var self = this;
 
 	// primary values
@@ -13,6 +12,10 @@ var Node = function()
 	this.tags = ko.observable("");
 	this.speaker = ko.observable("");
 	this.body = ko.observable("Empty Text");
+	// alternative way to get x,y, because there may a be delay getting them
+	// through css
+	this.assignedx = 0;
+	this.assignedy = 0;
 	//this.x = ko.observable(128);
 	//this.y = ko.observable(128);
 	this.active = ko.observable(true);
@@ -25,20 +28,17 @@ var Node = function()
 	this.selected = false;
 	this.lastCompiled = new Date().getTime() - 1000000;
 	// clipped values for display
-	this.clippedTags = ko.computed(function() 
-	{
+	this.clippedTags = ko.computed(function() {
 		var tags = this.tags().split(" ");
 		var output = "";
-		if (this.tags().length > 0)
-		{
+		if (this.tags().length > 0) {
 			for (var i = 0; i < tags.length; i ++)
 				output += '<span>' + tags[i] + '</span>';
 		}
         return output;
     }, this);
 
-	this.clippedBody = ko.computed(function() 
-	{
+	this.clippedBody = ko.computed(function() {
 		var result = app.getHighlightedText(this.body());
 		while (result.indexOf("\n") >= 0)
 			result = result.replace("\n", "<br />");
@@ -57,8 +57,7 @@ var Node = function()
 
 	this.canDoubleClick = true;
 
-	this.create = function()
-	{
+	this.create = function() {
 		Utils.pushToTop($(self.element));
 		self.style = window.getComputedStyle($(self.element).get(0));
 
@@ -123,17 +122,19 @@ var Node = function()
 		self.setSelected(!self.selected);
 	}
 
-	this.x = function(inX)
-	{
-		if (inX != undefined)
+	this.x = function(inX) {
+		if (inX != undefined) {
 			$(self.element).css({x:Math.floor(inX)});
+			self.assignedx = inX;
+		}
 		return Math.floor((new WebKitCSSMatrix(self.style.webkitTransform)).m41);
 	}
 
-	this.y = function(inY)
-	{
-		if (inY != undefined)
+	this.y = function(inY) {
+		if (inY != undefined) {
 			$(self.element).css({y:Math.floor(inY)});
+			self.assignedy = inY;
+		}
 		return Math.floor((new WebKitCSSMatrix(self.style.webkitTransform)).m42);
 	}
 
