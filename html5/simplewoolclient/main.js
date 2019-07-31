@@ -46,9 +46,15 @@ _i18n.setLocale("en");
 if (config.background!==null)
 	document.body.className = "pattern"+config.background;
 
-var sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
+var sourceCode = null;
+
+//sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
 
 if (params.code) sourceCode = params.code;
+
+try {
+	if (!sourceCode) sourceCode = window.name;
+} catch (e) { }
 
 directServerLoadDialogue("dialogue",sourceCode);
 

@@ -1374,6 +1374,8 @@ var App = function(name, version)
 	this.doRunDialogue = function(doContinue) {
 		//document.getElementById('woolclient-popup-iframe').contentWindow.location.reload();
 		data.saveToBuffer();
+		var content = data.getSaveData(FILETYPE.WOOL);
+		window.name = content;
 		//var elem = document.getElementById("woolclient-popup");
 		//elem.style.display="block";
 		//elem = document.getElementById("woolclient-popup-iframe");
