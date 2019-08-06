@@ -345,6 +345,18 @@ a:hover { color: #000;}
 	text-overflow: ellipsis;
 }
 
+.node .node-warning {
+	position: absolute;
+	top: 0px;
+	right: 10px;
+	width: 20px;
+	height: 40px;
+	line-height: 40px;
+	font-size: 35px;
+	font-weight: bold;
+	color: #f00;
+}
+
 .node .body
 {
 	position: absolute;
@@ -612,7 +624,6 @@ a:hover { color: #000;}
 	text-align: center;
 	border: 2px solid black;
 }
-
 
 /* --- MARQUEE --- */
 

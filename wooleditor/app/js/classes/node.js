@@ -51,6 +51,9 @@ var Node = function() {
 	// internal cache
 	this.linkedTo = ko.observableArray();
 	this.linkedFrom = ko.observableArray();
+	// links to nonexistent nodes {line,node}
+	this.linkedToUndefined = [];
+	this.linkedToExternal = [];
 
 	// reference to element containing us
 	this.element = null;
@@ -306,6 +309,7 @@ var Node = function() {
 		$(self.element).css('x',newX);
 		$(self.element).css('y',newY);
 		app.updateArrows();
+		setTimeout(data.saveToBuffer,500);
 		/*$(self.element).transition(
 			{
 				x: newX,
@@ -335,38 +339,54 @@ var Node = function() {
 		return false;
 	}
 
-	this.updateLinks = function()
-	{
+	this.updateLinks = function() {
 		self.resetDoubleClick();
 		// clear existing links
 		self.linkedTo.removeAll();
+		self.linkedToUndefined = [];
+		self.linkedToExternal = [];
 
 		// find all the links
-		var links = self.body().match(/\[\[(.*?)\]\]/g);
-		if (links != undefined)
-		{
-			var exists = {};
-			for (var i = links.length - 1; i >= 0; i --)
-			{
-				links[i] = links[i].substr(2, links[i].length - 4).toLowerCase();
+		// Same regex as used in woolserver-js
+		var lines = self.body().split(/\r?\n/);
+		var allLinks = []; // {line,node}
+		var exists = {};
+		for (var l=0; l<lines.length; l++) {
+			// TODO let woolserver-js do this
+			var links = lines[l].match(/^\[\[(.+)\]\]$/);
+			if (links != undefined) {
+				links = links[1].trim(); // first capture group
 
-				if (links[i].indexOf("|") >= 0)
-					links[i] = links[i].split("|")[1];
+				if (links.indexOf("|") >= 0)
+					links = links.split("|")[1];
 
-				if (exists[links[i]] != undefined)
-					links.splice(i, 1);
+				if (!exists[links]) {
+					allLinks.push({line:l,node:links});
+				}
 				
-				exists[links[i]] = true;
+				exists[links] = true;
 			}
-
-			// update links
-			for (var index in app.nodes())
-			{
+		}
+		// update links
+		for (var i = 0; i < allLinks.length; i ++) {
+			var link = allLinks[i];
+			var found = false;
+			for (var index in app.nodes()) {
 				var other = app.nodes()[index];
-				for (var i = 0; i < links.length; i ++)
-					if (other != self 
-					&& other.title().toLowerCase().trim() == links[i].trim())
-						self.linkedTo.push(other);
+				if (other != self 
+				&& other.title().toLowerCase().trim() == link.node.toLowerCase()) {
+					self.linkedTo.push(other);
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				if (link.node.indexOf(".") >= 0) {
+					self.linkedToExternal.push(link);
+					// dialogue.node
+				} else {
+					self.linkedToUndefined.push(link);
+				}
 			}
 		}
 	}
@@ -379,6 +399,8 @@ var Node = function() {
 		}
 	}
 	this.compile = function() {
+		// find undefined links
+		self.updateLinks();
 		var now = new Date().getTime();
 		if (now - self.lastCompiled < 2000) return;
 		self.lastCompiled = now;
@@ -412,6 +434,24 @@ var Node = function() {
 				errtexts.push(err.level+": "+err.msg);
 			}
 		}
+		for (i=0; i<self.linkedToUndefined.length; i++) {
+			var link = self.linkedToUndefined[i];
+			errannot.push({
+				row: link.line,
+				column: 0,
+				text: "error: Link to nonexistent node "+link.node,
+				type: "error",
+			});
+		}
+		for (i=0; i<self.linkedToExternal.length; i++) {
+			var link = self.linkedToExternal[i];
+			errannot.push({
+				row: link.line,
+				column: 0,
+				text: "notice: Link to another dialogue not supported in editor preview",
+				type: "warning",
+			});
+		}
 		//app.editor.getSession().addMarker(new Range(1,2,1,10),"myclass","line",false);
 		app.editor.getSession().setAnnotations(errannot);
 		document.getElementById("node-errors").innerHTML =
@@ -424,7 +464,13 @@ var Node = function() {
 		//app.editor.getSession().addMarker(new Range(1,2,1,2),"mycssclass",
 		//	"background",false);
 	}
-
+	this.hasErrors = function() {
+		var nodesource = data.getSaveData(FILETYPE.WOOL,this);
+		directServerLoadDialogue("dialogue",nodesource);
+		var errs = directServer.dialogues["dialogue"].nodes[0].errors;
+		self.updateLinks();
+		return errs.length > 0 || self.linkedToUndefined.length > 0;
+	}
 }
 
 ko.bindingHandlers.nodeBind = 

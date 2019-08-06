@@ -80,7 +80,7 @@
 				<div class="menu">
 					<span class="title" data-bind="click:app.runDialogue">Run</span>
 					<div class="dropdown">
-						<span class="item" data-bind="click: app.runDialogue">Restart</span>
+						<span class="item" data-bind="click: app.runDialogue">(Re)start</span>
 						<span class="item" data-bind="click: app.contDialogue">Continue</span>
 					</div>
 				</div>
@@ -88,13 +88,13 @@
 					<span class="title" data-bind="click:app.newNode">+ Node</span>
 				</div>
 
-				<div class="menu">
+				<!--<div class="menu">
 					<span class="title">Buffer</span>
 					<div class="dropdown">
 						<a class="item" download="file.wool" href='#' onclick="data.saveToBuffer();">Save</a>
 						<span class="item" data-bind="click: data.loadFromBuffer">Reload</span>
 					</div>
-				</div>
+				</div>-->
 				<div class="menu">
 					<span class="title">File</span>
 					<div class="dropdown">
@@ -129,7 +129,13 @@
 			<div class="nodes">
 				<div class="nodes-holder" data-bind="foreach: { data: app.nodes, as: 'node' }">
 					<div class="node" data-bind="nodeBind: true, css: { inactive: !node.active()}" >
-						<div class="title" data-bind="text: node.speaker()+':&nbsp;'+node.title(), style: {background:
+						<div class="node-warning" data-bind="text: 
+						(node.hasErrors() ? '&#x26a0;' : '')"></div>
+						<div class="title" data-bind="text: 
+						node.speaker()
+						+':&nbsp;'
+						+node.title(),
+						style: {background:
 						node.colorID() == 1 ? '#6EA5E0' :
 						node.colorID() == 2 ? '#9EDE74' :
 						node.colorID() == 3 ? '#FFE374' :

@@ -305,10 +305,19 @@ function WoolNode(dialogue,lines) {
 			this.body[i] = "C.addMultimedia('timer','"+matches[1]+"');";
 			continue;
 		}
+		// after checking all types of << .. >>, catch unrecognised << .. >>
+		var matches = /^<<.*>>$/.exec(line);
+		if (matches) {
+			// ignore line, produce error
+			this.body[i] = "";
+			logError("error",i,"Cannot parse << ... >> statement");
+			continue;
+		}
 		// Oude spec. Is nu aparte node "End"
 		var matches = /^\s*\[EXIT_DIALOGUE\]\s*$/.exec(line);
 		if (matches) {
 			this.body[i] = "C.setNodeType('exit');";
+			logError("error",i,"Deprecated EXIT_DIALOGUE statement");
 			continue;
 		}
 		// autoforward reply, no '|'
@@ -318,6 +327,7 @@ function WoolNode(dialogue,lines) {
 			this.body[i] = "C.addAutoForwardReply('"+optid+"');";
 			continue;
 		}
+
 		// normal reply
 		var matches = /^\[\[\s*([^|\]]+)\s*\|\s*([a-zA-Z0-9_.-]+)\s*(|.*)?\]\]$/.exec(line);
 		if (matches) {
@@ -378,18 +388,26 @@ function WoolNode(dialogue,lines) {
 				continue;
 			}
 		}
+		// after checking all types of [[ .. ]], catch unrecognised [[ .. ]]
+		var matches = /^\[\[.*\]\]$/.exec(line);
+		if (matches) {
+			// ignore line, produce error
+			this.body[i] = "";
+			logError("error",i,"Cannot parse [[ ... ]] statement");
+			continue;
+		}
 		// plain line
 		var matches = /^([a-zA-Z0-9_]+):\s*(.*)$/.exec(line);
 		if (matches) {
+			// with speaker
 			var speaker = matches[1];
 			dialogue.speakers[speaker] = speaker;
-			// with speaker
 			this.body[i] = "C.addLine("+
 				JSON.stringify(matches[2])+","
 				+JSON.stringify(speaker)+");";
 			continue;
 		} else {
-			// without
+			// without speaker
 			this.body[i] = "C.addLine("+JSON.stringify(line)+");";
 			continue;
 		}

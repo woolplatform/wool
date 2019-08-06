@@ -290,6 +290,10 @@ var App = function(name, version)
 				$("#marquee").css({x:0, y:0, width:0, height:0});
 				MarqueeOn = false;
 
+				//XXX save after a second because position is obtained from css
+				//transform which is not updated immediately after style is set.
+				// TODO maintain node position in different way
+				setTimeout(data.saveToBuffer,500);
 			});
 		})();
 
@@ -348,7 +352,7 @@ var App = function(name, version)
 				x += e.pageX / self.cachedScale;
 				y += e.pageY / self.cachedScale;
 
-				self.newNodeAt(x, y); 
+				self.newNode(x, y); 
 			} 
 
 			return !isAllowedEl; 
@@ -418,7 +422,7 @@ var App = function(name, version)
 		$(document).on('keydown', function(e) {
 			if (self.editing() || self.$searchField.is(':focus') || e.ctrlKey || e.metaKey) return;                                                    
 			var scale = self.cachedScale || 1,
-				movement = scale * 500;
+				movement = scale * 400;
 
 			if(e.shiftKey) {
 				movement = scale * 100;
@@ -701,26 +705,12 @@ var App = function(name, version)
 		}
 	}
 
-	this.newNode = function(updateArrows)
-	{
-		var node = new Node();
-		self.nodes.push(node);
-		if (updateArrows == undefined || updateArrows == true)
-			self.updateNodeLinks();
-		
-		self.recordNodeAction("created", node);
-
-		return node;
-	}
-
-	this.newNodeAt = function(x, y)
-	{
+	this.newNode = function(x, y) {
 		var node = new Node();
 		
 		self.nodes.push(node);
-
-		node.x(x-100);
-		node.y(y-100);
+		if (typeof x != "undefined") node.x(x-100);
+		if (typeof y != "undefined") node.y(y-100);
 		self.updateNodeLinks();
 		self.recordNodeAction("created", node);
 
@@ -765,10 +755,9 @@ var App = function(name, version)
 		return x.replace(/^\s+|\s+$/gm,'');
 	}
 
-	this.saveNode = function()
-	{
-		if (self.editing() != null)
-		{
+	this.saveNode = function() {
+		if (self.editing() != null) {
+			data.saveToBuffer();
 			self.updateNodeLinks();
 
 			self.editing().title(self.trim(self.editing().title()));
@@ -820,11 +809,11 @@ var App = function(name, version)
 		}
 	}
 
-	this.updateNodeLinks = function()
-	{
+	this.updateNodeLinks = function() {
 		for  (var i in self.nodes()) {
 			self.nodes()[i].updateLinks();
 		}
+		self.updateArrows();
 	}
 
 	this.updateArrows = function()
