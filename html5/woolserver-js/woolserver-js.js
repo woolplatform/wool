@@ -182,6 +182,9 @@ function WoolNodeContext(vars) {
 			action: action,
 		});
 	}
+	this.doAction = function(params) {
+		alert("Action called: "+JSON.stringify(params));
+	}
 }
 
 
@@ -221,15 +224,19 @@ function WoolNode(dialogue,lines) {
 		});
 	}
 	// parse space separated list of key="value" pairs
+	// Returns null on parse error
 	function parseKeyValList(expr) {
 		var ret = {};
 		var regex = /^\s*([a-zA-Z0-9_]+)\s*=\s*"([^"]+)"/;
 		while (true) {
 			var matches = regex.exec(expr);
-			if (!matches) break; // XXX report stray characters
+			if (!matches) break;
 			ret[matches[1]] = matches[2];
 			expr = expr.replace(regex,"");
 		}
+		// stray characters imply error
+		if (!expr) return ret;
+		if (expr.trim() != "") return null;
 		return ret;
 	}
 	if (this.body.length==0) logError("error",null,"Node has no body");
@@ -353,7 +360,20 @@ function WoolNode(dialogue,lines) {
 						if (matches) {
 							actfunc += "C.vars."+matches[1]+" = "+matches[2]+";";
 						} else {
-							logError("error",i,"Cannot parse action "+actionstr);
+							matches=/^<<action\s+(.+)\s*>>$/.exec(actionstr);
+							if (matches) {
+								var actionparams = parseKeyValList(matches[1]);
+								if (actionparams === null) {
+									logError("error",i,
+										"Cannot parse parameter string '"
+										+matches[1]+"'");
+								}
+								//logError("warning",i,"actions not implemented");
+								actfunc += "C.doAction("
+									+JSON.stringify(actionparams)+");";
+							} else {
+								logError("error",i,"Cannot parse action "+actionstr);
+							}
 						}
 					}
 					if (actfunc) {
@@ -366,9 +386,22 @@ function WoolNode(dialogue,lines) {
 			var matches = /^(.*)<<input\s+(.+)\s*>>(.*)$/.exec(desc);
 			if (matches) {
 				var beforeText = matches[1];
-				var inputparams = matches[2];
+				var inputparams_str = matches[2];
 				var afterText = matches[3];
-				inputparams = parseKeyValList(inputparams);
+				var inputparams = parseKeyValList(inputparams_str);
+				if (inputparams === null) {
+					logError("error",i,"Cannot parse parameter string '"
+						+inputparams_str+"'");
+					continue;
+				}
+				if (!inputparams.type) {
+					logError("error",i,"Input: type missing");
+					continue;
+				}
+				if (!inputparams.value) {
+					logError("error",i,"Input: value missing");
+					continue;
+				}
 				this.body[i] = "C.addInputReply('"
 					+optid+"',"
 					+JSON.stringify(beforeText)+",'"
