@@ -62,6 +62,11 @@ public class WoolSetCommand extends WoolExpressionCommand {
 	}
 	
 	@Override
+	public WoolReply findReplyById(int replyId) {
+		return null;
+	}
+
+	@Override
 	public void getReadVariableNames(Set<String> varNames) {
 		varNames.addAll(expression.getValueOperand().getVariableNames());
 	}

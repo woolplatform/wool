@@ -34,6 +34,7 @@ import nl.rrd.wool.expressions.Expression;
 import nl.rrd.wool.expressions.Value;
 import nl.rrd.wool.expressions.types.AssignExpression;
 import nl.rrd.wool.model.WoolNodeBody;
+import nl.rrd.wool.model.WoolReply;
 import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 import nl.rrd.wool.parser.WoolBodyParser;
 import nl.rrd.wool.parser.WoolBodyToken;
@@ -103,6 +104,19 @@ public class WoolIfCommand extends WoolExpressionCommand {
 		this.elseClause = elseClause;
 	}
 	
+	@Override
+	public WoolReply findReplyById(int replyId) {
+		for (Clause clause : ifClauses) {
+			WoolReply reply = clause.statement.findReplyById(replyId);
+			if (reply != null)
+				return reply;
+		}
+		if (elseClause != null)
+			return elseClause.findReplyById(replyId);
+		else
+			return null;
+	}
+
 	@Override
 	public void getReadVariableNames(Set<String> varNames) {
 		for (Clause clause : ifClauses) {

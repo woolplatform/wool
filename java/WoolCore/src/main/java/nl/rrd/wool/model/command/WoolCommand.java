@@ -27,6 +27,7 @@ import java.util.Set;
 
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.model.WoolNodeBody;
+import nl.rrd.wool.model.WoolReply;
 import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 
 /**
@@ -36,6 +37,15 @@ import nl.rrd.wool.model.nodepointer.WoolNodePointer;
  * @author Dennis Hofs (RRD)
  */
 public abstract class WoolCommand {
+
+	/**
+	 * Tries to find a reply with the specified ID within this command. If no
+	 * such reply is found, this method returns null.
+	 * 
+	 * @param replyId the reply ID
+	 * @return the reply or null
+	 */
+	public abstract WoolReply findReplyById(int replyId);
 	
 	/**
 	 * Retrieves all variable names that are read in this command and adds them

@@ -192,9 +192,14 @@ public class WoolNodeBody {
 		return replies;
 	}
 	
-	public WoolReply getReplyById(int replyId) {
+	public WoolReply findReplyById(int replyId) {
 		for (WoolReply reply : replies) {
 			if (reply.getReplyId() == replyId)
+				return reply;
+		}
+		for (Segment segment : segments) {
+			WoolReply reply = segment.findReplyById(replyId);
+			if (reply != null)
 				return reply;
 		}
 		return null;
@@ -406,6 +411,14 @@ public class WoolNodeBody {
 	}
 
 	public static abstract class Segment {
+		/**
+		 * Tries to find a reply with the specified ID within this segment. If
+		 * no such reply is found, this method returns null.
+		 * 
+		 * @param replyId the reply ID
+		 * @return the reply or null
+		 */
+		public abstract WoolReply findReplyById(int replyId);
 
 		/**
 		 * Retrieves all variable names that are read in this segment and adds
@@ -440,6 +453,11 @@ public class WoolNodeBody {
 		}
 		
 		@Override
+		public WoolReply findReplyById(int replyId) {
+			return null;
+		}
+
+		@Override
 		public void getReadVariableNames(Set<String> varNames) {
 			text.getReadVariableNames(varNames);
 		}
@@ -465,6 +483,11 @@ public class WoolNodeBody {
 			return command;
 		}
 		
+		@Override
+		public WoolReply findReplyById(int replyId) {
+			return command.findReplyById(replyId);
+		}
+
 		@Override
 		public void getReadVariableNames(Set<String> varNames) {
 			command.getReadVariableNames(varNames);

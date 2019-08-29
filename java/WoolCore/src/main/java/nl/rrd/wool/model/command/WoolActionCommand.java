@@ -93,6 +93,11 @@ public class WoolActionCommand extends WoolAttributesCommand {
 	}
 	
 	@Override
+	public WoolReply findReplyById(int replyId) {
+		return null;
+	}
+
+	@Override
 	public void getReadVariableNames(Set<String> varNames) {
 		value.getReadVariableNames(varNames);
 		for (WoolVariableString paramVals : parameters.values()) {

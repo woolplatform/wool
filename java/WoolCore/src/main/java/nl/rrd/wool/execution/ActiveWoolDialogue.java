@@ -167,7 +167,7 @@ public class ActiveWoolDialogue {
 	 */
 	public WoolNodePointer processReplyAndGetNodePointer(int replyId)
 			throws EvaluationException {
-		WoolReply selectedWoolReply = currentNode.getBody().getReplyById(
+		WoolReply selectedWoolReply = currentNode.getBody().findReplyById(
 				replyId);
 		Map<String,Object> variableMap = woolVariableStore.getModifiableMap(
 				VariableSource.CORE);
@@ -217,7 +217,7 @@ public class ActiveWoolDialogue {
 	}
 	
 	private WoolInputCommand findInputCommand(int replyId) {
-		WoolReply reply = this.currentNode.getBody().getReplyById(replyId);
+		WoolReply reply = this.currentNode.getBody().findReplyById(replyId);
 		WoolNodeBody body = reply.getStatement();
 		if (body == null)
 			return null;
@@ -239,7 +239,7 @@ public class ActiveWoolDialogue {
 	 * @return 
 	 */
 	public String getUserStatementFromReplyId(int replyId) throws WoolException {
-		WoolReply selectedReply = currentNode.getBody().getReplyById(replyId);
+		WoolReply selectedReply = currentNode.getBody().findReplyById(replyId);
 		if (selectedReply == null) {
 			throw new WoolException(WoolException.Type.REPLY_NOT_FOUND,
 					String.format("Reply with ID %s not found in dialogue \"%s\", node \"%s\"",
