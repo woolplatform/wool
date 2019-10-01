@@ -35,7 +35,6 @@ import java.util.Set;
  * the dialogue execution engine. 
  * 
  * @author Harm op den Akker
- * @see {@link DefaultWoolVariableStore},
  */
 public class WoolVariableStore extends Observable {
 	private Map<String,Object> variableMap = new HashMap<>();
@@ -63,9 +62,12 @@ public class WoolVariableStore extends Observable {
 	}
 	
 	/**
-	 * Stores the given {@code value} under the given {@name} in this {@link WoolVariableStore}.
+	 * Stores the given {@code value} under the given {@code name} in this
+	 * {@link WoolVariableStore}.
+	 *
 	 * @param name the name of the variable to store.
 	 * @param value the value of the variable to store.
+	 * @param source the source (core or external)
 	 */
 	public void setValue(String name, Object value, VariableSource source) {
 		variableMap.put(name,value);

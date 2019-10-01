@@ -63,9 +63,13 @@ public class WoolNode {
 	// ---------- Utility:
 	
 	/**
-	 * Returns the title of this {@link WoolNode} as defined in its corresponding {@link WoolHeader}. Returns the same
-	 * as {@code this.getHeader().getTitle()} or {@code null} if no {@link WoolHeader} has been set, or its title attribute is {@code null}.
-	 * @return the title of this {@link WoolNode} as defined in its corresponding {@link WoolHeader}.
+	 * Returns the title of this {@link WoolNode} as defined in its
+	 * corresponding {@link WoolNodeHeader}. Returns the same as {@code
+	 * this.getHeader().getTitle()} or {@code null} if no {@link WoolNodeHeader}
+	 * has been set, or its title attribute is {@code null}.
+	 *
+	 * @return the title of this {@link WoolNode} as defined in its
+	 * corresponding {@link WoolNodeHeader}.
 	 */
 	public String getTitle() {
 		if(header != null)

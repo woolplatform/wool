@@ -29,7 +29,7 @@ import nl.rrd.wool.model.WoolReply;
  * A pointer to a node that is part of a different dialogue than the dialogue of which the node that is being referred from is a part. 
  * 
  * @author Tessa Beinema
- * @see {@link WoolReply} for usage example
+ * @see WoolReply
  */
 public class WoolNodePointerExternal extends WoolNodePointer {
 	

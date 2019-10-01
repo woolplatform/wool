@@ -28,7 +28,8 @@ import nl.rrd.wool.model.WoolNode;
  * An abstract representation of a pointer to a next node. 
  * 
  * @author Tessa Beinema
- * @see {@link WoolNodePointerInternal}, {@link WoolNodePointerExternal}
+ * @see WoolNodePointerInternal
+ * @see WoolNodePointerExternal
  */
 public abstract class WoolNodePointer {
 	
@@ -38,7 +39,7 @@ public abstract class WoolNodePointer {
 	
 	/**
 	 * Creates an instance of a {@link WoolNodePointer} with given {@code nodeId}.
-	 * @param nextNodeId the unique identifier of the {@link WoolNode} that this NodePointer
+	 * @param nodeId the unique identifier of the {@link WoolNode} that this NodePointer
 	 * refers to.
 	 */
 	public WoolNodePointer(String nodeId) {

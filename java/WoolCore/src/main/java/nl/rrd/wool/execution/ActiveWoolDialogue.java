@@ -127,12 +127,12 @@ public class ActiveWoolDialogue {
 	}
 	
 	/**
-	 * "Starts" this {@link ActiveWoolDialogue} at the provided {@WoolNode},
-	 * returning that first node and updating the dialogue's internal state.
-	 * If you set the nodeId to null, it will return the start node.
-	 * 
-	 * @return nodeId the node ID or null
-	 * @return the first {@link WoolNode}
+	 * "Starts" this {@link ActiveWoolDialogue} at the provided {@link
+	 * WoolNode}, returning that node and updating the dialogue's internal
+	 * state. If you set the nodeId to null, it will return the start node.
+	 *
+	 * @param nodeId the node ID or null
+	 * @return the {@link WoolNode}
 	 * @throws WoolException if the request is invalid
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
@@ -164,6 +164,7 @@ public class ActiveWoolDialogue {
 	 * 
 	 * @param replyId the reply ID
 	 * @return WoolNodePointer the pointer to the next node
+	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
 	public WoolNodePointer processReplyAndGetNodePointer(int replyId)
 			throws EvaluationException {
@@ -233,10 +234,12 @@ public class ActiveWoolDialogue {
 	}
 
 	/**
-	 * The user's client returned the given {@code replyId} - what was the statement that was
-	 * uttered by the user?
-	 * @param replyId
-	 * @return 
+	 * The user's client returned the given {@code replyId} - what was the
+	 * statement that was uttered by the user?
+	 *
+	 * @param replyId the reply ID
+	 * @return the statement
+	 * @throws WoolException if no reply with the specified ID is found
 	 */
 	public String getUserStatementFromReplyId(int replyId) throws WoolException {
 		WoolReply selectedReply = currentNode.getBody().findReplyById(replyId);

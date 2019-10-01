@@ -22,11 +22,13 @@
 
 package nl.rrd.wool.model.nodepointer;
 
+import nl.rrd.wool.model.WoolReply;
+
 /**
  * A pointer to a node that is part of the same dialogue as the node that is being referred from. 
  * 
  * @author Tessa Beinema
- * @see {@link WoolReply} for usage example
+ * @see WoolReply
  */
 public class WoolNodePointerInternal extends WoolNodePointer {
 	

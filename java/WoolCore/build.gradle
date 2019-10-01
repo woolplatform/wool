@@ -1,7 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'distribution'
-apply plugin: 'maven-publish'
 apply plugin: 'eclipse-wtp'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 group = 'nl.rrd'
 version = '1.0.0'
@@ -29,6 +30,16 @@ jar {
 	}
 }
 
+task javadocJar(type: Jar) {
+	classifier = 'javadoc'
+	from javadoc
+}
+
+task sourcesJar(type: Jar) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
 distributions {
 	main {
 		contents {
@@ -40,18 +51,63 @@ distributions {
 
 [distZip, distTar, installDist]*.dependsOn jar
 
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-			artifactId = archivesBaseName
-		}
-	}
-}
-
 javadoc {
 	options {
 		links 'https://docs.oracle.com/javase/10/docs/api/'
 		addStringOption('Xdoclint:all,-html', '-quiet')
+	}
+}
+
+artifacts {
+	archives javadocJar, sourcesJar
+}
+
+signing {
+	sign configurations.archives
+}
+
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			beforeDeployment { MavenDeployment deployment ->
+				signing.signPom(deployment)
+			}
+			
+			repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+				authentication(userName: ossrhUsername, password: ossrhPassword)
+			}
+			
+			snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+				authentication(userName: ossrhUsername, password: ossrhPassword)
+			}
+			
+			pom.project {
+				name 'WOOL Dialogue Framework'
+				packaging 'jar'
+				description 'WOOL is a simple, powerful dialogue framework for creating virtual agent conversations.'
+				url 'https://www.council-of-coaches.eu/wool/'
+				
+				scm {
+					connection 'scm:git:git://github.com/RoessinghResearch/wool.git'
+					developerConnection 'scm:git:ssh://github.com:RoessinghResearch/wool.git'
+					url 'https://github.com/RoessinghResearch/wool/tree/master'
+				}
+				
+				licenses {
+					license {
+						name 'MIT License'
+						url 'https://opensource.org/licenses/MIT'
+					}
+				}
+				
+				developers {
+					developer {
+						id 'dhofs'
+						name 'Dennis Hofs'
+						email 'd.hofs@rrd.nl'
+					}
+				}
+			}
+		}
 	}
 }

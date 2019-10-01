@@ -62,7 +62,8 @@ public class WoolReply {
 
 	/**
 	 * Constructs a new reply.
-	 * 
+	 *
+	 * @param replyId the reply ID
 	 * @param statement the statement or null (auto-forward reply)
 	 * @param nodePointer the next node when the reply is chosen
 	 */
@@ -75,7 +76,8 @@ public class WoolReply {
 
 	/**
 	 * Constructs an auto-forward reply without a statement.
-	 * 
+	 *
+	 * @param replyId the reply ID
 	 * @param nodePointer the next node when the reply is chosen
 	 */
 	public WoolReply(int replyId, WoolNodePointer nodePointer) {
@@ -205,7 +207,7 @@ public class WoolReply {
 	 * variables resolved.
 	 * 
 	 * @param variables the variable map
-	 * @param processedBody the processed body
+	 * @return the processed reply
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
 	public WoolReply execute(Map<String,Object> variables)

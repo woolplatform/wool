@@ -82,6 +82,7 @@ public abstract class WoolExpressionCommand extends WoolCommand {
 	 * 
 	 * @param cmdStartToken the command start token
 	 * @param content the command content
+	 * @param name the command name
 	 * @return the parsed content
 	 * @throws LineNumberParseException if a parsing error occurs
 	 */
@@ -108,6 +109,7 @@ public abstract class WoolExpressionCommand extends WoolCommand {
 	 * 
 	 * @param cmdStartToken the command start token
 	 * @param content the command content
+	 * @param name the command name
 	 * @return the parsed content
 	 * @throws LineNumberParseException if a parsing error occurs
 	 */
