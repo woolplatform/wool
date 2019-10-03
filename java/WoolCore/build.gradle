@@ -102,10 +102,25 @@ uploadArchives {
 				
 				developers {
 					developer {
+						id 'bvanschooten'
+						name 'Boris van Schooten'
+						email 'b.vanschooten@rrd.nl'
+					}
+					developer {
 						id 'dhofs'
 						name 'Dennis Hofs'
 						email 'd.hofs@rrd.nl'
 					}
+					developer {
+						id 'hopdenakker'
+						name 'Harm op den Akker'
+						email 'h.opdenakker@rrd.nl'
+					}
+					developer {
+						id 'tbeinema'
+						name 'Tessa Beinema'
+						email 't.beinema@rrd.nl'
+					}					
 				}
 			}
 		}
