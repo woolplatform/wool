@@ -26,6 +26,7 @@ var Node = function() {
 	this.colorID = ko.observable(0);
 	this.checked = false;
 	this.selected = false;
+	this.compiledNode = null;
 	this.lastCompiled = new Date().getTime() - 1000000;
 	// clipped values for display
 	this.clippedTags = ko.computed(function() {
@@ -339,7 +340,10 @@ var Node = function() {
 		return false;
 	}
 
-	this.updateLinks = function() {
+	this.updateLinks = function(force) {
+		// obtain links from compiler
+		self.compile(force);
+		var errs = self.compiledNode.errors;
 		self.resetDoubleClick();
 		// clear existing links
 		self.linkedTo.removeAll();
@@ -347,7 +351,9 @@ var Node = function() {
 		self.linkedToExternal = [];
 
 		// find all the links
+		var allLinks = self.compiledNode.links;
 		// Same regex as used in woolserver-js
+		/*
 		var lines = self.body().split(/\r?\n/);
 		var allLinks = []; // {line,node}
 		var exists = {};
@@ -367,6 +373,7 @@ var Node = function() {
 				exists[links] = true;
 			}
 		}
+		*/
 		// update links
 		for (var i = 0; i < allLinks.length; i ++) {
 			var link = allLinks[i];
@@ -398,15 +405,22 @@ var Node = function() {
 			return 1;
 		}
 	}
-	this.compile = function() {
-		// find undefined links
-		self.updateLinks();
+	// compiles max once every 2 seconds, unless force=true
+	this.compile = function(force) {
 		var now = new Date().getTime();
-		if (now - self.lastCompiled < 2000) return;
+		if (self.lastCompiled && !force && now - self.lastCompiled < 2000)
+			return;
 		self.lastCompiled = now;
 		var nodesource = data.getSaveData(FILETYPE.WOOL,this);
 		directServerLoadDialogue("dialogue",nodesource);
-		var errs = directServer.dialogues["dialogue"].nodes[0].errors;
+		self.compiledNode = directServer.dialogues["dialogue"].nodes[0];
+	}
+	// compiles max once every 2 seconds, unless force=true
+	this.getErrors = function(force) {
+		self.compile(force);
+		// find undefined links for error reporting
+		self.updateLinks();
+		var errs = self.compiledNode.errors;
 		var errannot = [];
 		var errtexts = [];
 		for (var i=0; i<errs.length; i++) {
@@ -452,6 +466,10 @@ var Node = function() {
 				type: "warning",
 			});
 		}
+		// check duplicate names
+		if (self.checkDuplicateTitles()) {
+			errtexts.push("error: title is already used by another node");
+		}
 		//app.editor.getSession().addMarker(new Range(1,2,1,10),"myclass","line",false);
 		app.editor.getSession().setAnnotations(errannot);
 		document.getElementById("node-errors").innerHTML =
@@ -464,12 +482,25 @@ var Node = function() {
 		//app.editor.getSession().addMarker(new Range(1,2,1,2),"mycssclass",
 		//	"background",false);
 	}
+	this.checkDuplicateTitles = function() {
+		var nodes = app.nodes();
+		for (var i=0; i<nodes.length; i++) {
+			var node = nodes[i];
+			if (node!=self
+				&&     node.title().toLowerCase().trim()
+				    == self.title().toLowerCase().trim()   ) {
+				return true;
+			}
+		}
+		return false;
+	}
 	this.hasErrors = function() {
 		var nodesource = data.getSaveData(FILETYPE.WOOL,this);
 		directServerLoadDialogue("dialogue",nodesource);
 		var errs = directServer.dialogues["dialogue"].nodes[0].errors;
 		self.updateLinks();
-		return errs.length > 0 || self.linkedToUndefined.length > 0;
+		return errs.length > 0 || self.linkedToUndefined.length > 0
+			|| self.checkDuplicateTitles();
 	}
 }
 

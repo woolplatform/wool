@@ -252,9 +252,13 @@ function _directServer_progress_dialogue(par) {
 		directServer.currentnodectx.vars
 	);
 	if (typeof directServer.currentnode.func == 'function' ) {
-		directServer.currentnode.func(directServer.currentnodectx);
+		try {
+			directServer.currentnode.func(directServer.currentnodectx);
+		} catch (e) {
+			directServer.logError("Node "+directServer.currentnode.param["title"]+": runtime script error: "+e);
+		}
 	} else {
-		directServer.logError("Node "+directServer.currentnode.param["title"]+": script error.");
+		directServer.logError("Node "+directServer.currentnode.param["title"]+": script compile error.");
 	}
 	return directServer.getNode();
 }

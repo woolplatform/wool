@@ -345,7 +345,7 @@ var data =
 		}
 
 		$(".arrows").css({ opacity: 0 }).transition({ opacity: 1 }, 500);
-		app.updateNodeLinks();
+		app.updateNodeLinks(true);
 		// XXX save after a second because position is obtained from css
 		// transform which is not updated immediately after style is set.
 		// TODO maintain node position in different way

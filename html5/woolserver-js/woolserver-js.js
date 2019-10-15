@@ -203,6 +203,7 @@ function WoolNode(dialogue,lines) {
 	this.body = [];
 	this.param = []; // key-value pairs from head
 	this.errors = []; // array of {level, line, msg}
+	this.links = []; // array of {linenr,nodename}, used for editor
 	var inBody=false;
 	for (var i=0; i<lines.length; i++) {
 		var line = lines[i];
@@ -216,6 +217,20 @@ function WoolNode(dialogue,lines) {
 			this.body.push(line);
 		} else {
 			this.head.push(line);
+		}
+	}
+	// check for existence of bare identifiers (e.g. myVar instead of $myVar)
+	// If found, add error to this.errors
+	function checkExpressionForBareIds(expr,line) {
+		var found = null;
+		// XXX shallow parsing, doesn't handle -identifier
+		if ((found=expr.match(/^([a-zA-Z0-9_]+)/))
+		||  (found=expr.match(/\s+([a-zA-Z0-9_]+)/))
+		||  (found=expr.match(/[^$a-zA-Z0-9_"-]([a-zA-Z0-9_]+)/))
+		) {
+			if (found[1]!="true" && found[1]!="false") {
+				logError("error",line,"Variable '"+found[1]+"' missing '$' prefix");
+			}
 		}
 	}
 	function rewriteExpression(expr) {
@@ -277,6 +292,7 @@ function WoolNode(dialogue,lines) {
 		if (line == "") continue;
 		var matches = /^<<(else)?if\s+(.+)\s*>>$/.exec(line);
 		if (matches) {
+			checkExpressionForBareIds(matches[2], i);
 			this.body[i] = (matches[1] ? "} else if (" : "if (")
 				+ rewriteExpression(matches[2])
 				+ ") {";
@@ -331,6 +347,7 @@ function WoolNode(dialogue,lines) {
 		var matches = /^\[\[\s*([^|\]]+)\s*\]\]$/.exec(line);
 		if (matches) {
 			var optid = matches[1];
+			this.links.push({line:i,node:optid});
 			this.body[i] = "C.addAutoForwardReply('"+optid+"');";
 			continue;
 		}
@@ -342,6 +359,7 @@ function WoolNode(dialogue,lines) {
 			var desc = matches[1];
 			var optid = matches[2];
 			var actionsstr = matches[3];
+			this.links.push({line:i,node:optid});
 			var action=null;
 			if (actionsstr) {
 				actionsstr = actionsstr.substring(1); // chop leading '|'

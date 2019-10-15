@@ -809,16 +809,16 @@ var App = function(name, version)
 		}
 	}
 
-	this.updateNodeLinks = function() {
+	this.updateNodeLinks = function(force) {
 		for  (var i in self.nodes()) {
-			self.nodes()[i].updateLinks();
+			self.nodes()[i].updateLinks(force);
 		}
 		self.updateArrows();
 	}
 
 	this.updateArrows = function()
 	{
-		console.log("updateArrows");
+		//console.log("updateArrows");
 		self.canvas.width = $(window).width();
 		self.canvas.height = $(window).height();
 
@@ -1349,7 +1349,7 @@ var App = function(name, version)
 		$(".editor-footer .line-count").html(lines.length);
 		$(".editor-footer .row-index").html(cursor.row);
 		$(".editor-footer .column-index").html(cursor.column);
-		self.editing().compile();
+		self.editing().getErrors();
 	}
 
 	this.contDialogue = function() {
