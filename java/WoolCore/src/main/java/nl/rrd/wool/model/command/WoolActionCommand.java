@@ -39,11 +39,18 @@ import nl.rrd.wool.parser.WoolNodeState;
 import nl.rrd.wool.utils.CurrentIterator;
 
 /**
- * This command models the &lt;&lt;action ...&gt;&gt; command in Wool. It
+ * This command models the &lt;&lt;action ...&gt;&gt; command in WOOL. It
  * specifies an action that should be performed along with a statement. It can
  * be part of a {@link WoolNodeBody WoolNodeBody} (along with an agent
  * statement) or a {@link WoolReply WoolReply} (to be performed when the user
  * chooses the reply).
+ *
+ * Three different action commands are supported:
+ * <ul>
+ *     <li>image</li>
+ *     <li>video</li>
+ *     <li>generic</li>
+ * </ul>
  * 
  * @author Dennis Hofs (RRD)
  */
@@ -58,16 +65,32 @@ public class WoolActionCommand extends WoolAttributesCommand {
 	private String type;
 	private WoolVariableString value;
 	private Map<String,WoolVariableString> parameters = new LinkedHashMap<>();
-	
+
+	/**
+	 * Creates an instance of a {@link WoolActionCommand} with given {@code type} and
+	 * {@code value}.
+	 * @param type the type of this {@link WoolActionCommand} as a String, which should be
+	 *                one of "image", "video", or "generic".
+	 * @param value
+	 */
 	public WoolActionCommand(String type, WoolVariableString value) {
 		this.type = type;
 		this.value = value;
 	}
 
+	/**
+	 * Returns the type of this {@link WoolActionCommand} as a String.
+	 * @return the type of this {@link WoolActionCommand} as a String.
+	 */
 	public String getType() {
 		return type;
 	}
 
+	/**
+	 * Sets the type of this {@link WoolActionCommand}, which should be one of "image",
+	 * "video", or "generic".
+	 * @param type the type of this {@link WoolActionCommand}.
+	 */
 	public void setType(String type) {
 		this.type = type;
 	}
