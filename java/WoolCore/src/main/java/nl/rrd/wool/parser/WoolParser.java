@@ -105,22 +105,6 @@ public class WoolParser {
 	public void close() throws IOException {
 		reader.close();
 	}
-	
-	public class ReadResult {
-		private WoolDialogue dialogue = null;
-		private List<ParseException> parseErrors = new ArrayList<>();
-		
-		private ReadResult() {
-		}
-
-		public WoolDialogue getDialogue() {
-			return dialogue;
-		}
-
-		public List<ParseException> getParseErrors() {
-			return parseErrors;
-		}
-	}
 
 	/**
 	 * Tries to read the dialogue file. If a reading error occurs, it throws an
@@ -133,7 +117,7 @@ public class WoolParser {
 	public ReadResult readDialogue() throws IOException {
 		ReadResult result = new ReadResult();
 		if (!dialogueName.matches("[A-Za-z0-9_-]+")) {
-			result.parseErrors.add(new ParseException(
+			result.getParseErrors().add(new ParseException(
 					"Invalid dialogue name: " + dialogueName));
 		}
 		WoolDialogue dialogue = new WoolDialogue(dialogueName);
@@ -146,7 +130,7 @@ public class WoolParser {
 				dialogue.addNode(readResult.node);
 			} else {
 				foundNodeError = true;
-				result.parseErrors.add(readResult.parseException);
+				result.getParseErrors().add(readResult.parseException);
 				if (!readResult.readNodeEnd)
 					moveToNextNode();
 			}
@@ -154,7 +138,7 @@ public class WoolParser {
 		if (foundNodeError)
 			return result;
 		if (!dialogue.nodeExists("Start")) {
-			result.parseErrors.add(new LineNumberParseException(
+			result.getParseErrors().add(new LineNumberParseException(
 					"Node with title \"Start\" not found",
 					reader.getLineNum(), reader.getColNum()));
 		}
@@ -169,12 +153,12 @@ public class WoolParser {
 			LineNumberParseException parseEx = new LineNumberParseException(
 					"Found reply with pointer to non-existing node: " +
 					pointer.getNodeId(), token.getLineNum(), token.getColNum());
-			result.parseErrors.add(createWoolNodeParseException(
+			result.getParseErrors().add(createWoolNodeParseException(
 					pointerToken.getNodeTitle(), parseEx));
 		}
-		if (!result.parseErrors.isEmpty())
+		if (!result.getParseErrors().isEmpty())
 			return result;
-		result.dialogue = dialogue;
+		result.setDialogue(dialogue);
 		this.dialogue = null;
 		nodePointerTokens = null;
 		return result;
@@ -489,16 +473,16 @@ public class WoolParser {
 			System.exit(1);
 			return;
 		}
-		if (!readResult.parseErrors.isEmpty()) {
+		if (!readResult.getParseErrors().isEmpty()) {
 			System.err.println("ERROR: Failed to parse file: " +
 					file.getAbsolutePath());
-			for (ParseException ex : readResult.parseErrors) {
+			for (ParseException ex : readResult.getParseErrors()) {
 				System.err.println(ex.getMessage());
 			}
 			System.exit(1);
 			return;
 		}
 		System.out.println("Finished parsing dialogue from file: " + file.getAbsolutePath());
-		System.out.println(readResult.dialogue);
+		System.out.println(readResult.getDialogue());
 	}
 }
