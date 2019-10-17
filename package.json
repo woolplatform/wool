@@ -1,0 +1,20 @@
+{
+	"name": "Wool",
+	"version": "1.0.0",
+	"main": "wooleditor/app/main.js",
+	"window": {
+		"toolbar": false,
+		"position": "center",
+		"width": 1280,
+		"height": 720,
+		"min_width": 800,
+		"min_height": 600,
+		"icon": "Yarn.png"
+	},
+	"scripts": {
+		"start": "electron ."
+	},
+	"devDependencies": {
+		"electron": "^6.0.12"
+	}
+}

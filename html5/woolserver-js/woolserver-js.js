@@ -223,10 +223,14 @@ function WoolNode(dialogue,lines) {
 	// If found, add error to this.errors
 	function checkExpressionForBareIds(expr,line) {
 		var found = null;
-		// XXX shallow parsing, doesn't handle -identifier
-		if ((found=expr.match(/^([a-zA-Z0-9_]+)/))
-		||  (found=expr.match(/\s+([a-zA-Z0-9_]+)/))
-		||  (found=expr.match(/[^$a-zA-Z0-9_"-]([a-zA-Z0-9_]+)/))
+		// XXX shallow parsing
+		// first, remove all quoted strings
+		// XXX escapes not supported
+		expr = expr.replace(/["][^"]*["]/g,"");
+		expr = expr.replace(/['][^']*[']/g,"");
+		if ((found=expr.match(/^([a-zA-Z_][a-zA-Z0-9_]+)/))
+		||  (found=expr.match(/\s+([a-zA-Z_][a-zA-Z0-9_]+)/))
+		//||  (found=expr.match(/[^$a-zA-Z0-9_"-]([a-zA-Z0-9_]+)/))
 		) {
 			if (found[1]!="true" && found[1]!="false") {
 				logError("error",line,"Variable '"+found[1]+"' missing '$' prefix");
