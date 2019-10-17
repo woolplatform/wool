@@ -1,0 +1,139 @@
+title: Start
+tags: 
+speaker: Bob
+colorID: 2
+position: -630,120
+---
+In this example we will look at conditionals in WOOL.
+
+[[Conditionals]]
+===
+title: Conditionals
+tags: 
+speaker: Bob
+colorID: 0
+position: -336,119
+---
+So let's first set some variables that we can use to play with.
+
+<<set $variableThatIsTrue = true>>
+<<set $variableThatIsFalse = false>>
+
+[[Conditionals2]]
+===
+title: Conditionals2
+tags: 
+speaker: Bob
+colorID: 0
+position: -46,117
+---
+<<if $variableThatIsTrue == true>>
+  This statement will only be shown if the variable "variableThatIsTrue" is true (which it is).
+<<else>>
+  Otherwise, you would see this statement (you will never see this).
+<<endif>>
+
+[[Conditionals3]]
+===
+title: Conditionals3
+tags: 
+speaker: Bob
+colorID: 0
+position: 240,116
+---
+<<if $variableThatIsTrue >>
+  You can write the shorthand "if variableName" to check for true (without the "== true" part).
+<<endif>>
+
+[[Okay, that is clear.|Conditionals4]]
+[[Goodbye.|End]]
+===
+title: End
+tags: 
+speaker: 
+colorID: 5
+position: -224,458
+---
+
+===
+title: Conditionals4
+tags: 
+speaker: Bob
+colorID: 0
+position: 561,118
+---
+You can make any part of the
+<<if $variableThatIsTrue>>
+  WOOL
+<<else>>
+  NOT WOOL!
+<<endif>>
+dialogue conditional. As long as
+<<if $variableThatIsFalse>>
+  [[Suddenly a reply option.|End]]
+<<else>>
+  the resulting contents are valid.
+<<endif>>
+
+<<if $variableThatIsFalse >>
+  [[The user will never see this reply option.|End]]
+<<else>>
+  [[Okay, that is clear.|Conditionals5]]
+<<endif>>
+===
+title: Conditionals5
+tags: 
+speaker: Bob
+colorID: 0
+position: 870,114
+---
+<<if $variableThatIsTrue >>
+  <<if $variableThatIsFalse >>
+    Text that will never be shown.
+  <<else>>
+    Also, you can nest conditionals as deep as you like.
+    <<if $variableThatIsTrue >>
+      [[Okay, clear.|Conditionals6]]
+    <<endif>>
+  <<endif>>
+<<else>>
+  This text will also never be shown.
+<<endif>>
+===
+title: Conditionals6
+tags: 
+speaker: Bob
+colorID: 0
+position: 1186,114
+---
+Let me set some other variables to show some other things.
+
+<<set $thisIsAString = "Some string.">>
+<<set $thisIsANumber = 42>>
+
+[[Thanks, and goodbye.|Conditionals7]]
+===
+title: Conditionals7
+tags: 
+speaker: Bob
+colorID: 0
+position: 1499,107
+---
+<<if $thisIsAString == "Some string." >>
+  You can use conditionals using strings or numbers as well, anything you would expect from a scripting language really...
+<<endif>>
+
+<<if $thisIsANumber == 42>>
+  [[Understood.|Conditionals8]]
+<<endif>>
+===
+title: Conditionals8
+tags: 
+speaker: Bob
+colorID: 0
+position: 1803,110
+---
+And that's all we have to say about conditionals for today.
+
+[[Thanks and goodbye.|End]]
+===
