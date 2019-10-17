@@ -1,8 +1,8 @@
 title: Start
 tags: 
 speaker: Bob
-colorID: 0
-position: 921,182
+colorID: 2
+position: 758,-148
 ---
 Hi, my name is Bob, and this is the Default WOOL Test dialogue.
 
@@ -11,17 +11,17 @@ Hi, my name is Bob, and this is the Default WOOL Test dialogue.
 ===
 title: End
 tags: 
-speaker: Bob
+speaker: 
 colorID: 5
-position: 915,586
+position: 752,255
 ---
-I'm sad to say that this is the end of our dialogue.
+
 ===
 title: Continue
 tags: 
 speaker: Bob
 colorID: 0
-position: 1223,180
+position: 1060,-150
 ---
 This dialogue is very basic, and shows only dialogue flow and ending.
 
@@ -31,7 +31,7 @@ title: DialogueReplies
 tags: 
 speaker: Bob
 colorID: 0
-position: 1853,178
+position: 1690,-152
 ---
 Any node can have zero or more reply options. When there are none, the dialogue is over.
 
@@ -43,7 +43,7 @@ title: DialogueMenu
 tags: 
 speaker: Bob
 colorID: 0
-position: 1518,182
+position: 1355,-148
 ---
 We deal with statements, reply options, and ending dialogues.
 
@@ -55,29 +55,39 @@ title: DialogueEnding
 tags: 
 speaker: Bob
 colorID: 0
-position: 1519,523
+position: 1357,195
 ---
 When a statement has no reply options left, the dialogue will end.
 
-[[How does that work?|DialogueEnding2]]
-[[Goodbye.|End]]
+[[DialogueEnding2]]
 ===
-title: DialogueEnding2
+title: DialogueEnding3
 tags: 
 speaker: Bob
 colorID: 5
-position: 1520,838
+position: 1356,726
 ---
-Well, like this.
+I've got the last word, and I declare this dialogue to be over!
 ===
 title: DialogueStatements
 tags: 
 speaker: Bob
 colorID: 0
-position: 1515,-112
+position: 1352,-442
 ---
 Statements are things that a speaker says, like this!
 
 [[Tell me more.|DialogueMenu]]
 [[Goodbye.|End]]
+===
+title: DialogueEnding2
+tags: 
+speaker: Bob
+colorID: 0
+position: 1357,465
+---
+Alternatively, a reply option can point to the reserved node name "End". When the dialogue reaches this node, the dialogue is also over.
+
+[[This reply option points to the "End" node.|End]]
+[[This one points to a node without replies.|DialogueEnding3]]
 ===
