@@ -201,11 +201,11 @@ public class WoolBodyTokenizer {
 		for (int i = start; i < line.length(); i++) {
 			char c = line.charAt(i);
 			if (i == start && (c < 'A' || c > 'Z') &&
-					(c < 'a' || c > 'z')) {
+					(c < 'a' || c > 'z') && c != '_') {
 				end.set(i);
 				return "";
 			} else if (i > start && (c < 'A' || c > 'Z') &&
-					(c < 'a' || c > 'z') && (c < '0' || c > '9')) {
+					(c < 'a' || c > 'z') && (c < '0' || c > '9') && c != '_') {
 				end.set(i);
 				return line.substring(start, i);
 			}
