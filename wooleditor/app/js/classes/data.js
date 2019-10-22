@@ -14,7 +14,7 @@ var data =
 		if (filebase) {
 			data.filename = filebase[1];
 		}
-		if (app.fs != undefined)
+		if (false && app.fs != undefined)
 		{
 			if (app.fs.readFile(filename, "utf-8", function(error, contents)
 			{
@@ -345,7 +345,7 @@ var data =
 		}
 
 		$(".arrows").css({ opacity: 0 }).transition({ opacity: 1 }, 500);
-		app.updateNodeLinks(true);
+		app.updateNodeLinks(true); // force update after loading
 		// XXX save after a second because position is obtained from css
 		// transform which is not updated immediately after style is set.
 		// TODO maintain node position in different way

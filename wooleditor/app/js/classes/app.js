@@ -44,7 +44,7 @@ var App = function(name, version)
 
 	// node-webkit
 	if (typeof(require) == "function") {
-		this.gui = require('nw.gui');
+		//this.gui = require('nw.gui');
 		this.fs = require('fs');
 		this.isNwjs = true;
 	}
@@ -547,7 +547,7 @@ var App = function(name, version)
 			editingPath = localStorage.getItem(app.LOCALSTORAGEPREFIX+"path");
 			if (!editingPath) return;
 		}
-		var gui = require('nw.gui');
+		var gui = null;//require('nw.gui');
 
 		if (!gui) return;
 

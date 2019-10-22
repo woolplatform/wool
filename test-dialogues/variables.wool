@@ -1,0 +1,128 @@
+title: Start
+tags: 
+speaker: Bob
+colorID: 2
+position: 584,92
+---
+<<set $subjectToday = "variables" >>
+
+In this example we look at $subjectToday.
+
+[[Okay, let's go.|Variables1]]
+===
+title: Variables1
+tags: 
+speaker: Bob
+colorID: 0
+position: 874,88
+---
+<<set $variableOne = "One" >>
+<<set $variable2 = "Two" >>
+<<set $variable_three = "Three" >>
+
+In this node we have set some variables: $variableOne, $variable2, and $variable_three using a "set" statement.
+
+[[Variables2]]
+===
+title: Variables2
+tags: 
+speaker: Bob
+colorID: 0
+position: 1167,90
+---
+<<set $aNumber = 42 >>
+
+These variables contained string values, so they can be injected in statements (this can also be done with numbers, like so: $aNumber).
+
+[[Variables3]]
+===
+title: Variables3
+tags: 
+speaker: Bob
+colorID: 0
+position: 1472,84
+---
+Variables must start with a $-sign and then any small or capital letter ([a-z] or [A-Z]). Besides that you can use any combination of letters, numbers and underscores to define your variable name.
+
+[[Variables4]]
+===
+title: Variables4
+tags: 
+speaker: Bob
+colorID: 0
+position: 1768,79
+---
+Variables can be set at various places in the dialogue. For example, attached to replies:
+
+[[Let it be "Four!"|Variables5|<<set $replyVariable = "Four!">>]]
+[[I'm going for "Pizza."|Variables5|<<set $replyVariable = "Pizza.">>]]
+[[I'll make it the number 8.|Variables5|<<set $replyVariable = 8>>]]
+===
+title: Variables5
+tags: 
+speaker: Bob
+colorID: 0
+position: 2069,76
+---
+So, your variable now has the value "$replyVariable" (without the quotes). 
+
+[[Variables6]]
+===
+title: Variables6
+tags: 
+speaker: Bob
+colorID: 0
+position: 2366,73
+---
+All variables that you set in the dialogue can be used directly. But not all variables need to be set from the dialogue itself.
+
+[[Variables7]]
+===
+title: Variables7
+tags: 
+speaker: Bob
+colorID: 0
+position: 2672,70
+---
+The WOOL software libraries support the concept of a "variable store", a simple list of variables that can be used to store the state of your application.
+
+[[Variables8]]
+===
+title: Variables8
+tags: 
+speaker: Bob
+colorID: 0
+position: 2971,72
+---
+For example, many of your dialogues might use a variable called "userName" that is set after account creation. So you can say things like "Hey $userName!".
+
+[[Variables9]]
+===
+title: Variables9
+tags: 
+speaker: Bob
+colorID: 0
+position: 3306,70
+---
+Without attaching a variable store that contains a value for this variable "$userName", we will not see a value, but the WOOL script is still valid.
+
+[[Variables10]]
+===
+title: Variables10
+tags: 
+speaker: Bob
+colorID: 0
+position: 3628,67
+---
+Well, that's all we have to say about variables!
+
+[[Goodbye.|End]]
+===
+title: End
+tags: 
+speaker: 
+colorID: 5
+position: 2533,489
+---
+
+===
