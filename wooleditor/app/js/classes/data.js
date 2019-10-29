@@ -1,4 +1,4 @@
-var FILETYPE = { JSON: "json", XML: "xml", TWEE: "twee", TWEE2: "tw2", UNKNOWN: "none", YARNTEXT: "yarn.txt", WOOL: "wool" };
+var FILETYPE = { JSON: "json", XML: "xml", TWEE: "twee", TWEE2: "tw2", UNKNOWN: "none", YARNTEXT: "yarn.txt", WOOL: "wool", CSV: "csv" };
 
 var data =
 {
@@ -358,8 +358,7 @@ var data =
 		var content = [];
 		var nodes = node ? [ node ] : app.nodes();
 
-		for (var i = 0; i < nodes.length; i ++)
-		{
+		for (var i = 0; i < nodes.length; i ++) {
 			content.push({
 				"title": nodes[i].title(), 
 				"tags": nodes[i].tags(), 
@@ -370,12 +369,20 @@ var data =
 			});
 		}
 
-		if (type == FILETYPE.JSON)
-		{
+		if (type == FILETYPE.CSV) {
+			alltexts = {};
+			for (var i = 0; i < nodes.length; i ++) {
+				nodes[i].compile(true);
+				for (var text in nodes[i].compiledNode.texts) {
+					alltexts[text] = true;
+				}
+			}
+			for (var text in alltexts) {
+				output += JSON.stringify(text)+"\n";
+			}
+		} else if (type == FILETYPE.JSON) {
 			output = JSON.stringify(content, null, "\t");
-		}
-		else if (type == FILETYPE.WOOL)
-		{
+		} else if (type == FILETYPE.WOOL) {
 			for (i = 0; i < content.length; i++)
 			{
 				output += "title: " + content[i].title + "\n";
@@ -488,10 +495,13 @@ var data =
 		{
 			switch(type) {
 				case 'json':
-					content = "data:text/json," + content;
+					content = "data:text/json," + encodeURIComponent(content);
 					break;
 				case 'xml':
-					content = "data:text/xml," + content;
+					content = "data:text/xml," + encodeURIComponent(content);
+					break;
+				case 'csv':
+					content = "data:text/csv," + encodeURIComponent(content);
 					break;
 				default:
 					content = "data:text/plain," + encodeURIComponent(content);

@@ -204,6 +204,7 @@ function WoolNode(dialogue,lines) {
 	this.param = []; // key-value pairs from head
 	this.errors = []; // array of {level, line, msg}
 	this.links = []; // array of {linenr,nodename}, used for editor
+	this.texts = {}; // array { <text> => true}, for translation
 	var inBody=false;
 	for (var i=0; i<lines.length; i++) {
 		var line = lines[i];
@@ -225,7 +226,7 @@ function WoolNode(dialogue,lines) {
 		var found = null;
 		// XXX shallow parsing
 		// first, remove all quoted strings
-		// XXX escapes not supported
+		// XXX string escapes not supported
 		expr = expr.replace(/["][^"]*["]/g,"");
 		expr = expr.replace(/['][^']*[']/g,"");
 		if ((found=expr.match(/^([a-zA-Z_][a-zA-Z0-9_]+)/))
@@ -285,6 +286,7 @@ function WoolNode(dialogue,lines) {
 	// 
 	// '[[' <replyText> '| <dialogueNodeID> ']]'
 	// '[[' <dialogueNodeID> ']]'   (autoforward)
+	var alllines="";
 	for (var i=0; i<this.body.length; i++) {
 		var line = this.body[i];
 		var linecommentchar = line.indexOf('//');
@@ -296,6 +298,11 @@ function WoolNode(dialogue,lines) {
 		if (line == "") continue;
 		var matches = /^<<(else)?if\s+(.+)\s*>>$/.exec(line);
 		if (matches) {
+			if (alllines) {
+				// flush text in between conditionals
+				this.texts[alllines] = true;
+				alllines=""
+			}
 			checkExpressionForBareIds(matches[2], i);
 			this.body[i] = (matches[1] ? "} else if (" : "if (")
 				+ rewriteExpression(matches[2])
@@ -304,11 +311,21 @@ function WoolNode(dialogue,lines) {
 		}
 		var matches = /^<<else\s*>>$/.exec(line);
 		if (matches) {
+			if (alllines) {
+				// flush text in between conditionals
+				this.texts[alllines] = true;
+				alllines=""
+			}
 			this.body[i] = "} else {";
 			continue;
 		}
 		var matches = /^<<endif\s*>>$/.exec(line);
 		if (matches) {
+			if (alllines) {
+				// flush text in between conditionals
+				this.texts[alllines] = true;
+				alllines=""
+			}
 			this.body[i] = "}";
 			continue;
 		}
@@ -391,6 +408,7 @@ function WoolNode(dialogue,lines) {
 										+matches[1]+"'");
 								}
 								//logError("warning",i,"actions not implemented");
+								// no known actions with i18n text parameters
 								actfunc += "C.doAction("
 									+JSON.stringify(actionparams)+");";
 							} else {
@@ -424,6 +442,8 @@ function WoolNode(dialogue,lines) {
 					logError("error",i,"Input: value missing");
 					continue;
 				}
+				this.texts[beforeText] = true;
+				this.texts[afterText] = true;
 				this.body[i] = "C.addInputReply('"
 					+optid+"',"
 					+JSON.stringify(beforeText)+",'"
@@ -436,6 +456,7 @@ function WoolNode(dialogue,lines) {
 					+");";
 				continue;
 			} else {
+				this.texts[desc] = true;
 				this.body[i] = "C.addReplyChoice("
 					+JSON.stringify(optid)+","
 					+JSON.stringify(desc)+","
@@ -456,6 +477,8 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			// with speaker
 			var speaker = matches[1];
+			if (alllines) alllines += "\n";
+			alllines += matches[2];
 			dialogue.speakers[speaker] = speaker;
 			this.body[i] = "C.addLine("+
 				JSON.stringify(matches[2])+","
@@ -463,10 +486,13 @@ function WoolNode(dialogue,lines) {
 			continue;
 		} else {
 			// without speaker
+			if (alllines) alllines += "\n";
+			alllines += line;
 			this.body[i] = "C.addLine("+JSON.stringify(line)+");";
 			continue;
 		}
 	}
+	if (alllines) this.texts[alllines] = true;
 	console.log("Parsing function:");
 	console.log(this.body.join("\n"));
 	// turn code into function

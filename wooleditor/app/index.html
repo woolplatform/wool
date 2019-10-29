@@ -103,6 +103,7 @@
 						<!--<span class="item" data-bind="click: data.tryOpenFolder">Open Folder...</span>-->
 						<span class="item" data-bind="click: data.tryAppend">Append...</span>
 						<a class="item" download="file.wool" href='#' onclick="data.saveFileDialog(this,FILETYPE.WOOL,data.getSaveData(FILETYPE.WOOL));">Save...</a>
+						<a class="item" download="file.csv" href='#' onclick="data.saveFileDialog(this,FILETYPE.CSV,data.getSaveData(FILETYPE.CSV));">Export Poeditor CSV</a>
 						<!-- ko if:data.editingPath() != null -->
 						<!--
 						<span class="item" data-bind="click: data.trySaveCurrent">Save</span>
