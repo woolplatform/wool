@@ -8,6 +8,18 @@ var data =
 
 	filename: "file",
 
+
+	// callback: function(element)
+	readFileGeneric: function(e, filename, element, callback) {
+		var reader = new FileReader();
+		reader.onerror = function(e) {
+			alert("Error reading file");
+		}
+		reader.onload = callback;
+		reader.readAsText(element[0].files[0]);
+	},
+
+
 	readFile: function(e, filename, clearNodes, element) {
 		console.log(filename);
 		var filebase = filename.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
@@ -74,6 +86,16 @@ var data =
 
 	openFile: function(e, filename, element) {
 		data.readFile(e, filename, true, element);
+
+		app.resetUIState();
+		app.refreshWindowTitle(filename);
+	},
+
+	openLang: function(e, filename, element) {
+		data.readFileGeneric(e, filename, element, function(e) {
+			_i18n.ReadJSONFromString(e.target.result);
+			_i18n.setLocale("nl");
+		});
 
 		app.resetUIState();
 		app.refreshWindowTitle(filename);
@@ -370,6 +392,7 @@ var data =
 		}
 
 		if (type == FILETYPE.CSV) {
+			// XXX strings are not properly quoted
 			alltexts = {};
 			for (var i = 0; i < nodes.length; i ++) {
 				nodes[i].compile(true);
@@ -381,7 +404,21 @@ var data =
 				output += JSON.stringify(text)+"\n";
 			}
 		} else if (type == FILETYPE.JSON) {
-			output = JSON.stringify(content, null, "\t");
+			//output = JSON.stringify(content, null, "\t");
+			alltexts = {};
+			for (var i = 0; i < nodes.length; i ++) {
+				nodes[i].compile(true);
+				for (var text in nodes[i].compiledNode.texts) {
+					alltexts[text] = true;
+				}
+			}
+			output = [];
+			for (var text in alltexts) {
+				output.push({
+					"term": text
+				});
+			}
+			output = JSON.stringify(output);
 		} else if (type == FILETYPE.WOOL) {
 			for (i = 0; i < content.length; i++)
 			{
@@ -543,6 +580,11 @@ var data =
 	tryOpenFile: function()
 	{
 		data.openFileDialog($('#open-file'), data.openFile);
+	},
+
+	tryOpenLang: function()
+	{
+		data.openFileDialog($('#open-lang'), data.openLang);
 	},
 
 	tryOpenFolder: function()

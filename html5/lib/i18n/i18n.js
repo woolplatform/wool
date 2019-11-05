@@ -9,7 +9,8 @@ var _i18n = window.i18n({
 
 
 // Usage:
-// call ReadPODefFromFile or ReadPODef or _i18n.loadJSON to load defs
+// call ReadPODefFromFile, ReadJSONFromString, ReadPODef, or _i18n.loadJSON
+// to load defs.
 // Then use _i18n.setLocale("locale"); to set locale after reading defs.
 
 
@@ -174,6 +175,21 @@ function(filename,locale,callback,charmapping) {
 			if (callback) callback(data);
 		}
 	);
+}
+
+// json supported by gettext.js is "key-value" json
+// charmapping not used (yet)
+_i18n.ReadJSONFromString =
+function(data,locale,pluralForms,charmapping) {
+	if (!locale) locale="nl";
+	if (!pluralForms) pluralForms="nplurals=2; plural=(n!=1);";
+	var json = JSON.parse(data);
+	json[""] = {
+		"language": locale,
+		"plural-forms": pluralForms,
+	};
+	this.loadJSON(json);
+	console.log("JSON file read.");
 }
 
 _i18n._getGettextContext = function(string) {

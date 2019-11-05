@@ -18,6 +18,9 @@
 		<script type="text/javascript" src="js/libs/theme-yarn.js"></script>
 		<script type="text/javascript" src="js/libs/mode-yarn.js"></script>
 
+		<script type="text/javascript" src="../../html5/lib/i18n/gettext.js"></script>
+		<script type="text/javascript" src="../../html5/lib/i18n/i18n.js"></script>
+
 		<!-- various models / classes -->
 		<script type="text/javascript" src="js/classes/app.js"></script>
 		<script type="text/javascript" src="js/classes/data.js"></script>
@@ -103,7 +106,8 @@
 						<!--<span class="item" data-bind="click: data.tryOpenFolder">Open Folder...</span>-->
 						<span class="item" data-bind="click: data.tryAppend">Append...</span>
 						<a class="item" download="file.wool" href='#' onclick="data.saveFileDialog(this,FILETYPE.WOOL,data.getSaveData(FILETYPE.WOOL));">Save...</a>
-						<a class="item" download="file.csv" href='#' onclick="data.saveFileDialog(this,FILETYPE.CSV,data.getSaveData(FILETYPE.CSV));">Export Poeditor CSV</a>
+						<a class="item" download="file.csv" href='#' onclick="data.saveFileDialog(this,FILETYPE.JSON,data.getSaveData(FILETYPE.JSON));">Export Poeditor JSON</a>
+						<span class="item" data-bind="click: data.tryOpenLang">Load Poeditor JSON...</span>
 						<!-- ko if:data.editingPath() != null -->
 						<!--
 						<span class="item" data-bind="click: data.trySaveCurrent">Save</span>
@@ -221,6 +225,7 @@
 		<!-- Hidden fields, file dialogs, and elements -->
 		<div class="hidden">
 			<input type="file" id="open-file" accept=".wool,.txt,.xml,.json,.twee,.tw2"/>
+			<input type="file" id="open-lang" accept=".json"/>
 			<input type="file" id="open-folder" webkitdirectory directory/>
 			<input type="file" id="save-file" nwsaveas="filename.txt" />
 		</div>
