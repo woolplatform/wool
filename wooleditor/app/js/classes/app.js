@@ -498,6 +498,10 @@ var App = function(name, version)
 
 	} // this.run()
 
+	this.clearLangDefs = function() {
+		localStorage.removeItem(app.LOCALSTORAGEPREFIX+"langDefs");
+	}
+
 	this.getNodesConnectedTo = function(toNode)
 	{
 		var connectedNodes = [];
@@ -1364,7 +1368,10 @@ var App = function(name, version)
 		//document.getElementById('woolclient-popup-iframe').contentWindow.location.reload();
 		data.saveToBuffer();
 		var content = data.getSaveData(FILETYPE.WOOL);
-		window.name = content;
+		window.name = JSON.stringify({
+			sourceCode: content,
+			langDefs: localStorage.getItem(self.LOCALSTORAGEPREFIX+"langDefs"),
+		});
 		//var elem = document.getElementById("woolclient-popup");
 		//elem.style.display="block";
 		//elem = document.getElementById("woolclient-popup-iframe");

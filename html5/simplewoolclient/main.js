@@ -32,15 +32,16 @@ saveConfig();
 
 // init ---------------------------------------------------------------
 
+// 3rd party code should load these defs and set the language
 // load language defs directly because we can't load from file without http.
-_i18n.loadJSON({
-	"": { "language": "nl", "plural-forms": "nplurals=2; plural=(n != 1);", },
-	"You:": "Jij:",
-	"Your response:": "Je antwoord:",
-	"Continue": "Ga verder",
-	"Send": "Verstuur",
-});
-_i18n.setLocale("en");
+//_i18n.loadJSON({
+//	"": { "language": "nl", "plural-forms": "nplurals=2; plural=(n != 1);", },
+//	"You:": "Jij:",
+//	"Your response:": "Je antwoord:",
+//	"Continue": "Ga verder",
+//	"Send": "Verstuur",
+//});
+//_i18n.setLocale("en");
 
 
 if (config.background!==null)
@@ -48,13 +49,31 @@ if (config.background!==null)
 
 var sourceCode = null;
 
+var langDefs = null;
+
 //sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
 
 if (params.code) sourceCode = params.code;
 
 try {
-	if (!sourceCode) sourceCode = window.name;
-} catch (e) { }
+	var windowparams = JSON.parse(window.name);
+	if (!sourceCode) sourceCode = windowparams.sourceCode;
+	if (!langDefs) langDefs = windowparams.langDefs;
+} catch (e) {
+	console.log(e);
+}
+
+if (langDefs) {
+	// autodetect json or po
+	try {
+		JSON.parse(langDefs);
+		_i18n.ReadJSONFromString(langDefs,"nl");
+	} catch (e) {
+		// assuming language is nl
+		_i18n.readPODef(langDefs);
+	}
+	_i18n.setLocale("nl");
+}
 
 directServerLoadDialogue("dialogue",sourceCode);
 
@@ -201,15 +220,19 @@ function updateNodeUI(node) {
 	var replyelem = document.getElementById("user-reply");
 	if (node.id=="End") {
 		document.getElementById("agent-name").innerHTML = "";
-		document.getElementById("agent-statement").innerHTML = "End Dialogue";
+		document.getElementById("agent-statement").innerHTML = 
+			__("End of dialogue");
+	} else {
+		document.getElementById("agent-name").innerHTML = node.speaker + ":";
+		document.getElementById("agent-statement").innerHTML = __(node.statement);
+	}
+	if (node.id=="End" || node.replies.length==0) {
 		replyelem.className = "reply-box-auto-forward";
 		replyelem.innerHTML =
 			"<button class='reply-auto-forward' onclick='startDialogue()'>"
 				+__("Restart")+"</button>"
 		return;
 	}
-	document.getElementById("agent-name").innerHTML = node.speaker + ":";
-	document.getElementById("agent-statement").innerHTML = node.statement;
 	replyelem.innerHTML = 
 		"<p id='user-name'>"+__("You:")+"</p>"
 		+"<p id='user-instruction'>"+__("Your response:")+"</p>";
@@ -220,7 +243,7 @@ function updateNodeUI(node) {
 			replyelem.innerHTML +=
 				"<button class='reply' onclick='handleBasicReply(\""
 					+reply.replyId+"\",\""+i+"\")'>"
-					+reply.statement+"</button>"
+					+__(reply.statement)+"</button>"
 		} else if (reply.replyType=="AUTOFORWARD") {
 			replyelem.className = "reply-box-auto-forward";
 			replyelem.innerHTML +=
@@ -238,7 +261,7 @@ function updateNodeUI(node) {
 				? "handleTextReply" : "handleNumericReply";
 			replyelem.className = "reply-box";
 			replyelem.innerHTML += '<p class="before_statement">' 
-				+ reply.beforeStatement + '</p>';
+				+ __(reply.beforeStatement) + '</p>';
 			replyelem.innerHTML +=
 				"<input type='text' placeholder='Type here' value='' type='text' name='test' class='"+replyclass+"'"
 				+" id='"+reply.replyId+"_content'"
@@ -248,7 +271,7 @@ function updateNodeUI(node) {
 					+reply.replyId+"\",\""+i+"\")' value='"+__("Send")+"'></input>";
 			if (reply.afterStatement) {
 				replyelem.innerHTML += '<p class="after_statement">' 
-					+ reply.afterStatement + '</p>';
+					+ __(reply.afterStatement) + '</p>';
 			}
 
 		}

@@ -62,6 +62,9 @@ var data =
 			}
 			reader.readAsText(element[0].files[0]);
 		}
+
+		app.clearLangDefs();
+
 		/*
 		else if (window.File && window.FileReader && window.FileList && window.Blob && e.target && e.target.files && e.target.files.length > 0)
 		{
@@ -93,12 +96,10 @@ var data =
 
 	openLang: function(e, filename, element) {
 		data.readFileGeneric(e, filename, element, function(e) {
-			_i18n.ReadJSONFromString(e.target.result);
-			_i18n.setLocale("nl");
+			localStorage.setItem(app.LOCALSTORAGEPREFIX+"langDefs",
+				e.target.result);
+			alert("Loaded language definitions.");
 		});
-
-		app.resetUIState();
-		app.refreshWindowTitle(filename);
 	},
 
 	openFolder: function(e, foldername)
@@ -150,8 +151,7 @@ var data =
 		*/
 	},
 
-	loadData: function(content, type, clearNodes, doNotCenter)
-	{
+	loadData: function(content, type, clearNodes, doNotCenter) {
 		// clear all content
 		if (clearNodes)
 			app.nodes.removeAll();
@@ -414,10 +414,23 @@ var data =
 			}
 			output = [];
 			for (var text in alltexts) {
+				elem = {};
+				elem[text] = "";
 				output.push({
-					"term": text
+					term: text,
 				});
 			}
+			// Texts coming from user interface.
+			// from simplewoolclient/main.js
+			output.push({ term: "You:", /*context: "UIText",*/ });
+			output.push({ term: "Your response:", /*context: "UIText",*/ });
+			// also in android/couch
+			output.push({ term: "Continue", /*context: "UIText",*/ });
+			output.push({ term: "Send", /*context: "UIText",*/ });
+			output.push({ term: "End of dialogue", /*context: "UIText",*/ });
+			output.push({ term: "Restart", /*context: "UIText",*/ });
+			// only in Android client + Couch client
+			output.push({ term: "Finish", /*context: "UIText",*/ });
 			output = JSON.stringify(output);
 		} else if (type == FILETYPE.WOOL) {
 			for (i = 0; i < content.length; i++)
@@ -573,6 +586,7 @@ var data =
 		if (!confirm("Clear all nodes?")) return;
 		app.resetUIState();
 		app.nodes.removeAll();
+		app.clearLangDefs();
 		app.newNode().title("Start");
 		app.updateArrows();
 	},
