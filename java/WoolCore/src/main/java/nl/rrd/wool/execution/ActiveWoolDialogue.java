@@ -22,22 +22,19 @@
 
 package nl.rrd.wool.execution;
 
-import java.util.List;
-import java.util.Map;
-
 import nl.rrd.wool.exception.WoolException;
 import nl.rrd.wool.execution.WoolVariableStore.VariableSource;
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.expressions.Value;
-import nl.rrd.wool.model.WoolDialogue;
-import nl.rrd.wool.model.WoolNode;
-import nl.rrd.wool.model.WoolNodeBody;
-import nl.rrd.wool.model.WoolReply;
+import nl.rrd.wool.model.*;
 import nl.rrd.wool.model.command.WoolCommand;
 import nl.rrd.wool.model.command.WoolInputCommand;
 import nl.rrd.wool.model.command.WoolSetCommand;
 import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 import nl.rrd.wool.model.nodepointer.WoolNodePointerInternal;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * An {@link ActiveWoolDialogue} is a wrapper around a {@link WoolDialogue}, which contains
@@ -49,7 +46,8 @@ import nl.rrd.wool.model.nodepointer.WoolNodePointerInternal;
  * @author Tessa Beinema
  */
 public class ActiveWoolDialogue {
-	
+
+	private WoolDialogueDescription dialogueDescription;
 	private WoolDialogue dialogueDefinition;
 	private WoolNode currentNode;
 	private DialogueState dialogueState;
@@ -57,13 +55,19 @@ public class ActiveWoolDialogue {
 		
 	// ----------- Constructors:
 	
-	public ActiveWoolDialogue(WoolDialogue dialogueDefinition) {
+	public ActiveWoolDialogue(WoolDialogueDescription dialogueDescription,
+			WoolDialogue dialogueDefinition) {
+		this.dialogueDescription = dialogueDescription;
 		this.dialogueDefinition = dialogueDefinition;
 		this.dialogueState = DialogueState.INACTIVE;
 	}
 	
 	// ---------- Getters:
-	
+
+	public WoolDialogueDescription getDialogueDescription() {
+		return dialogueDescription;
+	}
+
 	public WoolDialogue getDialogueDefinition() {
 		return dialogueDefinition;
 	}
