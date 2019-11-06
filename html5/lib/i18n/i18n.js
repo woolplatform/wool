@@ -9,7 +9,8 @@ var _i18n = window.i18n({
 
 
 // Usage:
-// call ReadPODefFromFile or ReadPODef or _i18n.loadJSON to load defs
+// call ReadPODefFromFile, ReadJSONFromString, ReadPODef, or _i18n.loadJSON
+// to load defs.
 // Then use _i18n.setLocale("locale"); to set locale after reading defs.
 
 
@@ -146,7 +147,9 @@ _i18n.readPODef = function(string,charmapping) {
 	WritePODef(msgelem);
 	// make exception for "" key. Here, lines are split into elements
 	var options = ret[""].split('\n');
-	ret[""] = {};
+	ret[""] = {
+		"plural-forms": "nplurals=2; plural=(n != 1);",
+	};
 	for (var i=0; i<options.length; i++) {
 		var opt = options[i];
 		if (opt=="") continue;
@@ -166,14 +169,31 @@ _i18n.ReadPODefFromFile =
 function(filename,locale,callback,charmapping) {
 	Utils._ajax("GET",filename,"",
 		function(data) {
-			var podef = ReadPODef(data,charmapping);
-			console.log("PO file read.");
+			var podef = _i18n.readPODef(data,charmapping);
+			console.log("PO language file read.");
 			if (callback) callback(null);
 		}, function(data) {
 			console.log("Error reading PO file: "+data);
 			if (callback) callback(data);
 		}
 	);
+}
+
+// json supported by gettext.js is similar to the "key-value" json in
+// poeditor. Context does not work because encoded differently. Language +
+// pluralforms are also not included in the defs.
+// charmapping not used (yet)
+_i18n.ReadJSONFromString =
+function(data,locale,pluralForms,charmapping) {
+	if (!locale) locale="nl";
+	if (!pluralForms) pluralForms="nplurals=2; plural=(n!=1);";
+	var json = JSON.parse(data);
+	json[""] = {
+		"language": locale,
+		"plural-forms": pluralForms,
+	};
+	this.loadJSON(json);
+	console.log("JSON language file read.");
 }
 
 _i18n._getGettextContext = function(string) {

@@ -8,6 +8,18 @@ var data =
 
 	filename: "file",
 
+
+	// callback: function(element)
+	readFileGeneric: function(e, filename, element, callback) {
+		var reader = new FileReader();
+		reader.onerror = function(e) {
+			alert("Error reading file");
+		}
+		reader.onload = callback;
+		reader.readAsText(element[0].files[0]);
+	},
+
+
 	readFile: function(e, filename, clearNodes, element) {
 		console.log(filename);
 		var filebase = filename.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
@@ -50,6 +62,9 @@ var data =
 			}
 			reader.readAsText(element[0].files[0]);
 		}
+
+		app.clearLangDefs();
+
 		/*
 		else if (window.File && window.FileReader && window.FileList && window.Blob && e.target && e.target.files && e.target.files.length > 0)
 		{
@@ -77,6 +92,14 @@ var data =
 
 		app.resetUIState();
 		app.refreshWindowTitle(filename);
+	},
+
+	openLang: function(e, filename, element) {
+		data.readFileGeneric(e, filename, element, function(e) {
+			localStorage.setItem(app.LOCALSTORAGEPREFIX+"langDefs",
+				e.target.result);
+			alert("Loaded language definitions.");
+		});
 	},
 
 	openFolder: function(e, foldername)
@@ -128,8 +151,7 @@ var data =
 		*/
 	},
 
-	loadData: function(content, type, clearNodes, doNotCenter)
-	{
+	loadData: function(content, type, clearNodes, doNotCenter) {
 		// clear all content
 		if (clearNodes)
 			app.nodes.removeAll();
@@ -370,6 +392,7 @@ var data =
 		}
 
 		if (type == FILETYPE.CSV) {
+			// XXX strings are not properly quoted
 			alltexts = {};
 			for (var i = 0; i < nodes.length; i ++) {
 				nodes[i].compile(true);
@@ -381,7 +404,34 @@ var data =
 				output += JSON.stringify(text)+"\n";
 			}
 		} else if (type == FILETYPE.JSON) {
-			output = JSON.stringify(content, null, "\t");
+			//output = JSON.stringify(content, null, "\t");
+			alltexts = {};
+			for (var i = 0; i < nodes.length; i ++) {
+				nodes[i].compile(true);
+				for (var text in nodes[i].compiledNode.texts) {
+					alltexts[text] = true;
+				}
+			}
+			output = [];
+			for (var text in alltexts) {
+				elem = {};
+				elem[text] = "";
+				output.push({
+					term: text,
+				});
+			}
+			// Texts coming from user interface.
+			// from simplewoolclient/main.js
+			output.push({ term: "You:", /*context: "UIText",*/ });
+			output.push({ term: "Your response:", /*context: "UIText",*/ });
+			// also in android/couch
+			output.push({ term: "Continue", /*context: "UIText",*/ });
+			output.push({ term: "Send", /*context: "UIText",*/ });
+			output.push({ term: "End of dialogue", /*context: "UIText",*/ });
+			output.push({ term: "Restart", /*context: "UIText",*/ });
+			// only in Android client + Couch client
+			output.push({ term: "Finish", /*context: "UIText",*/ });
+			output = JSON.stringify(output);
 		} else if (type == FILETYPE.WOOL) {
 			for (i = 0; i < content.length; i++)
 			{
@@ -536,6 +586,7 @@ var data =
 		if (!confirm("Clear all nodes?")) return;
 		app.resetUIState();
 		app.nodes.removeAll();
+		app.clearLangDefs();
 		app.newNode().title("Start");
 		app.updateArrows();
 	},
@@ -543,6 +594,11 @@ var data =
 	tryOpenFile: function()
 	{
 		data.openFileDialog($('#open-file'), data.openFile);
+	},
+
+	tryOpenLang: function()
+	{
+		data.openFileDialog($('#open-lang'), data.openLang);
 	},
 
 	tryOpenFolder: function()

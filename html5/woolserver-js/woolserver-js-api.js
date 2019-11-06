@@ -87,7 +87,7 @@ directServer.getNode = function() {
 		// TODO
 		speakersInDialogue: ctx.speakers,
 		speaker: speaker,
-		statement: directServer.substituteVars(ctx,ctx.lines.join("\n")),
+		statement: directServer.substituteVars(ctx,ctx.text),
 		multimedia: null,
 		replies: []
 	};

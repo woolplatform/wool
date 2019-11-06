@@ -139,7 +139,7 @@ function WoolNodeContext(vars) {
 	this.vars = vars;
 	// no speaker defined: speaker = "UNKNOWN";
 	this.speakers = [];
-	this.lines = [];
+	this.text = "";
 	this.media = null;
 	this.type = "default";
 	this.afreply = null;
@@ -147,7 +147,7 @@ function WoolNodeContext(vars) {
 	this.choices = [];
 
 	this.addLine = function(line,speaker) {
-		this.lines.push(line);
+		this.text += line + "\n";
 		if (speaker) this.speakers.push(speaker);
 	}
 	this.addMultimedia = function(type,param) {
@@ -188,6 +188,9 @@ function WoolNodeContext(vars) {
 }
 
 
+// links - can be used for editor to show arrows
+// texts - can be used for translation.  The node's text lines are trimmed,
+//         with \n added to each line. 
 function WoolNode(dialogue,lines) {
 	console.log("Created node! Lines:"+lines.length);
 	var self=this;
@@ -477,8 +480,9 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			// with speaker
 			var speaker = matches[1];
-			if (alllines) alllines += "\n";
-			alllines += matches[2];
+			//if (alllines) alllines += "\n";
+			//alllines += matches[2];
+			alllines += matches[2] + "\n";
 			dialogue.speakers[speaker] = speaker;
 			this.body[i] = "C.addLine("+
 				JSON.stringify(matches[2])+","
@@ -486,8 +490,9 @@ function WoolNode(dialogue,lines) {
 			continue;
 		} else {
 			// without speaker
-			if (alllines) alllines += "\n";
-			alllines += line;
+			//if (alllines) alllines += "\n";
+			//alllines += line;
+			alllines += line + "\n";
 			this.body[i] = "C.addLine("+JSON.stringify(line)+");";
 			continue;
 		}

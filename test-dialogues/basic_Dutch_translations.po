@@ -1,0 +1,113 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: POEditor.com\n"
+"Project-Id-Version: wool_basic\n"
+"Language: nl\n"
+
+#: 
+msgid "Nice to meet you Bob."
+msgstr "Leuk je te ontmoeten Bob."
+
+#: 
+msgid "Goodbye."
+msgstr "Tot ziens."
+
+#: 
+msgid "Hi, my name is Bob, and this is the Default WOOL Test dialogue.\n"
+""
+msgstr "Hallo, ik heet Bob, en dit is het standaard WOOL testdialoog."
+
+#: 
+msgid "This dialogue is very basic, and shows only dialogue flow and ending.\n"
+""
+msgstr "Dit dialoog is heel eenvoudig, en laat alleen dialoogflow en beëindiging zien."
+
+#: 
+msgid "Tell me more."
+msgstr "Vertel me meer."
+
+#: 
+msgid "Dialogue over?"
+msgstr "Dialoog voorbij?"
+
+#: 
+msgid "Any node can have zero or more reply options. When there are none, the dialogue is over.\n"
+""
+msgstr "Elke node kan nul of meer antwoordopties hebben. Als er geen zijn, is het dialoog voorbij."
+
+#: 
+msgid "Tell me about statements."
+msgstr "Vertel me over statements."
+
+#: 
+msgid "Reply Options?"
+msgstr "Antwoordopties?"
+
+#: 
+msgid "How do you end a dialogue?"
+msgstr "Hoe beëindig je een dialoog?"
+
+#: 
+msgid "We deal with statements, reply options, and ending dialogues.\n"
+""
+msgstr "We behandelen statement, antwoordopties, en beëindiging van dialogen."
+
+#: 
+msgid "When a statement has no reply options left, the dialogue will end.\n"
+""
+msgstr "Wanneer een statement geen antwoordopties meer heeft, beëindigt het dialoog."
+
+#: 
+msgid "I've got the last word, and I declare this dialogue to be over!\n"
+""
+msgstr "Ik heb het laatste woord, en ik verklaar dit dialoog voorbij!"
+
+#: 
+msgid "Statements are things that a speaker says, like this!\n"
+""
+msgstr "Statements zijn dingen die een spreker zegt, zoals dit!"
+
+#: 
+msgid "This reply option points to the \"End\" node."
+msgstr "Deze antwoordoptie verwijst naar de \"End\" node."
+
+#: 
+msgid "This one points to a node without replies."
+msgstr "Deze verwijst naar een node zonder antwoorden."
+
+#: 
+msgid "Alternatively, a reply option can point to the reserved node name \"End\". When the dialogue reaches this node, the dialogue is also over.\n"
+""
+msgstr "Een antwoordoptie kan als alternatief verwijzen naar een gereserveerde nodenaam \"End\". Als de dialoog op deze node uitkomt, is het dialoog ook voorbij."
+
+#: 
+msgid "You:"
+msgstr "Jij:"
+
+#: 
+msgid "Your response:"
+msgstr "Je respons:"
+
+#: 
+msgid "Continue"
+msgstr "Doorgaan"
+
+#: 
+msgid "Send"
+msgstr "Verzend"
+
+#: 
+msgid "Restart"
+msgstr "Herstart"
+
+#: 
+msgid "Finish"
+msgstr "Beëindig"
+
+#: 
+msgid "End of dialogue"
+msgstr "Einde dialoog"
+
