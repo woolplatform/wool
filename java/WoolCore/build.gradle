@@ -1,8 +1,11 @@
-apply plugin: 'java'
-apply plugin: 'distribution'
-apply plugin: 'eclipse-wtp'
-apply plugin: 'maven'
-apply plugin: 'signing'
+plugins {
+	id 'java'
+	id 'java-library'
+	id 'distribution'
+	id 'eclipse-wtp'
+	id 'maven-publish'
+	id 'signing'
+}
 
 group = 'nl.rrd'
 version = '1.0.0'
@@ -16,17 +19,17 @@ repositories {
 
 dependencies {
     // Use JUnit test framework
-	compile "org.slf4j:slf4j-api:1.7.25"
-	compile "com.fasterxml.jackson.core:jackson-annotations:2.9.7"
-	compile "com.fasterxml.jackson.core:jackson-core:2.9.7"
-	compile "com.fasterxml.jackson.core:jackson-databind:2.9.7"
+	api "org.slf4j:slf4j-api:1.7.25"
+	api "com.fasterxml.jackson.core:jackson-annotations:2.9.7"
+	api "com.fasterxml.jackson.core:jackson-core:2.9.7"
+	api "com.fasterxml.jackson.core:jackson-databind:2.9.7"
     testImplementation 'junit:junit:4.12'
 }
 
 jar {
 	manifest {
 		attributes 'Main-Class': 'nl.rrd.wool.parser.WoolParser'
-		attributes 'Class-Path': configurations.compile.collect({ it.name }).join(' ')
+		attributes 'Class-Path': configurations.compileClasspath.collect({ it.name }).join(' ')
 	}
 }
 
@@ -42,8 +45,9 @@ task sourcesJar(type: Jar) {
 
 distributions {
 	main {
+		distributionBaseName = archivesBaseName
 		contents {
-			from configurations.compile
+			from configurations.compileClasspath
 			from jar
 		}
 	}
@@ -62,67 +66,68 @@ artifacts {
 	archives javadocJar, sourcesJar
 }
 
-signing {
-	sign configurations.archives
-}
-
-uploadArchives {
-	repositories {
-		mavenDeployer {
-			beforeDeployment { MavenDeployment deployment ->
-				signing.signPom(deployment)
-			}
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifactId = archivesBaseName
+			from components.java
 			
-			repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-				authentication(userName: ossrhUsername, password: ossrhPassword)
-			}
-			
-			snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-				authentication(userName: ossrhUsername, password: ossrhPassword)
-			}
-			
-			pom.project {
-				name 'WOOL Dialogue Framework'
-				packaging 'jar'
-				description 'WOOL is a simple, powerful dialogue framework for creating virtual agent conversations.'
-				url 'https://www.council-of-coaches.eu/wool/'
-				
-				scm {
-					connection 'scm:git:git://github.com/RoessinghResearch/wool.git'
-					developerConnection 'scm:git:ssh://github.com:RoessinghResearch/wool.git'
-					url 'https://github.com/RoessinghResearch/wool/tree/master'
-				}
+			pom {
+				name = 'WOOL Dialogue Framework'
+				description = 'WOOL is a simple, powerful dialogue framework for creating virtual agent conversations.'
+				url = 'https://www.council-of-coaches.eu/wool/'
 				
 				licenses {
 					license {
-						name 'MIT License'
-						url 'https://opensource.org/licenses/MIT'
+						name = 'MIT License'
+						url = 'https://opensource.org/licenses/MIT'
 					}
 				}
 				
 				developers {
 					developer {
-						id 'bvanschooten'
-						name 'Boris van Schooten'
-						email 'b.vanschooten@rrd.nl'
+						id = 'bvanschooten'
+						name = 'Boris van Schooten'
+						email = 'b.vanschooten@rrd.nl'
 					}
 					developer {
-						id 'dhofs'
-						name 'Dennis Hofs'
-						email 'd.hofs@rrd.nl'
+						id = 'dhofs'
+						name = 'Dennis Hofs'
+						email = 'd.hofs@rrd.nl'
 					}
 					developer {
-						id 'hopdenakker'
-						name 'Harm op den Akker'
-						email 'h.opdenakker@rrd.nl'
+						id = 'hopdenakker'
+						name = 'Harm op den Akker'
+						email = 'h.opdenakker@rrd.nl'
 					}
 					developer {
-						id 'tbeinema'
-						name 'Tessa Beinema'
-						email 't.beinema@rrd.nl'
+						id = 'tbeinema'
+						name = 'Tessa Beinema'
+						email = 't.beinema@rrd.nl'
 					}					
+				}
+				
+				scm {
+					connection = 'scm:git:git://github.com/RoessinghResearch/wool.git'
+					developerConnection = 'scm:git:ssh://github.com:RoessinghResearch/wool.git'
+					url = 'https://github.com/RoessinghResearch/wool/tree/master'
 				}
 			}
 		}
 	}
+	repositories {
+		maven {
+			def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+			def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+			url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+			credentials {
+				username ossrhUsername
+				password ossrhPassword
+			}
+		}
+	}
+}
+
+signing {
+	sign publishing.publications.mavenJava
 }
