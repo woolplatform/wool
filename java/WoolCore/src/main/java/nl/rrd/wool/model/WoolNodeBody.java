@@ -22,24 +22,13 @@
 
 package nl.rrd.wool.model;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import nl.rrd.wool.expressions.EvaluationException;
-import nl.rrd.wool.model.command.WoolActionCommand;
-import nl.rrd.wool.model.command.WoolCommand;
-import nl.rrd.wool.model.command.WoolIfCommand;
-import nl.rrd.wool.model.command.WoolInputCommand;
-import nl.rrd.wool.model.command.WoolSetCommand;
+import nl.rrd.wool.model.command.*;
 import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 import nl.rrd.wool.model.nodepointer.WoolNodePointerExternal;
 import nl.rrd.wool.model.nodepointer.WoolNodePointerInternal;
+
+import java.util.*;
 
 /**
  * A node body can occur in three different contexts inside a {@link WoolNode

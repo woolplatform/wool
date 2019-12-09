@@ -22,12 +22,6 @@
 
 package nl.rrd.wool.model.command;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import nl.rrd.wool.exception.LineNumberParseException;
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.expressions.Expression;
@@ -40,6 +34,8 @@ import nl.rrd.wool.parser.WoolBodyParser;
 import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.parser.WoolNodeState;
 import nl.rrd.wool.utils.CurrentIterator;
+
+import java.util.*;
 
 /**
  * This class models the &lt;&lt;if ...&gt;&gt; command in Wool. It can be part
@@ -129,6 +125,11 @@ public class WoolIfCommand extends WoolExpressionCommand {
 
 	@Override
 	public void getWriteVariableNames(Set<String> varNames) {
+		for (Clause clause : ifClauses) {
+			clause.statement.getWriteVariableNames(varNames);
+		}
+		if (elseClause != null)
+			elseClause.getWriteVariableNames(varNames);
 	}
 
 	@Override
