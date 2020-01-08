@@ -1,0 +1,58 @@
+<!-- Test page for woolanimplayer. -->
+<html>
+<head>
+
+<script src="../lib/lottie/lottie.min.js"></script>
+<script src="woolanimplayer.js"></script>
+<link rel="stylesheet" type="text/css" href="css/woolanimplayer.css">
+
+<style>
+/* position container for avatar animation */
+.avatar {
+	width: 50%;
+	height: 50%;
+	position: absolute;
+}
+
+</style>
+
+</head>
+<body>
+
+<button onclick='doPlay();'>Restart</button>
+
+<!-- avatar container -->
+<div class='avatar' id='animations'></div>
+
+<script>
+
+// create player, provide id of container div
+var player = new WoolAnimPlayer("animations","examples");
+
+// Add and initialize animations.
+// Each avatar may have one or more animations, identified by a string.
+// 
+// Here, we define two animations belonging to avatar "sylvia".
+// Currently, each animation is assumed to be in a directory,
+// formatted like this: avatarname + "_" + animationname.
+// Ex: sylvia_test_blinking_eyes
+player.addAnimation("sylvia","test_blinking_eyes");
+player.addAnimation("sylvia","test_blinking_eyes_mouth");
+player.addAnimation("sylvia","test_mouth");
+
+
+function doPlay() {
+	// play animations by specifying an avatar, and an array of animations.
+	// Each animation in the array is played once. The final animation keeps
+	// looping.
+	player.playAnimations("sylvia",[
+		"test_blinking_eyes_mouth",
+		"test_mouth",
+		"test_blinking_eyes" ]);
+}
+
+
+</script>
+
+</body>
+</html>
