@@ -16,5 +16,8 @@
 	},
 	"devDependencies": {
 		"electron": "^6.0.12"
+	},
+	"dependencies": {
+		"split.js": "^1.5.11"
 	}
 }

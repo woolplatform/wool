@@ -43,10 +43,12 @@ var App = function(name, version)
 	this.$searchField = $(".search-field");
 
 	// node-webkit
-	if (typeof(require) == "function") {
+	if (typeof(process) !== "undefined") {
 		//this.gui = require('nw.gui');
-		this.fs = require('fs');
+		this.fs = new NodeFileSystem();
 		this.isNwjs = true;
+	} else {
+		this.fs = new BrowserFileSystem();
 	}
 
 	this.run = function() {
@@ -443,8 +445,8 @@ var App = function(name, version)
 							: self.nodes();
 				var isNodeSelected = selectedNodes.length > 0;
 				if (self.focusedNodeIdx > -1 && nodes.length > self.focusedNodeIdx
-					&& (self.transformOrigin[0] != -nodes[self.focusedNodeIdx].x() + $(window).width() / 2 - $(nodes[self.focusedNodeIdx].element).width() / 2
-						|| self.transformOrigin[1] != -nodes[self.focusedNodeIdx].y() + $(window).height() / 2 - $(nodes[self.focusedNodeIdx].element).height() / 2))
+					&& (self.transformOrigin[0] != -nodes[self.focusedNodeIdx].x() + self.canvas.width / 2 - $(nodes[self.focusedNodeIdx].element).width() / 2
+						|| self.transformOrigin[1] != -nodes[self.focusedNodeIdx].y() + self.canvas.height / 2 - $(nodes[self.focusedNodeIdx].element).height() / 2))
 				{
 					self.focusedNodeIdx = -1;
 				}
@@ -820,35 +822,33 @@ var App = function(name, version)
 		self.updateArrows();
 	}
 
-	this.updateArrows = function()
-	{
+	this.updateArrows = function() {
 		//console.log("updateArrows");
-		self.canvas.width = $(window).width();
-		self.canvas.height = $(window).height();
+		self.canvas.width = $("#app").width();
+		self.canvas.height = $("#app").height();
 
 		var scale = self.cachedScale;
 		var offset = $(".nodes-holder").offset();
-
-		self.context.clearRect(0, 0, $(window).width(), $(window).height());
+		// add width of file selector + gutter
+		if ($(".gutter").length > 0) {
+			offset.left -= $("#filepanel").width()+$($(".gutter")[0]).width();
+		}
+		self.context.clearRect(0, 0, self.canvas.width, self.canvas.height);
 		self.context.lineWidth = 4 * scale;
 
 		var nodes = self.nodes();
 
-		for(var i in nodes)
-		{
+		for(var i in nodes) {
 			var node = nodes[i];
 			nodes[i].tempWidth = $(node.element).width();
 			nodes[i].tempHeight = $(node.element).height();
 			nodes[i].tempOpacity = $(node.element).css("opacity");
 		}
 
-		for(var index in nodes)
-		{
+		for(var index in nodes) {
 			var node = nodes[index];
-			if (node.linkedTo().length > 0)
-			{
-				for(var link in node.linkedTo())
-				{
+			if (node.linkedTo().length > 0) {
+				for(var link in node.linkedTo()) {
 					var linked = node.linkedTo()[link];
 
 					// get origins
@@ -1264,8 +1264,8 @@ var App = function(name, version)
 			var node = self.nodes()[idx];
 			var nodeXScaled = -( node.x() * self.cachedScale ),
 				nodeYScaled = -( node.y() * self.cachedScale ),
-				winXCenter = $(window).width() / 2,
-				winYCenter = $(window).height() / 2,
+				winXCenter = self.canvas.width / 2,
+				winYCenter = self.canvas.height / 2,
 				nodeWidthShift = node.tempWidth * self.cachedScale / 2,
 				nodeHeightShift = node.tempHeight * self.cachedScale / 2;
 
@@ -1283,8 +1283,8 @@ var App = function(name, version)
 			var node = self.getSelectedNodes()[idx];
 			var nodeXScaled = -( node.x() * self.cachedScale ),
 				nodeYScaled = -( node.y() * self.cachedScale ),
-				winXCenter = $(window).width() / 2,
-				winYCenter = $(window).height() / 2,
+				winXCenter = self.canvas.width / 2,
+				winYCenter = self.canvas.height / 2,
 				nodeWidthShift = node.tempWidth * self.cachedScale / 2,
 				nodeHeightShift = node.tempHeight * self.cachedScale / 2;
 
@@ -1300,8 +1300,8 @@ var App = function(name, version)
 		const nodeWidth = 100, nodeHeight = 100;
 		var nodeXScaled = -( x * self.cachedScale ),
 			nodeYScaled = -( y * self.cachedScale ),
-			winXCenter = $(window).width() / 2,
-			winYCenter = $(window).height() / 2,
+			winXCenter = self.canvas.width / 2,
+			winYCenter = self.canvas.height / 2,
 			nodeWidthShift = nodeWidth * self.cachedScale / 2,
 			nodeHeightShift = nodeHeight * self.cachedScale / 2;
 
