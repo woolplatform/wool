@@ -25,7 +25,6 @@ package nl.rrd.wool.execution;
 import nl.rrd.wool.exception.WoolException;
 import nl.rrd.wool.execution.WoolVariableStore.VariableSource;
 import nl.rrd.wool.expressions.EvaluationException;
-import nl.rrd.wool.expressions.Value;
 import nl.rrd.wool.model.*;
 import nl.rrd.wool.model.command.WoolCommand;
 import nl.rrd.wool.model.command.WoolInputCommand;
@@ -213,28 +212,11 @@ public class ActiveWoolDialogue {
 		return currentNode;
 	}
 	
-	public void storeReplyInput(int replyId, Object input) {
-		WoolInputCommand inputCmd = findInputCommand(replyId);
-		if (inputCmd == null)
-			return;
-		String variableName = inputCmd.getVariableName();
-		this.woolVariableStore.setValue(variableName, input, VariableSource.CORE);
-	}
-	
-	private WoolInputCommand findInputCommand(int replyId) {
-		WoolReply reply = this.currentNode.getBody().findReplyById(replyId);
-		WoolNodeBody body = reply.getStatement();
-		if (body == null)
-			return null;
-		for (WoolNodeBody.Segment segment : body.getSegments()) {
-			if (!(segment instanceof WoolNodeBody.CommandSegment))
-				continue;
-			WoolNodeBody.CommandSegment cmdSegment =
-					(WoolNodeBody.CommandSegment)segment;
-			if (cmdSegment.getCommand() instanceof WoolInputCommand)
-				return (WoolInputCommand)cmdSegment.getCommand();
+	public void storeReplyInput(Map<String,?> variables) {
+		for (String varName : variables.keySet()) {
+			this.woolVariableStore.setValue(varName, variables.get(varName),
+					VariableSource.CORE);
 		}
-		return null;
 	}
 
 	/**
@@ -269,9 +251,7 @@ public class ActiveWoolDialogue {
 				// a reply statement can only contain an "input" command
 				WoolInputCommand command =
 						(WoolInputCommand)cmdSegment.getCommand();
-				Value value = new Value(woolVariableStore.getValue(
-						command.getVariableName()));
-				result.append(value.toString());
+				result.append(command.getStatementLog(woolVariableStore));
 			}
 		}
 		return result.toString();

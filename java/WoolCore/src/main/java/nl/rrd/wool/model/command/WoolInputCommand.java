@@ -22,13 +22,8 @@
 
 package nl.rrd.wool.model.command;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import nl.rrd.wool.exception.LineNumberParseException;
-import nl.rrd.wool.expressions.EvaluationException;
+import nl.rrd.wool.execution.WoolVariableStore;
 import nl.rrd.wool.model.WoolNodeBody;
 import nl.rrd.wool.model.WoolReply;
 import nl.rrd.wool.model.nodepointer.WoolNodePointer;
@@ -36,27 +31,28 @@ import nl.rrd.wool.parser.WoolBodyToken;
 import nl.rrd.wool.parser.WoolNodeState;
 import nl.rrd.wool.utils.CurrentIterator;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * This class models the &lt;&lt;input ...&gt;&gt; command in Wool. It can
  * be part of a {@link WoolNodeBody WoolNodeBody} inside a reply.
  * 
  * @author Dennis Hofs (RRD)
  */
-public class WoolInputCommand extends WoolAttributesCommand {
+public abstract class WoolInputCommand extends WoolAttributesCommand {
 	public static final String TYPE_TEXT = "text";
 	public static final String TYPE_NUMERIC = "numeric";
-	
+
 	private static final List<String> VALID_TYPES = Arrays.asList(
 			TYPE_TEXT, TYPE_NUMERIC);
 	
 	private String type;
-	private String variableName;
-	private Integer min = null;
-	private Integer max = null;
-	
-	public WoolInputCommand(String type, String variableName) {
+
+	public WoolInputCommand(String type) {
 		this.type = type;
-		this.variableName = variableName;
 	}
 
 	public String getType() {
@@ -67,64 +63,17 @@ public class WoolInputCommand extends WoolAttributesCommand {
 		this.type = type;
 	}
 
-	public String getVariableName() {
-		return variableName;
-	}
+	public abstract Map<String,?> getParameters();
 
-	public void setVariableName(String variableName) {
-		this.variableName = variableName;
-	}
+	public abstract String getStatementLog(WoolVariableStore varStore);
 
-	public Integer getMin() {
-		return min;
-	}
-
-	public void setMin(Integer min) {
-		this.min = min;
-	}
-
-	public Integer getMax() {
-		return max;
-	}
-
-	public void setMax(Integer max) {
-		this.max = max;
-	}
-	
 	@Override
 	public WoolReply findReplyById(int replyId) {
 		return null;
 	}
 
 	@Override
-	public void getReadVariableNames(Set<String> varNames) {
-	}
-
-	@Override
-	public void getWriteVariableNames(Set<String> varNames) {
-		varNames.add(variableName);
-	}
-
-	@Override
 	public void getNodePointers(Set<WoolNodePointer> pointers) {
-	}
-
-	@Override
-	public void executeBodyCommand(Map<String, Object> variables,
-			WoolNodeBody processedBody) throws EvaluationException {
-		processedBody.addSegment(new WoolNodeBody.CommandSegment(this));
-	}
-
-	@Override
-	public String toString() {
-		String result = "<<input type=\"" + type +
-				"\" value=\"$" + variableName + "\"";
-		if (min != null)
-			result += " min=\"" + min + "\"";
-		if (max != null)
-			result += " max=\"" + max + "\"";
-		result += ">>";
-		return result;
 	}
 
 	public static WoolInputCommand parse(WoolBodyToken cmdStartToken,
@@ -139,15 +88,12 @@ public class WoolInputCommand extends WoolAttributesCommand {
 					"Invalid value for attribute \"type\": " + type,
 					token.getLineNum(), token.getColNum());
 		}
-		String variableName = readVariableAttr("value", attrs, cmdStartToken,
-				true);
-		WoolInputCommand command = new WoolInputCommand(type, variableName);
-		Integer min = readIntAttr("min", attrs, cmdStartToken, false, null,
-				null);
-		command.setMin(min);
-		Integer max = readIntAttr("max", attrs, cmdStartToken, false, null,
-				null);
-		command.setMax(max);
-		return command;
+		switch (type) {
+			case TYPE_TEXT:
+				return WoolInputTextCommand.parse(cmdStartToken, attrs);
+			case TYPE_NUMERIC:
+				return WoolInputNumericCommand.parse(cmdStartToken, attrs);
+		}
+		throw new RuntimeException("Unsupported value for input type: " + type);
 	}
 }
