@@ -11,12 +11,7 @@ var data =
 
 	// callback: function(element)
 	readFileGeneric: function(e, filename, element, callback) {
-		var reader = new FileReader();
-		reader.onerror = function(e) {
-			alert("Error reading file");
-		}
-		reader.onload = callback;
-		reader.readAsText(element[0].files[0]);
+		data.fs.readFile(filename,element[0].files[0],callback);
 	},
 
 
@@ -26,42 +21,23 @@ var data =
 		if (filebase) {
 			data.filename = filebase[1];
 		}
-		if (false && app.fs != undefined)
-		{
-			if (app.fs.readFile(filename, "utf-8", function(error, contents)
-			{
-				if (error)
-				{
-
-				}
-				else
-				{
+		app.fs.readFile(filename,element[0].files[0],
+			function(error,contents) {
+				if (error) {
+					alert("Error reading file");
+					console.log(error);
+				} else {
 					var type = data.getFileType(filename);
 					if (type == FILETYPE.UNKNOWN)
 						alert("Unknown filetype!");
-					else
-					{
+					else {
 						data.editingPath(filename);
 						data.editingType(type);
 						data.loadData(contents, type, clearNodes);
 					}
 				}
-			}));
-		}
-		else
-		{
-			var reader = new FileReader();
-			reader.onerror = function(e) {
-				alert("Error reading file");
 			}
-			reader.onload = function(e) {
-				var type = data.getFileType(filename);
-				data.editingPath(filename);
-				data.editingType(type);
-				data.loadData(e.target.result, type, clearNodes);
-			}
-			reader.readAsText(element[0].files[0]);
-		}
+		);
 
 		app.clearLangDefs();
 
@@ -95,10 +71,14 @@ var data =
 	},
 
 	openLang: function(e, filename, element) {
-		data.readFileGeneric(e, filename, element, function(e) {
-			localStorage.setItem(app.LOCALSTORAGEPREFIX+"langDefs",
-				e.target.result);
-			alert("Loaded language definitions.");
+		data.readFileGeneric(e, filename, element, function(err,data) {
+			if (err) {
+				alert("Error reading file");
+			} else {
+				localStorage.setItem(app.LOCALSTORAGEPREFIX+"langDefs",
+					e.target.result);
+				alert("Loaded language definitions.");
+			}
 		});
 	},
 
@@ -492,23 +472,16 @@ var data =
 		return output;
 	},
 
-	saveTo: function(path, content)
-	{
-		if (app.fs != undefined)
-		{
-			app.fs.writeFile(path, content, {encoding: 'utf-8'}, function(err) 
-			{
-				data.editingPath(path);
-				if(err)
-					alert("Error Saving Data to " + path + ": " + err);
-			});
-		}
+	saveTo: function(path, content) {
+		app.fs.writeFile(path, content, function(err) {
+			data.editingPath(path);
+			if (err)
+				alert("Error Saving Data to " + path + ": " + err);
+		});
 	},
 
-	openFileDialog: function(dialog, callback)
-	{
-		dialog.bind("change", function(e)
-		{
+	openFileDialog: function(dialog, callback) {
+		dialog.bind("change", function(e) {
 			// make callback
 			callback(e, dialog.val(), dialog);
 
@@ -532,17 +505,13 @@ var data =
 	saveFileDialog: function(dialog, type, content) {
 		var file = data.filename + "." + type;
 
-		if (app.fs)
-		{
+		if (app.fs.fstype == "node") {
 			dialog.attr("nwsaveas", file);
-			data.openFileDialog(dialog, function(e, path)
-			{
+			data.openFileDialog(dialog, function(e, path) {
 				data.saveTo(path, content);
 				app.refreshWindowTitle(path);
 			});
-		}
-		else
-		{
+		} else {
 			switch(type) {
 				case 'json':
 					content = "data:text/json," + encodeURIComponent(content);
@@ -591,34 +560,28 @@ var data =
 		app.updateArrows();
 	},
 
-	tryOpenFile: function()
-	{
+	tryOpenFile: function() {
 		data.openFileDialog($('#open-file'), data.openFile);
 	},
 
-	tryOpenLang: function()
-	{
+	tryOpenLang: function() {
 		data.openFileDialog($('#open-lang'), data.openLang);
 	},
 
-	tryOpenFolder: function()
-	{
+	tryOpenFolder: function() {
 		data.openFileDialog($('#open-folder'), data.openFolder);
 	},
 
-	tryAppend: function()
-	{
+	tryAppend: function() {
 		data.openFileDialog($('#open-file'), data.appendFile);
 	},
 
-	trySave: function(type)
-	{
+	trySave: function(type) {
 		data.editingType(type);
 		data.saveFileDialog($('#save-file'), type, data.getSaveData(type));
 	},
 
-	trySaveCurrent: function()
-	{
+	trySaveCurrent: function() {
 		if (data.editingPath().length > 0 && data.editingType().length > 0)
 		{
 			data.saveTo(data.editingPath(), data.getSaveData(data.editingType()));
