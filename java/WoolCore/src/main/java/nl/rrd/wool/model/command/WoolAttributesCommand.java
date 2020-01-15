@@ -137,17 +137,13 @@ public abstract class WoolAttributesCommand extends WoolCommand {
 		if (varStr == null)
 			return null;
 		WoolBodyToken token = attrs.get(name);
-		List<WoolVariableString.Segment> segments = varStr.getSegments();
-		if (segments.size() != 1 ||
-				!(segments.get(0) instanceof WoolVariableString.TextSegment)) {
+		if (!varStr.isPlainText()) {
 			throw new LineNumberParseException(String.format(
 					"Value for attribute \"%s\" is not plain text", name) +
 					": " + token.getText(), token.getLineNum(),
 					token.getColNum());
 		}
-		WoolVariableString.TextSegment segment =
-				(WoolVariableString.TextSegment)segments.get(0);
-		return segment.getText();
+		return varStr.evaluate(null);
 	}
 	
 	protected static String readVariableAttr(String name,

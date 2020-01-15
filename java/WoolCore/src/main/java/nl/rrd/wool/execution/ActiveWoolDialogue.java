@@ -153,11 +153,10 @@ public class ActiveWoolDialogue {
 								nodeId, dialogueDefinition.getDialogueName()));
 			}
 		}
-		this.currentNode = nextNode;
-		if(this.currentNode.getBody().getReplies().size() == 0) {
+		this.currentNode = executeWoolNode(nextNode);
+		if (this.currentNode.getBody().getReplies().size() == 0)
 			this.dialogueState = DialogueState.FINISHED;
-		}
-		return executeWoolNode(nextNode);
+		return currentNode;
 	}
 	
 	/**

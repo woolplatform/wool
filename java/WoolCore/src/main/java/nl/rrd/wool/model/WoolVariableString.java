@@ -146,6 +146,14 @@ public class WoolVariableString {
 		}
 		return true;
 	}
+
+	public boolean isPlainText() {
+		for (Segment segment : segments) {
+			if (!(segment instanceof TextSegment))
+				return false;
+		}
+		return true;
+	}
 	
 	public void trimWhitespace() {
 		removeLeadingWhitespace();
@@ -247,7 +255,7 @@ public class WoolVariableString {
 				char c = input.charAt(i);
 				for (char escape : escapes) {
 					if (c == escape) {
-						builder.append(input.substring(start, i));
+						builder.append(input, start, i);
 						builder.append('\\');
 						builder.append(c);
 						start = i + 1;

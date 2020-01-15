@@ -247,7 +247,7 @@ public class WoolBodyTokenizer {
 			char c = line.charAt(i);
 			switch (c) {
 			case '\\':
-				textBuffer.append(line.substring(textStart, i));
+				textBuffer.append(line, textStart, i);
 				textStart = i + 1;
 				prevEscape = true;
 				i++;
@@ -257,7 +257,7 @@ public class WoolBodyTokenizer {
 						new ReferenceParameter<>();
 				String varName = readVariableName(line, i + 1, varEnd);
 				if (varName.length() > 0) {
-					textBuffer.append(line.substring(textStart, i));
+					textBuffer.append(line, textStart, i);
 					if (textBuffer.length() > 0) {
 						result.addSegment(new WoolVariableString.TextSegment(
 								textBuffer.toString()));
@@ -272,7 +272,7 @@ public class WoolBodyTokenizer {
 				}
 				break;
 			case '"':
-				textBuffer.append(line.substring(textStart, i));
+				textBuffer.append(line, textStart, i);
 				if (textBuffer.length() > 0) {
 					result.addSegment(new WoolVariableString.TextSegment(
 							textBuffer.toString()));
@@ -376,7 +376,7 @@ public class WoolBodyTokenizer {
 		tokens.add(token);
 	}
 
-	private class BodyState {
+	private static class BodyState {
 		private boolean inCommand = false;
 		private boolean inReply = false;
 		private StringBuilder textBuffer;

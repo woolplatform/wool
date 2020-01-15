@@ -45,9 +45,11 @@ import java.util.Set;
 public abstract class WoolInputCommand extends WoolAttributesCommand {
 	public static final String TYPE_TEXT = "text";
 	public static final String TYPE_NUMERIC = "numeric";
+	public static final String TYPE_SET = "set";
+	public static final String TYPE_TIME = "time";
 
 	private static final List<String> VALID_TYPES = Arrays.asList(
-			TYPE_TEXT, TYPE_NUMERIC);
+			TYPE_TEXT, TYPE_NUMERIC, TYPE_SET, TYPE_TIME);
 	
 	private String type;
 
@@ -63,8 +65,29 @@ public abstract class WoolInputCommand extends WoolAttributesCommand {
 		this.type = type;
 	}
 
+	/**
+	 * Returns the parameters for this input command to send to the client. This
+	 * is a map from parameter names to values. A value can be any JSON type.
+	 * This method should only be called on a command that has already been
+	 * executed with {@link #executeBodyCommand(Map, WoolNodeBody)
+	 * executeBodyCommand()}. This means that any variables in parameter values
+	 * have already been resolved.
+	 *
+	 * @return the parameters for this input command to send to the client
+	 */
 	public abstract Map<String,?> getParameters();
 
+	/**
+	 * Returns the string to use in the user statement log in place of this
+	 * input command. It can use variable values from the specified variable
+	 * store. This method should only be called on a command that has already
+	 * been executed with {@link #executeBodyCommand(Map, WoolNodeBody)
+	 * executeBodyCommand()}. This means that any variables in parameter values
+	 * have already been resolved.
+	 *
+	 * @param varStore the variable store
+	 * @return the statement log
+	 */
 	public abstract String getStatementLog(WoolVariableStore varStore);
 
 	@Override
@@ -93,6 +116,10 @@ public abstract class WoolInputCommand extends WoolAttributesCommand {
 				return WoolInputTextCommand.parse(cmdStartToken, attrs);
 			case TYPE_NUMERIC:
 				return WoolInputNumericCommand.parse(cmdStartToken, attrs);
+			case TYPE_SET:
+				return WoolInputSetCommand.parse(cmdStartToken, attrs);
+			case TYPE_TIME:
+				return WoolInputTimeCommand.parse(cmdStartToken, attrs);
 		}
 		throw new RuntimeException("Unsupported value for input type: " + type);
 	}
