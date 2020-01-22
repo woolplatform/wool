@@ -7,6 +7,10 @@
 	<link rel="stylesheet" href="css/style.css">
 
 	<!-- libraries -->
+	<!-- Insert this line above jquery script imports.
+	See: https://stackoverflow.com/questions/52381131/jstree-is-not-a-function-using-jstree-in-electron-js  -->
+	<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
 	<script type="text/javascript" src="js/libs/jquery-1.11.2.min.js"></script>
 	<script type="text/javascript" src="js/libs/jquery.mousewheel.min.js"></script>
 	<script type="text/javascript" src="js/libs/transit.js"></script>
@@ -253,7 +257,6 @@
 		<script type="text/javascript">
 			var app = new App("Wool Editor", "1.2");
 			app.run();
-			console.log(app.isNwjs);
 			if (app.isNwjs) {
 				Split(["#filepanel","#editpanel"],{
 					minSize: [0,1070],

@@ -401,15 +401,17 @@ var data =
 			}
 			// Texts coming from user interface.
 			// from simplewoolclient/main.js
-			output.push({ term: "You:", /*context: "UIText",*/ });
-			output.push({ term: "Your response:", /*context: "UIText",*/ });
-			// also in android/couch
-			output.push({ term: "Continue", /*context: "UIText",*/ });
-			output.push({ term: "Send", /*context: "UIText",*/ });
-			output.push({ term: "End of dialogue", /*context: "UIText",*/ });
-			output.push({ term: "Restart", /*context: "UIText",*/ });
-			// only in Android client + Couch client
-			output.push({ term: "Finish", /*context: "UIText",*/ });
+			// We won't put these in the main file for now, later they should
+			// go into a separate file.
+			//output.push({ term: "You:", /*context: "UIText",*/ });
+			//output.push({ term: "Your response:", /*context: "UIText",*/ });
+			//// also in android/couch
+			//output.push({ term: "Continue", /*context: "UIText",*/ });
+			//output.push({ term: "Send", /*context: "UIText",*/ });
+			//output.push({ term: "End of dialogue", /*context: "UIText",*/ });
+			//output.push({ term: "Restart", /*context: "UIText",*/ });
+			//// only in Android client + Couch client
+			//output.push({ term: "Finish", /*context: "UIText",*/ });
 			output = JSON.stringify(output);
 		} else if (type == FILETYPE.WOOL) {
 			for (i = 0; i < content.length; i++)
