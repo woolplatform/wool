@@ -27,8 +27,6 @@ function NodeFileSystem() {
 	FileSystem.apply(this,["node"]);
 	this.fs = require('fs');
 	this.path = require('path');
-	console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-	console.log(this.fs);
 }
 NodeFileSystem.prototype = new FileSystem();
 
@@ -97,6 +95,108 @@ BrowserFileSystem.prototype.writeFile = function(path,data,callback) {}
 
 BrowserFileSystem.prototype.readdir = null;
 
-BrowserFileSystem.prototype.readdirtree = null;
+BrowserFileSystem.prototype.readdirtree = function(path,callback) {
+	callback(null, [
+		{
+			"id": "/file1",
+			"text": "file1",
+			"parent": "#",
+			"icon": "jstreefile",
+		},
+		{
+			"id": "/file2",
+			"text": "file2",
+			"parent": "#",
+			"icon": "jstreefile",
+		},
+		{
+			"id": "/dir1",
+			"text": "dir1",
+			"parent": "#",
+			"icon": "jstreedir",
+		},
+		{
+			"id": "/dir1/d1file1",
+			"text": "d1file1",
+			"parent": "/dir1",
+			"icon": "jstreefile",
+		},
+		{
+			"id": "/dir1/d1file2",
+			"text": "d1file2",
+			"parent": "/dir1",
+			"icon": "jstreefile",
+		},
+		{
+			"id": "/dir2",
+			"text": "dir2",
+			"parent": "#",
+			"icon": "jstreedir",
+		},
+		{
+			"id": "/dir2/d2file1",
+			"text": "d1file1",
+			"parent": "/dir2",
+			"icon": "jstreefile",
+		},
+		{
+			"id": "/dir2/d1file2",
+			"text": "d2file2",
+			"parent": "/dir2",
+			"icon": "jstreefile",
+		},
+		{
+			"id": "/dir2/dir2-2",
+			"text": "dir2-2",
+			"parent": "/dir2",
+			"icon": "jstreedir",
+		},
+		{
+			"id": "/dir2/dir2-2/d2-2file_aap",
+			"text": "d2-2file_aap",
+			"parent": "/dir2/dir2-2",
+			"icon": "jstreefile",
+		},
+		{
+			"id": "/dir2/dir2-2/d2-2file_noot",
+			"text": "d2-2file_noot",
+			"parent": "/dir2/dir2-2",
+			"icon": "jstreefile",
+		},
+	]);
+	/*callback(null, {
+		"file1": null,
+		"file2": null,
+		"dir1", [
+			["d1file1"],
+			["d1file2"],
+		]],
+		["dir2", [
+			["d2file1"],
+			["d2file2"],
+			["dir2-2", [
+				["d2-2fileajdlkajdlkakldjklad"],
+				["d2-2fileqwlqwjlkazx-lksjlaks"],
+			]],
+		]],
+	]);*/
+	/*
+	callback(null, [
+		["file1"],
+		["file2"],
+		["dir1", [
+			["d1file1"],
+			["d1file2"],
+		]],
+		["dir2", [
+			["d2file1"],
+			["d2file2"],
+			["dir2-2", [
+				["d2-2fileajdlkajdlkakldjklad"],
+				["d2-2fileqwlqwjlkazx-lksjlaks"],
+			]],
+		]],
+	]);*/
+}
 
 

@@ -1,23 +1,24 @@
 {
-	"name": "Wool",
-	"version": "1.0.0",
-	"main": "wooleditor/app/main.js",
-	"window": {
-		"toolbar": false,
-		"position": "center",
-		"width": 1280,
-		"height": 720,
-		"min_width": 800,
-		"min_height": 600,
-		"icon": "Yarn.png"
-	},
-	"scripts": {
-		"start": "electron ."
-	},
-	"devDependencies": {
-		"electron": "^6.0.12"
-	},
-	"dependencies": {
-		"split.js": "^1.5.11"
-	}
+  "name": "Wool",
+  "version": "1.0.0",
+  "main": "wooleditor/app/main.js",
+  "window": {
+    "toolbar": false,
+    "position": "center",
+    "width": 1280,
+    "height": 720,
+    "min_width": 800,
+    "min_height": 600,
+    "icon": "Yarn.png"
+  },
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^6.1.7"
+  },
+  "dependencies": {
+    "jstree": "^3.3.8",
+    "split.js": "^1.5.11"
+  }
 }

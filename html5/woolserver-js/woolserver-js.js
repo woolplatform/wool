@@ -187,10 +187,10 @@ function WoolNodeContext(vars) {
 	}
 }
 
-
 // links - can be used for editor to show arrows
 // texts - can be used for translation.  The node's text lines are trimmed,
 //         with \n added to each line. 
+//         XXX translation of strings with substitute vars is not supported yet!
 function WoolNode(dialogue,lines) {
 	console.log("Created node! Lines:"+lines.length);
 	var self=this;
@@ -289,7 +289,7 @@ function WoolNode(dialogue,lines) {
 	// 
 	// '[[' <replyText> '| <dialogueNodeID> ']]'
 	// '[[' <dialogueNodeID> ']]'   (autoforward)
-	var alllines="";
+	var alllines=""; // collect subsequent lines for translation
 	for (var i=0; i<this.body.length; i++) {
 		var line = this.body[i];
 		var linecommentchar = line.indexOf('//');
@@ -303,7 +303,7 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			if (alllines) {
 				// flush text in between conditionals
-				this.texts[alllines] = true;
+				this.texts[alllines.trim()] = true;
 				alllines=""
 			}
 			checkExpressionForBareIds(matches[2], i);
@@ -316,7 +316,7 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			if (alllines) {
 				// flush text in between conditionals
-				this.texts[alllines] = true;
+				this.texts[alllines.trim()] = true;
 				alllines=""
 			}
 			this.body[i] = "} else {";
@@ -326,7 +326,7 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			if (alllines) {
 				// flush text in between conditionals
-				this.texts[alllines] = true;
+				this.texts[alllines.trim()] = true;
 				alllines=""
 			}
 			this.body[i] = "}";
@@ -431,6 +431,7 @@ function WoolNode(dialogue,lines) {
 				var beforeText = matches[1];
 				var inputparams_str = matches[2];
 				var afterText = matches[3];
+				var textSegment = beforeText+"%1"+afterText;
 				var inputparams = parseKeyValList(inputparams_str);
 				if (inputparams === null) {
 					logError("error",i,"Cannot parse parameter string '"
@@ -445,8 +446,7 @@ function WoolNode(dialogue,lines) {
 					logError("error",i,"Input: value missing");
 					continue;
 				}
-				this.texts[beforeText] = true;
-				this.texts[afterText] = true;
+				this.texts[textSegment] = true;
 				this.body[i] = "C.addInputReply('"
 					+optid+"',"
 					+JSON.stringify(beforeText)+",'"
@@ -497,7 +497,7 @@ function WoolNode(dialogue,lines) {
 			continue;
 		}
 	}
-	if (alllines) this.texts[alllines] = true;
+	if (alllines) this.texts[alllines.trim()] = true;
 	console.log("Parsing function:");
 	console.log(this.body.join("\n"));
 	// turn code into function

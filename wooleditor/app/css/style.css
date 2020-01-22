@@ -712,3 +712,17 @@ a:hover { color: #000;}
 	line-height: 16px;
 }
 
+/* jstree */
+
+.jstreefile {
+	background-image: url('../../node_modules/jstree/dist/themes/default/32px.png');
+}
+
+.jstreedir {
+	background-image: url('../../node_modules/jstree/dist/themes/default/32px.png');
+}
+
+
+
+
+

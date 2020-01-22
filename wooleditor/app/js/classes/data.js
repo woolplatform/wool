@@ -11,7 +11,7 @@ var data =
 
 	// callback: function(element)
 	readFileGeneric: function(e, filename, element, callback) {
-		data.fs.readFile(filename,element[0].files[0],callback);
+		app.fs.readFile(filename,element[0].files[0],callback);
 	},
 
 
@@ -75,8 +75,7 @@ var data =
 			if (err) {
 				alert("Error reading file");
 			} else {
-				localStorage.setItem(app.LOCALSTORAGEPREFIX+"langDefs",
-					e.target.result);
+				localStorage.setItem(app.LOCALSTORAGEPREFIX+"langDefs",data);
 				alert("Loaded language definitions.");
 			}
 		});
