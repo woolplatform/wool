@@ -334,7 +334,7 @@ function WoolNode(dialogue,lines) {
 		}
 		var matches = /^<<set\s+[$](\w+)\s*[=]\s*(.+)\s*>>$/.exec(line);
 		if (matches) {
-			this.body[i] = "C.vars."+matches[1]+" = "+matches[2]+";";
+			this.body[i] = "C.vars."+matches[1]+" = "+rewriteExpression(matches[2])+";";
 			continue;
 		}
 		var matches = /^<<multimedia\s+type=image\s+name=([^\]]+)>>$/.exec(line);
