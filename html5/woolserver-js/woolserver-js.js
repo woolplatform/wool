@@ -332,6 +332,7 @@ function WoolNode(dialogue,lines) {
 			this.body[i] = "}";
 			continue;
 		}
+		// XXX duplicate code for <<set>> in reply statement
 		var matches = /^<<set\s+[$](\w+)\s*[=]\s*(.+)\s*>>$/.exec(line);
 		if (matches) {
 			this.body[i] = "C.vars."+matches[1]+" = "+rewriteExpression(matches[2])+";";
@@ -398,9 +399,10 @@ function WoolNode(dialogue,lines) {
 					var actfunc = "";
 					for (var j=0; j<actions.length; j++) {
 						var actionstr = "<<"+actions[j]+">>";
+						// XXX duplicate code for <<set>> above
 						var matches=/^<<set\s+[$](\w+)\s*[=]\s*(.+)\s*>>$/.exec(actionstr);
 						if (matches) {
-							actfunc += "C.vars."+matches[1]+" = "+matches[2]+";";
+							actfunc += "C.vars."+matches[1]+" = "+rewriteExpression(matches[2])+";";
 						} else {
 							matches=/^<<action\s+(.+)\s*>>$/.exec(actionstr);
 							if (matches) {
