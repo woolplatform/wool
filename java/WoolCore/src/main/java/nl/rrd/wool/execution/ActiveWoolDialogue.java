@@ -23,7 +23,6 @@
 package nl.rrd.wool.execution;
 
 import nl.rrd.wool.exception.WoolException;
-import nl.rrd.wool.execution.WoolVariableStore.VariableSource;
 import nl.rrd.wool.expressions.EvaluationException;
 import nl.rrd.wool.model.*;
 import nl.rrd.wool.model.command.WoolCommand;
@@ -173,7 +172,7 @@ public class ActiveWoolDialogue {
 		WoolReply selectedWoolReply = currentNode.getBody().findReplyById(
 				replyId);
 		Map<String,Object> variableMap = woolVariableStore.getModifiableMap(
-				VariableSource.CORE);
+				true);
 		for (WoolCommand command : selectedWoolReply.getCommands()) {
 			if (command instanceof WoolSetCommand) {
 				WoolSetCommand setCommand = (WoolSetCommand)command;
@@ -212,10 +211,8 @@ public class ActiveWoolDialogue {
 	}
 	
 	public void storeReplyInput(Map<String,?> variables) {
-		for (String varName : variables.keySet()) {
-			this.woolVariableStore.setValue(varName, variables.get(varName),
-					VariableSource.CORE);
-		}
+		Map<String,Object> map = woolVariableStore.getModifiableMap(true);
+		map.putAll(variables);
 	}
 
 	/**
@@ -273,8 +270,7 @@ public class ActiveWoolDialogue {
 		WoolNode processedNode = new WoolNode();
 		processedNode.setHeader(woolNode.getHeader());
 		WoolNodeBody processedBody = new WoolNodeBody();
-		Map<String,Object> variables = woolVariableStore.getModifiableMap(
-				VariableSource.CORE);
+		Map<String,Object> variables = woolVariableStore.getModifiableMap(true);
 		woolNode.getBody().execute(variables, true, processedBody);
 		processedNode.setBody(processedBody);
 		return processedNode;

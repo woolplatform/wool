@@ -22,11 +22,7 @@
 
 package nl.rrd.wool.execution;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -36,45 +32,46 @@ import java.util.Set;
  * 
  * @author Harm op den Akker
  */
-public class WoolVariableStore extends Observable {
+public class WoolVariableStore {
 	private Map<String,Object> variableMap = new HashMap<>();
-	
-	public enum VariableSource {
-		CORE, EXTERNAL;
-	}
-	
-	public class Variable {
-		private String name;
-		private Object value;
-		
-		public Variable(String name, Object value) {
-			this.name = name;
-			this.value = value;
-		}
-		
-		public String getVariableName() {
-			return name;
-		}
-		
-		public Object getVariableValue() {
-			return value;
+
+	private final List<OnChangeListener> onChangeListeners = new ArrayList<>();
+
+	public void addOnChangeListener(OnChangeListener listener) {
+		synchronized (onChangeListeners) {
+			onChangeListeners.add(listener);
 		}
 	}
-	
+
+	public void removeOnChangeListener(OnChangeListener listener) {
+		synchronized (onChangeListeners) {
+			onChangeListeners.remove(listener);
+		}
+	}
+
+	private void notifyOnChange(WoolVariableStoreChange... changes) {
+		List<OnChangeListener> ls;
+		synchronized (onChangeListeners) {
+			ls = new ArrayList<>(onChangeListeners);
+		}
+		for (OnChangeListener l : ls) {
+			l.onChange(this, Arrays.asList(changes));
+		}
+	}
+
 	/**
 	 * Stores the given {@code value} under the given {@code name} in this
 	 * {@link WoolVariableStore}.
 	 *
 	 * @param name the name of the variable to store.
 	 * @param value the value of the variable to store.
-	 * @param source the source (core or external)
+	 * @param notify true if listeners should be notified of the change, false
+	 * otherwise
 	 */
-	public void setValue(String name, Object value, VariableSource source) {
+	public void setValue(String name, Object value, boolean notify) {
 		variableMap.put(name,value);
-		if (source == VariableSource.CORE) {
-			setChanged();
-			notifyObservers(new Variable(name, value));
-		}
+		if (notify)
+			notifyOnChange(new WoolVariableStoreChange.Put(name, value));
 	}
 
 	/**
@@ -87,15 +84,15 @@ public class WoolVariableStore extends Observable {
 		return variableMap.get(name);
 	}
 	
-	public Map<String,Object> getModifiableMap(VariableSource source) {
-		return new SourceMap(source);
+	public Map<String,Object> getModifiableMap(boolean notifyOnChange) {
+		return new SourceMap(notifyOnChange);
 	}
 	
 	private class SourceMap implements Map<String,Object> {
-		private VariableSource source;
+		private boolean notifyOnChange;
 		
-		public SourceMap(VariableSource source) {
-			this.source = source;
+		public SourceMap(boolean notifyOnChange) {
+			this.notifyOnChange = notifyOnChange;
 		}
 
 		@Override
@@ -126,25 +123,32 @@ public class WoolVariableStore extends Observable {
 		@Override
 		public Object put(String key, Object value) {
 			Object result = get(key);
-			setValue(key, value, source);
+			setValue(key, value, notifyOnChange);
 			return result;
 		}
 
 		@Override
 		public Object remove(Object key) {
-			return variableMap.remove(key);
+			Object result = variableMap.remove(key);
+			if (notifyOnChange)
+				notifyOnChange(new WoolVariableStoreChange.Remove((String)key));
+			return result;
 		}
 
 		@Override
-		public void putAll(Map<? extends String, ? extends Object> m) {
-			for (String key : m.keySet()) {
-				setValue(key, m.get(key), source);
+		public void putAll(Map<? extends String, ?> m) {
+			variableMap.putAll(m);
+			if (notifyOnChange) {
+				Map<String,Object> notifyMap = new LinkedHashMap<>(m);
+				notifyOnChange(new WoolVariableStoreChange.Put(notifyMap));
 			}
 		}
 
 		@Override
 		public void clear() {
 			variableMap.clear();
+			if (notifyOnChange)
+				notifyOnChange(new WoolVariableStoreChange.Clear());
 		}
 
 		@Override
@@ -161,5 +165,10 @@ public class WoolVariableStore extends Observable {
 		public Set<Entry<String, Object>> entrySet() {
 			return variableMap.entrySet();
 		}
+	}
+
+	public interface OnChangeListener {
+		void onChange(WoolVariableStore varStore,
+				List<WoolVariableStoreChange> changes);
 	}
 }
