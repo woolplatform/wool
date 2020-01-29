@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'nl.rrd'
-version = '1.0.0'
+version = '1.0.1'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 archivesBaseName = 'wool-core'
@@ -34,14 +34,9 @@ jar {
 	}
 }
 
-task javadocJar(type: Jar) {
-	classifier = 'javadoc'
-	from javadoc
-}
-
-task sourcesJar(type: Jar) {
-	classifier = 'sources'
-	from sourceSets.main.allSource
+java {
+	withJavadocJar()
+	withSourcesJar()
 }
 
 distributions {
@@ -61,10 +56,6 @@ javadoc {
 		links 'https://docs.oracle.com/javase/10/docs/api/'
 		addStringOption('Xdoclint:all,-html', '-quiet')
 	}
-}
-
-artifacts {
-	archives javadocJar, sourcesJar
 }
 
 publishing {
