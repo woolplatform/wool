@@ -71,7 +71,7 @@ public class WoolActionCommand extends WoolAttributesCommand {
 	 * {@code value}.
 	 * @param type the type of this {@link WoolActionCommand} as a String, which should be
 	 *                one of "image", "video", or "generic".
-	 * @param value
+	 * @param value the value of this command
 	 */
 	public WoolActionCommand(String type, WoolVariableString value) {
 		this.type = type;
