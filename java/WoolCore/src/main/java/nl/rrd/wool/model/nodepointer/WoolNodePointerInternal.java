@@ -35,11 +35,20 @@ public class WoolNodePointerInternal extends WoolNodePointer {
 	public WoolNodePointerInternal (String nodeId) {
 		super(nodeId);
 	}
+
+	public WoolNodePointerInternal(WoolNodePointerInternal other) {
+		super(other);
+	}
 	
 	// ---------- Functions:
 	
 	@Override
 	public String toString() {
 		return this.nodeId;
+	}
+
+	@Override
+	public WoolNodePointerInternal clone() {
+		return new WoolNodePointerInternal(this);
 	}
 }

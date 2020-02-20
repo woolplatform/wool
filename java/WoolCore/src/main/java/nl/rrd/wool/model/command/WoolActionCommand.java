@@ -78,6 +78,15 @@ public class WoolActionCommand extends WoolAttributesCommand {
 		this.value = value;
 	}
 
+	public WoolActionCommand(WoolActionCommand other) {
+		this.type = other.type;
+		this.value = new WoolVariableString(other.value);
+		for (String key : other.parameters.keySet()) {
+			this.parameters.put(key, new WoolVariableString(
+					other.parameters.get(key)));
+		}
+	}
+
 	/**
 	 * Returns the type of this {@link WoolActionCommand} as a String.
 	 * @return the type of this {@link WoolActionCommand} as a String.
@@ -185,5 +194,10 @@ public class WoolActionCommand extends WoolAttributesCommand {
 			command.addParameter(attr, (WoolVariableString)token.getValue());
 		}
 		return command;
+	}
+
+	@Override
+	public WoolActionCommand clone() {
+		return new WoolActionCommand(this);
 	}
 }

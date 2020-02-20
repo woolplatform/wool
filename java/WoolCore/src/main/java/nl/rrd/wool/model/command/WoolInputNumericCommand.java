@@ -21,6 +21,13 @@ public class WoolInputNumericCommand extends WoolInputCommand {
 		this.variableName = variableName;
 	}
 
+	public WoolInputNumericCommand(WoolInputNumericCommand other) {
+		super(other);
+		this.variableName = other.variableName;
+		this.min = other.min;
+		this.max = other.max;
+	}
+
 	public String getVariableName() {
 		return variableName;
 	}
@@ -85,6 +92,11 @@ public class WoolInputNumericCommand extends WoolInputCommand {
 			result += " max=\"" + max + "\"";
 		result += ">>";
 		return result;
+	}
+
+	@Override
+	public WoolInputNumericCommand clone() {
+		return new WoolInputNumericCommand(this);
 	}
 
 	public static WoolInputCommand parse(WoolBodyToken cmdStartToken,

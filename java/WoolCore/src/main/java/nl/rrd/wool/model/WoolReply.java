@@ -85,6 +85,16 @@ public class WoolReply {
 		this.nodePointer = nodePointer;
 	}
 
+	public WoolReply(WoolReply other) {
+		this.replyId = other.replyId;
+		if (other.statement != null)
+			this.statement = new WoolNodeBody(other.statement);
+		this.nodePointer = other.nodePointer.clone();
+		for (WoolCommand cmd : other.commands) {
+			this.commands.add(cmd.clone());
+		}
+	}
+
 	/**
 	 * Returns the reply ID. The ID is unique within a node.
 	 * 

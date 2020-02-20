@@ -48,7 +48,7 @@ import nl.rrd.wool.model.WoolNodeHeader;
 import nl.rrd.wool.model.nodepointer.WoolNodePointerInternal;
 import nl.rrd.wool.parser.WoolNodeState.NodePointerToken;
 
-public class WoolParser {
+public class WoolParser implements AutoCloseable {
 	public static final String NODE_NAME_REGEX = "[A-Za-z0-9_-]+";
 	
 	private String dialogueName;
@@ -101,7 +101,8 @@ public class WoolParser {
 					new BufferedReader(reader));
 		}
 	}
-	
+
+	@Override
 	public void close() throws IOException {
 		reader.close();
 	}

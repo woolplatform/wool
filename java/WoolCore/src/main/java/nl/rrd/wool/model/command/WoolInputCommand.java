@@ -57,6 +57,10 @@ public abstract class WoolInputCommand extends WoolAttributesCommand {
 		this.type = type;
 	}
 
+	public WoolInputCommand(WoolInputCommand other) {
+		this.type = other.type;
+	}
+
 	public String getType() {
 		return type;
 	}

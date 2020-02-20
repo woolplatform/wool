@@ -39,6 +39,11 @@ public class WoolNode {
 		this.header = header;
 		this.body = body;
 	}
+
+	public WoolNode(WoolNode other) {
+		header = new WoolNodeHeader(other.header);
+		body = new WoolNodeBody(other.body);
+	}
 	
 	// ---------- Getters:
 	

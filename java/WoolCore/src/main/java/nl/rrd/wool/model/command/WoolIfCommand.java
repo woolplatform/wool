@@ -47,6 +47,17 @@ public class WoolIfCommand extends WoolExpressionCommand {
 	private List<Clause> ifClauses = new ArrayList<>();
 	private WoolNodeBody elseClause = null;
 
+	public WoolIfCommand() {
+	}
+
+	public WoolIfCommand(WoolIfCommand other) {
+		for (Clause ifClause : other.ifClauses) {
+			this.ifClauses.add(new Clause(ifClause));
+		}
+		if (other.elseClause != null)
+			this.elseClause = new WoolNodeBody(other.elseClause);
+	}
+
 	/**
 	 * Returns the if clauses. They should be processed from first to last.
 	 * There should be at least one clause. That is the "if" clause. Any
@@ -247,6 +258,11 @@ public class WoolIfCommand extends WoolExpressionCommand {
 		}
 	}
 
+	@Override
+	public WoolIfCommand clone() {
+		return new WoolIfCommand(this);
+	}
+
 	/**
 	 * This class models a clause of an if statement. That is the "if" clause
 	 * or an "elseif" clause.
@@ -266,6 +282,11 @@ public class WoolIfCommand extends WoolExpressionCommand {
 		public Clause(Expression expression, WoolNodeBody statement) {
 			this.expression = expression;
 			this.statement = statement;
+		}
+
+		public Clause(Clause other) {
+			this.expression = other.expression;
+			this.statement = new WoolNodeBody(other.statement);
 		}
 
 		/**

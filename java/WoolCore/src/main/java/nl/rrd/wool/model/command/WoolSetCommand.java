@@ -53,6 +53,10 @@ public class WoolSetCommand extends WoolExpressionCommand {
 		this.expression = expression;
 	}
 
+	public WoolSetCommand(WoolSetCommand other) {
+		this.expression = other.expression;
+	}
+
 	public AssignExpression getExpression() {
 		return expression;
 	}
@@ -89,6 +93,11 @@ public class WoolSetCommand extends WoolExpressionCommand {
 	@Override
 	public String toString() {
 		return "<<set " + expression + ">>";
+	}
+
+	@Override
+	public WoolSetCommand clone() {
+		return new WoolSetCommand(this);
 	}
 
 	public static WoolSetCommand parse(WoolBodyToken cmdStartToken,

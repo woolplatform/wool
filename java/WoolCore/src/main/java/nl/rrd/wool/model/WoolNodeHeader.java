@@ -22,7 +22,7 @@
 
 package nl.rrd.wool.model;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class WoolNodeHeader {
@@ -34,17 +34,23 @@ public class WoolNodeHeader {
 	// ---------- Constructors:
 	
 	public WoolNodeHeader() { 
-		optionalTags = new HashMap<String,String>();
+		optionalTags = new LinkedHashMap<>();
 	}
 	
 	public WoolNodeHeader(String title) {
 		this.title = title;
-		optionalTags = new HashMap<String,String>();
+		optionalTags = new LinkedHashMap<>();
 	}
 	
 	public WoolNodeHeader(String title, Map<String,String> optionalTags) {
 		this.title = title;
 		this.optionalTags = optionalTags;
+	}
+
+	public WoolNodeHeader(WoolNodeHeader other) {
+		this.title = other.title;
+		this.speaker = other.speaker;
+		this.optionalTags = new LinkedHashMap<>(other.optionalTags);
 	}
 	
 	// ---------- Getters:

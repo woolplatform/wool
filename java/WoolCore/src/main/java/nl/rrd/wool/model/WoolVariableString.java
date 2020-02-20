@@ -44,11 +44,17 @@ public class WoolVariableString {
 	
 	public WoolVariableString() {
 	}
-	
+
 	public WoolVariableString(String text) {
 		segments.add(new TextSegment(text));
 	}
-	
+
+	public WoolVariableString(WoolVariableString other) {
+		for (Segment segment : other.segments) {
+			this.segments.add(segment.clone());
+		}
+	}
+
 	/**
 	 * Returns the segments as an unmodifiable list.
 	 * 
@@ -216,7 +222,9 @@ public class WoolVariableString {
 		return result.toString();
 	}
 
-	public static abstract class Segment {
+	public static abstract class Segment implements Cloneable {
+		@Override
+		public abstract Segment clone();
 	}
 	
 	public static class TextSegment extends Segment {
@@ -224,6 +232,10 @@ public class WoolVariableString {
 		
 		public TextSegment(String text) {
 			this.text = text;
+		}
+
+		public TextSegment(TextSegment other) {
+			this.text = other.text;
 		}
 
 		public String getText() {
@@ -267,13 +279,22 @@ public class WoolVariableString {
 				builder.append(input.substring(start));
 			return builder.toString();
 		}
+
+		@Override
+		public TextSegment clone() {
+			return new TextSegment(this);
+		}
 	}
 	
 	public static class VariableSegment extends Segment {
 		private String variableName;
-		
+
 		public VariableSegment(String variableName) {
 			this.variableName = variableName;
+		}
+
+		public VariableSegment(VariableSegment other) {
+			this.variableName = other.variableName;
 		}
 
 		public String getVariableName() {
@@ -287,6 +308,11 @@ public class WoolVariableString {
 		@Override
 		public String toString() {
 			return "$" + variableName;
+		}
+
+		@Override
+		public VariableSegment clone() {
+			return new VariableSegment(this);
 		}
 	}
 }

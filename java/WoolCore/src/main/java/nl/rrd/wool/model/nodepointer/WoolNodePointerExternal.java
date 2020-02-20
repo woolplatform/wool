@@ -39,6 +39,11 @@ public class WoolNodePointerExternal extends WoolNodePointer {
 		super(nodeId);
 		this.dialogueId = dialogueId;
 	}
+
+	public WoolNodePointerExternal(WoolNodePointerExternal other) {
+		super(other);
+		this.dialogueId = other.dialogueId;
+	}
 	
 	// ---------- Getters:
 
@@ -72,5 +77,10 @@ public class WoolNodePointerExternal extends WoolNodePointer {
 		if (!dialogueId.equals(other.dialogueId))
 			return false;
 		return true;
+	}
+
+	@Override
+	public WoolNodePointerExternal clone() {
+		return new WoolNodePointerExternal(this);
 	}
 }

@@ -29,6 +29,18 @@ public class WoolInputTimeCommand extends WoolInputCommand {
 		this.variableName = variableName;
 	}
 
+	public WoolInputTimeCommand(WoolInputTimeCommand other) {
+		super(other);
+		this.variableName = other.variableName;
+		this.granularityMinutes = other.granularityMinutes;
+		if (other.startTime != null)
+			this.startTime = new WoolVariableString(other.startTime);
+		if (other.minTime != null)
+			this.minTime = new WoolVariableString(other.minTime);
+		if (other.maxTime != null)
+			this.maxTime = new WoolVariableString(other.maxTime);
+	}
+
 	public String getVariableName() {
 		return variableName;
 	}
@@ -121,6 +133,11 @@ public class WoolInputTimeCommand extends WoolInputCommand {
 			processedCmd.maxTime = evaluateTime(maxTime.evaluate(variables));
 		}
 		processedBody.addSegment(new WoolNodeBody.CommandSegment(processedCmd));
+	}
+
+	@Override
+	public WoolInputTimeCommand clone() {
+		return new WoolInputTimeCommand(this);
 	}
 
 	private static WoolVariableString evaluateTime(String text)

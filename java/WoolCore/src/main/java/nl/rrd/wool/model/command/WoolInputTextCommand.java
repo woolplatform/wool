@@ -21,6 +21,13 @@ public class WoolInputTextCommand extends WoolInputCommand {
 		this.variableName = variableName;
 	}
 
+	public WoolInputTextCommand(WoolInputTextCommand other) {
+		super(other);
+		this.variableName = other.variableName;
+		this.min = other.min;
+		this.max = other.max;
+	}
+
 	public String getVariableName() {
 		return variableName;
 	}
@@ -85,6 +92,11 @@ public class WoolInputTextCommand extends WoolInputCommand {
 			result += " max=\"" + max + "\"";
 		result += ">>";
 		return result;
+	}
+
+	@Override
+	public WoolInputTextCommand clone() {
+		return new WoolInputTextCommand(this);
 	}
 
 	public static WoolInputCommand parse(WoolBodyToken cmdStartToken,

@@ -18,6 +18,13 @@ public class WoolInputSetCommand extends WoolInputCommand {
 		super(TYPE_SET);
 	}
 
+	public WoolInputSetCommand(WoolInputSetCommand other) {
+		super(other);
+		for (Option option : other.options) {
+			this.options.add(new Option(option));
+		}
+	}
+
 	public List<Option> getOptions() {
 		return options;
 	}
@@ -95,6 +102,11 @@ public class WoolInputSetCommand extends WoolInputCommand {
 		return builder.toString();
 	}
 
+	@Override
+	public WoolInputSetCommand clone() {
+		return new WoolInputSetCommand(this);
+	}
+
 	public static WoolInputSetCommand parse(WoolBodyToken cmdStartToken,
 			Map<String,WoolBodyToken> attrs) throws LineNumberParseException {
 		WoolInputSetCommand result = new WoolInputSetCommand();
@@ -130,6 +142,12 @@ public class WoolInputSetCommand extends WoolInputCommand {
 		private WoolVariableString text = null;
 
 		public Option() {
+		}
+
+		public Option(Option other) {
+			this.variableName = other.variableName;
+			if (other.text != null)
+				this.text = new WoolVariableString(other.text);
 		}
 
 		public String getVariableName() {

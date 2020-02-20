@@ -31,7 +31,7 @@ import nl.rrd.wool.model.WoolNode;
  * @see WoolNodePointerInternal
  * @see WoolNodePointerExternal
  */
-public abstract class WoolNodePointer {
+public abstract class WoolNodePointer implements Cloneable {
 	
 	protected String nodeId;
 
@@ -44,6 +44,10 @@ public abstract class WoolNodePointer {
 	 */
 	public WoolNodePointer(String nodeId) {
 		this.nodeId = nodeId;
+	}
+
+	public WoolNodePointer(WoolNodePointer other) {
+		this.nodeId = other.nodeId;
 	}
 	
 	// ---------- Getters:
@@ -84,4 +88,7 @@ public abstract class WoolNodePointer {
 			return false;
 		return true;
 	}
+
+	@Override
+	public abstract WoolNodePointer clone();
 }

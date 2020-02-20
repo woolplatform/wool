@@ -86,7 +86,19 @@ import java.util.*;
 public class WoolNodeBody {
 	private List<Segment> segments = new ArrayList<>();
 	private List<WoolReply> replies = new ArrayList<>();
-	
+
+	public WoolNodeBody() {
+	}
+
+	public WoolNodeBody(WoolNodeBody other) {
+		for (Segment segment : other.segments) {
+			this.segments.add(segment.clone());
+		}
+		for (WoolReply reply : other.replies) {
+			this.replies.add(new WoolReply(reply));
+		}
+	}
+
 	/**
 	 * Returns the segments as an unmodifiable list.
 	 * 
@@ -114,7 +126,11 @@ public class WoolNodeBody {
 			segments.add(segment);
 		}
 	}
-	
+
+	public void clearSegments() {
+		segments.clear();
+	}
+
 	/**
 	 * Normalizes whitespace in the text segments. It removes empty lines and
 	 * makes sure that lines end with "\n". Within each line, it trims
@@ -399,7 +415,7 @@ public class WoolNodeBody {
 		return builder.toString();
 	}
 
-	public static abstract class Segment {
+	public static abstract class Segment implements Cloneable {
 		/**
 		 * Tries to find a reply with the specified ID within this segment. If
 		 * no such reply is found, this method returns null.
@@ -424,6 +440,14 @@ public class WoolNodeBody {
 		 * @param varNames the set to which the variable names are added
 		 */
 		public abstract void getWriteVariableNames(Set<String> varNames);
+
+		/**
+		 * Returns a deep copy of this segment.
+		 *
+		 * @return a deep copy of this segment
+		 */
+		@Override
+		public abstract Segment clone();
 	}
 	
 	public static class TextSegment extends Segment {
@@ -431,6 +455,10 @@ public class WoolNodeBody {
 		
 		public TextSegment(WoolVariableString text) {
 			this.text = text;
+		}
+
+		public TextSegment(TextSegment other) {
+			this.text = new WoolVariableString(other.text);
 		}
 
 		public WoolVariableString getText() {
@@ -459,6 +487,11 @@ public class WoolNodeBody {
 		public String toString() {
 			return text.toString();
 		}
+
+		@Override
+		public TextSegment clone() {
+			return new TextSegment(this);
+		}
 	}
 	
 	public static class CommandSegment extends Segment {
@@ -466,6 +499,10 @@ public class WoolNodeBody {
 		
 		public CommandSegment(WoolCommand command) {
 			this.command = command;
+		}
+
+		public CommandSegment(CommandSegment other) {
+			this.command = other.command.clone();
 		}
 
 		public WoolCommand getCommand() {
@@ -490,6 +527,11 @@ public class WoolNodeBody {
 		@Override
 		public String toString() {
 			return command.toString();
+		}
+
+		@Override
+		public CommandSegment clone() {
+			return new CommandSegment(this);
 		}
 	}
 }

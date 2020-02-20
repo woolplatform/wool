@@ -36,7 +36,7 @@ import nl.rrd.wool.model.nodepointer.WoolNodePointer;
  * 
  * @author Dennis Hofs (RRD)
  */
-public abstract class WoolCommand {
+public abstract class WoolCommand implements Cloneable {
 
 	/**
 	 * Tries to find a reply with the specified ID within this command. If no
@@ -84,4 +84,12 @@ public abstract class WoolCommand {
 	 */
 	public abstract void executeBodyCommand(Map<String,Object> variables,
 			WoolNodeBody processedBody) throws EvaluationException;
+
+	/**
+	 * Returns a deep copy of this command.
+	 *
+	 * @return a deep copy of this command
+	 */
+	@Override
+	public abstract WoolCommand clone();
 }
