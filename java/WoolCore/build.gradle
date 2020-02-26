@@ -109,6 +109,12 @@ publishing {
 	}
 	repositories {
 		maven {
+			def ossrhUsername = project.properties.ossrhUsername
+			if (!ossrhUsername)
+				ossrhUsername = ''
+			def ossrhPassword = project.properties.ossrhPassword
+			if (!ossrhPassword)
+				ossrhPassword = ''
 			def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 			def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
 			url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
