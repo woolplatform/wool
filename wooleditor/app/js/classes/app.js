@@ -797,6 +797,11 @@ var App = function(name, version, filename) {
 	}
 
 	this.updateSearch = function() {
+		// Start node is checked after saveNode is finished, this is because
+		// node.title is not updated immediately
+		if (self.addStartNodeIfMissing()) {
+			alert("Missing Start node added.");
+		}
 		var search = self.$searchField.val().toLowerCase();
 		var speaker= $(".search-speaker input").is(':checked');
 		var title = $(".search-title input").is(':checked');

@@ -257,7 +257,7 @@
 		<!-- start it all up! -->
 		<script type="text/javascript">
 			var filePath = localStorage.getItem(App.LOCALSTORAGEPREFIX+"path");
-			if (!filePath) filePath = "file.wool";
+			if (!filePath) filePath = "unnamed";
 			var app = new App("Wool Editor", "1.3",filePath);
 			app.run();
 			if (app.isNwjs) {
