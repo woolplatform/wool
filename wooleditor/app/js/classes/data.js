@@ -6,9 +6,6 @@ var data =
 	editingType: ko.observable(""),
 	editingFolder: ko.observable(null),
 
-	filename: "file",
-
-
 	// callback: function(element)
 	readFileGeneric: function(e, filename, element, callback) {
 		app.fs.readFile(filename,element[0].files[0],callback);
@@ -16,11 +13,6 @@ var data =
 
 
 	readFile: function(e, filename, clearNodes, element) {
-		console.log(filename);
-		var filebase = filename.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
-		if (filebase) {
-			data.filename = filebase[1];
-		}
 		app.fs.readFile(filename,element[0].files[0],
 			function(error,contents) {
 				if (error) {
@@ -65,6 +57,20 @@ var data =
 
 	openFile: function(e, filename, element) {
 		data.readFile(e, filename, true, element);
+		// set filename
+		var dfilename = filename;
+		if (app.fs.fstype == "browser") {
+			// remove meaninless path
+			dfilename = dfilename.split("\\");
+			dfilename = dfilename[dfilename.length-1];
+		}
+		// remove extension
+		var filebase = filename.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
+		if (filebase) {
+			dfilename = filebase[1];
+		}
+		app.filename(dfilename);
+		localStorage.setItem(App.LOCALSTORAGEPREFIX+"path",dfilename);
 
 		app.resetUIState();
 		app.refreshWindowTitle(filename);
@@ -75,7 +81,7 @@ var data =
 			if (err) {
 				alert("Error reading file");
 			} else {
-				localStorage.setItem(app.LOCALSTORAGEPREFIX+"langDefs",data);
+				localStorage.setItem(App.LOCALSTORAGEPREFIX+"langDefs",data);
 				alert("Loaded language definitions.");
 			}
 		});
@@ -352,6 +358,9 @@ var data =
 		// TODO maintain node position in different way
 		setTimeout(data.saveToBuffer,1000);
 		if (warnings.length) alert(warnings.join("\n"));
+		if (app.addStartNodeIfMissing()) {
+			alert("Added missing Start node.");
+		}
 	},
 
 	getSaveData: function(type,node) {
@@ -504,7 +513,7 @@ var data =
 	},
 
 	saveFileDialog: function(dialog, type, content) {
-		var file = data.filename + "." + type;
+		var file = app.filename() + "." + type;
 
 		if (app.fs.fstype == "node") {
 			dialog.attr("nwsaveas", file);
@@ -536,13 +545,13 @@ var data =
 	saveToBuffer: function(dialog, type, content) {
 		var content = data.getSaveData(FILETYPE.WOOL);
 		if (localStorage) {
-			localStorage.setItem(app.LOCALSTORAGEPREFIX+"buffer",content);
+			localStorage.setItem(App.LOCALSTORAGEPREFIX+"buffer",content);
 		}
 	},
 	// returns true = data loaded
 	loadFromBuffer: function(dialog, type, content) {
 		if (localStorage) {
-			var loaddata=localStorage.getItem(app.LOCALSTORAGEPREFIX+"buffer");
+			var loaddata=localStorage.getItem(App.LOCALSTORAGEPREFIX+"buffer");
 			if (loaddata) {
 				data.loadData(loaddata, FILETYPE.WOOL, /*clearNodes*/true,
 				true);
@@ -554,10 +563,12 @@ var data =
 
 	tryClearData: function() {
 		if (!confirm("Clear all nodes?")) return;
+		app.filename("unnamed");
+		localStorage.setItem(App.LOCALSTORAGEPREFIX+"path","unnamed");
 		app.resetUIState();
 		app.nodes.removeAll();
 		app.clearLangDefs();
-		app.newNode().title("Start");
+		app.addStartNodeIfMissing();
 		app.updateArrows();
 	},
 

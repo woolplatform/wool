@@ -1,11 +1,11 @@
-var App = function(name, version)
-{
+var App = function(name, version, filename) {
 	var self = this;
 
 	// self
 	this.instance = this;
 	this.name = ko.observable(name);
 	this.version = ko.observable(version);
+	this.filename = ko.observable(filename);
 	this.editing = ko.observable(null);
 	this.editor = null; // ace editor object
 	this.deleting = ko.observable(null);
@@ -34,7 +34,6 @@ var App = function(name, version)
 
 	this.UPDATE_ARROWS_THROTTLE_MS = 50;
 
-	this.LOCALSTORAGEPREFIX="wool_js_";
 
 	//this.editingPath = ko.observable(null);
 
@@ -51,6 +50,23 @@ var App = function(name, version)
 		this.fs = new BrowserFileSystem();
 	}
 
+	// returns: true if start node was added
+	this.addStartNodeIfMissing = function() {
+		// check if Start node present
+		var nodes = self.nodes();
+		var foundStart=false;
+		for (var i in nodes) {
+			if (nodes[i].title()=="Start") {
+				foundStart=true;
+				break;
+			}
+		}
+		if (!foundStart) {
+			self.newNode().title("Start");
+			return true;
+		}
+		return false;
+	}
 	this.run = function() {
 		//TODO(Al):
 		// delete mutliple nodes at the same time
@@ -72,9 +88,11 @@ var App = function(name, version)
 
 		self.canvas = $(".arrows")[0];
 		self.context = self.canvas.getContext('2d');
-		// XXX load old defs here
-		if (!data.loadFromBuffer()) {
-			self.newNode().title("Start");
+		// load old defs here
+		var dataloaded = data.loadFromBuffer();
+		var startadded = self.addStartNodeIfMissing();
+		if (dataloaded && startadded) {
+			alert("Missing Start node added.");
 		}
 
 		self.refreshWindowTitle(null);
@@ -501,7 +519,7 @@ var App = function(name, version)
 	} // this.run()
 
 	this.clearLangDefs = function() {
-		localStorage.removeItem(app.LOCALSTORAGEPREFIX+"langDefs");
+		localStorage.removeItem(App.LOCALSTORAGEPREFIX+"langDefs");
 	}
 
 	this.getNodesConnectedTo = function(toNode)
@@ -550,7 +568,7 @@ var App = function(name, version)
 
 	this.refreshWindowTitle = function(editingPath) {
 		if (!editingPath) {
-			editingPath = localStorage.getItem(app.LOCALSTORAGEPREFIX+"path");
+			editingPath = localStorage.getItem(App.LOCALSTORAGEPREFIX+"path");
 			if (!editingPath) return;
 		}
 		var gui = null;//require('nw.gui');
@@ -562,7 +580,7 @@ var App = function(name, version)
 
 		win.title = "Wool - [" + editingPath + "] ";// + (self.dirty?"*":"");
 		// XXX it's complicated
-		//localStorage.setItem(app.LOCALSTORAGEPREFIX+"path",editingPath);
+		//localStorage.setItem(App.LOCALSTORAGEPREFIX+"path",editingPath);
 	}
 
 	this.recordNodeAction = function(action, node)
@@ -1370,7 +1388,7 @@ var App = function(name, version)
 		var content = data.getSaveData(FILETYPE.WOOL);
 		window.name = JSON.stringify({
 			sourceCode: content,
-			langDefs: localStorage.getItem(self.LOCALSTORAGEPREFIX+"langDefs"),
+			langDefs: localStorage.getItem(App.LOCALSTORAGEPREFIX+"langDefs"),
 		});
 		//var elem = document.getElementById("woolclient-popup");
 		//elem.style.display="block";
@@ -1401,7 +1419,7 @@ var App = function(name, version)
 	}
 
 	this.loadUIState = function() {
-		var uistate = localStorage.getItem(self.LOCALSTORAGEPREFIX+"uistate");
+		var uistate = localStorage.getItem(App.LOCALSTORAGEPREFIX+"uistate");
 		if (uistate) {
 			console.log("Loaded uistate:");
 			console.log(uistate);
@@ -1420,10 +1438,14 @@ var App = function(name, version)
 		};
 		console.log("Storing ui state:");
 		console.log(uistate);
-		localStorage.setItem(app.LOCALSTORAGEPREFIX+"uistate",
+		localStorage.setItem(App.LOCALSTORAGEPREFIX+"uistate",
 			JSON.stringify(uistate));
 	}
 
 	this.loadUIState();
 
 }
+
+
+App.LOCALSTORAGEPREFIX="wool_js_";
+
