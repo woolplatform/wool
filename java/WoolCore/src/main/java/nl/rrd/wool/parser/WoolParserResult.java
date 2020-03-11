@@ -28,27 +28,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A {@link ReadResult} object contains the results of parsing a .wool file, including
+ * A {@link WoolParserResult} object contains the results of parsing a .wool file, including
  * the resulting {@link WoolDialogue} and a list of {@link ParseException}s.
  *
  * @author Dennis Hofs
  * @author Harm op den Akker
  */
-public class ReadResult {
+public class WoolParserResult {
 
     private WoolDialogue dialogue;
     private List<ParseException> parseErrors;
 
     /**
-     * Creates an instance of an empty {@link ReadResult} object.
+     * Creates an instance of an empty {@link WoolParserResult} object.
      */
-    public ReadResult() {
+    public WoolParserResult() {
         parseErrors = new ArrayList<ParseException>();
     }
 
     /**
-     * Returns the {@link WoolDialogue} that is part of this {@link ReadResult}.
-     * @return the {@link WoolDialogue} that is part of this {@link ReadResult}.
+     * Returns the {@link WoolDialogue} that is part of this {@link WoolParserResult}.
+     * @return the {@link WoolDialogue} that is part of this {@link WoolParserResult}.
      */
     public WoolDialogue getDialogue() {
         return dialogue;
@@ -64,8 +64,8 @@ public class ReadResult {
     }
 
     /**
-     * Sets the {@link WoolDialogue} that is part of this {@link ReadResult}.
-     * @param dialogue the {@link WoolDialogue} that is part of this {@link ReadResult}.
+     * Sets the {@link WoolDialogue} that is part of this {@link WoolParserResult}.
+     * @param dialogue the {@link WoolDialogue} that is part of this {@link WoolParserResult}.
      */
     public void setDialogue(WoolDialogue dialogue) {
         this.dialogue = dialogue;

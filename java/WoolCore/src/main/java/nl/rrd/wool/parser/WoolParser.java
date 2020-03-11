@@ -115,8 +115,8 @@ public class WoolParser implements AutoCloseable {
 	 * @return the read result
 	 * @throws IOException if a reading error occurs
 	 */
-	public ReadResult readDialogue() throws IOException {
-		ReadResult result = new ReadResult();
+	public WoolParserResult readDialogue() throws IOException {
+		WoolParserResult result = new WoolParserResult();
 		if (!dialogueName.matches("[A-Za-z0-9_-]+")) {
 			result.getParseErrors().add(new ParseException(
 					"Invalid dialogue name: " + dialogueName));
@@ -464,7 +464,7 @@ public class WoolParser implements AutoCloseable {
 			System.exit(1);
 			return;
 		}
-		ReadResult readResult;
+		WoolParserResult readResult;
 		try {
 			WoolParser parser = new WoolParser(file);
 			readResult = parser.readDialogue();

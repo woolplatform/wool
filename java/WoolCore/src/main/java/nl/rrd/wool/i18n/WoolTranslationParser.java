@@ -62,90 +62,113 @@ import java.util.Map;
  * @author Dennis Hofs (RRD)
  */
 public class WoolTranslationParser {
-	public static Map<WoolTranslatable,WoolTranslatable> parse(URL url)
-			throws ParseException, IOException {
+	public static WoolTranslationParserResult parse(URL url)
+			throws IOException {
 		try (InputStream input = url.openStream()) {
 			return parse(input);
 		}
 	}
 
-	public static Map<WoolTranslatable,WoolTranslatable> parse(File file)
-			throws ParseException, IOException {
+	public static WoolTranslationParserResult parse(File file)
+			throws IOException {
 		try (InputStream input = new FileInputStream(file)) {
 			return parse(input);
 		}
 	}
 
-	public static Map<WoolTranslatable,WoolTranslatable> parse(
-			InputStream input) throws ParseException, IOException{
+	public static WoolTranslationParserResult parse(InputStream input)
+			throws IOException{
 		return parse(new InputStreamReader(input, StandardCharsets.UTF_8));
 	}
 
-	public static Map<WoolTranslatable,WoolTranslatable> parse(Reader reader)
-			throws ParseException, IOException {
+	public static WoolTranslationParserResult parse(Reader reader)
+			throws IOException {
+		WoolTranslationParserResult result = new WoolTranslationParserResult();
 		Map<WoolTranslatable, WoolTranslatable> translations =
 				new LinkedHashMap<>();
 		String json = FileUtils.readFileString(reader);
-		if (json.trim().isEmpty())
-			throw new ParseException("Empty translation file");
-		Map<String,?> map = JsonMapper.parse(json,
-				new TypeReference<Map<String,?>>() {});
-		parse(map, translations);
-		return translations;
+		if (json.trim().isEmpty()) {
+			result.getWarnings().add("Empty translation file");
+			result.setTranslations(translations);
+			return result;
+		}
+		Map<String,?> map;
+		try {
+			map = JsonMapper.parse(json, new TypeReference<Map<String, ?>>() {});
+		} catch (ParseException ex) {
+			result.getParseErrors().add(ex);
+			return result;
+		}
+		parse(map, translations, result);
+		if (result.getParseErrors().isEmpty())
+			result.setTranslations(translations);
+		return result;
 	}
 
 	private static void parse(Map<String,?> map,
-			Map<WoolTranslatable,WoolTranslatable> translations)
-			throws ParseException {
+			Map<WoolTranslatable,WoolTranslatable> translations,
+			WoolTranslationParserResult parseResult) {
 		for (String key : map.keySet()) {
 			Object value = map.get(key);
 			if (value instanceof String) {
-				parseTranslatable(key, (String)value, translations);
+				parseTranslatable(key, (String)value, translations,
+						parseResult);
 			} else {
-				parseContextMap(key, value, translations);
+				parseContextMap(key, value, translations, parseResult);
 			}
 		}
 	}
 
 	private static void parseTranslatable(String key, String value,
-			Map<WoolTranslatable,WoolTranslatable> translations)
-			throws ParseException {
-		WoolTranslatable transKey;
+			Map<WoolTranslatable,WoolTranslatable> translations,
+			WoolTranslationParserResult parseResult) {
+		boolean success = true;
+		WoolTranslatable transKey = null;
 		try {
 			transKey = parseTranslationString(key);
 		} catch (ParseException ex) {
-			throw new ParseException(String.format(
+			parseResult.getParseErrors().add(new ParseException(String.format(
 					"Failed to parse translation key \"%s\"", key) + ": " +
-					ex.getMessage(), ex);
+					ex.getMessage(), ex));
+			success = false;
 		}
-		WoolTranslatable transValue;
+		if (transKey != null && translations.containsKey(transKey)) {
+			parseResult.getParseErrors().add(new ParseException(
+					"Found duplicate translation key: " + transKey));
+			success = false;
+		}
+		if (value.trim().isEmpty()) {
+			parseResult.getWarnings().add(String.format(
+					"Empty translation value for key \"%s\"", key));
+			return;
+		}
+		WoolTranslatable transValue = null;
 		try {
 			transValue = parseTranslationString(value);
 		} catch (ParseException ex) {
-			throw new ParseException(String.format(
+			parseResult.getParseErrors().add(new ParseException(String.format(
 					"Failed to parse translation value for key \"%s\"", key) +
-					": " + value + ": " + ex.getMessage(), ex);
+					": " + value + ": " + ex.getMessage(), ex));
+			success = false;
 		}
-		if (translations.containsKey(transKey)) {
-			throw new ParseException("Found duplicate translation key: " +
-					transKey);
-		}
-		translations.put(transKey, transValue);
+		if (success)
+			translations.put(transKey, transValue);
 	}
 
 	private static void parseContextMap(String key, Object value,
-			Map<WoolTranslatable,WoolTranslatable> translations)
-			throws ParseException {
+			Map<WoolTranslatable,WoolTranslatable> translations,
+			WoolTranslationParserResult parseResult) {
 		Map<String,?> map;
 		try {
 			map = JsonMapper.convert(value,
 					new TypeReference<Map<String, ?>>() {});
-		} catch (IllegalArgumentException ex) {
-			throw new ParseException(
+		} catch (ParseException ex) {
+			parseResult.getParseErrors().add(new ParseException(
 					"Failed to parse translation map after context key \"" +
-					key + "\": " + ex.getMessage(), ex);
+					key + "\": " + ex.getMessage(), ex));
+			return;
 		}
-		parse(map, translations);
+		parse(map, translations, parseResult);
 	}
 
 	private static WoolTranslatable parseTranslationString(String translation)

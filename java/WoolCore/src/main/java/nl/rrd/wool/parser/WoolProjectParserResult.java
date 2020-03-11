@@ -35,10 +35,11 @@ import java.util.Map;
  *
  * @author Dennis Hofs (RRD)
  */
-public class WoolProjectReadResult {
+public class WoolProjectParserResult {
 	private WoolProject project = null;
 	private Map<String,List<ParseException>> parseErrors =
 			new LinkedHashMap<>();
+	private Map<String,List<String>> warnings = new LinkedHashMap<>();
 
 	/**
 	 * Returns the project if parsing succeeded. Otherwise it returns null.
@@ -76,5 +77,25 @@ public class WoolProjectReadResult {
 	 */
 	public void setParseErrors(Map<String,List<ParseException>> parseErrors) {
 		this.parseErrors = parseErrors;
+	}
+
+	/**
+	 * Returns the warnings. They keys are the paths to files with warnings. A
+	 * value should be a list with 1 or more warnings.
+	 *
+	 * @return the warnings
+	 */
+	public Map<String, List<String>> getWarnings() {
+		return warnings;
+	}
+
+	/**
+	 * Sets the warnings. They keys are the paths to files with warnings. A
+	 * value should be a list with 1 or more warnings.
+	 *
+	 * @param warnings the warnings
+	 */
+	public void setWarnings(Map<String, List<String>> warnings) {
+		this.warnings = warnings;
 	}
 }

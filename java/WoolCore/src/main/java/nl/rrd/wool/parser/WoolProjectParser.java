@@ -24,10 +24,7 @@ package nl.rrd.wool.parser;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import nl.rrd.wool.exception.ParseException;
-import nl.rrd.wool.i18n.I18nLanguageFinder;
-import nl.rrd.wool.i18n.WoolTranslatable;
-import nl.rrd.wool.i18n.WoolTranslationParser;
-import nl.rrd.wool.i18n.WoolTranslator;
+import nl.rrd.wool.i18n.*;
 import nl.rrd.wool.json.JsonMapper;
 import nl.rrd.wool.model.WoolDialogue;
 import nl.rrd.wool.model.WoolDialogueDescription;
@@ -87,8 +84,8 @@ public class WoolProjectParser {
 		this.resourcePath = resourcePath;
 	}
 
-	public WoolProjectReadResult parse() throws IOException {
-		WoolProjectReadResult result = new WoolProjectReadResult();
+	public WoolProjectParserResult parse() throws IOException {
+		WoolProjectParserResult result = new WoolProjectParserResult();
 		parseFiles(result);
 		if (!result.getParseErrors().isEmpty())
 			return result;
@@ -112,7 +109,7 @@ public class WoolProjectParser {
 	 * @param readResult the read result
 	 * @throws IOException if a reading error occurs
 	 */
-	private void parseFiles(WoolProjectReadResult readResult)
+	private void parseFiles(WoolProjectParserResult readResult)
 			throws IOException {
 		try {
 			doParseFiles(readResult);
@@ -122,7 +119,7 @@ public class WoolProjectParser {
 		}
 	}
 
-	private void doParseFiles(WoolProjectReadResult readResult) throws IOException {
+	private void doParseFiles(WoolProjectParserResult readResult) throws IOException {
 		try {
 			parseProjectFile();
 		} catch (ParseException ex) {
@@ -133,7 +130,7 @@ public class WoolProjectParser {
 		Set<WoolDialogueDescription> dlgDescrSet = new HashSet<>();
 		for (WoolFileDescription descr : dialogueFiles) {
 			dlgDescrSet.add(fileDescriptionToDialogueDescription(descr));
-			ReadResult dlgReadResult = parseDialogueFile(descr);
+			WoolParserResult dlgReadResult = parseDialogueFile(descr);
 			if (dlgReadResult.getParseErrors().isEmpty()) {
 				dialogues.put(descr, dlgReadResult.getDialogue());
 			} else {
@@ -150,16 +147,23 @@ public class WoolProjectParser {
 						descr));
 				continue;
 			}
-			try {
-				translations.put(descr, parseTranslationFile(descr));
-			} catch (ParseException ex) {
-				getParseErrors(readResult, descr).add(ex);
+			WoolTranslationParserResult transParseResult = parseTranslationFile(
+					descr);
+			if (!transParseResult.getParseErrors().isEmpty()) {
+				getParseErrors(readResult, descr).addAll(
+						transParseResult.getParseErrors());
 			}
+			if (!transParseResult.getWarnings().isEmpty()) {
+				getWarnings(readResult, descr).addAll(
+						transParseResult.getWarnings());
+			}
+			if (transParseResult.getParseErrors().isEmpty())
+				translations.put(descr, transParseResult.getTranslations());
 		}
 	}
 
 	private List<ParseException> getParseErrors(
-			WoolProjectReadResult readResult, String resourcePath) {
+			WoolProjectParserResult readResult, String resourcePath) {
 		List<ParseException> errors = readResult.getParseErrors().get(
 				resourcePath);
 		if (errors != null)
@@ -170,7 +174,7 @@ public class WoolProjectParser {
 	}
 
 	private List<ParseException> getParseErrors(
-			WoolProjectReadResult readResult, WoolFileDescription descr) {
+			WoolProjectParserResult readResult, WoolFileDescription descr) {
 		String path = fileDescriptionToResourcePath(descr);
 		List<ParseException> errors = readResult.getParseErrors().get(path);
 		if (errors != null)
@@ -178,6 +182,17 @@ public class WoolProjectParser {
 		errors = new ArrayList<>();
 		readResult.getParseErrors().put(path, errors);
 		return errors;
+	}
+
+	private List<String> getWarnings(WoolProjectParserResult readResult,
+			WoolFileDescription descr) {
+		String path = fileDescriptionToResourcePath(descr);
+		List<String> warnings = readResult.getWarnings().get(path);
+		if (warnings != null)
+			return warnings;
+		warnings = new ArrayList<>();
+		readResult.getWarnings().put(path, warnings);
+		return warnings;
 	}
 
 	/**
@@ -191,7 +206,7 @@ public class WoolProjectParser {
 	 *
 	 * @param readResult the read result
 	 */
-	private void createTranslatedDialogues(WoolProjectReadResult readResult) {
+	private void createTranslatedDialogues(WoolProjectParserResult readResult) {
 		try {
 			doCreateTranslatedDialogues(readResult);
 		} finally {
@@ -200,7 +215,7 @@ public class WoolProjectParser {
 		}
 	}
 
-	private void doCreateTranslatedDialogues(WoolProjectReadResult readResult) {
+	private void doCreateTranslatedDialogues(WoolProjectParserResult readResult) {
 		for (WoolFileDescription descr : dialogues.keySet()) {
 			WoolDialogueDescription dlgDescr =
 					fileDescriptionToDialogueDescription(descr);
@@ -295,7 +310,7 @@ public class WoolProjectParser {
 		}
 	}
 
-	private ReadResult parseDialogueFile(WoolFileDescription description)
+	private WoolParserResult parseDialogueFile(WoolFileDescription description)
 			throws IOException {
 		String dlgName = fileNameToDialogueName(description.getFileName());
 		String resourceName = fileDescriptionToResourcePath(description);
@@ -306,9 +321,8 @@ public class WoolProjectParser {
 		}
 	}
 
-	private Map<WoolTranslatable,WoolTranslatable> parseTranslationFile(
-			WoolFileDescription description) throws ParseException,
-			IOException {
+	private WoolTranslationParserResult parseTranslationFile(
+			WoolFileDescription description) throws IOException {
 		String resourceName = fileDescriptionToResourcePath(description);
 		InputStream input = getClass().getClassLoader().getResourceAsStream(
 				resourceName);
