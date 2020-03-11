@@ -20,9 +20,15 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-package nl.rrd.wool.model;
+package nl.rrd.wool.parser;
 
-public class WoolDialogueDescription {
+/**
+ * This class describes a WOOL file. This can be a ".wool" dialogue file or a
+ * ".json" translation file.
+ *
+ * @author Dennis Hofs (RRD)
+ */
+public class WoolFileDescription {
 	
 	private String mainSpeaker;
 	private String language;
@@ -30,9 +36,17 @@ public class WoolDialogueDescription {
 	
 	// -------------------- Constructors
 
-	public WoolDialogueDescription () {	}
+	public WoolFileDescription() {	}
 
-	public WoolDialogueDescription (String mainSpeaker, String language, String fileName) {
+	/**
+	 * Constructs a new description. The file name can be a ".wool" dialogue
+	 * file or a ".json" translation file.
+	 *
+	 * @param mainSpeaker the main speaker
+	 * @param language the language code (for example en_GB)
+	 * @param fileName the file name (.wool or .json)
+	 */
+	public WoolFileDescription(String mainSpeaker, String language, String fileName) {
 		this.setMainSpeaker(mainSpeaker);
 		this.setLanguage(language);
 		this.setFileName(fileName);
@@ -40,30 +54,78 @@ public class WoolDialogueDescription {
 	
 	// -------------------- Getters
 
+	/**
+	 * Returns the main speaker.
+	 *
+	 * @return the main speaker
+	 */
 	public String getMainSpeaker() {
 		return this.mainSpeaker;
 	}
-	
+
+	/**
+	 * Return the language code (for example en_GB).
+	 *
+	 * @return the language code (for example en_GB)
+	 */
 	public String getLanguage() {
 		return this.language;
 	}
-	
+
+	/**
+	 * Returns the file name. This can be a ".wool" dialogue file or a ".json"
+	 * translation file.
+	 *
+	 * @return the file name (.wool or .json)
+	 */
 	public String getFileName() {
 		return this.fileName;
 	}
 	
 	// -------------------- Setters
-	
+
+	/**
+	 * Sets the main speaker.
+	 *
+	 * @param mainSpeaker the main speaker
+	 */
 	public void setMainSpeaker(String mainSpeaker) {
 		this.mainSpeaker = mainSpeaker;
 	}
 
+	/**
+	 * Sets the language code (for example en_GB).
+	 *
+	 * @param language the language code (for example en_GB)
+	 */
 	public void setLanguage(String language) {
 		this.language = language;
 	}
 
+	/**
+	 * Sets the file name. This can be a ".wool" dialogue file or a ".json"
+	 * translation file.
+	 *
+	 * @param fileName the file name (.wool or .json)
+	 */
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null || getClass() != obj.getClass())
+			return false;
+		WoolFileDescription other = (WoolFileDescription)obj;
+		if (!mainSpeaker.equals(other.mainSpeaker))
+			return false;
+		if (!language.equals(other.language))
+			return false;
+		if (!fileName.equals(other.fileName))
+			return false;
+		return true;
 	}
 
 	@Override
@@ -74,23 +136,16 @@ public class WoolDialogueDescription {
 		return result;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this)
-			return true;
-		if (obj == null || obj.getClass() != getClass())
-			return false;
-		WoolDialogueDescription other = (WoolDialogueDescription)obj;
-		if (!mainSpeaker.equals(other.mainSpeaker))
-			return false;
-		if (!language.equals(other.language))
-			return false;
-		if (!fileName.equals(other.fileName))
-			return false;
-		return true;
-	}
-
 	public String toString() {
-		return "Dialogue '" + this.fileName + ".wool.txt' with main speaker '" + this.mainSpeaker + "' in language '" + this.language + "'.";
+		String fileType;
+		if (fileName.endsWith(".wool"))
+			fileType = "Dialogue file";
+		else if (fileName.endsWith(".json"))
+			fileType = "Translation file";
+		else
+			fileType = "Unknown file";
+		return String.format(
+				"%s \"%s\" with main speaker \"%s\" in language \"%s\"",
+				fileType, fileName, mainSpeaker, language);
 	}
 }

@@ -20,48 +20,33 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-package nl.rrd.wool.execution;
+package nl.rrd.wool.utils;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
 
-public abstract class WoolVariableStoreChange {
-	public static class Put extends WoolVariableStoreChange {
-		private Map<String,?> variables;
+/**
+ * Interface to locate and open resources. Implementations can locate resources
+ * for example from the file system, class loader or Android asset manager.
+ *
+ * @author Dennis Hofs (RRD)
+ */
+public interface ResourceLocator {
 
-		public Put(Map<String,?> variables) {
-			this.variables = variables;
-		}
+	/**
+	 * Returns whether the specified resource exists.
+	 *
+	 * @param path the resource path
+	 * @return true if the resource exists, false otherwise
+	 */
+	boolean resourceExists(String path);
 
-		public Put(String name, Object value) {
-			Map<String,Object> variables = new LinkedHashMap<>();
-			variables.put(name, value);
-			this.variables = variables;
-		}
-
-		public Map<String,?> getVariables() {
-			return variables;
-		}
-	}
-
-	public static class Remove extends WoolVariableStoreChange {
-		private Collection<String> variableNames;
-
-		public Remove(Collection<String> variableNames) {
-			this.variableNames = variableNames;
-		}
-
-		public Remove(String variableName) {
-			variableNames = Collections.singletonList(variableName);
-		}
-
-		public Collection<String> getVariableNames() {
-			return variableNames;
-		}
-	}
-
-	public static class Clear extends WoolVariableStoreChange {
-	}
+	/**
+	 * Opens the resource at the specified path.
+	 *
+	 * @param path the resource path
+	 * @return the input stream
+	 * @throws IOException if the resource doesn't exist or can't be opened
+	 */
+	InputStream openResource(String path) throws IOException;
 }

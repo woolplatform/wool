@@ -64,6 +64,17 @@ public class WoolDialogue {
 	public WoolDialogue(String dialogueName) {
 		this.dialogueName = dialogueName;
 	}
+
+	public WoolDialogue(WoolDialogue other) {
+		dialogueName = other.dialogueName;
+		for (String key : other.nodes.keySet()) {
+			nodes.put(key, new WoolNode(other.nodes.get(key)));
+		}
+		speakers.addAll(other.speakers);
+		variablesNeeded.addAll(other.variablesNeeded);
+		variablesWritten.addAll(other.variablesWritten);
+		dialoguesReferenced.addAll(other.dialoguesReferenced);
+	}
 	
 	// ---------- Getters:
 	
