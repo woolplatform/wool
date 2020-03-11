@@ -428,12 +428,15 @@ function WoolNode(dialogue,lines) {
 					}
 				}
 			}
-			var matches = /^(.*)<<input\s+(.+)\s*>>(.*)$/.exec(desc);
+			var matches = /^(.*)(<<input\s+)(.+)(\s*>>)(.*)$/.exec(desc);
 			if (matches) {
 				var beforeText = matches[1];
-				var inputparams_str = matches[2];
-				var afterText = matches[3];
-				var textSegment = beforeText+"%1"+afterText;
+				var inputparams_str = matches[3];
+				var afterText = matches[5];
+				// new server style
+				var textSegment = beforeText+matches[2]+inputparams_str+matches[4]+afterText;
+				// old gettext stle
+				//var textSegment = beforeText+"%1"+afterText;
 				var inputparams = parseKeyValList(inputparams_str);
 				if (inputparams === null) {
 					logError("error",i,"Cannot parse parameter string '"

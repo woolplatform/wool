@@ -203,6 +203,10 @@ var Node = function() {
 		$(self.element).transition({opacity: 0, scale: 0.8, y: "-=80px", rotate: "-45deg"}, 250, "easeInQuad", function()
 		{
 			app.removeNode(self);
+			// check if Start node is deleted, make new Start node
+			if (app.addStartNodeIfMissing()) {
+				alert("Start node required. Creating new one.");
+			}
 			app.updateArrows();
 		});
 		app.deleting(null);

@@ -228,6 +228,7 @@
 			<div class="app-info">
 				<span class="app-title" data-bind="text:app.name"></span>
 				<span class="app-version" data-bind="text:app.version"></span>
+				<span class="app-filename" data-bind="text:app.filename"></span>
 			</div>
 
 
@@ -237,7 +238,7 @@
 
 		<!-- Hidden fields, file dialogs, and elements -->
 		<div class="hidden">
-			<input type="file" id="open-file" accept=".wool,.txt,.xml,.json,.twee,.tw2"/>
+			<input type="file" id="open-file" accept=".wool"/>
 			<input type="file" id="open-lang" accept=".po,.json"/>
 			<input type="file" id="open-folder" webkitdirectory directory/>
 			<input type="file" id="save-file" nwsaveas="filename.txt" />
@@ -255,7 +256,9 @@
 
 		<!-- start it all up! -->
 		<script type="text/javascript">
-			var app = new App("Wool Editor", "1.2");
+			var filePath = localStorage.getItem(App.LOCALSTORAGEPREFIX+"path");
+			if (!filePath) filePath = "unnamed";
+			var app = new App("Wool Editor", "1.3",filePath);
 			app.run();
 			if (app.isNwjs) {
 				Split(["#filepanel","#editpanel"],{
