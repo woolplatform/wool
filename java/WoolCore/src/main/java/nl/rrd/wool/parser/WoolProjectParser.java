@@ -143,7 +143,8 @@ public class WoolProjectParser {
 					fileDescriptionToDialogueDescription(descr);
 			if (dlgDescrSet.contains(dlgDescr)) {
 				getParseErrors(readResult, descr).add(new ParseException(
-						"Found translation file for existing dialogue file: " +
+						String.format("Found both translation file \"%s\" and dialogue file \"%s.wool\"",
+						descr.getFileName(), dlgDescr.getFileName()) + ": " +
 						descr));
 				continue;
 			}

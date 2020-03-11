@@ -369,11 +369,19 @@ public class WoolNodeBody {
 	}
 
 	public void trimWhitespace() {
-		removeLeadingWhitespace();
-		removeTrailingWhitespace();
+		trimWhitespace(segments);
+	}
+
+	public static void trimWhitespace(List<WoolNodeBody.Segment> segments) {
+		removeLeadingWhitespace(segments);
+		removeTrailingWhitespace(segments);
 	}
 
 	public void removeLeadingWhitespace() {
+		removeLeadingWhitespace(segments);
+	}
+
+	public static void removeLeadingWhitespace(List<WoolNodeBody.Segment> segments) {
 		while (!segments.isEmpty()) {
 			Segment segment = segments.get(0);
 			if (!(segment instanceof TextSegment))
@@ -388,6 +396,10 @@ public class WoolNodeBody {
 	}
 
 	public void removeTrailingWhitespace() {
+		removeTrailingWhitespace(segments);
+	}
+
+	public static void removeTrailingWhitespace(List<WoolNodeBody.Segment> segments) {
 		while (!segments.isEmpty()) {
 			Segment segment = segments.get(segments.size() - 1);
 			if (!(segment instanceof TextSegment))
