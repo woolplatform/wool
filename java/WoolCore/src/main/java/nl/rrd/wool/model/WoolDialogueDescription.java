@@ -26,16 +26,17 @@ public class WoolDialogueDescription {
 	
 	private String mainSpeaker;
 	private String language;
-	private String fileName;
+	private String dialogueName;
 	
 	// -------------------- Constructors
 
 	public WoolDialogueDescription () {	}
 
-	public WoolDialogueDescription (String mainSpeaker, String language, String fileName) {
+	public WoolDialogueDescription (String mainSpeaker, String language,
+			String dialogueName) {
 		this.setMainSpeaker(mainSpeaker);
 		this.setLanguage(language);
-		this.setFileName(fileName);
+		this.setDialogueName(dialogueName);
 	}
 	
 	// -------------------- Getters
@@ -48,8 +49,8 @@ public class WoolDialogueDescription {
 		return this.language;
 	}
 	
-	public String getFileName() {
-		return this.fileName;
+	public String getDialogueName() {
+		return this.dialogueName;
 	}
 	
 	// -------------------- Setters
@@ -62,15 +63,15 @@ public class WoolDialogueDescription {
 		this.language = language;
 	}
 
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
+	public void setDialogueName(String dialogueName) {
+		this.dialogueName = dialogueName;
 	}
 
 	@Override
 	public int hashCode() {
 		int result = mainSpeaker.hashCode();
 		result = 31 * result + language.hashCode();
-		result = 31 * result + fileName.hashCode();
+		result = 31 * result + dialogueName.hashCode();
 		return result;
 	}
 
@@ -85,12 +86,13 @@ public class WoolDialogueDescription {
 			return false;
 		if (!language.equals(other.language))
 			return false;
-		if (!fileName.equals(other.fileName))
+		if (!dialogueName.equals(other.dialogueName))
 			return false;
 		return true;
 	}
 
 	public String toString() {
-		return "Dialogue '" + this.fileName + ".wool.txt' with main speaker '" + this.mainSpeaker + "' in language '" + this.language + "'.";
+		return "Dialogue '" + this.dialogueName + "' with main speaker '" +
+				this.mainSpeaker + "' in language '" + this.language + "'.";
 	}
 }

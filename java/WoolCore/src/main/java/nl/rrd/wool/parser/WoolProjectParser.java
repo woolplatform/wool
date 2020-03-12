@@ -22,50 +22,25 @@
 
 package nl.rrd.wool.parser;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import nl.rrd.wool.exception.ParseException;
 import nl.rrd.wool.i18n.*;
-import nl.rrd.wool.json.JsonMapper;
 import nl.rrd.wool.model.WoolDialogue;
 import nl.rrd.wool.model.WoolDialogueDescription;
 import nl.rrd.wool.model.WoolProject;
-import nl.rrd.wool.utils.FileUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
  * This class can read an entire WOOL project consisting of ".wool" dialogue
- * files and ".json" translation files. The files should be in the resources
- * on the classpath. At construction you can specify the root path.
+ * files and ".json" translation files.
  *
- * <p>The files should be organized as language/speaker/dialogue-name.wool or
- * language/speaker/dialogue-name.json. Example: en/robin/intro.wool</p>
- *
- * <p>The files should be specified in project file "dialogues.json" in the
- * root directory. This can automatically be generated at build time. It
- * should be structured like:<br />
- *<pre>{
- *    "en": {
- *        "robin":[
- *            "dialogue1.wool",
- *            "dialogue2.wool",
- *            "dialogue3.json"
- *        ]
- *    }
- *}</pre></p>
+ * @author Dennis Hofs (RRD)
  */
 public class WoolProjectParser {
-	private static final String PROJECT_FILE = "dialogues.json";
 
-	private String resourcePath;
-
-	private List<WoolFileDescription> dialogueFiles = new ArrayList<>();
-	private List<WoolFileDescription> translationFiles = new ArrayList<>();
+	private WoolFileLoader fileLoader;
 
 	private Map<WoolFileDescription, WoolDialogue> dialogues =
 			new LinkedHashMap<>();
@@ -75,18 +50,14 @@ public class WoolProjectParser {
 	private Map<WoolDialogueDescription, WoolDialogue> translatedDialogues =
 			new LinkedHashMap<>();
 
-	/**
-	 * Constructs a new parser.
-	 *
-	 * @param resourcePath the resource path (without leading or trailing slash)
-	 */
-	public WoolProjectParser(String resourcePath) {
-		this.resourcePath = resourcePath;
+	public WoolProjectParser(WoolFileLoader fileLoader) {
+		this.fileLoader = fileLoader;
 	}
 
 	public WoolProjectParserResult parse() throws IOException {
 		WoolProjectParserResult result = new WoolProjectParserResult();
-		parseFiles(result);
+		List<WoolFileDescription> files = fileLoader.listWoolFiles();
+		parseFiles(files, result);
 		if (!result.getParseErrors().isEmpty())
 			return result;
 		createTranslatedDialogues(result);
@@ -99,35 +70,28 @@ public class WoolProjectParser {
 	}
 
 	/**
-	 * Tries to parse the project file and all dialogue and translation files.
-	 * This method fills variables "dialogues" and "translations". Any parse
-	 * errors will be added to "readResult".
+	 * Tries to parse all project files (dialogue and translation files). This
+	 * method fills variables "dialogues" and "translations". Any parse errors
+	 * will be added to "readResult".
 	 *
 	 * <p>It uses "dialogueFiles" and "translationFiles". They will be cleared
 	 * in the end.</p>
 	 *
+	 * @param files the project files
 	 * @param readResult the read result
 	 * @throws IOException if a reading error occurs
 	 */
-	private void parseFiles(WoolProjectParserResult readResult)
-			throws IOException {
-		try {
-			doParseFiles(readResult);
-		} finally {
-			dialogueFiles.clear();
-			translationFiles.clear();
-		}
-	}
-
-	private void doParseFiles(WoolProjectParserResult readResult) throws IOException {
-		try {
-			parseProjectFile();
-		} catch (ParseException ex) {
-			getParseErrors(readResult, resourcePath + "/" + PROJECT_FILE)
-					.add(ex);
-			return;
-		}
+	private void parseFiles(List<WoolFileDescription> files,
+			WoolProjectParserResult readResult) throws IOException {
 		Set<WoolDialogueDescription> dlgDescrSet = new HashSet<>();
+		List<WoolFileDescription> dialogueFiles = new ArrayList<>();
+		List<WoolFileDescription> translationFiles = new ArrayList<>();
+		for (WoolFileDescription file : files) {
+			if (file.getFileName().endsWith(".wool"))
+				dialogueFiles.add(file);
+			else if (file.getFileName().endsWith(".json"))
+				translationFiles.add(file);
+		}
 		for (WoolFileDescription descr : dialogueFiles) {
 			dlgDescrSet.add(fileDescriptionToDialogueDescription(descr));
 			WoolParserResult dlgReadResult = parseDialogueFile(descr);
@@ -144,7 +108,7 @@ public class WoolProjectParser {
 			if (dlgDescrSet.contains(dlgDescr)) {
 				getParseErrors(readResult, descr).add(new ParseException(
 						String.format("Found both translation file \"%s\" and dialogue file \"%s.wool\"",
-						descr.getFileName(), dlgDescr.getFileName()) + ": " +
+						descr.getFileName(), dlgDescr.getDialogueName()) + ": " +
 						descr));
 				continue;
 			}
@@ -164,19 +128,8 @@ public class WoolProjectParser {
 	}
 
 	private List<ParseException> getParseErrors(
-			WoolProjectParserResult readResult, String resourcePath) {
-		List<ParseException> errors = readResult.getParseErrors().get(
-				resourcePath);
-		if (errors != null)
-			return errors;
-		errors = new ArrayList<>();
-		readResult.getParseErrors().put(resourcePath, errors);
-		return errors;
-	}
-
-	private List<ParseException> getParseErrors(
 			WoolProjectParserResult readResult, WoolFileDescription descr) {
-		String path = fileDescriptionToResourcePath(descr);
+		String path = fileDescriptionToPath(descr);
 		List<ParseException> errors = readResult.getParseErrors().get(path);
 		if (errors != null)
 			return errors;
@@ -187,7 +140,7 @@ public class WoolProjectParser {
 
 	private List<String> getWarnings(WoolProjectParserResult readResult,
 			WoolFileDescription descr) {
-		String path = fileDescriptionToResourcePath(descr);
+		String path = fileDescriptionToPath(descr);
 		List<String> warnings = readResult.getWarnings().get(path);
 		if (warnings != null)
 			return warnings;
@@ -227,7 +180,7 @@ public class WoolProjectParser {
 			WoolDialogueDescription dlgDescr =
 					fileDescriptionToDialogueDescription(descr);
 			WoolDialogue source = findSourceDialogue(dlgDescr.getMainSpeaker(),
-					dlgDescr.getFileName());
+					dlgDescr.getDialogueName());
 			if (source == null) {
 				getParseErrors(readResult, descr).add(new ParseException(
 						"No source dialogue found for translation: " +
@@ -268,74 +221,20 @@ public class WoolProjectParser {
 			return dialogues.get(lngMap.get(language));
 	}
 
-	/**
-	 * Parses the project file and fills variables "dialogueFiles" and
-	 * "translationFiles".
-	 *
-	 * @throws ParseException if a parse error occurs
-	 * @throws IOException if a reading error occurs
-	 */
-	private void parseProjectFile() throws ParseException, IOException {
-		InputStream input = getClass().getClassLoader().getResourceAsStream(
-				resourcePath + "/" + PROJECT_FILE);
-		try (Reader reader = new InputStreamReader(input,
-				StandardCharsets.UTF_8)) {
-			String json = FileUtils.readFileString(reader);
-			Map<String, ?> map = JsonMapper.parse(json,
-					new TypeReference<Map<String, ?>>() {});
-			for (String language : map.keySet()) {
-				parseLanguageValue(language, map.get(language));
-			}
-		}
-	}
-
-	private void parseLanguageValue(String language, Object value) throws ParseException {
-		Map<String, ?> map = JsonMapper.convert(value,
-				new TypeReference<Map<String, ?>>() {});
-		for (String speaker : map.keySet()) {
-			parseSpeakerValue(language, speaker, map.get(speaker));
-		}
-	}
-
-	private void parseSpeakerValue(String language, String speaker,
-			Object value) throws ParseException {
-		List<String> list = JsonMapper.convert(value,
-				new TypeReference<List<String>>() {});
-		for (String filename : list) {
-			WoolFileDescription descr = new WoolFileDescription(speaker,
-					language, filename);
-			if (filename.endsWith(".wool"))
-				dialogueFiles.add(descr);
-			else if (filename.endsWith(".json"))
-				translationFiles.add(descr);
-		}
-	}
-
 	private WoolParserResult parseDialogueFile(WoolFileDescription description)
 			throws IOException {
 		String dlgName = fileNameToDialogueName(description.getFileName());
-		String resourceName = fileDescriptionToResourcePath(description);
-		InputStream input = getClass().getClassLoader().getResourceAsStream(
-				resourceName);
-		try (WoolParser woolParser = new WoolParser(dlgName, input)) {
+		try (WoolParser woolParser = new WoolParser(dlgName,
+				fileLoader.openFile(description))) {
 			return woolParser.readDialogue();
 		}
 	}
 
 	private WoolTranslationParserResult parseTranslationFile(
 			WoolFileDescription description) throws IOException {
-		String resourceName = fileDescriptionToResourcePath(description);
-		InputStream input = getClass().getClassLoader().getResourceAsStream(
-				resourceName);
-		try (Reader reader = new InputStreamReader(input,
-				StandardCharsets.UTF_8)) {
+		try (Reader reader = fileLoader.openFile(description)) {
 			return WoolTranslationParser.parse(reader);
 		}
-	}
-
-	private String fileDescriptionToResourcePath(WoolFileDescription descr) {
-		return resourcePath + "/" + descr.getLanguage() + "/" +
-				descr.getMainSpeaker() + "/" + descr.getFileName();
 	}
 
 	private WoolDialogueDescription fileDescriptionToDialogueDescription(
@@ -343,7 +242,7 @@ public class WoolProjectParser {
 		WoolDialogueDescription result = new WoolDialogueDescription();
 		result.setMainSpeaker(descr.getMainSpeaker());
 		result.setLanguage(descr.getLanguage());
-		result.setFileName(fileNameToDialogueName(descr.getFileName()));
+		result.setDialogueName(fileNameToDialogueName(descr.getFileName()));
 		return result;
 	}
 
@@ -352,5 +251,10 @@ public class WoolProjectParser {
 			return fileName.substring(0, fileName.length() - 5);
 		else
 			return fileName;
+	}
+
+	private String fileDescriptionToPath(WoolFileDescription descr) {
+		return descr.getLanguage() + "/" + descr.getMainSpeaker() + "/" +
+				descr.getFileName();
 	}
 }
