@@ -22,6 +22,8 @@
 
 package nl.rrd.wool.execution;
 
+import org.joda.time.DateTime;
+
 import java.util.*;
 
 
@@ -65,13 +67,16 @@ public class WoolVariableStore {
 	 *
 	 * @param name the name of the variable to store.
 	 * @param value the value of the variable to store.
-	 * @param notify true if listeners should be notified of the change, false
-	 * otherwise
+	 * @param save true if the variable should be saved in the database, false
+	 * if it can be kept just in memory
+	 * @param time the time (in the time zone of the user) that should be stored
+	 * with this value. This is ignored and can be null if "save" is false
 	 */
-	public void setValue(String name, Object value, boolean notify) {
+	public void setValue(String name, Object value, boolean save,
+			DateTime time) {
 		variableMap.put(name,value);
-		if (notify)
-			notifyOnChange(new WoolVariableStoreChange.Put(name, value));
+		if (save)
+			notifyOnChange(new WoolVariableStoreChange.Put(name, value, time));
 	}
 
 	/**
@@ -83,16 +88,28 @@ public class WoolVariableStore {
 	public Object getValue(String name) {
 		return variableMap.get(name);
 	}
-	
-	public Map<String,Object> getModifiableMap(boolean notifyOnChange) {
-		return new SourceMap(notifyOnChange);
+
+	/**
+	 * Returns a modifiable map for this variable store. If "save" is true, then
+	 * any modification is saved to the database with the specified time.
+	 *
+	 * @param save true if the variable should be saved in the database, false
+	 * if it can be kept just in memory
+	 * @param time the time in the time zone of the user. This is ignored and
+	 * can be null if "save" is false
+	 * @return the modifiable map
+	 */
+	public Map<String,Object> getModifiableMap(boolean save, DateTime time) {
+		return new SourceMap(save, time);
 	}
 	
 	private class SourceMap implements Map<String,Object> {
-		private boolean notifyOnChange;
-		
-		public SourceMap(boolean notifyOnChange) {
-			this.notifyOnChange = notifyOnChange;
+		private boolean save;
+		private DateTime time;
+
+		public SourceMap(boolean save, DateTime time) {
+			this.save = save;
+			this.time = time;
 		}
 
 		@Override
@@ -123,32 +140,34 @@ public class WoolVariableStore {
 		@Override
 		public Object put(String key, Object value) {
 			Object result = get(key);
-			setValue(key, value, notifyOnChange);
+			setValue(key, value, save, time);
 			return result;
 		}
 
 		@Override
 		public Object remove(Object key) {
 			Object result = variableMap.remove(key);
-			if (notifyOnChange)
-				notifyOnChange(new WoolVariableStoreChange.Remove((String)key));
+			if (save) {
+				notifyOnChange(new WoolVariableStoreChange.Remove((String) key,
+						time));
+			}
 			return result;
 		}
 
 		@Override
 		public void putAll(Map<? extends String, ?> m) {
 			variableMap.putAll(m);
-			if (notifyOnChange) {
-				Map<String,Object> notifyMap = new LinkedHashMap<>(m);
-				notifyOnChange(new WoolVariableStoreChange.Put(notifyMap));
+			if (save) {
+				Map<String, Object> notifyMap = new LinkedHashMap<>(m);
+				notifyOnChange(new WoolVariableStoreChange.Put(notifyMap, time));
 			}
 		}
 
 		@Override
 		public void clear() {
 			variableMap.clear();
-			if (notifyOnChange)
-				notifyOnChange(new WoolVariableStoreChange.Clear());
+			if (save)
+				notifyOnChange(new WoolVariableStoreChange.Clear(time));
 		}
 
 		@Override

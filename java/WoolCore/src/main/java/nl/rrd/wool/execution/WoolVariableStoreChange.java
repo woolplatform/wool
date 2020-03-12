@@ -22,6 +22,8 @@
 
 package nl.rrd.wool.execution;
 
+import org.joda.time.DateTime;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -30,38 +32,61 @@ import java.util.Map;
 public abstract class WoolVariableStoreChange {
 	public static class Put extends WoolVariableStoreChange {
 		private Map<String,?> variables;
+		private DateTime time;
 
-		public Put(Map<String,?> variables) {
+		public Put(Map<String,?> variables, DateTime time) {
 			this.variables = variables;
+			this.time = time;
 		}
 
-		public Put(String name, Object value) {
+		public Put(String name, Object value, DateTime time) {
 			Map<String,Object> variables = new LinkedHashMap<>();
 			variables.put(name, value);
 			this.variables = variables;
+			this.time = time;
 		}
 
 		public Map<String,?> getVariables() {
 			return variables;
 		}
+
+		public DateTime getTime() {
+			return time;
+		}
 	}
 
 	public static class Remove extends WoolVariableStoreChange {
 		private Collection<String> variableNames;
+		private DateTime time;
 
-		public Remove(Collection<String> variableNames) {
+		public Remove(Collection<String> variableNames, DateTime time) {
 			this.variableNames = variableNames;
+			this.time = time;
 		}
 
-		public Remove(String variableName) {
+		public Remove(String variableName, DateTime time) {
 			variableNames = Collections.singletonList(variableName);
+			this.time = time;
 		}
 
 		public Collection<String> getVariableNames() {
 			return variableNames;
 		}
+
+		public DateTime getTime() {
+			return time;
+		}
 	}
 
 	public static class Clear extends WoolVariableStoreChange {
+		private DateTime time;
+
+		public Clear(DateTime time) {
+			this.time = time;
+		}
+
+		public DateTime getTime() {
+			return time;
+		}
 	}
 }
