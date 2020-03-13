@@ -12,7 +12,7 @@
     "icon": "Yarn.png"
   },
   "scripts": {
-    "start": "electron .",
+    "start": "electron ."
   },
   "devDependencies": {
     "electron": "^8.1.1"

@@ -270,6 +270,7 @@
 					updateDirTree();
 				}
 			})
+			var jsTreeInited=false;
 			function updateDirTree() {
 				var root = localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
 				if (!root) {
@@ -294,22 +295,25 @@
 							icon: item[0]=="DIR" ? "jstreedir":"jstreefile",
 						});
 					}
-					console.log(jstdata);
-					$("#filetree").jstree({
-						"core": { "data": jstdata },
-						"types" : {
-							"default" : {
-								"icon" : "glyphicon glyphicon-flash"
+					if (jsTreeInited) {
+						$('#filetree').jstree(true).settings.core.data=jstdata;
+						$('#filetree').jstree(true).refresh();
+					} else {
+						$("#filetree").jstree({
+							"core": { "data": jstdata },
+							"types" : {
+								"default" : {
+									"icon" : "glyphicon glyphicon-flash"
+								},
+								"demo" : {
+									"icon" : "glyphicon glyphicon-ok"
+								}
 							},
-							"demo" : {
-								"icon" : "glyphicon glyphicon-ok"
-							}
-						},
-						"plugins" : [ "types" ]
-					}).on("ready.jstree", function(e,data) {
+							"plugins" : [ "types" ]
+						}).on("ready.jstree", function(e,data) {
 						//$("#filetree").jstree(true).set_type("/file1","demo");
 						//alert($("#filetree").jstree(true).get_type("/file1"));
-						$("#filetree").on("select_node.jstree",
+							$("#filetree").on("select_node.jstree",
 							function(e,data) {
 								var item = data.node;
 								if (data.node.icon == "jstreefile") {
@@ -320,7 +324,9 @@
 									}
 								}
 							});
-					});
+						});
+						jsTreeInited=true;
+					}
 				});
 			}
 			function loadWoolFile(filename) {
