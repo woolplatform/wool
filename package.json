@@ -12,10 +12,10 @@
     "icon": "Yarn.png"
   },
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
   },
   "devDependencies": {
-    "electron": "^6.1.7"
+    "electron": "^8.1.1"
   },
   "dependencies": {
     "jstree": "^3.3.8",

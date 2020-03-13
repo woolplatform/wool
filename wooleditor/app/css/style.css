@@ -7,7 +7,7 @@ html {
 body {
 	overflow: hidden;
 	-webkit-user-select: none;
-	line-height: 1.6em;
+	/*line-height: 1.6em;*/
 	background: #000;
 	height: 100%;
 }
@@ -720,8 +720,56 @@ a:hover { color: #000;}
 	line-height: 16px;
 }
 
+/* --- FILE TREE --- */
+
+
+#fileroot {
+	font-size: 12px;
+}
+
+#filetree {
+
+	font-size: 12px;
+}
+#filepanel {
+	overflow-y: auto;
+	height: 100%;
+}
+
+
+
 /* jstree */
 
+/* item height */
+
+/* attempt to modify item height
+.jstree-default .jstree-node {
+	min-height: 16px;
+	line-height: 16px;
+}
+
+.jstree-default .jstree-anchor {
+	height: 16px;
+	line-height: 16px;
+}
+
+.jstree-default .jstree-icon:empty {
+	height: 16px;
+}
+.jstree-default .jstree-icon {
+	height: 16px;
+}
+*/
+
+
+/* remove icon space left of filename to save space */
+.jstree-default .jstree-icon.jstreefile,
+.jstree-default .jstree-icon.jstreedir {
+	display: none;
+}
+
+
+/* todo: give files an icon, one for wool and one for json */
 .jstreefile {
 	background-image: url('../../node_modules/jstree/dist/themes/default/32px.png');
 }
@@ -731,6 +779,189 @@ a:hover { color: #000;}
 }
 
 
+/* item size */
+/* the following is the small style taken from jstree css,
+   with "-small" removed */
 
-
+.jstree-default .jstree-node {
+  min-height: 18px;
+  line-height: 18px;
+  margin-left: 18px;
+  min-width: 18px;
+}
+.jstree-default .jstree-anchor {
+  line-height: 18px;
+  height: 18px;
+}
+.jstree-default .jstree-icon {
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+.jstree-default .jstree-icon:empty {
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+.jstree-default.jstree-rtl .jstree-node {
+  margin-right: 18px;
+}
+.jstree-default .jstree-wholerow {
+  height: 18px;
+}
+.jstree-default .jstree-node,
+.jstree-default .jstree-icon {
+  background-image: url("../images/jstree/32px.png");
+}
+.jstree-default .jstree-node {
+  background-position: -295px -7px;
+  background-repeat: repeat-y;
+}
+.jstree-default .jstree-last {
+  background: transparent;
+}
+.jstree-default .jstree-open > .jstree-ocl {
+  background-position: -135px -7px;
+}
+.jstree-default .jstree-closed > .jstree-ocl {
+  background-position: -103px -7px;
+}
+.jstree-default .jstree-leaf > .jstree-ocl {
+  background-position: -71px -7px;
+}
+.jstree-default .jstree-themeicon {
+  background-position: -263px -7px;
+}
+.jstree-default > .jstree-no-dots .jstree-node,
+.jstree-default > .jstree-no-dots .jstree-leaf > .jstree-ocl {
+  background: transparent;
+}
+.jstree-default > .jstree-no-dots .jstree-open > .jstree-ocl {
+  background-position: -39px -7px;
+}
+.jstree-default > .jstree-no-dots .jstree-closed > .jstree-ocl {
+  background-position: -7px -7px;
+}
+.jstree-default .jstree-disabled {
+  background: transparent;
+}
+.jstree-default .jstree-disabled.jstree-hovered {
+  background: transparent;
+}
+.jstree-default .jstree-disabled.jstree-clicked {
+  background: #efefef;
+}
+.jstree-default .jstree-checkbox {
+  background-position: -167px -7px;
+}
+.jstree-default .jstree-checkbox:hover {
+  background-position: -167px -39px;
+}
+.jstree-default.jstree-checkbox-selection .jstree-clicked > .jstree-checkbox,
+.jstree-default .jstree-checked > .jstree-checkbox {
+  background-position: -231px -7px;
+}
+.jstree-default.jstree-checkbox-selection .jstree-clicked > .jstree-checkbox:hover,
+.jstree-default .jstree-checked > .jstree-checkbox:hover {
+  background-position: -231px -39px;
+}
+.jstree-default .jstree-anchor > .jstree-undetermined {
+  background-position: -199px -7px;
+}
+.jstree-default .jstree-anchor > .jstree-undetermined:hover {
+  background-position: -199px -39px;
+}
+.jstree-default .jstree-checkbox-disabled {
+  opacity: 0.8;
+  filter: url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'jstree-grayscale\'><feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/></filter></svg>#jstree-grayscale");
+  /* Firefox 10+ */
+  filter: gray;
+  /* IE6-9 */
+  -webkit-filter: grayscale(100%);
+  /* Chrome 19+ & Safari 6+ */
+}
+.jstree-default > .jstree-striped {
+  background-size: auto 36px;
+}
+.jstree-default.jstree-rtl .jstree-node {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAACAQMAAAB49I5GAAAABlBMVEUAAAAdHRvEkCwcAAAAAXRSTlMAQObYZgAAAAxJREFUCNdjAAMOBgAAGAAJMwQHdQAAAABJRU5ErkJggg==");
+  background-position: 100% 1px;
+  background-repeat: repeat-y;
+}
+.jstree-default.jstree-rtl .jstree-last {
+  background: transparent;
+}
+.jstree-default.jstree-rtl .jstree-open > .jstree-ocl {
+  background-position: -135px -39px;
+}
+.jstree-default.jstree-rtl .jstree-closed > .jstree-ocl {
+  background-position: -103px -39px;
+}
+.jstree-default.jstree-rtl .jstree-leaf > .jstree-ocl {
+  background-position: -71px -39px;
+}
+.jstree-default.jstree-rtl > .jstree-no-dots .jstree-node,
+.jstree-default.jstree-rtl > .jstree-no-dots .jstree-leaf > .jstree-ocl {
+  background: transparent;
+}
+.jstree-default.jstree-rtl > .jstree-no-dots .jstree-open > .jstree-ocl {
+  background-position: -39px -39px;
+}
+.jstree-default.jstree-rtl > .jstree-no-dots .jstree-closed > .jstree-ocl {
+  background-position: -7px -39px;
+}
+.jstree-default .jstree-themeicon-custom {
+  background-color: transparent;
+  background-image: none;
+  background-position: 0 0;
+}
+.jstree-default > .jstree-container-ul .jstree-loading > .jstree-ocl {
+  background: url("../images/jstree/throbber.gif") center center no-repeat;
+}
+.jstree-default .jstree-file {
+  background: url("../images/jstree/32px.png") -103px -71px no-repeat;
+}
+.jstree-default .jstree-folder {
+  background: url("../images/jstree/32px.png") -263px -7px no-repeat;
+}
+.jstree-default > .jstree-container-ul > .jstree-node {
+  margin-left: 0;
+  margin-right: 0;
+}
+#jstree-dnd.jstree-default {
+  line-height: 18px;
+  padding: 0 4px;
+}
+#jstree-dnd.jstree-default .jstree-ok,
+#jstree-dnd.jstree-default .jstree-er {
+  background-image: url("../images/jstree/32px.png");
+  background-repeat: no-repeat;
+  background-color: transparent;
+}
+#jstree-dnd.jstree-default i {
+  background: transparent;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+#jstree-dnd.jstree-default .jstree-ok {
+  background-position: -7px -71px;
+}
+#jstree-dnd.jstree-default .jstree-er {
+  background-position: -39px -71px;
+}
+.jstree-default .jstree-ellipsis {
+  overflow: hidden;
+}
+.jstree-default .jstree-ellipsis .jstree-anchor {
+  width: calc(100% - 23px);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.jstree-default.jstree-rtl .jstree-node {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAACAQMAAABv1h6PAAAABlBMVEUAAAAdHRvEkCwcAAAAAXRSTlMAQObYZgAAAAxJREFUCNdjAAMHBgAAiABBI4gz9AAAAABJRU5ErkJggg==");
+}
+.jstree-default.jstree-rtl .jstree-last {
+  background: transparent;
+}
 

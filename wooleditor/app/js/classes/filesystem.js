@@ -43,30 +43,32 @@ NodeFileSystem.prototype.readdir = function(path,callback) {}
 NodeFileSystem.prototype.readdirtree = function(path,callback) {
 	var self=this;
 	//From: https://stackoverflow.com/questions/5827612/node-js-fs-readdir-recursive-directory-search
-	var walk = function(dir, callback) {
+	var walk = function(root, dir, callback) {
 		var results = [];
-		self.fs.readdir(dir, function(err, list) {
+		var dirall = dir ? self.path.join(root,dir) : root;
+		self.fs.readdir(dirall, function(err, list) {
 			if (err) return callback(err);
 			var pending = list.length;
 			if (!pending) return callback(null, results);
 			list.forEach(function(file) {
-				var filepath = self.path.resolve(dir, file);
-				self.fs.stat(filepath, function(err, stat) {
+				var relpath = self.path.join(dir, file);
+				var abspath = self.path.resolve(dirall, file);
+				self.fs.stat(abspath, function(err, stat) {
 					if (stat && stat.isDirectory()) {
-						results.push(["DIR",file,filepath]);
-						walk(filepath, function(err, res) {
+						results.push(["DIR",file,self.path.join(dir,file)]);
+						walk(root, relpath, function(err, res) {
 							results = results.concat(res);
 							if (!--pending) callback(null, results);
 						});
 					} else {
-						results.push([file,filepath]);
+						results.push(["FILE",file,relpath]);
 						if (!--pending) callback(null, results);
 					}
 				});
 			});
 		});
 	};
-	walk(path,callback);
+	walk(path,"",callback);
 }
 
 

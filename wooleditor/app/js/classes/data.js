@@ -6,14 +6,20 @@ var data =
 	editingType: ko.observable(""),
 	editingFolder: ko.observable(null),
 
+	appendRoot: function(filepath) {
+		if (app.fs.fstype != "node") return filepath;
+		var root = localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
+		return root+"/"+filepath;
+	},
+
 	// callback: function(element)
 	readFileGeneric: function(e, filename, element, callback) {
-		app.fs.readFile(filename,element[0].files[0],callback);
+		app.fs.readFile(this.appendRoot(filename),element[0].files[0],callback);
 	},
 
 
 	readFile: function(e, filename, clearNodes, element) {
-		app.fs.readFile(filename,element[0].files[0],
+		app.fs.readFile(this.appendRoot(filename),element[0].files[0],
 			function(error,contents) {
 				if (error) {
 					alert("Error reading file");
@@ -60,12 +66,17 @@ var data =
 		// set filename
 		var dfilename = filename;
 		if (app.fs.fstype == "browser") {
-			// remove meaninless path
+			// remove fake path
 			dfilename = dfilename.split("\\");
 			dfilename = dfilename[dfilename.length-1];
+			dfilename = dfilename.split("/");
+			dfilename = dfilename[dfilename.length-1];
+			// remove path, extension
+			var filebase = filename.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
+		} else {
+			// remove extension
+			var filebase = filename.match(/^(.*[\/\\][^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
 		}
-		// remove extension
-		var filebase = filename.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
 		if (filebase) {
 			dfilename = filebase[1];
 		}
@@ -483,7 +494,7 @@ var data =
 	},
 
 	saveTo: function(path, content) {
-		app.fs.writeFile(path, content, function(err) {
+		app.fs.writeFile(this.appendRoot(path), content, function(err) {
 			data.editingPath(path);
 			if (err)
 				alert("Error Saving Data to " + path + ": " + err);
@@ -516,11 +527,18 @@ var data =
 		var file = app.filename() + "." + type;
 
 		if (app.fs.fstype == "node") {
-			dialog.attr("nwsaveas", file);
-			data.openFileDialog(dialog, function(e, path) {
-				data.saveTo(path, content);
-				app.refreshWindowTitle(path);
-			});
+			// in node mode, we do not present a dialog, but save the file
+			// under its current name. New files are created through the file
+			// tree.
+			data.saveTo(file, content);
+			alert("Saved to "+file);
+			return false;
+			// nw.js way to do dialog
+			//dialog.attr("nwsaveas", file);
+			//data.openFileDialog(dialog, function(e, path) {
+			//	data.saveTo(path, content);
+			//	app.refreshWindowTitle(path);
+			//});
 		} else {
 			switch(type) {
 				case 'json':

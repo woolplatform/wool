@@ -3,8 +3,6 @@
 <head>
 	<meta charset="utf-8">
 	<title>Wool editor</title>
-	<link rel="stylesheet" href="css/normalize.css">
-	<link rel="stylesheet" href="css/style.css">
 
 	<!-- libraries -->
 	<!-- Insert this line above jquery script imports.
@@ -38,11 +36,19 @@
 
 	<script type="text/javascript" src="../../html5/woolserver-js/woolserver-js-api.js"></script>
 	<script type="text/javascript" src="../../html5/woolserver-js/woolserver-js.js"></script>
+
+	<link rel="stylesheet" href="css/normalize.css">
+	<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 	<div id='filepanel' class="split">
-		<div id="filetree">Files</div>
+		<div id="filepanelheader">
+			<!-- nwjs style: input type="file" onchange='selectBaseDir(this);' nwdirectory /> -->
+			<button onclick='sendSelectBaseDir();'>Select Wool directory</button>
+		</div>
+		<div id="fileroot"></div>
+		<div id="filetree"></div>
 	</div>
 	<div id='editpanel' class="split">
 		<!-- Fancy Background -->
@@ -118,7 +124,7 @@
 						<span class="item" data-bind="click: data.tryOpenFile">Open...</span>
 						<!--<span class="item" data-bind="click: data.tryOpenFolder">Open Folder...</span>-->
 						<span class="item" data-bind="click: data.tryAppend">Append...</span>
-						<a class="item" download="file.wool" href='#' onclick="data.saveFileDialog(this,FILETYPE.WOOL,data.getSaveData(FILETYPE.WOOL));">Save...</a>
+						<a class="item" download="file.wool" href='#' onclick="return data.saveFileDialog(this,FILETYPE.WOOL,data.getSaveData(FILETYPE.WOOL));">Save...</a>
 						<a class="item" download="file.csv" href='#' onclick="data.saveFileDialog(this,FILETYPE.JSON,data.getSaveData(FILETYPE.JSON));">Export Poeditor Terms</a>
 						<span class="item" data-bind="click: data.tryOpenLang">Load Translation</span>
 						<!-- ko if:data.editingPath() != null -->
@@ -256,7 +262,81 @@
 
 		<!-- start it all up! -->
 		<script type="text/javascript">
+			window.addEventListener('message', evt => {
+				if (evt.data.type === 'dirs-selected') {
+					//console.log("Dir selected: "+evt.data.data);
+					localStorage.setItem(App.LOCALSTORAGEPREFIX+"root",
+						evt.data.data);
+					updateDirTree();
+				}
+			})
+			function updateDirTree() {
+				var root = localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
+				if (!root) {
+					$("#filetree").html("Please select Wool directory.");
+					return;
+				}
+				$("#fileroot").html(root);
+				app.fs.readdirtree(root,function(err,res) {
+					if (err) return;
+					// convert ["FILE"/"DIR",name,fullpath] to
+					// [id:fullpath,text:name,parent,icon]
+					var jstdata = [];
+					for (var i=0; i<res.length; i++) {
+						var item = res[i];
+						var basedir = item[2].substring(0,
+							item[2].length - item[1].length - 1);
+						if (basedir.length == 0) basedir = "#";
+						jstdata.push({
+							id: item[2],
+							text: item[1],
+							parent: basedir,
+							icon: item[0]=="DIR" ? "jstreedir":"jstreefile",
+						});
+					}
+					console.log(jstdata);
+					$("#filetree").jstree({
+						"core": { "data": jstdata },
+						"types" : {
+							"default" : {
+								"icon" : "glyphicon glyphicon-flash"
+							},
+							"demo" : {
+								"icon" : "glyphicon glyphicon-ok"
+							}
+						},
+						"plugins" : [ "types" ]
+					}).on("ready.jstree", function(e,data) {
+						//$("#filetree").jstree(true).set_type("/file1","demo");
+						//alert($("#filetree").jstree(true).get_type("/file1"));
+						$("#filetree").on("select_node.jstree",
+							function(e,data) {
+								var item = data.node;
+								if (data.node.icon == "jstreefile") {
+									var filename = data.node.id;
+									if (filename.toLowerCase().indexOf(".wool")
+									> -1) {
+										loadWoolFile(filename);
+									}
+								}
+							});
+					});
+				});
+			}
+			function loadWoolFile(filename) {
+				data.openFile(null, filename,[ {files: [filename]} ]);
+			}
+			function sendSelectBaseDir(elem) {
+				window.postMessage({type: 'select-dirs'})
+			}
+
+			function selectBaseDir(elem) {
+				alert(elem.value);
+				//localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
+			}
+
 			var filePath = localStorage.getItem(App.LOCALSTORAGEPREFIX+"path");
+			var woolRoot = localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
 			if (!filePath) filePath = "unnamed";
 			var app = new App("Wool Editor", "1.3",filePath);
 			app.run();
@@ -267,15 +347,11 @@
 					snapOffset: 0,
 					onDrag: app.updateArrows,
 				});
-					console.log("###########################################");
-				app.fs.readdirtree(".",function(err,res) {
-					console.log("@@@@@@###########################################");
-					console.log(err);
-					console.log(res);
-					$("#filetree").jstree({
-						"core": { "data": res }
-					});
-				});
+				if (!woolRoot) {
+					$("#filetree").html("Please select Wool directory.");
+				} else {
+					updateDirTree();
+				}
 			} else {
 				$("#filepanel").hide();
 				$("#editpanel").css("width","100%");
