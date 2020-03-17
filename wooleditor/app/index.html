@@ -55,7 +55,7 @@
 		<div id="app-bg">&nbsp;</div>
 
 		<!-- Entry Point / Container -->
-		<div id="app">
+		<div id="app" tabindex="0">
 
 			<!-- search form -->
 			<div class="app-search">
@@ -295,12 +295,9 @@
 							icon: item[0]=="DIR" ? "jstreedir":"jstreefile",
 						});
 					}
-					if (jsTreeInited) {
-						$('#filetree').jstree(true).settings.core.data=jstdata;
-						$('#filetree').jstree(true).refresh();
-					} else {
+					if (!jsTreeInited) {
 						$("#filetree").jstree({
-							"core": { "data": jstdata },
+							//"core": { "data": jstdata },
 							"types" : {
 								"default" : {
 									"icon" : "glyphicon glyphicon-flash"
@@ -309,7 +306,11 @@
 									"icon" : "glyphicon glyphicon-ok"
 								}
 							},
-							"plugins" : [ "types" ]
+							"contextmenu": {
+								"select_node": false,
+								"items": createContextMenu
+							},
+							"plugins" : [ "types", "contextmenu" ]
 						}).on("ready.jstree", function(e,data) {
 						//$("#filetree").jstree(true).set_type("/file1","demo");
 						//alert($("#filetree").jstree(true).get_type("/file1"));
@@ -327,7 +328,68 @@
 						});
 						jsTreeInited=true;
 					}
+					$('#filetree').jstree(true).settings.core.data=jstdata;
+					$('#filetree').jstree(true).refresh();
 				});
+			}
+			function createContextMenu(node) {
+				if ($(node).attr("icon") == "jstreedir") {
+					return {
+						"createWoolFile" : {
+							// The item label
+							"label"             : "Create Wool file",
+							// The function to execute upon a click
+							"action"            : function (obj) {
+								console.log(node);
+								console.log($(node).attr("id"));
+								console.log(obj);
+							},
+							// All below are optional
+							"_disabled"         : false,
+							"_class"            : "class",  // class is applied to the item LI node
+							"separator_before"  : false,
+							"separator_after"   : false,
+							// false or string - if does not contain `/` - used as classname
+							"icon"              : false,
+							//"submenu"           : {
+							//    /* Collection of objects (the same structure) */
+							//}
+						},
+					}
+				} else { // jstreefile
+					return {
+						"renameFile" : {
+							// The item label
+							"label"             : "[TODO] Rename file",
+							// The function to execute upon a click
+							"action"            : function (obj) {
+								console.log($(node).attr("id"));
+							},
+							// All below are optional
+							"_disabled"         : false,
+							"_class"            : "class",  // class is applied to the item LI node
+							"separator_before"  : false,
+							"separator_after"   : false,
+							// false or string - if does not contain `/` - used as classname
+							"icon"              : false,
+						},
+						"deleteFile" : {
+							// The item label
+							"label"             : "[TODO] Delete file",
+							// The function to execute upon a click
+							"action"            : function (obj) {
+								console.log($(node).attr("id"));
+							},
+							// All below are optional
+							"_disabled"         : false,
+							"_class"            : "class",  // class is applied to the item LI node
+							"separator_before"  : false,
+							"separator_after"   : false,
+							// false or string - if does not contain `/` - used as classname
+							"icon"              : false,
+						},
+					}
+				}
 			}
 			function loadWoolFile(filename) {
 				data.openFile(null, filename,[ {files: [filename]} ]);

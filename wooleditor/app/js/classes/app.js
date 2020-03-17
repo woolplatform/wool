@@ -3,6 +3,7 @@ var App = function(name, version, filename) {
 
 	// self
 	this.instance = this;
+	this.domroot = null;
 	this.name = ko.observable(name);
 	this.version = ko.observable(version);
 	this.filename = ko.observable(filename);
@@ -83,8 +84,10 @@ var App = function(name, version, filename) {
 		if (osName == "Linux")
 			self.zoomSpeed = .1;
 
-		$("#app").show();
-		ko.applyBindings(self, $("#app")[0]);
+		this.domroot = $("#app")
+		this.domroot.show();
+		this.domroot.focus();
+		ko.applyBindings(self, this.domroot[0]);
 
 		self.canvas = $(".arrows")[0];
 		self.context = self.canvas.getContext('2d');
@@ -356,9 +359,9 @@ var App = function(name, version, filename) {
 			self.translate();
 		});
 
-		$(document).on('keyup keydown', function(e) { self.shifted = e.shiftKey; } );
+		this.domroot.on('keyup keydown', function(e) { self.shifted = e.shiftKey; } );
 
-		$(document).contextmenu( function(e){
+		this.domroot.contextmenu( function(e){
 			var isAllowedEl = (
 					$(e.target).hasClass('nodes') ||
 					$(e.target).parents('.nodes').length
@@ -378,7 +381,7 @@ var App = function(name, version, filename) {
 			return !isAllowedEl; 
 		}); 
 
-		$(document).on('keydown', function(e){
+		this.domroot.on('keydown', function(e){
 			//global ctrl+z
 			if((e.metaKey || e.ctrlKey) && !self.editing())
 			{
@@ -393,7 +396,7 @@ var App = function(name, version, filename) {
 			}
 		});
                 
-        $(document).on('keydown', function(e) {
+        this.domroot.on('keydown', function(e) {
 			// XXX Is this supposed to be node-webkit only? It works in the
 			// browser but interferes with metakeys.
             if (self.isNwjs === false) { return; }
@@ -439,7 +442,7 @@ var App = function(name, version, filename) {
             }                  
         });
         
-		$(document).on('keydown', function(e) {
+		this.domroot.on('keydown', function(e) {
 			if (self.editing() || self.$searchField.is(':focus') || e.ctrlKey || e.metaKey) return;                                                    
 			var scale = self.cachedScale || 1,
 				movement = scale * 400;
@@ -488,7 +491,7 @@ var App = function(name, version, filename) {
 
 		$(window).on('resize', self.updateArrows);
 
-		$(document).on('keyup keydown mousedown mouseup', function(e) {
+		this.domroot.on('keyup keydown mousedown mouseup', function(e) {
 			if(self.editing() != null)
 			{
 				self.updateEditorStats();
@@ -847,8 +850,8 @@ var App = function(name, version, filename) {
 
 	this.updateArrows = function() {
 		//console.log("updateArrows");
-		self.canvas.width = $("#app").width();
-		self.canvas.height = $("#app").height();
+		self.canvas.width = this.domroot.width();
+		self.canvas.height = this.domroot.height();
 
 		var scale = self.cachedScale;
 		var offset = $(".nodes-holder").offset();
