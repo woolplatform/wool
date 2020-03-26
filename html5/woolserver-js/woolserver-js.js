@@ -192,7 +192,7 @@ function WoolNodeContext(vars) {
 //         with \n added to each line. 
 //         XXX translation of strings with substitute vars is not supported yet!
 function WoolNode(dialogue,lines) {
-	console.log("Created node! Lines:"+lines.length);
+	//console.log("Created node! Lines:"+lines.length);
 	var self=this;
 	// compile time errors
 	// level - notice, warning, error, fatal
@@ -274,7 +274,7 @@ function WoolNode(dialogue,lines) {
 		}
 	}
 	if (this.param.speaker) dialogue.speakers[speaker] = this.param.speaker;
-	console.log(this.param);
+	//console.log(this.param);
 	// parse body. Format for each line:
 	// <text>
 	// <agentname> ":" <text>
@@ -503,8 +503,8 @@ function WoolNode(dialogue,lines) {
 		}
 	}
 	if (alllines) this.texts[alllines.trim()] = true;
-	console.log("Parsing function:");
-	console.log(this.body.join("\n"));
+	//console.log("Parsing function:");
+	//console.log(this.body.join("\n"));
 	// turn code into function
 	try {
 		this.func = new Function("C", this.body.join("\n") );
@@ -533,7 +533,7 @@ function WoolDialogue(woolsource) {
 			nodelines.push(line);
 		}
 	}
-	console.log(this.nodes);
+	//console.log(this.nodes);
 };
 
 
@@ -563,7 +563,6 @@ function directServerLoadFile(i,filename,callback) {
 		console.log(directServer);
 		if (callback) callback();
 	}
-	console.log("#"+filename+"#"+basename);
 	$.ajax({
 		url: "../woolserver-js/"+filename,
 		type: 'get',

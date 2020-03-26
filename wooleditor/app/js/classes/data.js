@@ -19,8 +19,10 @@ var data =
 
 
 	readFile: function(e, filename, clearNodes, element) {
+		app.showWaitSpinner(true);
 		app.fs.readFile(this.appendRoot(filename),element[0].files[0],
 			function(error,contents) {
+			app.showWaitSpinner(false);
 				if (error) {
 					alert("Error reading file");
 					console.log(error);
@@ -163,6 +165,12 @@ var data =
 		}
 		else if (type == FILETYPE.YARNTEXT
 		||       type == FILETYPE.WOOL) {
+			if (clearNodes) {
+				app.recordSavedChanges(content);
+			} else {
+				// append -> content unknown
+				app.recordSavedChanges(null);
+			}
 			var convertSpeaker = type == FILETYPE.YARNTEXT;
 			console.log("YARN: "+convertSpeaker);
 			var lines = content.split("\n");
@@ -531,6 +539,7 @@ var data =
 			// under its current name. New files are created through the file
 			// tree.
 			data.saveTo(file, content);
+			app.recordSavedChanges(content);
 			alert("Saved to "+file);
 			return false;
 			// nw.js way to do dialog

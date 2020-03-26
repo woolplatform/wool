@@ -20,6 +20,10 @@ FileSystem.prototype.readdir = function(path,callback) {}
 FileSystem.prototype.readdirtree = function(path,callback) {}
 
 
+// safe - true = check if file exists before overwriting
+// callback - function(err)
+FileSystem.prototype.renameFile = function(oldpath,newpath,safe,callback) {}
+
 
 // node.js implementation. Assumes node.js is available.
 
@@ -71,6 +75,21 @@ NodeFileSystem.prototype.readdirtree = function(path,callback) {
 	walk(path,"",callback);
 }
 
+FileSystem.prototype.renameFile = function(oldpath,newpath,safe,callback) {
+	var self=this;
+	if (safe) {
+		this.fs.access(newpath,this.fs.constants.F_OK,function(err) {
+			if (err) {
+				// file does not exist -> OK
+				self.renameFile(oldpath,newpath,false,callback);
+			} else {
+				callback("File already exists.");
+			}
+		});
+	} else {
+		this.fs.rename(oldpath, newpath, callback);
+	}
+}
 
 
 // browser-only implementation

@@ -30,7 +30,9 @@ var App = function(name, version, filename) {
 	];
 	this.shifted = false;
   	this.isNwjs = false;
-    
+
+	this.lastSavedSource = null;
+
 	this.urlParameters = Utils.getUrlParameters();
 
 	this.UPDATE_ARROWS_THROTTLE_MS = 50;
@@ -300,7 +302,7 @@ var App = function(name, version, filename) {
 
 			$(".nodes").on("mouseup", function(e)
 			{
-				console.log("finished dragging");
+				//console.log("finished dragging");
 				dragging = false;
 
 				if(MarqueeOn && MarqueeSelection.length == 0)
@@ -489,7 +491,10 @@ var App = function(name, version, filename) {
 			self.translate(100);
 		} );
 
-		$(window).on('resize', self.updateArrows);
+		$(window).on('resize', function() {
+			self.translate(100);
+			self.updateArrows;
+		});
 
 		this.domroot.on('keyup keydown mousedown mouseup', function(e) {
 			if(self.editing() != null)
@@ -548,6 +553,24 @@ var App = function(name, version, filename) {
 		}
 		return connectedNodes;
 	}
+
+	this.recordSavedChanges = function(content) {
+		this.lastSavedSource = content;
+	}
+
+	// NOTE: check does not work for file format changes,
+	// in particular the "tags:" field was added later, and old files will
+	// always report unsaved.
+	this.areChangesSaved = function() {
+		var newsource = data.getSaveData(FILETYPE.WOOL);
+		return newsource == this.lastSavedSource;
+	}
+
+	this.showWaitSpinner = function(show) {
+		var spinner = document.getElementById("waitoverlay");
+		spinner.style.display = show ? "block" : "none";
+	}
+
 
 	this.mouseUpOnNodeNotMoved = function()
 	{
@@ -850,6 +873,8 @@ var App = function(name, version, filename) {
 
 	this.updateArrows = function() {
 		//console.log("updateArrows");
+		// function can be called before app is inited
+		if (!this.domroot) return;
 		self.canvas.width = this.domroot.width();
 		self.canvas.height = this.domroot.height();
 
@@ -1155,8 +1180,8 @@ var App = function(name, version, filename) {
 					self.transformOrigin[1] +
 				")"
 		);
-		console.log("Translating to ...");
-		console.log(self.transformOrigin);
+		//console.log("Translating to ...");
+		//console.log(self.transformOrigin);
 		self.updateArrows();
 
 		self.storeUIState();
@@ -1322,7 +1347,7 @@ var App = function(name, version, filename) {
 	}
 
 	this.warpToNodeXY = function(x, y) {
-		console.log("warp to x, y: " + x + ", " + y);
+		//console.log("warp to x, y: " + x + ", " + y);
 		const nodeWidth = 100, nodeHeight = 100;
 		var nodeXScaled = -( x * self.cachedScale ),
 			nodeYScaled = -( y * self.cachedScale ),
