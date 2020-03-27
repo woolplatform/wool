@@ -65,25 +65,7 @@ var data =
 
 	openFile: function(e, filename, element) {
 		data.readFile(e, filename, true, element);
-		// set filename
-		var dfilename = filename;
-		if (app.fs.fstype == "browser") {
-			// remove fake path
-			dfilename = dfilename.split("\\");
-			dfilename = dfilename[dfilename.length-1];
-			dfilename = dfilename.split("/");
-			dfilename = dfilename[dfilename.length-1];
-			// remove path, extension
-			var filebase = filename.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
-		} else {
-			// remove extension
-			var filebase = filename.match(/^(.*[\/\\][^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
-		}
-		if (filebase) {
-			dfilename = filebase[1];
-		}
-		app.filename(dfilename);
-		localStorage.setItem(App.LOCALSTORAGEPREFIX+"path",dfilename);
+		app.setCurrentPath(filename);
 
 		app.resetUIState();
 		app.refreshWindowTitle(filename);
@@ -591,12 +573,12 @@ var data =
 	tryClearData: function() {
 		if (!confirm("Clear all nodes?")) return;
 		app.filename("unnamed");
-		localStorage.setItem(App.LOCALSTORAGEPREFIX+"path","unnamed");
+		app.setCurrentPath("unnamed");
 		app.resetUIState();
 		app.nodes.removeAll();
 		app.clearLangDefs();
 		app.addStartNodeIfMissing();
-		app.updateArrows();
+		app.translate();
 	},
 
 	tryOpenFile: function() {

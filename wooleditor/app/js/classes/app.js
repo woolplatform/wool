@@ -100,7 +100,7 @@ var App = function(name, version, filename) {
 			alert("Missing Start node added.");
 		}
 
-		self.refreshWindowTitle(null);
+		self.refreshWindowTitle();
 
 		if (osName != "Windows" && osName != "Linux" && self.gui != undefined)
 		{
@@ -182,22 +182,18 @@ var App = function(name, version, filename) {
 					self.deselectAllNodes();
 			});
 
-			$(".nodes").on("mousemove", function(e)
-			{
+			$(".nodes").on("mousemove", function(e) {
 				
 				if (dragging) {
 					// We added shiftKey because altKey interferes with
 					// xfce metakey
 					if (e.shiftKey || e.altKey || e.button === 1) {
 						//prevents jumping straight back to standard dragging
-						if(MarqueeOn)
-						{
+						if (MarqueeOn) {
 							MarqueeSelection = [];
 							MarqRect = {x1:0,y1:0,x2:0,y2:0};
 							$("#marquee").css({x:0, y:0, width:0, height:0});
-						}
-						else
-						{
+						} else {
 							/*
 							self.transformOrigin[0] += e.pageX - offset.x;
 							self.transformOrigin[1] += e.pageY - offset.y;
@@ -217,9 +213,8 @@ var App = function(name, version, filename) {
 							offset.x = e.pageX;
 							offset.y = e.pageY;
 						}
-					}
-					else
-					{	
+						self.translate();
+					} else {	
 						MarqueeOn = true;
 
 						var scale = self.cachedScale;
@@ -492,8 +487,7 @@ var App = function(name, version, filename) {
 		} );
 
 		$(window).on('resize', function() {
-			self.translate(100);
-			self.updateArrows;
+			self.translate();
 		});
 
 		this.domroot.on('keyup keydown mousedown mouseup', function(e) {
@@ -594,7 +588,7 @@ var App = function(name, version, filename) {
 
 	this.refreshWindowTitle = function(editingPath) {
 		if (!editingPath) {
-			editingPath = localStorage.getItem(App.LOCALSTORAGEPREFIX+"path");
+			editingPath = App.getCurrentPath();
 			if (!editingPath) return;
 		}
 		var gui = null;//require('nw.gui');
@@ -1477,8 +1471,40 @@ var App = function(name, version, filename) {
 
 	this.loadUIState();
 
+	this.setCurrentPath = function(newpath) {
+		// normalize path
+		var dnewpath = newpath;
+		var filebase = null;
+		if (this.fs.fstype == "browser") {
+			// remove fake path
+			dnewpath = dnewpath.split("\\");
+			dnewpath = dnewpath[dnewpath.length-1];
+			dnewpath = dnewpath.split("/");
+			dnewpath = dnewpath[dnewpath.length-1];
+			// remove path, extension
+			filebase = newpath.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
+		} else {
+			// remove extension
+			filebase = newpath.match(/^(.*[\/\\][^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
+		}
+		if (filebase) {
+			dnewpath = filebase[1];
+		}
+		this.filename(dnewpath);
+		localStorage.setItem(App.LOCALSTORAGEPREFIX+"path", dnewpath);
+		this.refreshWindowTitle();
+	}
 }
 
 
+// static defs ---------------------------------------------------
+
 App.LOCALSTORAGEPREFIX="wool_js_";
+
+
+// addExtension: true = add ".wool" extension
+App.getCurrentPath = function(addExtension) {
+	return localStorage.getItem(App.LOCALSTORAGEPREFIX+"path")
+		+ (addExtension ? ".wool" : "");
+}
 

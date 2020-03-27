@@ -33,6 +33,7 @@
 	<script type="text/javascript" src="js/classes/data.js"></script>
 	<script type="text/javascript" src="js/classes/utils.js"></script>
 	<script type="text/javascript" src="js/classes/node.js"></script>
+	<script type="text/javascript" src="js/classes/filemanager.js"></script>
 
 	<script type="text/javascript" src="../../html5/woolserver-js/woolserver-js-api.js"></script>
 	<script type="text/javascript" src="../../html5/woolserver-js/woolserver-js.js"></script>
@@ -48,7 +49,8 @@
 	<div id='filepanel' class="split">
 		<div id="filepanelheader">
 			<!-- nwjs style: input type="file" onchange='selectBaseDir(this);' nwdirectory /> -->
-			<button onclick='sendSelectBaseDir();'>Select Wool directory</button>
+			<button onclick='filemgr.sendSelectBaseDir();'>Select Wool directory</button>
+			<button onclick='filemgr.updateDirTree();'>Reload directory</button>
 		</div>
 		<div id="fileroot"></div>
 		<div id="filetree"></div>
@@ -265,199 +267,21 @@
 
 		<!-- start it all up! -->
 		<script type="text/javascript">
-			window.addEventListener('message', evt => {
-				if (evt.data.type === 'dirs-selected') {
-					//console.log("Dir selected: "+evt.data.data);
-					localStorage.setItem(App.LOCALSTORAGEPREFIX+"root",
-						evt.data.data);
-					updateDirTree();
-				}
-			})
-			var jsTreeInited=false;
-			function updateDirTree() {
-				var root = localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
-				if (!root) {
-					$("#filetree").html("Please select Wool directory.");
-					return;
-				}
-				$("#fileroot").html(root);
-				app.fs.readdirtree(root,function(err,res) {
-					if (err) return;
-					// convert ["FILE"/"DIR",name,fullpath] to
-					// [id:fullpath,text:name,parent,icon]
-					var jstdata = [];
-					for (var i=0; i<res.length; i++) {
-						var item = res[i];
-						var basedir = item[2].substring(0,
-							item[2].length - item[1].length - 1);
-						if (basedir.length == 0) basedir = "#";
-						jstdata.push({
-							id: item[2],
-							text: item[1],
-							parent: basedir,
-							icon: item[0]=="DIR" ? "jstreedir":"jstreefile",
-						});
-					}
-					if (!jsTreeInited) {
-						$("#filetree").jstree({
-							//"core": { "data": jstdata },
-							"core": {
-						        //'check_callback' : true,
-						        'check_callback' : function (operation, node, node_parent, node_position, more) {
-									// operation can be 'create_node', 'rename_node', 'delete_node', 'move_node' or 'copy_node'
-									// in case of 'rename_node' node_position is filled with the new node name
-									//return operation === 'rename_node' ? true : false;
-									return true;
-								},
-							},
-							"types" : {
-								"default" : {
-									"icon" : "glyphicon glyphicon-flash"
-								},
-								"demo" : {
-									"icon" : "glyphicon glyphicon-ok"
-								}
-							},
-							"contextmenu": {
-								"select_node": false,
-								"items": createContextMenu
-							},
-							"plugins" : [ "types", "contextmenu" ]
-						}).on("ready.jstree", function(e,data) {
-						//$("#filetree").jstree(true).set_type("/file1","demo");
-						//alert($("#filetree").jstree(true).get_type("/file1"));
-							$("#filetree").on("select_node.jstree",
-							function(e,data) {
-								var item = data.node;
-								if (data.node.icon == "jstreefile") {
-									var filename = data.node.id;
-									if (filename.toLowerCase().indexOf(".wool")
-									> -1) {
-										loadWoolFile(filename);
-									}
-								}
-							});
-						}).on("rename_node.jstree", function(e,nodedata) {
-							var id = nodedata.node.id;
-							var oldname = nodedata.old;
-							var newname = nodedata.text;
-							var newpath = id.substr(0,
-								id.length-oldname.length) + newname;
-							// TODO re-append extension
-							console.log("New filename: "+newpath);
-							app.fs.renameFile(
-								data.appendRoot(id),
-								data.appendRoot(newpath),
-								true,
-								function(e) {
-									if (e) {
-										alert("Error renaming file: "+e);
-									} else {
-										// TODO check if file is loaded
-										// -> rename currently loaded file
-										nodedata.node.id = newpath;
-									}
-								}
-							);
-						});
-						jsTreeInited=true;
-					}
-					$('#filetree').jstree(true).settings.core.data=jstdata;
-					$('#filetree').jstree(true).refresh();
-				});
-			}
-			function createContextMenu(node) {
-				if ($(node).attr("icon") == "jstreedir") {
-					return {
-						"createWoolFile" : {
-							"label"             : "[TODO] Create Wool file",
-							"action"            : function (obj) {
-								console.log(node);
-								console.log($(node).attr("id"));
-								console.log(obj);
-							},
-							// All below are optional
-							"_disabled"         : false,
-							"_class"            : "class",  // class is applied to the item LI node
-							"separator_before"  : false,
-							"separator_after"   : false,
-							// false or string - if does not contain `/` - used as classname
-							"icon"              : false,
-							//"submenu"           : {
-							//    /* Collection of objects (the same structure) */
-							//}
-						},
-					}
-				} else { // jstreefile
-					return {
-						"renameFile" : {
-							// The item label
-							"label"             : "Rename file",
-							// The function to execute upon a click
-							"action"            : function (obj) {
-								console.log($(node).attr("id"));
-								$('#filetree').jstree(true).edit($(node).attr("id"));
-								console.log($('#filetree').jstree(true).last_error());
-							},
-							// All below are optional
-							"_disabled"         : false,
-							"_class"            : "class",  // class is applied to the item LI node
-							"separator_before"  : false,
-							"separator_after"   : false,
-							// false or string - if does not contain `/` - used as classname
-							"icon"              : false,
-						},
-						"deleteFile" : {
-							// The item label
-							"label"             : "[TODO] Delete file",
-							// The function to execute upon a click
-							"action"            : function (obj) {
-								console.log($(node).attr("id"));
-							},
-							// All below are optional
-							"_disabled"         : false,
-							"_class"            : "class",  // class is applied to the item LI node
-							"separator_before"  : false,
-							"separator_after"   : false,
-							// false or string - if does not contain `/` - used as classname
-							"icon"              : false,
-						},
-					}
-				}
-			}
-			function loadWoolFile(filename) {
-				if (!app.areChangesSaved()) {
-					var confirm = window.confirm("Changes not saved, proceed?");
-					if (!confirm) return;
-				}
-				data.openFile(null, filename,[ {files: [filename]} ]);
-			}
-			function sendSelectBaseDir(elem) {
-				window.postMessage({type: 'select-dirs'})
-			}
-
-			function selectBaseDir(elem) {
-				alert(elem.value);
-				//localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
-			}
-
-			var filePath = localStorage.getItem(App.LOCALSTORAGEPREFIX+"path");
-			var woolRoot = localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
+			// TODO move this to App, then we can get rid of static parts
+			var filePath = App.getCurrentPath();
 			if (!filePath) filePath = "unnamed";
 			var app = new App("Wool Editor", "1.4.0",filePath);
 			app.run();
 			if (app.isNwjs) {
 				Split(["#filepanel","#editpanel"],{
-					minSize: [0,1070],
+					//minSize: [0,1070],
+					minSize: [0,700],
 					sizes: [15,85],
 					snapOffset: 0,
-					onDrag: app.updateArrows,
+					onDrag: app.translate,
 				});
-				if (!woolRoot) {
-					$("#filetree").html("Please select Wool directory.");
-				} else {
-					updateDirTree();
-				}
+				var filemgr = new FileManager();
+				filemgr.init();
 			} else {
 				$("#filepanel").hide();
 				$("#editpanel").css("width","100%");

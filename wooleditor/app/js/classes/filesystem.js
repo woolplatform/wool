@@ -221,3 +221,4 @@ BrowserFileSystem.prototype.readdirtree = function(path,callback) {
 }
 
 
+BrowserFileSystem.prototype.renameFile = null;
