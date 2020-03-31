@@ -1,0 +1,81 @@
+title: Test
+tags: 
+speaker: 
+colorID: 0
+position: 490,471
+---
+A is shown as $a.
+
+<br>
+
+<<if $a>>
+* A resolves to true
+<<else>>
+A does not resolve to true
+<<endif>>
+
+<br>
+
+<<if !$a>>
+* !A resolves to true
+<<else>>
+!A does not resolve to true
+<<endif>>
+
+<br>
+
+<<if $a == "" >>
+* A matches empty string
+<<else>>
+A does not match empty string
+<<endif>>
+
+<br>
+
+<<if $a == 0>>
+* A matches the number 0
+<<else>>
+A does not match the number 0
+<<endif>>
+
+<br>
+
+<<if $a == true>>
+* A matches literal true
+<<else>>
+A does not match literal true
+<<endif>>
+
+<br>
+
+<<if $a == false>>
+* A matches literal false
+<<else>>
+A does not match literal false
+<<endif>>
+
+<br>
+
+<<if $a == null>>
+* A matches null
+<<else>>
+A does not match null
+<<endif>>
+===
+title: Start
+tags: 
+speaker: 
+colorID: 0
+position: 168,459
+---
+Select the value of variable A.
+
+[["Aardvark"|Test|<<set $a = "Aardvark">>]]
+[[""|Test|<<set $a = "">>]]
+[[The number 42|Test|<<set $a = 42>>]]
+[[The number 0|Test|<<set $a = 0>>]]
+[[true|Test|<<set $a = true>>]]
+[[false|Test|<<set $a = false>>]]
+[[null|Test|<<set $a = null>>]]
+[[Do not define A|Test]]
+===
