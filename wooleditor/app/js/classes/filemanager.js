@@ -70,7 +70,7 @@ FileManager.prototype.updateDirTree  = function() {
 					"select_node": false,
 					"items": self.createContextMenu
 				},
-				"plugins" : [ "types", "contextmenu" ]
+				"plugins" : [ "types", "contextmenu", "state" ]
 			}).on("ready.jstree", function(e,data) {
 			//$("#filetree").jstree(true).set_type("/file1","demo");
 			//alert($("#filetree").jstree(true).get_type("/file1"));

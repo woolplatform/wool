@@ -517,19 +517,30 @@ var data =
 		var file = app.filename() + "." + type;
 
 		if (app.fs.fstype == "node") {
-			// in node mode, we do not present a dialog, but save the file
-			// under its current name. New files are created through the file
-			// tree.
-			data.saveTo(file, content);
-			app.recordSavedChanges(content);
-			alert("Saved to "+file);
-			return false;
-			// nw.js way to do dialog
-			//dialog.attr("nwsaveas", file);
-			//data.openFileDialog(dialog, function(e, path) {
-			//	data.saveTo(path, content);
-			//	app.refreshWindowTitle(path);
-			//});
+			switch(type) {
+				case 'json':
+					// regular html dialog for translation files. Language
+					// setting could be added to save automatically in the
+					// right directory.
+					content = "data:text/json," + encodeURIComponent(content);
+					dialog.download = file;
+					dialog.href = content;
+					return true;
+				default:
+					// in node mode, we do not present a dialog, but save the
+					// file under its current name. New files are created
+					// through the file tree.
+					data.saveTo(file, content);
+					app.recordSavedChanges(content);
+					alert("Saved to "+file);
+					return false;
+					// nw.js way to do dialog
+					//dialog.attr("nwsaveas", file);
+					//data.openFileDialog(dialog, function(e, path) {
+					//	data.saveTo(path, content);
+					//	app.refreshWindowTitle(path);
+					//});
+			}
 		} else {
 			switch(type) {
 				case 'json':

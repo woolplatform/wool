@@ -369,8 +369,9 @@ var App = function(name, version, filename) {
 				var x = self.transformOrigin[0] * -1 / self.cachedScale,
 					y = self.transformOrigin[1] * -1 / self.cachedScale;
 
-				x += e.pageX / self.cachedScale;
-				y += e.pageY / self.cachedScale;
+				var rootofs = self.domroot.offset();
+				x += (e.pageX - rootofs.left) / self.cachedScale;
+				y += (e.pageY - rootofs.top) / self.cachedScale;
 
 				self.newNode(x, y); 
 			} 
@@ -510,7 +511,11 @@ var App = function(name, version, filename) {
 				var node = nodes[i];
 				if (node.title() == this.urlParameters.editnode) {
 					this.warpToNodeXY(node.assignedx,node.assignedy);
-					app.editNode(node);
+					// XXX if we editNode immediately, there is a size problem,
+					// causing shaking. Not sure what part needs time, so not
+					// sure if we can find a proper callback. Could
+					// be the css transform.
+					setTimeout(function() { app.editNode(node) },500);
 					break;
 				}
 			}
