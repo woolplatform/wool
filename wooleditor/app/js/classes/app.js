@@ -30,7 +30,9 @@ var App = function(name, version, filename) {
 	];
 	this.shifted = false;
   	this.isNwjs = false;
-    
+
+	this.lastSavedSource = null;
+
 	this.urlParameters = Utils.getUrlParameters();
 
 	this.UPDATE_ARROWS_THROTTLE_MS = 50;
@@ -98,7 +100,7 @@ var App = function(name, version, filename) {
 			alert("Missing Start node added.");
 		}
 
-		self.refreshWindowTitle(null);
+		self.refreshWindowTitle();
 
 		if (osName != "Windows" && osName != "Linux" && self.gui != undefined)
 		{
@@ -180,22 +182,18 @@ var App = function(name, version, filename) {
 					self.deselectAllNodes();
 			});
 
-			$(".nodes").on("mousemove", function(e)
-			{
+			$(".nodes").on("mousemove", function(e) {
 				
 				if (dragging) {
 					// We added shiftKey because altKey interferes with
 					// xfce metakey
 					if (e.shiftKey || e.altKey || e.button === 1) {
 						//prevents jumping straight back to standard dragging
-						if(MarqueeOn)
-						{
+						if (MarqueeOn) {
 							MarqueeSelection = [];
 							MarqRect = {x1:0,y1:0,x2:0,y2:0};
 							$("#marquee").css({x:0, y:0, width:0, height:0});
-						}
-						else
-						{
+						} else {
 							/*
 							self.transformOrigin[0] += e.pageX - offset.x;
 							self.transformOrigin[1] += e.pageY - offset.y;
@@ -215,9 +213,8 @@ var App = function(name, version, filename) {
 							offset.x = e.pageX;
 							offset.y = e.pageY;
 						}
-					}
-					else
-					{	
+						self.translate();
+					} else {	
 						MarqueeOn = true;
 
 						var scale = self.cachedScale;
@@ -300,7 +297,7 @@ var App = function(name, version, filename) {
 
 			$(".nodes").on("mouseup", function(e)
 			{
-				console.log("finished dragging");
+				//console.log("finished dragging");
 				dragging = false;
 
 				if(MarqueeOn && MarqueeSelection.length == 0)
@@ -372,8 +369,9 @@ var App = function(name, version, filename) {
 				var x = self.transformOrigin[0] * -1 / self.cachedScale,
 					y = self.transformOrigin[1] * -1 / self.cachedScale;
 
-				x += e.pageX / self.cachedScale;
-				y += e.pageY / self.cachedScale;
+				var rootofs = self.domroot.offset();
+				x += (e.pageX - rootofs.left) / self.cachedScale;
+				y += (e.pageY - rootofs.top) / self.cachedScale;
 
 				self.newNode(x, y); 
 			} 
@@ -489,7 +487,9 @@ var App = function(name, version, filename) {
 			self.translate(100);
 		} );
 
-		$(window).on('resize', self.updateArrows);
+		$(window).on('resize', function() {
+			self.translate();
+		});
 
 		this.domroot.on('keyup keydown mousedown mouseup', function(e) {
 			if(self.editing() != null)
@@ -511,7 +511,11 @@ var App = function(name, version, filename) {
 				var node = nodes[i];
 				if (node.title() == this.urlParameters.editnode) {
 					this.warpToNodeXY(node.assignedx,node.assignedy);
-					app.editNode(node);
+					// XXX if we editNode immediately, there is a size problem,
+					// causing shaking. Not sure what part needs time, so not
+					// sure if we can find a proper callback. Could
+					// be the css transform.
+					setTimeout(function() { app.editNode(node) },500);
 					break;
 				}
 			}
@@ -549,6 +553,24 @@ var App = function(name, version, filename) {
 		return connectedNodes;
 	}
 
+	this.recordSavedChanges = function(content) {
+		this.lastSavedSource = content;
+	}
+
+	// NOTE: check does not work for file format changes,
+	// in particular the "tags:" field was added later, and old files will
+	// always report unsaved.
+	this.areChangesSaved = function() {
+		var newsource = data.getSaveData(FILETYPE.WOOL);
+		return newsource == this.lastSavedSource;
+	}
+
+	this.showWaitSpinner = function(show) {
+		var spinner = document.getElementById("waitoverlay");
+		spinner.style.display = show ? "block" : "none";
+	}
+
+
 	this.mouseUpOnNodeNotMoved = function()
 	{
 		self.deselectAllNodes();
@@ -571,7 +593,7 @@ var App = function(name, version, filename) {
 
 	this.refreshWindowTitle = function(editingPath) {
 		if (!editingPath) {
-			editingPath = localStorage.getItem(App.LOCALSTORAGEPREFIX+"path");
+			editingPath = App.getCurrentPath();
 			if (!editingPath) return;
 		}
 		var gui = null;//require('nw.gui');
@@ -850,6 +872,8 @@ var App = function(name, version, filename) {
 
 	this.updateArrows = function() {
 		//console.log("updateArrows");
+		// function can be called before app is inited
+		if (!this.domroot) return;
 		self.canvas.width = this.domroot.width();
 		self.canvas.height = this.domroot.height();
 
@@ -1155,8 +1179,8 @@ var App = function(name, version, filename) {
 					self.transformOrigin[1] +
 				")"
 		);
-		console.log("Translating to ...");
-		console.log(self.transformOrigin);
+		//console.log("Translating to ...");
+		//console.log(self.transformOrigin);
 		self.updateArrows();
 
 		self.storeUIState();
@@ -1322,7 +1346,7 @@ var App = function(name, version, filename) {
 	}
 
 	this.warpToNodeXY = function(x, y) {
-		console.log("warp to x, y: " + x + ", " + y);
+		//console.log("warp to x, y: " + x + ", " + y);
 		const nodeWidth = 100, nodeHeight = 100;
 		var nodeXScaled = -( x * self.cachedScale ),
 			nodeYScaled = -( y * self.cachedScale ),
@@ -1452,8 +1476,40 @@ var App = function(name, version, filename) {
 
 	this.loadUIState();
 
+	this.setCurrentPath = function(newpath) {
+		// normalize path
+		var dnewpath = newpath;
+		var filebase = null;
+		if (this.fs.fstype == "browser") {
+			// remove fake path
+			dnewpath = dnewpath.split("\\");
+			dnewpath = dnewpath[dnewpath.length-1];
+			dnewpath = dnewpath.split("/");
+			dnewpath = dnewpath[dnewpath.length-1];
+			// remove path, extension
+			filebase = newpath.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
+		} else {
+			// remove extension
+			filebase = newpath.match(/^(.*[\/\\][^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
+		}
+		if (filebase) {
+			dnewpath = filebase[1];
+		}
+		this.filename(dnewpath);
+		localStorage.setItem(App.LOCALSTORAGEPREFIX+"path", dnewpath);
+		this.refreshWindowTitle();
+	}
 }
 
 
+// static defs ---------------------------------------------------
+
 App.LOCALSTORAGEPREFIX="wool_js_";
+
+
+// addExtension: true = add ".wool" extension
+App.getCurrentPath = function(addExtension) {
+	return localStorage.getItem(App.LOCALSTORAGEPREFIX+"path")
+		+ (addExtension ? ".wool" : "");
+}
 

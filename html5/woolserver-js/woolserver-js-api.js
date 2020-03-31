@@ -74,9 +74,9 @@ directServer.getNode = function() {
 	var dia = directServer.currentdialogue;
 	var node = directServer.currentnode;
 	var ctx = directServer.currentnodectx;
-	console.log(dia);
-	console.log(node);
-	console.log(ctx);
+	//console.log(dia);
+	//console.log(node);
+	//console.log(ctx);
 	var speaker = "UNKNOWN";
 	if (ctx.speakers.length > 0) {
 		speaker = ctx.speakers[0];

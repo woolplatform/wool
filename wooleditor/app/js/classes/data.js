@@ -19,8 +19,10 @@ var data =
 
 
 	readFile: function(e, filename, clearNodes, element) {
+		app.showWaitSpinner(true);
 		app.fs.readFile(this.appendRoot(filename),element[0].files[0],
 			function(error,contents) {
+			app.showWaitSpinner(false);
 				if (error) {
 					alert("Error reading file");
 					console.log(error);
@@ -63,25 +65,7 @@ var data =
 
 	openFile: function(e, filename, element) {
 		data.readFile(e, filename, true, element);
-		// set filename
-		var dfilename = filename;
-		if (app.fs.fstype == "browser") {
-			// remove fake path
-			dfilename = dfilename.split("\\");
-			dfilename = dfilename[dfilename.length-1];
-			dfilename = dfilename.split("/");
-			dfilename = dfilename[dfilename.length-1];
-			// remove path, extension
-			var filebase = filename.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
-		} else {
-			// remove extension
-			var filebase = filename.match(/^(.*[\/\\][^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
-		}
-		if (filebase) {
-			dfilename = filebase[1];
-		}
-		app.filename(dfilename);
-		localStorage.setItem(App.LOCALSTORAGEPREFIX+"path",dfilename);
+		app.setCurrentPath(filename);
 
 		app.resetUIState();
 		app.refreshWindowTitle(filename);
@@ -163,6 +147,12 @@ var data =
 		}
 		else if (type == FILETYPE.YARNTEXT
 		||       type == FILETYPE.WOOL) {
+			if (clearNodes) {
+				app.recordSavedChanges(content);
+			} else {
+				// append -> content unknown
+				app.recordSavedChanges(null);
+			}
 			var convertSpeaker = type == FILETYPE.YARNTEXT;
 			console.log("YARN: "+convertSpeaker);
 			var lines = content.split("\n");
@@ -527,18 +517,30 @@ var data =
 		var file = app.filename() + "." + type;
 
 		if (app.fs.fstype == "node") {
-			// in node mode, we do not present a dialog, but save the file
-			// under its current name. New files are created through the file
-			// tree.
-			data.saveTo(file, content);
-			alert("Saved to "+file);
-			return false;
-			// nw.js way to do dialog
-			//dialog.attr("nwsaveas", file);
-			//data.openFileDialog(dialog, function(e, path) {
-			//	data.saveTo(path, content);
-			//	app.refreshWindowTitle(path);
-			//});
+			switch(type) {
+				case 'json':
+					// regular html dialog for translation files. Language
+					// setting could be added to save automatically in the
+					// right directory.
+					content = "data:text/json," + encodeURIComponent(content);
+					dialog.download = file;
+					dialog.href = content;
+					return true;
+				default:
+					// in node mode, we do not present a dialog, but save the
+					// file under its current name. New files are created
+					// through the file tree.
+					data.saveTo(file, content);
+					app.recordSavedChanges(content);
+					alert("Saved to "+file);
+					return false;
+					// nw.js way to do dialog
+					//dialog.attr("nwsaveas", file);
+					//data.openFileDialog(dialog, function(e, path) {
+					//	data.saveTo(path, content);
+					//	app.refreshWindowTitle(path);
+					//});
+			}
 		} else {
 			switch(type) {
 				case 'json':
@@ -582,12 +584,12 @@ var data =
 	tryClearData: function() {
 		if (!confirm("Clear all nodes?")) return;
 		app.filename("unnamed");
-		localStorage.setItem(App.LOCALSTORAGEPREFIX+"path","unnamed");
+		app.setCurrentPath("unnamed");
 		app.resetUIState();
 		app.nodes.removeAll();
 		app.clearLangDefs();
 		app.addStartNodeIfMissing();
-		app.updateArrows();
+		app.translate();
 	},
 
 	tryOpenFile: function() {

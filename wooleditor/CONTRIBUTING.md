@@ -1,23 +1,22 @@
-# Contributing to Yarn
+# Contributing to Wool
 
 Hi there! We're thrilled that you'd like to contribute to this project. Your help is essential for keeping it great.
 
 ## How to send in your contributions
 
-There are many ways you can send your contributions to Yarn. You can either **report a bug**, or you can make the changes yourself and **submit a pull request**!
+There are many ways you can send your contributions to Wool. You can either **report a bug**, or you can make the changes yourself and **submit a pull request**!
 
 ### Reporting bugs and opening issues
 
-Please [report bugs](https://github.com/infiniteammoinc/Yarn/issues) and open issues generously. Don't be afraid that your idea is silly, or you're reporting a duplicate. We're happy to hear from you. Seriously.
+Please [report bugs](https://github.com/RoessinghResearch/wool/issues) and open issues generously. Don't be afraid that your idea is silly, or you're reporting a duplicate. We're happy to hear from you. Seriously.
 
-> ***Please Note:*** Yarn is written by volunteers. If you encounter a problem while using it, we'll do our best to help you, but the authors cannot offer any support.
 
 ### Submitting a pull request
 
-* [Fork](https://github.com/infiniteammoinc/Yarn/fork) and clone the repository
+* [Fork](https://github.com/RoessinghResearch/wool/issues/fork) and clone the repository
 * Create a new branch: git checkout -b my-branch-name
 * Make your changes
-* Push to your fork and [submit a pull request](https://github.com/infiniteammoinc/Yarn/compare)
+* Push to your fork and [submit a pull request](https://github.com/RoessinghResearch/wool/issues/compare)
 * Pat your self on the back and wait for your pull request to be reviewed.
 
 If you're unfamiliar with how pull requests work, [GitHub's documentation on them](https://help.github.com/articles/using-pull-requests/) is very good.
@@ -30,4 +29,4 @@ Here are a few things you can do that will increase the likelihood of your pull 
 
 ### Code and other contributions
 
-Contributions to Yarn (via pull request or otherwise) must be licensed under the MIT license.
+Contributions to Wool (via pull request or otherwise) must be licensed under the MIT license.
