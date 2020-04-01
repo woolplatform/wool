@@ -244,12 +244,27 @@ function WoolNode(dialogue,lines) {
 		}
 	}
 	function rewriteExpression(expr) {
+		// XXX $a == $b is not rewritten, inherits js semantics
 		// XXX shallow parsing, could match string literal
 		// XXX improve number parser 
-		expr = expr.replace(/[^=]==\s*true\b/g," === true");
-		expr = expr.replace(/[^=]==\s*false\b/g," === false");
-		expr = expr.replace(/[^=]==\s*0\b/g," === 0");
-		expr = expr.replace(/[^=]==\s*0[.]0\b/g," === 0.0");
+		expr = expr.replace(/[^=]==\s*true\b/g,  " === true");
+		expr = expr.replace(/[^=]==\s*false\b/g, " === false");
+		expr = expr.replace(/[^=]==\s*0\b/g,     " === 0");
+		expr = expr.replace(/[^=]==\s*0[.]0\b/g, " === 0.0");
+		expr = expr.replace( /\btrue\s*==[^=]/g, "true === ");
+		expr = expr.replace(/\bfalse\s*==[^=]/g, "false === ");
+		expr = expr.replace(    /\b0\s*==[^=]/g, "0 === ");
+		expr = expr.replace(/\b0[.]0\s*==[^=]/g, "0.0 === ");
+
+		expr = expr.replace(/!=\s*true\b/g,  " !== true");
+		expr = expr.replace(/!=\s*false\b/g, " !== false");
+		expr = expr.replace(/!=\s*0\b/g,     " !== 0");
+		expr = expr.replace(/!=\s*0[.]0\b/g, " !== 0.0");
+		expr = expr.replace( /\btrue\s*!=[^=]/g, "true !== ");
+		expr = expr.replace(/\bfalse\s*!=[^=]/g, "false !== ");
+		expr = expr.replace(    /\b0\s*!=[^=]/g, "0 !== ");
+		expr = expr.replace(/\b0[.]0\s*!=[^=]/g, "0.0 !== ");
+
 		return expr.replace(/[$]([a-zA-Z0-9_]+)/g, function(match,p1) {
 			return "C.vars."+p1;
 		});
