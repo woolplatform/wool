@@ -236,12 +236,20 @@ function WoolNode(dialogue,lines) {
 		||  (found=expr.match(/\s+([a-zA-Z_][a-zA-Z0-9_]+)/))
 		//||  (found=expr.match(/[^$a-zA-Z0-9_"-]([a-zA-Z0-9_]+)/))
 		) {
-			if (found[1]!="true" && found[1]!="false") {
+			if (found[1]!="true"
+			&&  found[1]!="false"
+			&&  found[1]!="null") {
 				logError("error",line,"Variable '"+found[1]+"' missing '$' prefix");
 			}
 		}
 	}
 	function rewriteExpression(expr) {
+		// XXX shallow parsing, could match string literal
+		// XXX improve number parser 
+		expr = expr.replace(/[^=]==\s*true\b/g," === true");
+		expr = expr.replace(/[^=]==\s*false\b/g," === false");
+		expr = expr.replace(/[^=]==\s*0\b/g," === 0");
+		expr = expr.replace(/[^=]==\s*0[.]0\b/g," === 0.0");
 		return expr.replace(/[$]([a-zA-Z0-9_]+)/g, function(match,p1) {
 			return "C.vars."+p1;
 		});
