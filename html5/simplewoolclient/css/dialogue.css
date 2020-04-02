@@ -124,6 +124,7 @@ body {
 	text-align: center;
 }
 
+
 .reply-box {
 	display: block;
 	float: left;
@@ -263,6 +264,7 @@ div.statement-box, button {
 	margin-top: 30px;
 }
 
+
 button.reply:hover, button.reply:last-of-type:hover{
 	border: 4px solid #a9d2db;
 	background: #dff0f4;
@@ -305,13 +307,19 @@ button.reply-auto-forward:hover{
 	color: #000;
 }
 
+/* text/numeric input ------------------------------------ */
+
+.responseblock {
+	display: inline-block;
+	white-space: nowrap;
+}
 
 input.reply {
 	border: 4px solid #0b7b99;
 	background: #fff;
 	color: #000;
 	min-width: 275px;
-	float: left;
+	display: inline-block;
  	margin: 0 0 10px 0;
 	padding: 15px 15px 15px 15px;
 	-webkit-border-radius: 25px 0px 0px 5px;
@@ -345,9 +353,9 @@ input.invalid {
 }
 
 input.submit {
+	display: inline-block;
 	max-width: 150px;
 	background: #2889A3;
-	float: right;
 	font-weight: 600;
 	padding: 15px 15px 15px 15px;
 	-webkit-border-radius: 0px 25px 25px 0px;
@@ -366,12 +374,12 @@ input.submit:hover {
 	color: #000;
 }
 
+/* Original changed style to plain rounded rectangle, why?
+
 input.reply_with_after_statement {
 	-webkit-border-radius: 25px;
 	-moz-border-radius: 25px;
 	border-radius: 25px;
-	/*min-width: 80px;
-	max-width: 125px;*/
 }
 
 input.submit_with_after_statement {
@@ -379,24 +387,24 @@ input.submit_with_after_statement {
 	-moz-border-radius: 25px;
 	border-radius: 25px;
 }
+*/
 
 
-
-p.before_statement{
+.before_statement{
 	font-style: italic;
-	display: block;
-	float: left;
+	display: inline-block;
 	margin-right: 10px;
+	line-height: 40px;
 }
 
-p.after_statement {
+.after_statement {
 	font-style: italic;
-	display: block;
-	float: left;
+	display: inline-block;
 	margin-left: 10px;
 	margin-right: 10px;
 }
 
+/* unused? */
 #error_message {
 	text-align: center;
 	border: 1px solid #fff;
@@ -413,7 +421,8 @@ p.after_statement {
 	float: left;
 }
 
-/** ----------------------------------------- Multimedia ----------------------------------------- **/
+/** Multimedia ----------------------------------------- **/
+
 .multimedia {
 	width: 42%;
 	display: block;
@@ -517,14 +526,14 @@ p.after_statement {
 }
 
 
-/** ----------------------------------------- Multi agent ----------------------------------------- **/
+/** Multi agent ----------------------------------------- **/
 
 #all_agents_box {
 	width: 100%;
 	position: absolute;
 	bottom: 0;
 }
-/** ----------------------------------------- Instructions ----------------------------------------- **/
+/** Instructions ----------------------------------------- **/
 
 div.instruction {
 	margin-top: 20px;

@@ -1478,6 +1478,7 @@ var App = function(name, version, filename) {
 
 	this.setCurrentPath = function(newpath) {
 		// normalize path
+		// XXX cannot handle filenames with more than one "."
 		var dnewpath = newpath;
 		var filebase = null;
 		if (this.fs.fstype == "browser") {
@@ -1490,7 +1491,10 @@ var App = function(name, version, filename) {
 			filebase = newpath.match(/^.*[\/\\]([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
 		} else {
 			// remove extension
+			// with path
 			filebase = newpath.match(/^(.*[\/\\][^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
+			// without path
+			if (!filebase) filebase = newpath.match(/^([^.]*)[.][YWyw][aoAO][roRO][LNln][txt.]*$/i);
 		}
 		if (filebase) {
 			dnewpath = filebase[1];

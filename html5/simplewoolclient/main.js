@@ -286,18 +286,20 @@ function updateNodeUI(node) {
 			var func = reply.replyType=="TEXTINPUT"
 				? "handleTextReply" : "handleNumericReply";
 			replyelem.className = "reply-box";
-			replyelem.innerHTML += '<p class="before_statement">' 
-				+ __(reply.beforeStatement) + '</p>';
+			replyelem.innerHTML += '<div class="before_statement">' 
+				+ __(reply.beforeStatement) + '</div>';
 			replyelem.innerHTML +=
-				"<input type='text' placeholder='Type here' value='' type='text' name='test' class='"+replyclass+"'"
+				"<div class='responseblock'>"
+				+"<input type='text' placeholder='Type here' value='' type='text' name='test' class='"+replyclass+"'"
 				+" id='"+reply.replyId+"_content'"
 				+"></input>"
 				+"<input class='"+submitclass+"'"
 				+" onclick='"+func+"(\""
-					+reply.replyId+"\",\""+i+"\")' value='"+__("Send")+"'></input>";
+					+reply.replyId+"\",\""+i+"\")' value='"+__("Send")+"'></input>"
+				+"</div>\n"; /* responseblock */
 			if (reply.afterStatement) {
-				replyelem.innerHTML += '<p class="after_statement">' 
-					+ __(reply.afterStatement) + '</p>';
+				replyelem.innerHTML += '<div class="after_statement">' 
+					+ __(reply.afterStatement) + '</div>';
 			}
 
 		}

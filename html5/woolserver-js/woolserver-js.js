@@ -223,15 +223,18 @@ function WoolNode(dialogue,lines) {
 			this.head.push(line);
 		}
 	}
+	function removeLiteralStrings(expr) {
+		// XXX string escapes not supported
+		expr = expr.replace(/["][^"]*["]/g,"");
+		expr = expr.replace(/['][^']*[']/g,"");
+		return expr;
+	}
 	// check for existence of bare identifiers (e.g. myVar instead of $myVar)
 	// If found, add error to this.errors
 	function checkExpressionForBareIds(expr,line) {
 		var found = null;
 		// XXX shallow parsing
-		// first, remove all quoted strings
-		// XXX string escapes not supported
-		expr = expr.replace(/["][^"]*["]/g,"");
-		expr = expr.replace(/['][^']*[']/g,"");
+		expr = removeLiteralStrings(expr);
 		if ((found=expr.match(/^([a-zA-Z_][a-zA-Z0-9_]+)/))
 		||  (found=expr.match(/\s+([a-zA-Z_][a-zA-Z0-9_]+)/))
 		//||  (found=expr.match(/[^$a-zA-Z0-9_"-]([a-zA-Z0-9_]+)/))
@@ -243,10 +246,17 @@ function WoolNode(dialogue,lines) {
 			}
 		}
 	}
+	// check for existence of '=', generate a warning in this.errors.
+	function checkExpressionForSingleEquals(expr,line) {
+		expr = removeLiteralStrings(expr);
+		if (expr.match(/[^=]=[^=]/)) {
+			logError("warning",line,"Assigment operator '=' found in <<if>> statement. Did you mean '=='?");
+		}
+	}
 	function rewriteExpression(expr) {
 		// XXX $a == $b is not rewritten, inherits js semantics
 		// XXX shallow parsing, could match string literal
-		// XXX improve number parser 
+		// XXX improve number parser, e.g. ".0" not supported
 		expr = expr.replace(/[^=]==\s*true\b/g,  " === true");
 		expr = expr.replace(/[^=]==\s*false\b/g, " === false");
 		expr = expr.replace(/[^=]==\s*0\b/g,     " === 0");
@@ -329,6 +339,7 @@ function WoolNode(dialogue,lines) {
 				this.texts[alllines.trim()] = true;
 				alllines=""
 			}
+			checkExpressionForSingleEquals(matches[2], i);
 			checkExpressionForBareIds(matches[2], i);
 			this.body[i] = (matches[1] ? "} else if (" : "if (")
 				+ rewriteExpression(matches[2])
