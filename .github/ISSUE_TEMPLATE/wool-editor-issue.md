@@ -7,7 +7,9 @@ assignees: borisvanschooten
 
 ---
 
-Editor Version: 
-Web or Desktop: 
-Operating System: 
-Browser (for Web):
+-- Editor Version: 
+-- Web or Desktop: 
+-- Operating System: 
+-- Browser (for Web):
+
+---- Describe the Issue: ----
