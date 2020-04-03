@@ -408,17 +408,26 @@ public class Value {
 			else
 				list2 = Collections.singletonList(val2.value);
 			return isEqualLists(list1, list2);
-		} else if (val1.isString() || val2.isString()) {
-			// one of the values can be a number
-			return val1.toString().equals(val2.toString());
-		} else {
+		} else if (val1.isNumber() || val2.isNumber()) {
+			// one of the values can be string
 			try {
-				return val1.asNumber().equals(val2.asNumber());
+				return isEqualNumbers(val1.asNumber(), val2.asNumber());
 			} catch (EvaluationException ex) {
-				throw new RuntimeException("Unexpected error: " +
-						ex.getMessage(), ex);
+				// one of the value is a string that can't be evaluated as a
+				// number
+				return false;
 			}
+		} else {
+			// both values are string
+			return val1.toString().equals(val2.toString());
 		}
+	}
+
+	private static boolean isEqualNumbers(Number num1, Number num2) {
+		if (isIntNumber(num1) && isIntNumber(num2))
+			return num1.longValue() == num2.longValue();
+		else
+			return num1.doubleValue() == num2.doubleValue();
 	}
 	
 	private static boolean isEqualLists(List<?> list1, List<?> list2) {
@@ -436,7 +445,7 @@ public class Value {
 	}
 	
 	private static boolean isEqualMaps(Map<?,?> map1, Map<?,?> map2) {
-		if (map1.size() != map1.size())
+		if (map1.size() != map2.size())
 			return false;
 		for (Object key : map1.keySet()) {
 			if (!map2.containsKey(key))
@@ -458,7 +467,7 @@ public class Value {
 			return val2.isString() && val1.toString().equals(val2.toString());
 		} else if (val1.isNumber()) {
 			try {
-				return val2.isNumber() && val1.asNumber().equals(
+				return val2.isNumber() && isEqualNumbers(val1.asNumber(),
 						val2.asNumber());
 			} catch (EvaluationException ex) {
 				throw new RuntimeException("Unexpected error: " +
@@ -489,7 +498,7 @@ public class Value {
 	}
 	
 	private static boolean isStrictEqualMaps(Map<?,?> map1, Map<?,?> map2) {
-		if (map1.size() != map1.size())
+		if (map1.size() != map2.size())
 			return false;
 		for (Object key : map1.keySet()) {
 			if (!map2.containsKey(key))
