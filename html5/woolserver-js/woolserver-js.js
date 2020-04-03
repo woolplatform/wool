@@ -249,8 +249,8 @@ function WoolNode(dialogue,lines) {
 	// check for existence of '=', generate a warning in this.errors.
 	function checkExpressionForSingleEquals(expr,line) {
 		expr = removeLiteralStrings(expr);
-		if (expr.match(/[^=]=[^=]/)) {
-			logError("warning",line,"Assigment operator '=' found in <<if>> statement. Did you mean '=='?");
+		if (expr.match(/[^=<>]=[^=]/)) {
+			logError("warning",line,"Assignment operator '=' found in <<if>> statement. Did you mean '=='?");
 		}
 	}
 	function rewriteExpression(expr) {
@@ -283,7 +283,7 @@ function WoolNode(dialogue,lines) {
 	// Returns null on parse error
 	function parseKeyValList(expr) {
 		var ret = {};
-		var regex = /^\s*([a-zA-Z0-9_]+)\s*=\s*"([^"]+)"/;
+		var regex = /^\s*([a-zA-Z0-9_]+)\s*=\s*"([^"]*)"/;
 		while (true) {
 			var matches = regex.exec(expr);
 			if (!matches) break;
@@ -294,6 +294,30 @@ function WoolNode(dialogue,lines) {
 		if (!expr) return ret;
 		if (expr.trim() != "") return null;
 		return ret;
+	}
+	// returns action statement when <<set ... >> found, otherwise null
+	function checkSetStatement(str) {
+		var matches=/^<<set\s+[$](\w+)\s*[=]\s*(.+)\s*>>$/.exec(str);
+		if (matches) {
+			return "C.vars."+matches[1]+" = "+rewriteExpression(matches[2])+";";
+		} else {
+			return null;
+		}
+	}
+	function checkActionStatement(str,i) {
+		matches=/^<<action\s+(.+)\s*>>$/.exec(str);
+		if (matches) {
+			var actionparams = parseKeyValList(matches[1]);
+			if (actionparams === null) {
+				logError("error",i,
+					"Cannot parse parameter string '"
+					+matches[1]+"'");
+				return null;
+			}
+			return "C.doAction("+JSON.stringify(actionparams)+");";
+		} else {
+			return null;
+		}
 	}
 	if (this.body.length==0) logError("error",null,"Node has no body");
 	// get key-value pairs from head
@@ -325,9 +349,20 @@ function WoolNode(dialogue,lines) {
 	var alllines=""; // collect subsequent lines for translation
 	for (var i=0; i<this.body.length; i++) {
 		var line = this.body[i];
+		// XXX also matches string literals, so in this parser, it is
+		// ignored inside << ... >> or [[ ... ]].
 		var linecommentchar = line.indexOf('//');
 		if (linecommentchar >= 0) {
-			line = line.substring(0,linecommentchar);
+			// comment found, check if not inside << ... >> or [[ ... ]]
+			var lhs = line.substring(0,linecommentchar);
+			var rhs = line.substring(linecommentchar+2);
+			if ( (lhs.indexOf("<<") >= 0 && rhs.indexOf(">>") >= 0)
+			||   (lhs.indexOf("[[") >= 0 && rhs.indexOf("]]") >= 0) ) {
+				// inside, do nothing
+			} else {
+				// not inside, keep left part only
+				line = lhs;
+			}
 		}
 		line = line.trim();
 		this.body[i] = line;
@@ -366,10 +401,14 @@ function WoolNode(dialogue,lines) {
 			this.body[i] = "}";
 			continue;
 		}
-		// XXX duplicate code for <<set>> in reply statement
-		var matches = /^<<set\s+[$](\w+)\s*[=]\s*(.+)\s*>>$/.exec(line);
-		if (matches) {
-			this.body[i] = "C.vars."+matches[1]+" = "+rewriteExpression(matches[2])+";";
+		var actfuncitem = checkSetStatement(line);
+		if (actfuncitem) {
+			this.body[i] = actfuncitem;
+			continue;
+		}
+		var actfuncitem = checkActionStatement(line,i);
+		if (actfuncitem) {
+			this.body[i] = actfuncitem;
 			continue;
 		}
 		var matches = /^<<multimedia\s+type=image\s+name=([^\]]+)>>$/.exec(line);
@@ -425,7 +464,7 @@ function WoolNode(dialogue,lines) {
 				// chop leading and trailing brackets
 				matches = /^\s*<<(.*)>>\s*$/.exec(actionsstr);
 				if (!matches) {
-					logError("error",i,"Cannot parse action "+actionstr);
+					logError("error",i,"Cannot parse action "+actionsstr);
 				} else {
 					actionsstr = matches[1];
 					// XXX brackets in quotes not parsed properly
@@ -433,25 +472,16 @@ function WoolNode(dialogue,lines) {
 					var actfunc = "";
 					for (var j=0; j<actions.length; j++) {
 						var actionstr = "<<"+actions[j]+">>";
-						// XXX duplicate code for <<set>> above
-						var matches=/^<<set\s+[$](\w+)\s*[=]\s*(.+)\s*>>$/.exec(actionstr);
-						if (matches) {
-							actfunc += "C.vars."+matches[1]+" = "+rewriteExpression(matches[2])+";";
+						var actfuncitem = checkSetStatement(actionstr);
+						if (actfuncitem) {
+							actfunc += actfuncitem;
 						} else {
-							matches=/^<<action\s+(.+)\s*>>$/.exec(actionstr);
-							if (matches) {
-								var actionparams = parseKeyValList(matches[1]);
-								if (actionparams === null) {
-									logError("error",i,
-										"Cannot parse parameter string '"
-										+matches[1]+"'");
-								}
-								//logError("warning",i,"actions not implemented");
-								// no known actions with i18n text parameters
-								actfunc += "C.doAction("
-									+JSON.stringify(actionparams)+");";
+							actfuncitem = checkActionStatement(actionstr,i);
+							if (actfuncitem) {
+								actfunc += actfuncitem;
 							} else {
-								logError("error",i,"Cannot parse action "+actionstr);
+								logError("error",i,
+									"Cannot parse action "+actionstr);
 							}
 						}
 					}

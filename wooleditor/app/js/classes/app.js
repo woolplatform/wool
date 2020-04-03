@@ -155,8 +155,7 @@ var App = function(name, version, filename) {
 		// setInterval(function() { self.updateArrows(); }, 16);
 
 		// drag node holder around
-		(function()
-		{
+		(function() {
 			var dragging = false;
 			var offset = { x: 0, y: 0 };
 			var MarqueeOn = false;
@@ -164,12 +163,12 @@ var App = function(name, version, filename) {
 			var MarqRect = {x1:0,y1:0,x2:0,y2:0};
 			var MarqueeOffset = [0, 0];
 
-			$(".nodes").on("mousedown", function(e)
-			{
+			$(".nodes").on("mousedown", function(e) {
 				$("#marquee").css({x:0, y:0, width:0, height:0});
 				dragging = true;
-				offset.x = e.pageX;
-				offset.y = e.pageY;
+				var rootofs = self.domroot.offset();
+				offset.x = e.pageX - rootofs.left;
+				offset.y = e.pageY - rootofs.top;
 				MarqueeSelection = [];
 				MarqRect = {x1:0,y1:0,x2:0,y2:0};
 
@@ -183,7 +182,9 @@ var App = function(name, version, filename) {
 			});
 
 			$(".nodes").on("mousemove", function(e) {
-				
+				var rootofs = self.domroot.offset();
+				var erootX = e.pageX - rootofs.left;
+				var erootY = e.pageY - rootofs.top;
 				if (dragging) {
 					// We added shiftKey because altKey interferes with
 					// xfce metakey
@@ -195,23 +196,23 @@ var App = function(name, version, filename) {
 							$("#marquee").css({x:0, y:0, width:0, height:0});
 						} else {
 							/*
-							self.transformOrigin[0] += e.pageX - offset.x;
-							self.transformOrigin[1] += e.pageY - offset.y;
+							self.transformOrigin[0] += erootX - offset.x;
+							self.transformOrigin[1] += erootY - offset.y;
 
 							self.translate();
 
-							offset.x = e.pageX;
-							offset.y = e.pageY;
+							offset.x = erootX;
+							offset.y = erootY;
 							*/
 
 							var nodes = self.nodes();
 							for (var i in nodes)
 							{
-								nodes[i].x(nodes[i].x() + (e.pageX - offset.x) / self.cachedScale);
-								nodes[i].y(nodes[i].y() + (e.pageY - offset.y) / self.cachedScale);
+								nodes[i].x(nodes[i].x() + (erootX - offset.x) / self.cachedScale);
+								nodes[i].y(nodes[i].y() + (erootY - offset.y) / self.cachedScale);
 							}
-							offset.x = e.pageX;
-							offset.y = e.pageY;
+							offset.x = erootX;
+							offset.y = erootY;
 						}
 						self.translate();
 					} else {	
@@ -219,33 +220,26 @@ var App = function(name, version, filename) {
 
 						var scale = self.cachedScale;
 
-						if(e.pageX > offset.x && e.pageY < offset.y)
-						{
+						if(erootX > offset.x && erootY < offset.y) {
 							MarqRect.x1 = offset.x;
-							MarqRect.y1 = e.pageY;
-							MarqRect.x2 = e.pageX;
+							MarqRect.y1 = erootY;
+							MarqRect.x2 = erootX;
 							MarqRect.y2 = offset.y;
-						}
-						else if(e.pageX > offset.x && e.pageY > offset.y)
-						{
+						} else if(erootX > offset.x && erootY > offset.y) {
 							MarqRect.x1 = offset.x;
 							MarqRect.y1 = offset.y;
-							MarqRect.x2 = e.pageX;
-							MarqRect.y2 = e.pageY;
-						}
-						else if(e.pageX < offset.x && e.pageY < offset.y)
-						{
-							MarqRect.x1 = e.pageX;
-							MarqRect.y1 = e.pageY;
+							MarqRect.x2 = erootX;
+							MarqRect.y2 = erootY;
+						} else if(erootX < offset.x && erootY < offset.y) {
+							MarqRect.x1 = erootX;
+							MarqRect.y1 = erootY;
 							MarqRect.x2 = offset.x;
 							MarqRect.y2 = offset.y;
-						}
-						else
-						{
-							MarqRect.x1 = e.pageX;
+						} else {
+							MarqRect.x1 = erootX;
 							MarqRect.y1 = offset.y;
 							MarqRect.x2 = offset.x;
-							MarqRect.y2 = e.pageY;
+							MarqRect.y2 = erootY;
 						}
 
 						$("#marquee").css({ x:MarqRect.x1, 
@@ -343,8 +337,9 @@ var App = function(name, version, filename) {
 				self.cachedScale += scaleChange;
 			};
 
-			var mouseX = event.pageX - self.transformOrigin[0],
-				mouseY = event.pageY - self.transformOrigin[1],
+			var rootofs = self.domroot.offset();
+			var mouseX = event.pageX - rootofs.left - self.transformOrigin[0],
+				mouseY = event.pageY - rootofs.top - self.transformOrigin[1],
 				newX = mouseX * (self.cachedScale / lastZoom),
 				newY = mouseY * (self.cachedScale / lastZoom),
 				deltaX = (mouseX - newX),
@@ -364,8 +359,7 @@ var App = function(name, version, filename) {
 					$(e.target).parents('.nodes').length
 				);
 
-			if( e.button == 2 && isAllowedEl )
-			{
+			if( e.button == 2 && isAllowedEl ) {
 				var x = self.transformOrigin[0] * -1 / self.cachedScale,
 					y = self.transformOrigin[1] * -1 / self.cachedScale;
 

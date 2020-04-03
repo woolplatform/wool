@@ -1,0 +1,32 @@
+title: Start
+tags: 
+speaker: 
+colorID: 0
+position: -84,408
+---
+This is a test of action statements.
+
+<<action type="generic" value="TEST_ACTION" param1="value1" param2="value2" param3="3">>
+
+This text comes after a generic action.
+
+<<action type="image" value="image.png">>
+
+This text comes after an image action.
+
+<<action type="video" value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">>
+
+This text comes after a video action.
+
+[[Open recipe book on page 10|Node1|<<action type="generic" value="OPEN_RECIPE_BOOK" page="10">>]]
+[[Two actions|Node1|<<action type="generic" value="OPEN_RECIPE_BOOK" page="10">><<action type="generic" value="OTHER">>]]
+[[Action + set statement|Node1| <<action type="generic" value="OPEN_RECIPE_BOOK" page="10">> <<set $bool=true>>]]
+===
+title: Node1
+tags: 
+speaker: 
+colorID: 0
+position: 315,406
+---
+End of dialogue
+===

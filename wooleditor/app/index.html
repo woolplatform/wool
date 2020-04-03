@@ -277,7 +277,7 @@
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
 			if (!filePath) filePath = "unnamed";
-			var app = new App("Wool Editor", "1.4.0",filePath);
+			var app = new App("Wool Editor", "1.4.1",filePath);
 			app.run();
 			if (app.isNwjs) {
 				Split(["#filepanel","#editpanel"],{

@@ -1,0 +1,101 @@
+title: TestNumberStringCmp
+tags: 
+speaker: 
+colorID: 0
+position: 331,464
+---
+This is a test of conditional statements.
+
+First, we test numeric and string comparisons.
+
+<br>
+
+<<if "3" == 3>>
+"3" == 3 is true
+<<else>>
+"3" == 3 is false
+<<endif>>
+
+<br>
+
+<<if "03" == 3>>
+"03" == 3 is true
+<<else>>
+"03" == 3 is false
+<<endif>>
+
+<br>
+
+<<if "2.50" == 2.5>>
+"2.50" == 2.5 is true
+<<else>>
+"2.50" == 2.5 is false
+<<endif>>
+
+<br>
+
+<<if "0" == 0>>
+"0" == 0 is true
+<<else>>
+"0" == 0 is false
+<<endif>>
+
+
+[[Start]]
+===
+title: Start
+tags: 
+speaker: 
+colorID: 0
+position: 328,167
+---
+In this file, we test different comparisons inside IF statements.
+
+What do you want to test?
+
+[[Number-String comparisons|TestNumberStringCmp]]
+[[Different comparison ops|TestCmpOps]]
+===
+title: TestCmpOps
+tags: 
+speaker: 
+colorID: 0
+position: 658,471
+---
+Here we test comparison ops.
+
+<br>
+
+<<if "12" > 3>>
+"12" > 3 is true
+<<else>>
+"12" > 3 is false
+<<endif>>
+
+<br>
+
+<<if 3 < 12>>
+3 < 12 is true
+<<else>>
+3 < 12 is false
+<<endif>>
+
+<br>
+
+<<if "3" <= 12>>
+"3" <= 12 is true
+<<else>>
+"3" <= 12 is false
+<<endif>>
+
+<br>
+
+<<if "3" >= "12">>
+"3" >= "12" is true
+<<else>>
+"3" >= "12" is false
+<<endif>>
+
+
+[[Start]]
+===
