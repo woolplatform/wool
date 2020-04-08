@@ -249,7 +249,7 @@ function WoolNode(dialogue,lines) {
 	// check for existence of '=', generate a warning in this.errors.
 	function checkExpressionForSingleEquals(expr,line) {
 		expr = removeLiteralStrings(expr);
-		if (expr.match(/[^=<>]=[^=]/)) {
+		if (expr.match(/[^=<>!]=[^=]/)) {
 			logError("warning",line,"Assignment operator '=' found in <<if>> statement. Did you mean '=='?");
 		}
 	}

@@ -185,7 +185,8 @@ if (urlParams.editable) {
 			+"</div>";
 	}
 	document.body.innerHTML +=
-		"<div class='editbox'>Avatar: "
+		"<div class='editbox'>"
+		+"Avatar: "
 		+"<div class='incrementbutton' onclick='incCurrentAvatar(1);'>+</div>"
 		+"<div class='incrementbutton' onclick='incCurrentAvatar(-1);'>-</div>"
 		+"<br>Background: "
@@ -194,7 +195,8 @@ if (urlParams.editable) {
 		+"<br><div class='commandbutton' onclick='showUrl();'>Get URL</div>"
 		+"<div class='commandbutton' onclick='showVariables();'>Variables</div>"
 		+edithtml
-		+"</div>";
+		+"</div>\n"
+		+"<div class='currentdialoguebox' id='dialogueId'></div>\n";
 }
 
 
@@ -229,6 +231,9 @@ function startDialogue() {
 
 
 function updateNodeUI(node) {
+	var dialogueidview = document.getElementById("dialogueId");
+	if (dialogueidview) dialogueidview.innerText =
+		directServer.currentdialogueId;
 	var editnodelink = document.getElementById("editnodeurl");
 	if (editnodelink) {
 		if (!directServer.jumpedToNewDialogue) {

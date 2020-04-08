@@ -1414,7 +1414,7 @@ var App = function(name, version, filename) {
 		var urlFileParam = "";
 		if (self.isNwjs) {
 			urlFileParam = "&woolRoot="+encodeURIComponent(data.getRoot())
-				+"&filepath="+encodeURIComponent(self.filename()+".wool")
+				+"&filepath="+encodeURIComponent("/"+self.filename())
 		}
 		var content = data.getSaveData(FILETYPE.WOOL);
 		window.name = JSON.stringify({
