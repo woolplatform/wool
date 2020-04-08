@@ -451,7 +451,7 @@ function WoolNode(dialogue,lines) {
 		}
 
 		// normal reply
-		var matches = /^\[\[\s*([^|\]]+)\s*\|\s*([a-zA-Z0-9_.-\/]+)\s*(|.*)?\]\]$/.exec(line);
+		var matches = /^\[\[\s*([^|\]]+)\s*\|\s*([a-zA-Z0-9_.\/-]+)\s*(|.*)?\]\]$/.exec(line);
 		if (matches) {
 			// XXX textinput also accepts min, max
 			var desc = matches[1];
