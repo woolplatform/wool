@@ -1,24 +1,33 @@
 
-var directServer = {
-	availableDialogues: [],
-	dialogues : {},
-	// function to call if dialogues are loaded
-	nrDialoguesLoaded: 0,
-	allDataLoaded: false,
-	// runtime errors
-	errors: [],
-	ui_settings: { language: "nl_NL" },
-	// state
-	currentdialogueId: null,
-	currentdialogue: null,
-	currentnode: null,
-	currentnodectx: null,
-};
+var directServer = {};
 
+function initDirectServer() {
+	directServer.rootDir = null; // null = unknown
+	directServer.jumpedToNewDialogue = false;
+	directServer.availableDialogues = [];
+	directServer.dialogues = {};
+	// function to call if dialogues are loaded
+	directServer.nrDialoguesLoaded = 0;
+	directServer.allDataLoaded = false;
+	// runtime errors
+	directServer.errors = [];
+	directServer.ui_settings = { language: "nl_NL" };
+	// state
+	directServer.currentdialogueId = null;
+	directServer.currentdialogue = null;
+	directServer.currentnode = null;
+	directServer.currentnodectx = null;
+}
+
+initDirectServer();
 
 // type is fatal, error, warning, notice
 directServer.logError = function (obj) {
 	directServer.errors.push(obj);
+}
+
+directServer.setRootDir = function(rootDir) {
+	directServer.rootDir = rootDir;
 }
 
 directServer.substituteVars = function(ctx,text) {
@@ -213,16 +222,26 @@ function _directServer_get_ui_settings(par) {
 }
 
 
+// par: {
+//     dialogueId - ID of dialogue
+//     startNodeId - ID of start node (optional, default is "Start")
+//     keepVars - keep any defined vars (optional, default is false)
+// }
 function _directServer_start_dialogue(par) {
 	directServer.currentdialogueId = par.dialogueId;
+	if (!par.startNodeId) par.startNodeId = "Start";
 	directServer.currentdialogue = directServer.dialogues[par.dialogueId];
 	// start node is node named "Start", otherwise first node
 	var node = directServer.currentdialogue.nodes[0];
-	var idx = directServer.findNodeIdx("Start");
+	var idx = directServer.findNodeIdx(par.startNodeId);
 	if (idx!==null) node = directServer.currentdialogue.nodes[idx];
 	directServer.currentnode = node;	
 	// pass kb variables here
-	directServer.currentnodectx = new WoolNodeContext({});
+	var vars = {};
+	if (par.keepVars && directServer.currentnodectx) {
+		vars = directServer.currentnodectx.vars;
+	}
+	directServer.currentnodectx = new WoolNodeContext(vars);
 	directServer.currentnode.func(directServer.currentnodectx);
 	return directServer.getNode();
 }
@@ -230,6 +249,26 @@ function _directServer_start_dialogue(par) {
 function _directServer_progress_dialogue(par) {
 	// do actions first
 	var replyId = par.replyId;
+	var newDialogueId = null; // defined when jumping to different dialogue
+	var pathSep = replyId.lastIndexOf(".");
+	if (pathSep >= 0) {
+		var fs = new NodeFileSystem();
+		var newPath = replyId.substring(0,pathSep);
+		replyId = replyId.substring(pathSep+1);
+		if (newPath.indexOf("/") != 0 && newPath.indexOf("\\") != 0) {
+			// relative path
+			var curPath=fs.getPathAPI().dirname(directServer.currentdialogueId);
+			newPath = fs.getPathAPI().normalize(fs.getPathAPI().join(
+				"/", curPath, newPath) );
+		} else {
+			// absolute path -> add language
+			// TODO define alternative language code
+			newPath = fs.getPathAPI().normalize(fs.getPathAPI().join(
+				"/","en",newPath) );
+		}
+		newDialogueId = newPath;
+		//alert("Dialogue jump "+newPath+"#"+replyId);
+	}
 	var replydef = typeof par.replyIndex != 'undefined'
 		? directServer.currentnodectx.choices[par.replyIndex]
 		: null;
@@ -247,19 +286,31 @@ function _directServer_progress_dialogue(par) {
 			ctx.vars[ctx.inputreply.inputvar] = par.textInput;
 		}
 	}
-	directServer.currentnode = directServer.currentdialogue.nodeMap[replyId];
-	directServer.currentnodectx = new WoolNodeContext(
-		directServer.currentnodectx.vars
-	);
-	if (typeof directServer.currentnode.func == 'function' ) {
-		try {
-			directServer.currentnode.func(directServer.currentnodectx);
-		} catch (e) {
-			directServer.logError("Node "+directServer.currentnode.param["title"]+": runtime script error: "+e);
-		}
+	// jump to new node
+	if (newDialogueId) {
+		directServer.jumpedToNewDialogue = true;
+		directServerLoadNodeDialogue(newDialogueId,
+			directServer.rootDir + newDialogueId + ".wool");
+		return _directServer_start_dialogue({
+			dialogueId: newDialogueId,
+			startNodeId: replyId,
+			keepVars: true,
+		});
 	} else {
-		directServer.logError("Node "+directServer.currentnode.param["title"]+": script compile error.");
+		directServer.currentnode = directServer.currentdialogue.nodeMap[replyId];
+		directServer.currentnodectx = new WoolNodeContext(
+			directServer.currentnodectx.vars
+		);
+		if (typeof directServer.currentnode.func == 'function' ) {
+			try {
+				directServer.currentnode.func(directServer.currentnodectx);
+			} catch (e) {
+				directServer.logError("Node "+directServer.currentnode.param["title"]+": runtime script error: "+e);
+			}
+		} else {
+			directServer.logError("Node "+directServer.currentnode.param["title"]+": script compile error.");
+		}
+		return directServer.getNode();
 	}
-	return directServer.getNode();
 }
 

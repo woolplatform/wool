@@ -8,8 +8,11 @@ var data =
 
 	appendRoot: function(filepath) {
 		if (app.fs.fstype != "node") return filepath;
-		var root = localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
-		return root+"/"+filepath;
+		return this.getRoot()+"/"+filepath;
+	},
+
+	getRoot: function() {
+		return localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
 	},
 
 	// callback: function(element)

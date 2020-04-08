@@ -1,4 +1,11 @@
+// ------------------------------------------------------------------
+// helpers
 
+function detectNodeJS() {
+	return typeof(process) !== "undefined";
+}
+
+// ------------------------------------------------------------------
 // abstract class, simulating nodejs fs functions
 
 function FileSystem(fstype) {
@@ -24,7 +31,10 @@ FileSystem.prototype.readdirtree = function(path,callback) {}
 // callback - function(err)
 FileSystem.prototype.renameFile = function(oldpath,newpath,safe,callback) {}
 
+FileSystem.prototype.getPathAPI = function(path) {}
 
+
+// ------------------------------------------------------------------
 // node.js implementation. Assumes node.js is available.
 
 function NodeFileSystem() {
@@ -36,6 +46,10 @@ NodeFileSystem.prototype = new FileSystem();
 
 NodeFileSystem.prototype.readFile = function(path,blob,callback){
 	this.fs.readFile(path, "utf-8", callback);
+}
+
+NodeFileSystem.prototype.readFileSync = function(path,blob,callback){
+	return this.fs.readFileSync(path, "utf-8");
 }
 
 NodeFileSystem.prototype.writeFile = function(path,data,callback) {
@@ -91,7 +105,9 @@ FileSystem.prototype.renameFile = function(oldpath,newpath,safe,callback) {
 	}
 }
 
+FileSystem.prototype.getPathAPI = function() { return this.path; }
 
+// ------------------------------------------------------------------
 // browser-only implementation
 
 function BrowserFileSystem() {

@@ -45,10 +45,10 @@ var App = function(name, version, filename) {
 	this.$searchField = $(".search-field");
 
 	// node-webkit
-	if (typeof(process) !== "undefined") {
+	this.isNwjs = detectNodeJS();
+	if (this.isNwjs) {
 		//this.gui = require('nw.gui');
 		this.fs = new NodeFileSystem();
-		this.isNwjs = true;
 	} else {
 		this.fs = new BrowserFileSystem();
 	}
@@ -1411,6 +1411,11 @@ var App = function(name, version, filename) {
 	this.doRunDialogue = function(doContinue) {
 		//document.getElementById('woolclient-popup-iframe').contentWindow.location.reload();
 		data.saveToBuffer();
+		var urlFileParam = "";
+		if (self.isNwjs) {
+			urlFileParam = "&woolRoot="+encodeURIComponent(data.getRoot())
+				+"&filepath="+encodeURIComponent(self.filename()+".wool")
+		}
 		var content = data.getSaveData(FILETYPE.WOOL);
 		window.name = JSON.stringify({
 			sourceCode: content,
@@ -1427,6 +1432,7 @@ var App = function(name, version, filename) {
 			+Math.random()
 			+"&editurl="+encodeURIComponent("../../wooleditor/app/index.html")
 			+(doContinue ? "&docontinue=true" : "")
+			+urlFileParam
 			//+"&code="+encodeURIComponent(
 			//	data.getSaveData(FILETYPE.WOOL)
 			//)

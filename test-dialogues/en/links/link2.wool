@@ -1,0 +1,22 @@
+title: Start
+tags: 
+speaker: 
+colorID: 0
+position: 279,228
+---
+Inter-dialogue link test. This is dialogue "link2".
+
+[[Go to link1|link1.Start]]
+[[Go to /link1|/link1.Start]]
+
+===
+title: AltStart
+tags: 
+speaker: 
+colorID: 0
+position: 574,235
+---
+Inter-dialogue link test. This is dialogue "link2". This is node "AltStart".
+
+[[Go to link1|link1.Start]]
+===

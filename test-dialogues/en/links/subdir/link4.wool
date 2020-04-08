@@ -1,0 +1,14 @@
+title: Start
+tags: 
+speaker: 
+colorID: 0
+position: 432,293
+---
+Inter-dialogue link test. This is dialogue "link4".
+
+[[Go to link3|link3.Start]]
+[[Go to link3.AltStart|link3.AltStart]]
+[[Go to /links/subdir/link3|/links/subdir/link3.Start]]
+[[Go to /links/link1|/links/link1.Start]]
+
+===

@@ -5,8 +5,8 @@
 
 var LOCALSTORAGEPREFIX="wool_js_";
 
-// get params and config ------------------------------------------------
-var params = Utils.getUrlParameters();
+// get urlParams and config ------------------------------------------------
+var urlParams = Utils.getUrlParameters();
 
 
 //localStorage.removeItem("simplewoolclient_config");
@@ -16,8 +16,8 @@ var config = {
 	"background": 12,
 };
 
-if (params.config) {
-	config = JSON.parse(params.config);
+if (urlParams.config) {
+	config = JSON.parse(urlParams.config);
 } else {
 	var c = localStorage.getItem("simplewoolclient_config");
 	if (c) config = JSON.parse(c);
@@ -47,21 +47,20 @@ saveConfig();
 if (config.background!==null)
 	document.body.className = "pattern"+config.background;
 
+
+// Obtain source code and lang defs. Possible sources:
+// - URL parameter "code" (langDefs cannot be obtained from url yet)
+// - windowparams.sourceCode and windowparams.langDefs
+
+
 var sourceCode = null;
 
 var langDefs = null;
 
-//sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
-
-if (params.code) sourceCode = params.code;
-
-try {
-	var windowparams = JSON.parse(window.name);
-	if (!sourceCode) sourceCode = windowparams.sourceCode;
-	if (!langDefs) langDefs = windowparams.langDefs;
-} catch (e) {
-	console.log(e);
-}
+// In the node environment, the ID represents the absolute path. If loaded
+// through directServerLoadNodeDialogue, this ensures the initial dialogue is
+// taken from the source code rather than the file.
+var dialogueID = "dialogue";
 
 if (langDefs) {
 	// autodetect json or po
@@ -75,13 +74,46 @@ if (langDefs) {
 	_i18n.setLocale("nl");
 }
 
-directServerLoadDialogue("dialogue",sourceCode);
+//sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
+
+if (urlParams.code) sourceCode = urlParams.code;
+
+try {
+	var windowparams = JSON.parse(window.name);
+	if (!sourceCode) sourceCode = windowparams.sourceCode;
+	if (!langDefs) langDefs = windowparams.langDefs;
+} catch (e) {
+	console.log(e);
+}
+
+// if URL parameters "woolRoot" and "filepath" are supplied, we assume node.js
+// is available, and we can load new dialogues.  Note that the current
+// dialogue is not loaded from file because it may not have been saved.
+// sourceCode is used instead of file contents every time we jump back to the
+// original dialogue.  If sourceCode is not available, then load it from file
+// anyway.
+if (urlParams.woolRoot && urlParams.filepath) {
+	dialogueID = urlParams.filepath;
+	if (!detectNodeJS()) {
+		alert("Fatal: File path specified but node.js not available");
+	} else {
+		directServer.setRootDir(urlParams.woolRoot);
+		if (!sourceCode) {
+			sourceCode = directServerLoadNodeDialogue(dialogueID,
+				urlParams.woolRoot+"/"+urlParams.filepath);
+		} else {
+			directServerLoadDialogue(dialogueID,sourceCode);
+		}
+	}
+} else {
+	directServerLoadDialogue(dialogueID,sourceCode);
+}
 
 
 var errorsFound=false;
 var errors = {};
-for (var i=0; i<directServer.dialogues["dialogue"].nodes.length; i++) {
-	var node = directServer.dialogues["dialogue"].nodes[i];
+for (var i=0; i<directServer.dialogues[dialogueID].nodes.length; i++) {
+	var node = directServer.dialogues[dialogueID].nodes[i];
 	if (node.errors.length) {
 		errorsFound=true;
 		errors[node.param.title] = [];
@@ -127,7 +159,6 @@ function showUrl() {
 	showingInDebug="URL";
 	var dbox = document.getElementById("debugarea");
 	dbox.parentNode.style.display="block";
-	var params = Utils.getUrlParameters();
 
 	dbox.innerHTML = window.location.protocol + "//" +
 		window.location.host + window.location.pathname
@@ -142,15 +173,15 @@ function showVariables() {
 	dbox.innerHTML = JSON.stringify(directServer.currentnodectx.vars,null,2);
 }
 
-if (params.editable) {
+if (urlParams.editable) {
 	var edithtml = "";
-	if (params.editurl) {
+	if (urlParams.editurl) {
 		edithtml =
 			"<br><div class='commandbutton'>"
-			+"<a href='"+params.editurl+"'>Back to editor</a>"
+			+"<a href='"+urlParams.editurl+"'>Back to editor</a>"
 			+"</div>"
 			+"<div class='commandbutton'>"
-			+"<a id='editnodeurl' href='"+params.editurl+"'>Edit Node</a>"
+			+"<a id='editnodeurl' href='"+urlParams.editurl+"'>Edit Node</a>"
 			+"</div>";
 	}
 	document.body.innerHTML +=
@@ -172,8 +203,8 @@ if (params.editable) {
 // index=null indicates autoforward reply (no index)
 function handleBasicReply(id,index) {
 	handleDirectServerCall("GET", null,null,
-		"progress_dialogue/?replyId="+id
-		+(index!==null ? "&replyIndex="+index : ""),
+		"progress_dialogue/?replyId="+encodeURIComponent(id)
+		+(index!==null ? "&replyIndex="+encodeURIComponent(index) : ""),
 		updateNodeUI);
 }
 
@@ -192,15 +223,21 @@ function handleNumericReply(id,index,min,max) {
 
 function startDialogue() {
 	handleDirectServerCall("GET", null,null,
-		"start_dialogue/?dialogueId=dialogue",
+		"start_dialogue/?dialogueId="+encodeURIComponent(dialogueID),
 			updateNodeUI);
 }
 
 
 function updateNodeUI(node) {
 	var editnodelink = document.getElementById("editnodeurl");
-	if (editnodelink) editnodelink.href = 
-		params.editurl+"?editnode="+encodeURIComponent(node.id);
+	if (editnodelink) {
+		if (!directServer.jumpedToNewDialogue) {
+			editnodelink.href =
+				urlParams.editurl+"?editnode="+encodeURIComponent(node.id);
+		} else {
+			editnodelink.className = "linkdisabled";
+		}
+	}
 	if (showingInDebug=="variables") showVariables();
 	if (directServer.errors.length > 0) {
 		alert(JSON.stringify(directServer.errors));
@@ -310,7 +347,7 @@ function updateNodeUI(node) {
 // start dialogue --------------------------------------------------
 
 var prevstate = localStorage.getItem("simplewoolclient_dialoguestate");
-if (params.docontinue) {
+if (urlParams.docontinue) {
 	if (prevstate) {
 		directServer.setState(prevstate);
 		updateNodeUI(directServer.getNode());

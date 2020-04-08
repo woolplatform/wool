@@ -73,3 +73,9 @@
 	font-size: 11px;
 }
 
+.commandbutton a.linkdisabled {
+	pointer-events: none;
+	cursor: default;
+	color: #ccc;
+	text-decoration: line-through;
+}

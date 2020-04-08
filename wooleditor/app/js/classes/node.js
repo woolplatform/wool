@@ -463,12 +463,14 @@ var Node = function() {
 		}
 		for (i=0; i<self.linkedToExternal.length; i++) {
 			var link = self.linkedToExternal[i];
-			errannot.push({
-				row: link.line,
-				column: 0,
-				text: "notice: Link to another dialogue not supported in editor preview",
-				type: "warning",
-			});
+			if (!app.isNwjs) {
+				errannot.push({
+					row: link.line,
+					column: 0,
+					text: "notice: Link to another dialogue not supported in browser version",
+					type: "warning",
+				});
+			}
 		}
 		// check duplicate names
 		if (self.checkDuplicateTitles()) {

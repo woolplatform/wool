@@ -451,7 +451,7 @@ function WoolNode(dialogue,lines) {
 		}
 
 		// normal reply
-		var matches = /^\[\[\s*([^|\]]+)\s*\|\s*([a-zA-Z0-9_.-]+)\s*(|.*)?\]\]$/.exec(line);
+		var matches = /^\[\[\s*([^|\]]+)\s*\|\s*([a-zA-Z0-9_.-\/]+)\s*(|.*)?\]\]$/.exec(line);
 		if (matches) {
 			// XXX textinput also accepts min, max
 			var desc = matches[1];
@@ -601,20 +601,26 @@ function WoolDialogue(woolsource) {
 };
 
 
-// load single dialogue client side ---------------------------------
+// ------------------------------------------------------------------------
+// client side functions to manipulate directServer directly
+
+// load single dialogue from source client side --------------------------
 // For client-side only handling (wool editor)
 
 function directServerLoadDialogue(dialogueID,data) {
-	//var data = localStorage.getItem(storageKey);
-	//if (data) {
-		directServer.dialogues[dialogueID] = new WoolDialogue(data);
-		//return true;
-	//}
-	//return false;
+	directServer.dialogues[dialogueID] = new WoolDialogue(data);
 }
 
+function directServerLoadNodeDialogue(dialogueID,filepath,overwrite) {
+	var fs = new NodeFileSystem();
+	var data = fs.readFileSync(filepath);
+	if (overwrite || !directServer.dialogues[dialogueID]) {
+		directServer.dialogues[dialogueID] = new WoolDialogue(data);
+	}
+	return data;
+}
 
-// load set of dialogues -----------------------------------------------
+// load set of dialogues from index file via ajax -------------------------
 // For dialogue selection screen (get_available_dialogues)
 
 function directServerLoadFile(i,filename,callback) {
