@@ -34,16 +34,15 @@ import nl.rrd.wool.model.nodepointer.WoolNodePointer;
 import nl.rrd.wool.model.nodepointer.WoolNodePointerExternal;
 
 /**
- * Object representation of a Wool Dialogue definition. A Wool Dialogue has a name, an
- * (unordered) list of {@link WoolNode}s and a specific start node.
+ * Object representation of a WOOL Dialogue definition. A WOOL Dialogue has a name and an
+ * (unordered) list of {@link WoolNode}s. One of these {@link WoolNode}s should have as title "Start".
  * 
- * @author Harm op den Akker
+ * @author Harm op den Akker (Roessingh Research and Development)
  */
 public class WoolDialogue {
 	
 	private String dialogueName;
-	// map from lower-case node titles to nodes
-	private Map<String,WoolNode> nodes = new LinkedHashMap<>();
+	private Map<String,WoolNode> nodes = new LinkedHashMap<>(); // map from lower-case node titles to nodes
 	private Set<String> speakers = new HashSet<>();
 	private Set<String> variablesNeeded = new HashSet<>();
 	private Set<String> variablesWritten = new HashSet<>();
@@ -59,12 +58,19 @@ public class WoolDialogue {
 	
 	/**
 	 * Creates an instance of a {@link WoolDialogue} with a given {@code dialogueName}.
+	 *
 	 * @param dialogueName the name of this {@link WoolDialogue}.
 	 */
 	public WoolDialogue(String dialogueName) {
 		this.dialogueName = dialogueName;
 	}
 
+	/**
+	 * Creates an instance of a {@link WoolDialogue}, instantiated with the contents of the given {@code other}
+	 * {@link WoolDialogue}.
+	 *
+	 * @param other the {@link WoolDialogue} with which to instantiate this {@link WoolDialogue}
+	 */
 	public WoolDialogue(WoolDialogue other) {
 		dialogueName = other.dialogueName;
 		for (String key : other.nodes.keySet()) {
@@ -80,6 +86,7 @@ public class WoolDialogue {
 	
 	/**
 	 * Returns the name of this {@link WoolDialogue}.
+	 *
 	 * @return the name of this {@link WoolDialogue}.
 	 */
 	public String getDialogueName() {
@@ -88,6 +95,7 @@ public class WoolDialogue {
 	
 	/**
 	 * Returns the starting {@link WoolNode} for this {@link WoolDialogue}.
+	 *
 	 * @return the starting {@link WoolNode} for this {@link WoolDialogue}.
 	 */
 	public WoolNode getStartNode() {
@@ -102,7 +110,8 @@ public class WoolDialogue {
 	public List<WoolNode> getNodes() {
 		return Collections.unmodifiableList(new ArrayList<>(nodes.values()));
 	}
-	
+
+
 	public void addNode(WoolNode node) {
 		nodes.put(node.getTitle().toLowerCase(), node);
 		if (node.getHeader().getSpeaker() != null)
@@ -157,13 +166,19 @@ public class WoolDialogue {
 	public boolean nodeExists(String nodeId) {
 		return nodes.containsKey(nodeId.toLowerCase());
 	}
-	
+
+	/**
+	 * Returns the {@link WoolNode} with the given identifier or title.
+	 * @param nodeId
+	 * @return
+	 */
 	public WoolNode getNodeById(String nodeId) {
 		return nodes.get(nodeId.toLowerCase());
 	}
 	
 	/**
 	 * Returns the total number of nodes in this {@link WoolDialogue}.
+	 *
 	 * @return the total number of nodes in this {@link WoolDialogue}.
 	 */
 	public int getNodeCount() {
@@ -172,6 +187,7 @@ public class WoolDialogue {
 	
 	/**
 	 * Returns the total number of speakers present in this {@link WoolDialogue}.
+	 *
 	 * @return the total number of speakers present in this {@link WoolDialogue}.
 	 */
 	public int getSpeakerCount() {
@@ -180,6 +196,7 @@ public class WoolDialogue {
 	
 	/**
 	 * Returns the total number of different dialogues referenced from this {@link WoolDialogue}.
+	 *
 	 * @return the total number of different dialogues referenced from this {@link WoolDialogue}.
 	 */
 	public int getDialoguesReferencedCount() {
@@ -188,6 +205,7 @@ public class WoolDialogue {
 	
 	/**
 	 * Returns the total number of different variables needed in executing this {@link WoolDialogue}.
+	 *
 	 * @return the total number of different variables needed in executing this {@link WoolDialogue}.
 	 */
 	public int getVariablesNeededCount() {
@@ -196,6 +214,7 @@ public class WoolDialogue {
 	
 	/**
 	 * Returns the total number of different variables written in executing this {@link WoolDialogue}.
+	 *
 	 * @return the total number of different variables written in executing this {@link WoolDialogue}.
 	 */
 	public int getVariablesWrittenCount() {
