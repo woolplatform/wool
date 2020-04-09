@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Roessingh Research and Development.
+ * Copyright 2019-2020 Roessingh Research and Development.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -25,7 +25,7 @@ package nl.rrd.wool.exception;
 /**
  * This exception indicates a parse error within a node.
  * 
- * @author Dennis Hofs (RRD)
+ * @author Dennis Hofs (Roessingh Research and Development)
  */
 public class WoolNodeParseException extends ParseException {
 	private static final long serialVersionUID = 5095774410463182542L;

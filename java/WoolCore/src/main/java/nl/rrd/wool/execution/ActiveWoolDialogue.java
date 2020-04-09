@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Roessingh Research and Development.
+ * Copyright 2019-2020 Roessingh Research and Development.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -41,8 +41,8 @@ import java.util.Map;
  * The {@link ActiveWoolDialogue} also contains utility functions to keep track of the state during 
  * "execution" of the dialogue.
  * 
- * @author Harm op den Akker
- * @author Tessa Beinema
+ * @author Harm op den Akker (Roessingh Research and Development)
+ * @author Tessa Beinema (Roessingh Research and Development)
  */
 public class ActiveWoolDialogue {
 
@@ -53,7 +53,13 @@ public class ActiveWoolDialogue {
 	private WoolVariableStore woolVariableStore;
 		
 	// ----------- Constructors:
-	
+
+	/**
+	 * Creates an instance of an {@link ActiveWoolDialogue} with a given {@link WoolDialogueDescription} and
+	 * {@link WoolDialogue}.
+	 * @param dialogueDescription
+	 * @param dialogueDefinition
+	 */
 	public ActiveWoolDialogue(WoolDialogueDescription dialogueDescription,
 			WoolDialogue dialogueDefinition) {
 		this.dialogueDescription = dialogueDescription;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Roessingh Research and Development.
+ * Copyright 2019-2020 Roessingh Research and Development.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -26,15 +26,26 @@ package nl.rrd.wool.exception;
  * This exception is thrown when some content has an invalid format for a
  * parser.
  * 
- * @author Dennis Hofs (RRD)
+ * @author Dennis Hofs (Roessingh Research and Development)
  */
 public class ParseException extends Exception {
 	private static final long serialVersionUID = 2827411288488428951L;
 
+	/**
+	 * Creates an instance of a {@link ParseException} with a given {@code message}.
+	 *
+	 * @param message the error message
+	 */
 	public ParseException(String message) {
 		super(message);
 	}
 
+	/**
+	 * Creates an instance of a {@link ParseException} with a given {@code message} and {@code cause}.
+	 *
+	 * @param message the error message
+	 * @param cause a cause or {@code null}
+	 */
 	public ParseException(String message, Throwable cause) {
 		super(message, cause);
 	}
