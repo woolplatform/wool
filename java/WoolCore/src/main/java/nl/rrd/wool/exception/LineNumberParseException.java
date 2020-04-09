@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Roessingh Research and Development.
+ * Copyright 2019-2020 Roessingh Research and Development.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -24,7 +24,7 @@ package nl.rrd.wool.exception;
 
 /**
  * This exception indicates a parse error with a line and column number. The
- * line and column number are automatically added to the exception message at
+ * line and column numbers are automatically added to the exception message at
  * construction.
  * 
  * @author Dennis Hofs (Roessingh Research and Development)
@@ -37,24 +37,22 @@ public class LineNumberParseException extends ParseException {
 	private int colNum;
 
 	/**
-	 * Constructs a new exception.
+	 * Constructs a new exception with a given {@code message}, {@code lineNum} and {@code colNum}.
 	 * 
 	 * @param message the error message
 	 * @param lineNum the line number (first line is 1)
-	 * @param colNum the column or character number in the line (first character
-	 * is 1)
+	 * @param colNum the column or character number in the line (first character is 1)
 	 */
 	public LineNumberParseException(String message, int lineNum, int colNum) {
 		this(message, lineNum, colNum, null);
 	}
 
 	/**
-	 * Constructs a new exception.
+	 * Constructs a new exception with a given {@code message}, {@code lineNum}, {@code colNum} and {@code cause}.
 	 * 
 	 * @param message the error message
 	 * @param lineNum the line number (first line is 1)
-	 * @param colNum the column or character number in the line (first character
-	 * is 1)
+	 * @param colNum the column or character number in the line (first character is 1)
 	 * @param cause a cause or null
 	 */
 	public LineNumberParseException(String message, int lineNum, int colNum,
@@ -67,7 +65,7 @@ public class LineNumberParseException extends ParseException {
 	}
 
 	/**
-	 * Returns the error message without the line and column number.
+	 * Returns the error message that caused this {@link LineNumberParseException} without the line and column number.
 	 * 
 	 * @return the error message without the line and column number
 	 */
@@ -76,7 +74,7 @@ public class LineNumberParseException extends ParseException {
 	}
 
 	/**
-	 * Returns the line number. The first line is 1.
+	 * Returns the line number of the error that caused this {@link LineNumberParseException}. The first line is 1.
 	 * 
 	 * @return the line number (first line is 1)
 	 */
@@ -85,8 +83,8 @@ public class LineNumberParseException extends ParseException {
 	}
 
 	/**
-	 * Returns the column or character number in the line. The first character
-	 * is 1.
+	 * Returns the column or character number in the line of the error that caused this
+	 * {@link LineNumberParseException}. The first character is 1.
 	 * 
 	 * @return the column or character number in the line (first character is 1)
 	 */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Roessingh Research and Development.
+ * Copyright 2019-2020 Roessingh Research and Development.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -32,14 +32,27 @@ package nl.rrd.wool.exception;
 public class WoolVariableException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Creates an instance of a {@link WoolVariableException} with given {@code message}.
+	 * @param message the error message
+	 */
 	public WoolVariableException(String message) {
 		super(message);
 	}
 
+	/**
+	 * Creates an instance of a {@link WoolVariableException} with given {@code cause}.
+	 * @param cause the cause of the exception
+	 */
 	public WoolVariableException(Throwable cause) {
 		super(cause);
 	}
 
+	/**
+	 * Creates an instance of a {@link WoolVariableException} with given {@code message} and {@code cause}.
+	 * @param message the error message
+	 * @param cause the cause of the exception
+	 */
 	public WoolVariableException(String message, Throwable cause) {
 		super(message, cause);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Roessingh Research and Development.
+ * Copyright 2019-2020 Roessingh Research and Development.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -22,6 +22,11 @@
 
 package nl.rrd.wool.exception;
 
+/**
+ * A {@link WoolException} is an exception that can be thrown during execution of a WOOL dialogue.
+ *
+ * @author Dennis Hofs (Roessingh Research and Development)
+ */
 public class WoolException extends Exception {
 	private static final long serialVersionUID = -8591019315920219483L;
 
@@ -34,17 +39,32 @@ public class WoolException extends Exception {
 	}
 	
 	private Type type;
-	
+
+	/**
+	 * Creates an instance of a {@link WoolException} with a given {@link Type} and {@code message}.
+	 * @param type the type of the exception
+	 * @param message the error message
+	 */
 	public WoolException(Type type, String message) {
 		super(message);
 		this.type = type;
 	}
-	
+
+	/**
+	 * Creates an instance of a {@link WoolException} with a given {@link Type}, {@code message} and {@code cause}.
+	 * @param type the type of the exception
+	 * @param message the error message
+	 * @param cause the cause of the exception
+	 */
 	public WoolException(Type type, String message, Throwable cause) {
 		super(message, cause);
 		this.type = type;
 	}
 
+	/**
+	 * Returns the {@link Type} of this {@link WoolException}.
+	 * @return the {@link Type} of this {@link WoolException}.
+	 */
 	public Type getType() {
 		return type;
 	}
