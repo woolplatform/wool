@@ -25,9 +25,9 @@ package eu.woolplatform.wool.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import eu.woolplatform.utils.ReferenceParameter;
 import eu.woolplatform.utils.exception.LineNumberParseException;
 import eu.woolplatform.wool.model.WoolVariableString;
-import eu.woolplatform.wool.utils.ReferenceParameter;
 
 public class WoolBodyTokenizer {
 	private BodyState bodyState = new BodyState();
