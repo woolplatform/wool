@@ -67,7 +67,7 @@ publishing {
 			pom {
 				name = 'WOOL Dialogue Framework'
 				description = 'WOOL is a simple, powerful dialogue framework for creating virtual agent conversations.'
-				url = 'https://www.council-of-coaches.eu/wool/'
+				url = 'https://www.woolplatform.eu/'
 				
 				licenses {
 					license {

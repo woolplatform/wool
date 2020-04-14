@@ -69,7 +69,7 @@ publishing {
 			pom {
 				name = 'WOOL Dialogue Framework Utils'
 				description = 'General purpose utils used in the WOOL Dialogue Framework.'
-				url = 'http://www.woolplatform.eu/'
+				url = 'https://www.woolplatform.eu/'
 				
 				licenses {
 					license {
