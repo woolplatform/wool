@@ -11,26 +11,28 @@ group = 'eu.woolplatform'
 version = '2.0.0'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-archivesBaseName = 'wool-core'
+archivesBaseName = 'wool-utils'
 
 repositories {
-    jcenter()
+	jcenter()
 }
 
 dependencies {
-    api project(':WoolUtils')
-	api "org.slf4j:slf4j-api:1.7.25"
-	api "com.fasterxml.jackson.core:jackson-annotations:2.9.7"
-	api "com.fasterxml.jackson.core:jackson-core:2.9.7"
-	api "com.fasterxml.jackson.core:jackson-databind:2.9.7"
-	api "joda-time:joda-time:2.10.5"
-    testImplementation 'junit:junit:4.12'
+	api 'com.fasterxml.jackson.core:jackson-core:2.9.8'
+	api 'com.fasterxml.jackson.core:jackson-annotations:2.9.8'
+	api 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+	api 'joda-time:joda-time:2.10.1'
+	api 'org.slf4j:slf4j-api:1.7.26'
+	api 'commons-codec:commons-codec:1.3' // newer versions not supported in Android
+    api fileTree(dir: 'libs', include: '*.jar')
+	testImplementation 'junit:junit:4.12'
 }
 
-jar {
-	manifest {
-		attributes 'Main-Class': 'eu.woolplatform.wool.parser.WoolParser'
-		attributes 'Class-Path': configurations.compileClasspath.collect({ it.name }).join(' ')
+distributions {
+	main {
+		contents {
+			from configurations.compileClasspath
+		}
 	}
 }
 
@@ -65,9 +67,9 @@ publishing {
 			from components.java
 			
 			pom {
-				name = 'WOOL Dialogue Framework'
-				description = 'WOOL is a simple, powerful dialogue framework for creating virtual agent conversations.'
-				url = 'https://www.council-of-coaches.eu/wool/'
+				name = 'WOOL Dialogue Framework Utils'
+				description = 'General purpose utils used in the WOOL Dialogue Framework.'
+				url = 'http://www.woolplatform.eu/'
 				
 				licenses {
 					license {

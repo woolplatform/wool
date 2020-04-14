@@ -1,0 +1,67 @@
+package eu.woolplatform.utils.json;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+
+/**
+ * This deserializer can read a string value or null and convert it to an enum
+ * using a static method T fromStringValue().
+ * 
+ * @author Dennis Hofs (RRD)
+ *
+ * @param <T> the enum type
+ */
+public class EnumCustomStringDeserializer<T extends Enum<?>> extends
+JsonDeserializer<T> {
+	private Class<T> enumClass;
+	
+	/**
+	 * Constructs a new instance. The enum class must have a static method
+	 * fromStringValue(String s).
+	 * 
+	 * @param enumClass the enum class
+	 */
+	public EnumCustomStringDeserializer(Class<T> enumClass) {
+		this.enumClass = enumClass;
+	}
+	
+	@Override
+	public T deserialize(JsonParser p, DeserializationContext ctxt)
+			throws IOException, JsonProcessingException {
+		if (!p.getCurrentToken().isScalarValue()) {
+			throw new JsonParseException(p,
+					"Expected string, found non-scalar value");
+		}
+		String s = p.getValueAsString();
+		if (s == null)
+			return null;
+		Exception exception = null;
+		T result = null;
+		try {
+			Method method = enumClass.getMethod("fromStringValue",
+					String.class);
+			Object resultObj = method.invoke(null, s);
+			result = enumClass.cast(resultObj);
+		} catch (NoSuchMethodException ex) {
+			exception = ex;
+		} catch (InvocationTargetException ex) {
+			exception = ex;
+		} catch (IllegalAccessException ex) {
+			exception = ex;
+		} catch (IllegalArgumentException ex) {
+			exception = ex;
+		}
+		if (exception != null) {
+			throw new RuntimeException("Can't invoke fromStringValue(): " +
+					exception.getMessage(), exception);
+		}
+		return result;
+	}
+}

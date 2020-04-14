@@ -16,4 +16,5 @@ include 'api'
 include 'services:webservice'
 */
 
+include ':WoolUtils'
 include ':WoolCore'
