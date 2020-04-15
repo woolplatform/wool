@@ -102,9 +102,9 @@ publishing {
 				}
 				
 				scm {
-					connection = 'scm:git:git://github.com/RoessinghResearch/wool.git'
-					developerConnection = 'scm:git:ssh://github.com:RoessinghResearch/wool.git'
-					url = 'https://github.com/RoessinghResearch/wool/tree/master'
+					connection = 'scm:git:git://github.com/woolplatform/wool.git'
+					developerConnection = 'scm:git:ssh://github.com:woolplatform/wool.git'
+					url = 'https://github.com/woolplatform/wool/tree/master'
 				}
 			}
 		}
