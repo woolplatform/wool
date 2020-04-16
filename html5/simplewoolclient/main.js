@@ -5,16 +5,62 @@
 
 var LOCALSTORAGEPREFIX="wool_js_";
 
+var NARRATOR = "Narrator";
+
 // get urlParams and config ------------------------------------------------
 var urlParams = Utils.getUrlParameters();
 
 
 //localStorage.removeItem("simplewoolclient_config");
 
+// XXX duplicated in wooleditor index.html
+var colorInfo = [
+	{ rgb: '#EEEEEE', name: "white",},
+	{ rgb: '#6EA5E0', name: "blue",},
+	{ rgb: '#9EDE74', name: "green",},
+	{ rgb: '#FFE374', name: "yellow",},
+	{ rgb: '#F7A666', name: "orange",},
+	{ rgb: '#C47862', name: "brown",},
+	{ rgb: '#97E1E9', name: "cyan",},
+	{ rgb: '#FF7080', name: "red",},
+	{ rgb: '#D070FF', name: "purple",},
+	{ rgb: '#AAAAAA', name: "grey",},
+];
+
+function makeRange(max) {
+	var ret = [];
+	for (var i=0; i<=max; i++) ret.push(i);
+	return ret;
+}
+
+// reset storage
+//localStorage.setItem("simplewoolclient_config",null);
+
+function saveConfig() {
+	config.avatar = avatarRes.serialize();
+	config.background = backgroundRes.serialize();
+	console.log(config);
+	localStorage.setItem("simplewoolclient_config",JSON.stringify(config));
+}
+
+// load config --------------------------------------------------------
+
 var config = {
-	"avatars": { },
-	"background": 12,
-};
+	// avatar and background ID are:
+	// - number for preset backgrounds 
+	// - URL for custom bg
+	"avatar": null,
+	"background": null,
+}
+//	"avatars": {
+//		"current": 0, // current index in all
+//		"all": [], // all known avatar IDs and URLs
+//		"mapping": { }, // name -> avatar ID (number) or URL
+//	}
+//	"background": 12, // current background
+//	"backgrounds:" {}, // list of urls 
+//	"backgroundmapping": {}, // colorID -> background ID
+//};
 
 if (urlParams.config) {
 	config = JSON.parse(urlParams.config);
@@ -23,10 +69,10 @@ if (urlParams.config) {
 	if (c) config = JSON.parse(c);
 }
 
-function saveConfig() {
-	localStorage.setItem("simplewoolclient_config",JSON.stringify(config));
-}
+var avatarRes = new ResourceUI(config.avatar,makeRange(99),0);
+var backgroundRes = new ResourceUI(config.background,makeRange(29),12);
 
+var isNarrator=false;
 
 saveConfig();
 
@@ -42,10 +88,6 @@ saveConfig();
 //	"Send": "Verstuur",
 //});
 //_i18n.setLocale("en");
-
-
-if (config.background!==null)
-	document.body.className = "pattern"+config.background;
 
 
 // Obtain source code and lang defs. Possible sources:
@@ -136,21 +178,65 @@ if (errorsFound) {
 
 // edit functions ---------------------------------------------------------
 
-var currentSpeaker=null;
+function updateAvatar() {
+	var elem = document.getElementById("agent_object");
+	if (isNarrator) {
+		elem.innerHTML="";
+	} else if (avatarRes.currentIsNumber()) {
+		GenAvataaar(elem,avatarRes.getCurrent());
+	} else {
+		elem.innerHTML="<img class='avatarimage' src='"+avatarRes.getCurrent()+"'></img>";
+	}
+}
+function updateBackground() {
+	if (backgroundRes.currentIsNumber()) {
+		document.body.className = "pattern"+backgroundRes.getCurrent();
+		document.getElementById("background").style.display="none";
+	} else {
+		document.getElementById("background").src=backgroundRes.getCurrent();
+		document.getElementById("background").style.display="block";
+	}
+}
 
 function incCurrentAvatar(amount) {
-	config.avatars[currentSpeaker] += amount;
+	if (isNarrator) return;
+	avatarRes.inc(amount);
 	saveConfig();
-	GenAvataaar(document.getElementById("agent_object"),
-		config.avatars[currentSpeaker]);
+	updateAvatar();
 }
 
 function incBackground(amount) {
-	config.background += amount;
-	if (config.background < 0) config.background = 29;
-	if (config.background > 29) config.background = 0;
+	backgroundRes.inc(amount);
 	saveConfig();
-	document.body.className = "pattern"+config.background;
+	updateBackground();
+}
+
+
+function addAvatarURL() {
+	if (isNarrator) return;
+	var url = prompt("Avatar URL:","");
+	if (url) {
+		avatarRes.add(url);
+		saveConfig();
+		updateAvatar();
+	}
+}
+
+function addBackgroundURL() {
+	var url = prompt("Background URL:","");
+	if (url) {
+		backgroundRes.add(url);
+		saveConfig();
+		updateBackground();
+	}
+}
+
+function deleteAvatar() {
+	alert("Not implemented yet");
+}
+
+function deleteBackground() {
+	alert("Not implemented yet");
 }
 
 var showingInDebug=null;
@@ -189,9 +275,13 @@ if (urlParams.editable) {
 		+"Avatar: "
 		+"<div class='incrementbutton' onclick='incCurrentAvatar(1);'>+</div>"
 		+"<div class='incrementbutton' onclick='incCurrentAvatar(-1);'>-</div>"
+		+"<div class='incrementbutton' onclick='deleteAvatar();'>&#x1F5D1;</div>"
+		+"<div class='commandbutton' onclick='addAvatarURL();'>URL</div>"
 		+"<br>Background: "
 		+"<div class='incrementbutton' onclick='incBackground(1);'>+</div>"
 		+"<div class='incrementbutton' onclick='incBackground(-1);'>-</div>"
+		+"<div class='incrementbutton' onclick='deleteBackground();'>&#x1F5D1;</div>"
+		+"<div class='commandbutton' onclick='addBackgroundURL();'>URL</div>"
 		+"<br><div class='commandbutton' onclick='showUrl();'>Get URL</div>"
 		+"<div class='commandbutton' onclick='showVariables();'>Variables</div>"
 		+edithtml
@@ -248,24 +338,26 @@ function updateNodeUI(node) {
 		alert(JSON.stringify(directServer.errors));
 		directServer.errors = [];
 	}
-	if (node.speaker && node.speaker!="UNKNOWN") {
-		if (typeof config.avatars[node.speaker] == 'undefined') {
-			config.avatars[node.speaker] = Math.floor(Math.random()*1000);
-			saveConfig();
-		}
-		currentSpeaker = node.speaker;
-		GenAvataaar(document.getElementById("agent_object"),
-			config.avatars[currentSpeaker]);
-	} else {
-		document.getElementById("agent_object").innerHTML="";
+	isNarrator = node.speaker == NARRATOR;
+	if (node.speaker && node.speaker!="UNKNOWN" && !isNarrator ) {
+		avatarRes.switchEntity(node.speaker,Math.floor(Math.random()*99));
 	}
+	updateAvatar();
+	backgroundRes.switchEntity(node.colorID, backgroundRes.getCurrent());
+	updateBackground();
+	saveConfig();
 	var replyelem = document.getElementById("user-reply");
 	if (node.id=="End") {
 		document.getElementById("agent-name").innerHTML = "";
 		document.getElementById("agent-statement").innerHTML = 
 			__("End of dialogue");
 	} else {
-		document.getElementById("agent-name").innerHTML = node.speaker + ":";
+		if (isNarrator) {
+			document.getElementById("agent-name").style.display="none";
+		} else {
+			document.getElementById("agent-name").style.display="block";
+			document.getElementById("agent-name").innerHTML = node.speaker + ":";
+		}
 		// XXX we use trim to make the translation phrase generated by the
 		// server. Move this to the server eventually.
 		document.getElementById("agent-statement").innerHTML = __(node.statement.trim());
@@ -277,9 +369,13 @@ function updateNodeUI(node) {
 				+__("Restart")+"</button>"
 		return;
 	}
-	replyelem.innerHTML = 
-		"<p id='user-name'>"+__("You:")+"</p>"
-		+"<p id='user-instruction'>"+__("Your response:")+"</p>";
+	if (isNarrator) {
+		replyelem.innerHTML = "";
+	} else {
+		replyelem.innerHTML = 
+			"<p id='user-name'>"+__("You:")+"</p>"
+			+"<p id='user-instruction'>"+__("Your response:")+"</p>";
+	}
 	for (var i=0; i<node.replies.length; i++) {
 		var reply = node.replies[i];
 		if (reply.replyType=="BASIC") {

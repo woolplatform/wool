@@ -188,13 +188,13 @@ var Node = function() {
 	{
 		self.colorID(self.colorID() - 1);
 		if (self.colorID() < 0)
-			self.colorID(6);
+			self.colorID(9);
 	}
 
 	this.doCycleColorUp = function()
 	{
 		self.colorID(self.colorID() + 1);
-		if (self.colorID() > 6)
+		if (self.colorID() > 9)
 			self.colorID(0);
 	}
 	

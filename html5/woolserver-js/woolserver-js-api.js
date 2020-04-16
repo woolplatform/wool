@@ -91,8 +91,9 @@ directServer.getNode = function() {
 		speaker = ctx.speakers[0];
 	}
 	if (node.param["speaker"]) speaker = node.param["speaker"];
-	var ret ={
+	var ret = {
 		id: node.param.title,
+		colorID: node.param.colorID,
 		// TODO
 		speakersInDialogue: ctx.speakers,
 		speaker: speaker,

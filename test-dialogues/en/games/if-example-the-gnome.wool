@@ -1,0 +1,165 @@
+title: Start
+tags: 
+speaker: Narrator
+colorID: 0
+position: 183,286
+---
+You are on a road that leads east to the woods and west to a small town.
+
+[[Go East|Woods]]
+[[Go West|Town]]
+===
+title: Woods
+tags: 
+speaker: Narrator
+colorID: 2
+position: 459,288
+---
+You are in the woods.
+
+There is a gnome here
+
+[[Go West|Start]]
+[[Talk to gnome|GnomeStart]]
+===
+title: GnomeStart
+tags: 
+speaker: Gnome
+colorID: 1
+position: 455,599
+---
+
+    Hello there, going somewhere?
+
+    [[Hello ...|GnomeHello]]
+    [[Goodbye|Woods]]
+
+===
+title: Town
+tags: 
+speaker: Narrator
+colorID: 9
+position: -98,295
+---
+You are in a small town.
+
+There is an inn here.
+
+[[Go East|Start]]
+[[Enter inn|Inn]]
+===
+title: Inn
+tags: 
+speaker: Narrator
+colorID: 4
+position: -386,296
+---
+You are inside an Inn.
+
+The innkeeper catches your eye.
+
+[[Go outside|Town]]
+[[Talk to innkeeper|InnkeeperStart]]
+===
+title: InnkeeperStart
+tags: 
+speaker: Innkeeper
+colorID: 4
+position: -381,574
+---
+Hello, how may I be of service?
+
+[[One coffee, please.|InnkeeperCoffee]]
+[[A cup of tea, please.|InnkeeperTea]]
+===
+title: InnkeeperCoffee
+tags: 
+speaker: Innkeeper
+colorID: 4
+position: -487,868
+---
+Here you go, one cup of hot coffee!
+
+[[Thank you.|Inn|<<set $hasCoffee=true>>]]
+===
+title: InnkeeperTea
+tags: 
+speaker: 
+colorID: 4
+position: -251,868
+---
+A hot tea for you!
+
+[[Thanks!|Inn|<<set $hasTea=true>>]]
+===
+title: GnomeHello
+tags: 
+speaker: Gnome
+colorID: 1
+position: 481,874
+---
+<<if $gnomeHappy>>
+    I know a secret place in the woods!
+
+    [[Oh.. maybe another time.|Woods]]
+    [[Take me there!|SecretPlace]]
+<<else>>
+    All alone in the woods? Do you have something for me?
+    
+    [[I don't know what you are talking about!|Woods]]
+    
+    <<if $hasCoffee>>
+        [[I have a coffee.|GnomeCoffee]]
+    <<endif>>
+    
+    <<if $hasTea>>
+        [[I have tea.|GnomeTea]]
+    <<endif>>
+<<endif>>
+===
+title: GnomeCoffee
+tags: 
+speaker: Gnome
+colorID: 1
+position: 196,878
+---
+<<if $offeredTea>>
+    // offered both tea and coffee -> satisfied
+    That's just what I wanted!
+    <<set $gnomeHappy=true>>
+
+<<else>>
+    If that is coffee, I prefer tea!
+<<endif>>
+<<set $offeredCoffee=true>>
+
+[[Ok ...|GnomeHello]]
+===
+title: GnomeTea
+tags: 
+speaker: Gnome
+colorID: 1
+position: 739,873
+---
+<<if $offeredCoffee>>
+    // offered both tea and coffee -> satisfied
+    That's just what I wanted!
+    <<set $gnomeHappy=true>>
+
+<<else>>
+    If that is tea, I prefer coffee!
+<<endif>>
+<<set $offeredTea=true>>
+
+[[Ok ...|GnomeHello]]
+===
+title: SecretPlace
+tags: 
+speaker: Narrator
+colorID: 1
+position: 480,1176
+---
+The gnome has taken you to a secret place in the woods.  TO BE CONTINUED.
+
+
+===

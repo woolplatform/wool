@@ -17,6 +17,11 @@ process.once('loaded', () => {
 			console.log("Selection canceled");
 		}
 	})
+	
+	// put this preload for main-window to give it prompt()
+	window.prompt = function(title, val){
+	  return ipcRenderer.sendSync('prompt', {title, val})
+	}
 })
 
 
