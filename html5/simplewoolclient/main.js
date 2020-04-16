@@ -63,7 +63,7 @@ var config = {
 //};
 
 if (urlParams.config) {
-	config = JSON.parse(urlParams.config);
+	config = JSON.parse(myDecodeURIComponent(urlParams.config));
 } else {
 	var c = localStorage.getItem("simplewoolclient_config");
 	if (c) config = JSON.parse(c);
@@ -118,7 +118,7 @@ if (langDefs) {
 
 //sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
 
-if (urlParams.code) sourceCode = urlParams.code;
+if (urlParams.code) sourceCode = myDecodeURIComponent(urlParams.code);
 
 try {
 	var windowparams = JSON.parse(window.name);
@@ -178,7 +178,10 @@ if (errorsFound) {
 
 // edit functions ---------------------------------------------------------
 
+// also updates controls
 function updateAvatar() {
+	document.getElementById("avatarcontrols").style.display =
+		isNarrator ? "none" : "block";
 	var elem = document.getElementById("agent_object");
 	if (isNarrator) {
 		elem.innerHTML="";
@@ -201,12 +204,16 @@ function updateBackground() {
 function incCurrentAvatar(amount) {
 	if (isNarrator) return;
 	avatarRes.inc(amount);
+	document.getElementById("resourceId").innerHTML = 
+		"Avatar: "+avatarRes.getCurrentHumanReadable();
 	saveConfig();
 	updateAvatar();
 }
 
 function incBackground(amount) {
 	backgroundRes.inc(amount);
+	document.getElementById("resourceId").innerHTML = 
+		"Background: "+backgroundRes.getCurrentHumanReadable();
 	saveConfig();
 	updateBackground();
 }
@@ -232,14 +239,35 @@ function addBackgroundURL() {
 }
 
 function deleteAvatar() {
-	alert("Not implemented yet");
+	if (avatarRes.currentIsNumber()) return;
+	if (!confirm("Delete resource "+avatarRes.getCurrentHumanReadable()+"?"))
+		return;
+	avatarRes.removeCurrent();
+	document.getElementById("resourceId").innerHTML = "";
+	updateAvatar();
 }
 
 function deleteBackground() {
-	alert("Not implemented yet");
+	if (backgroundRes.currentIsNumber()) return;
+	if(!confirm("Delete resource "+backgroundRes.getCurrentHumanReadable()+"?"))
+		return;
+	backgroundRes.removeCurrent();
+	document.getElementById("resourceId").innerHTML = "";
+	updateBackground();
 }
 
 var showingInDebug=null;
+
+// modified encoder for shorter urls
+function myEncodeURIComponent(string) {
+	return encodeURIComponent(kissc.compress(string));
+}
+
+function myDecodeURIComponent(string) {
+	var ret = kissc.decompress(string); 
+	if (ret === false) return string;
+	return ret;
+}
 
 function showUrl() {
 	showingInDebug="URL";
@@ -248,8 +276,8 @@ function showUrl() {
 
 	dbox.innerHTML = window.location.protocol + "//" +
 		window.location.host + window.location.pathname
-		+ "?config=" + encodeURIComponent(JSON.stringify(config))
-		+ "&code=" + encodeURIComponent(sourceCode);
+		+ "?config=" + myEncodeURIComponent(JSON.stringify(config))
+		+ "&code=" + myEncodeURIComponent(sourceCode);
 }
 
 function showVariables() {
@@ -272,20 +300,23 @@ if (urlParams.editable) {
 	}
 	document.body.innerHTML +=
 		"<div class='editbox'>"
-		+"Avatar: "
+		+"<div id='avatarcontrols'>Avatar: "
 		+"<div class='incrementbutton' onclick='incCurrentAvatar(1);'>+</div>"
 		+"<div class='incrementbutton' onclick='incCurrentAvatar(-1);'>-</div>"
 		+"<div class='incrementbutton' onclick='deleteAvatar();'>&#x1F5D1;</div>"
 		+"<div class='commandbutton' onclick='addAvatarURL();'>URL</div>"
-		+"<br>Background: "
+		+"</div>"
+		+"<div id='backgroundcontrols'>Background: "
 		+"<div class='incrementbutton' onclick='incBackground(1);'>+</div>"
 		+"<div class='incrementbutton' onclick='incBackground(-1);'>-</div>"
 		+"<div class='incrementbutton' onclick='deleteBackground();'>&#x1F5D1;</div>"
 		+"<div class='commandbutton' onclick='addBackgroundURL();'>URL</div>"
-		+"<br><div class='commandbutton' onclick='showUrl();'>Get URL</div>"
+		+"</div>"
+		+"<div class='commandbutton' onclick='showUrl();'>Get URL</div>"
 		+"<div class='commandbutton' onclick='showVariables();'>Variables</div>"
 		+edithtml
 		+"</div>\n"
+		+"<div class='currentresourcebox' id='resourceId'></div>\n"
 		+"<div class='currentdialoguebox' id='dialogueId'></div>\n";
 }
 

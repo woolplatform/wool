@@ -57,6 +57,11 @@ ResourceUI.prototype.getCurrent = function() {
 	return this.list[this.currentidx];
 }
 
+ResourceUI.prototype.getCurrentHumanReadable = function() {
+	var prefix = this.currentIsNumber() ? "Preset " : "Custom: '";
+	var suffix = this.currentIsNumber() ? "" : "'";
+	return prefix + this.getCurrent() + suffix;
+}
 
 ResourceUI.prototype.currentIsNumber = function() {
 	return !isNaN(this.list[this.currentidx]);
