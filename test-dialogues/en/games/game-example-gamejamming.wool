@@ -1,0 +1,78 @@
+title: Start
+tags: 
+speaker: Narrator
+colorID: 0
+position: 723,409
+---
+<b>Ludum Dare: the game.</b>
+<br>
+<br>Drink coffee and be well rested to develop your game.
+<br>
+<br>If you try to sleep with coffee in your system, you will sleep less well!
+<br>
+<br>Just remember folks, coffee is not a good substitute for sleep (but you will need it to complete this game)!
+
+<<set $coffee = 0 >>
+<<set $rest = 18 >>
+<<set $timeLeft = 48>>
+<<set $gameCompletion = 0>>
+[[Start jamming!|Main]]
+===
+title: Main
+tags: 
+speaker: Narrator
+colorID: 1
+position: 723,763
+---
+
+<<if $rest > 18>>
+    <<set $rest = 18>>
+<<elseif $rest < 0>>
+    <<set $rest = 0>>
+<<endif>>
+
+<<if $coffee > 8>>
+    <<set $coffee = 8>>
+<<elseif $coffee > 0>>
+    <<set $coffee = $coffee - 1>>
+<<endif>>
+
+<b>You are jamming.</b> Time left: $timeLeft hours.
+<br>
+<br>Caffeine high: $coffee.
+<br>Rest: $rest.
+<br>
+<br>Game completed: $gameCompletion %.
+
+<<if $timeLeft > 0>>
+    [[Jam!|Main|<<set $gameCompletion = $gameCompletion + 0.1*($coffee + 2*$rest)>><<set $timeLeft = $timeLeft - 1>><<set $rest = $rest - 1>>]]
+    [[Drink coffee|Main|<<set $coffee = $coffee + 5>>]]
+    <<if $timeLeft > 8>>
+        [[Sleep|Main|<<set $rest = $rest + 18 - 3*$coffee>><<set $timeLeft = $timeLeft - 8>><<set $coffee = 0>>]]
+    <<endif>>
+<<elseif $gameCompletion >= 100>>
+    [[Submission hour! Submit your entry.|Submitted]]
+<<else>>
+    [[You failed to complete your game! It still has crippling bugs!|Failed]]
+<<endif>>
+===
+title: Submitted
+tags: 
+speaker: Narrator
+colorID: 2
+position: 380,1019
+---
+You sumbitted your game. Congratulations! Your final score: $gameCompletion.
+
+[[Try again!|Start]]
+===
+title: Failed
+tags: 
+speaker: Narrator
+colorID: 7
+position: 1081,995
+---
+You did not finish your game! Your final score: $gameCompletion.
+
+[[Try again!|Start]]
+===

@@ -17,7 +17,7 @@ position: 459,288
 ---
 You are in the woods.
 
-There is a gnome here
+There is a gnome here.
 
 [[Go West|Start]]
 [[Talk to gnome|GnomeStart]]
@@ -69,6 +69,7 @@ position: -381,574
 ---
 Hello, how may I be of service?
 
+[[See you later.|Inn]]
 [[One coffee, please.|InnkeeperCoffee]]
 [[A cup of tea, please.|InnkeeperTea]]
 ===

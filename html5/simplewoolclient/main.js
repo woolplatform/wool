@@ -33,8 +33,10 @@ function makeRange(max) {
 	return ret;
 }
 
-// reset storage
-//localStorage.setItem("simplewoolclient_config",null);
+if (urlParams.resetconfig) {
+	localStorage.removeItem("simplewoolclient_config");
+	alert("Config reset!");
+}
 
 function saveConfig() {
 	config.avatar = avatarRes.serialize();
@@ -178,10 +180,10 @@ if (errorsFound) {
 
 // edit functions ---------------------------------------------------------
 
-// also updates controls
+// also updates controls if present
 function updateAvatar() {
-	document.getElementById("avatarcontrols").style.display =
-		isNarrator ? "none" : "block";
+	var controls = document.getElementById("avatarcontrols");
+	if (controls) controls.style.display = isNarrator ? "none" : "block";
 	var elem = document.getElementById("agent_object");
 	if (isNarrator) {
 		elem.innerHTML="";

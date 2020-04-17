@@ -384,8 +384,7 @@ var Node = function() {
 			var found = false;
 			for (var index in app.nodes()) {
 				var other = app.nodes()[index];
-				if (other != self 
-				&& other.title().toLowerCase().trim() == link.node.toLowerCase()) {
+				if (other.title().toLowerCase().trim() == link.node.toLowerCase()) {
 					self.linkedTo.push(other);
 					found = true;
 					break;
