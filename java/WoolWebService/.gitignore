@@ -1,0 +1,10 @@
+/.idea/
+/.settings/
+/bin/
+/build/
+/.classpath
+/.project
+/gradle.properties
+/gradle.*.properties
+!/gradle.sample.properties
+/src/main/resources/service.properties

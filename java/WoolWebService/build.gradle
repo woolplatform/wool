@@ -1,0 +1,164 @@
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+}
+
+plugins {
+	id 'war'
+	id 'eclipse-wtp'
+	id 'org.springframework.boot' version '2.1.4.RELEASE'
+	id 'com.bmuschko.cargo' version '2.3'
+	id 'org.hidetake.ssh' version '2.9.0'
+}
+
+group = 'eu.woolplatform'
+version = '1.0.0' // run updateVersion after changing this property
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+archivesBaseName = 'wool-webservice'
+
+configurations {
+	providedRuntime
+}
+
+dependencies {
+	implementation 'eu.woolplatform:wool-utils:2.0.0'
+	implementation 'eu.woolplatform:wool-core:2.0.0'
+	implementation 'io.jsonwebtoken:jjwt:0.9.0'
+	implementation 'io.springfox:springfox-swagger2:2.9.2'
+	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+	implementation 'javax.xml.bind:jaxb-api:2.3.1'
+	implementation 'org.springframework:spring-context-support:5.1.6.RELEASE'
+	implementation 'org.springframework.boot:spring-boot-starter-web:2.1.4.RELEASE'
+	testImplementation 'junit:junit:4.12'
+	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat:2.1.4.RELEASE'
+	cargo 'org.codehaus.cargo:cargo-core:1.6.5'
+	cargo 'org.codehaus.cargo:cargo-ant:1.6.5'
+}
+
+def cargoLocalTomcatContainerId = project.hasProperty('localTomcatContainerId') ? localTomcatContainerId : ''
+def cargoTomcatDeployPath = project.hasProperty('tomcatDeployPath') ? tomcatDeployPath : ''
+def cargoRemoteTomcatHost = project.hasProperty('remoteTomcatHost') ? remoteTomcatHost : ''
+def cargoRemoteTomcatUser = project.hasProperty('remoteTomcatUser') ? remoteTomcatUser : ''
+def cargoRemoteTomcatPassword = project.hasProperty('remoteTomcatPassword') ? remoteTomcatPassword : ''
+def cargoLocalTomcatHomeDir = project.hasProperty('localTomcatHomeDir') ? localTomcatHomeDir : '.'
+def cargoLocalTomcatAjpPort = project.hasProperty('localTomcatAjpPort') ? localTomcatAjpPort : 0
+def cargoLocalTomcatPort = project.hasProperty('localTomcatPort') ? localTomcatPort : 0
+def cargoRemoteTomcatPort = project.hasProperty('remoteTomcatPort') ? remoteTomcatPort : 0
+
+cargo {
+	containerId = cargoLocalTomcatContainerId
+
+	deployable {
+		context = cargoTomcatDeployPath
+	}
+	
+	remote {
+		hostname = cargoRemoteTomcatHost
+		username = cargoRemoteTomcatUser
+		password = cargoRemoteTomcatPassword
+	}
+	
+	local {
+		homeDir = file(cargoLocalTomcatHomeDir)
+		outputFile = file('build/logs/tomcat.log')
+		
+		containerProperties {
+			property 'cargo.tomcat.ajp.port', cargoLocalTomcatAjpPort
+		}
+	}
+}
+
+tasks.matching({ it.name =~ /cargo.*Local/ }).each() {
+	it.port = cargoLocalTomcatPort.toInteger()
+}
+
+tasks.matching({ it.name =~ /cargo.*Remote/ }).each() {
+	it.port = cargoRemoteTomcatPort.toInteger()
+}
+
+task updateConfig {
+	group = 'configuration'
+	description = 'Configures files with current values of woolconfig properties from gradle.properties.'
+	
+	doLast() {
+		Properties props = new Properties()
+		def propPrefix = 'woolconfig'
+		project.properties.each { key, value ->
+			if (!key.startsWith(propPrefix))
+				return
+			key = key.substring(propPrefix.length())
+			key = key[0].toLowerCase() + key.substring(1)
+			props[key] = value
+		}
+		def resDir = file('src/main/resources')
+		resDir.mkdirs()
+		def out = new File(resDir, 'service.properties')
+		out.withWriter('UTF-8') {
+			props.store(it, 'DO NOT EDIT, generated with gradlew updateConfig')
+		}
+	}
+}
+
+task updateVersion {
+	group = 'versioning'
+	description = 'Writes the current version to files containing the version number.'
+
+	doLast() {
+		ant.replaceregexp(file: 'src/main/webapp/WEB-INF/web.xml',
+			match: "<display-name>WOOL .+</display-name>",
+			replace: "<display-name>WOOL ${version}</display-name>")
+		ant.replaceregexp(file: 'src/main/resources/deployment.properties',
+			match: "version=.+",
+			replace: "version=${version}")
+	}
+}
+
+task checkResources {
+	group = 'build'
+	description = 'Checks if required resource files exist and are up-to-date.'
+	
+	dependsOn updateConfig
+	
+	doLast() {
+		def resDir = file('src/main/resources')
+		def resFile = new File(resDir, 'service.properties')
+		if (!resFile.exists())
+			throw new Exception('File service.properties not found. Run updateConfig')
+		Properties props = new Properties()
+		resFile.withInputStream {
+			props.load(it)
+		}
+		if (!props.containsKey('baseUrl'))
+			throw new Exception('File service.properties not up-to-date. Create gradle.properties from gradle.sample.properties and run updateConfig.')
+	}
+}
+
+test {
+	testLogging.showStandardStreams = true
+}
+
+gradle.taskGraph.whenReady {
+	tasks.withType(Test) {
+		def props = new Properties()
+		def propsFile = file('gradle.test.properties')
+		if (propsFile.exists()) {
+			propsFile.withReader('UTF-8') {
+				props.load(it)
+			}
+			props.each { key, value ->
+				systemProperty key, value
+			}
+		}
+	}
+}
+
+javadoc {
+	options {
+		links 'https://docs.oracle.com/javase/10/docs/api/'
+		addStringOption('Xdoclint:all,-html', '-quiet')
+	}
+}
+
+processResources.dependsOn checkResources

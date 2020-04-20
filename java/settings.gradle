@@ -18,3 +18,4 @@ include 'services:webservice'
 
 include ':WoolUtils'
 include ':WoolCore'
+include ':WoolWebService'
