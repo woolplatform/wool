@@ -3,10 +3,10 @@
 
 <web-app
 	xmlns="http://java.sun.com/xml/ns/j2ee"
-    version="2.5"
+	version="2.5"
 >
-    <display-name>WOOL 1.0.0</display-name>
-    <description>
+	<display-name>WOOL Web Service 1.0.0</display-name>
+	<description>
 		This web application provides the WOOL Web Service.
-    </description>
+	</description>
 </web-app>

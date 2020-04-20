@@ -107,8 +107,8 @@ task updateVersion {
 
 	doLast() {
 		ant.replaceregexp(file: 'src/main/webapp/WEB-INF/web.xml',
-			match: "<display-name>WOOL .+</display-name>",
-			replace: "<display-name>WOOL ${version}</display-name>")
+			match: "<display-name>WOOL Web Service .+</display-name>",
+			replace: "<display-name>WOOL Web Service ${version}</display-name>")
 		ant.replaceregexp(file: 'src/main/resources/deployment.properties',
 			match: "version=.+",
 			replace: "version=${version}")
