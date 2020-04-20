@@ -70,6 +70,12 @@ The web service is configured with this file that needs to be created:
 You can make a copy of this file and change it:
 <GITDIR>\wool\java\WoolWebService\gradle.sample.properties
 
+For the secret key, you may use the included key generator. Open a command
+prompt in this directory:
+<GITDIR>\wool\java\WoolWebService\KeyGenerator
+Enter this command:
+> .\keygenerator -t base64_256bits
+
 
 ================================================================================
 3 DEPLOY
