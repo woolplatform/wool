@@ -76,6 +76,12 @@ prompt in this directory:
 Enter this command:
 > .\keygenerator -t base64_256bits
 
+The passwords are loaded from an XML file that should be in the configured data
+dir:
+<DATADIR>\users.xml
+An example file can be found in:
+<GITDIR>\wool\java\WoolWebService\config\users.xml
+
 
 ================================================================================
 3 DEPLOY
