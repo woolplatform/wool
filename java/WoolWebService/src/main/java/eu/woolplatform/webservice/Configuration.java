@@ -23,6 +23,7 @@ public class Configuration extends LinkedHashMap<String,String> {
 
 	public static final String VERSION = "version";
 	public static final String BASE_URL = "baseUrl";
+	public static final String JWT_SECRET_KEY = "jwtSecretKey";
 	public static final String DATA_DIR = "dataDir";
 
 	private static final Object LOCK = new Object();
