@@ -31,7 +31,7 @@ public class QueryRunner {
 	 * @throws Exception if an unexpected error occurs. This results in HTTP
 	 * error status 500 Internal Server Error.
 	 */
-	public static <T> T runAuthQuery(AuthQuery<T> query,
+	public static <T> T runQuery(AuthQuery<T> query,
 			String versionName, HttpServletRequest request,
 			HttpServletResponse response) throws HttpException, Exception {
 		ProtocolVersion version;

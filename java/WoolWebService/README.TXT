@@ -1,6 +1,6 @@
 ================================================================================
 WOOL WEB SERVICE 1.0.0
-20 April 2020
+21 April 2020
 Dennis Hofs (d.hofs@rrd.nl)
 
 ================================================================================
@@ -134,3 +134,42 @@ The "user" in the response may have different case than the case-insensitive
 "user" in the request.
 
 In subsequent queries you must include the token in header X-Auth-Token.
+
+--------------------------------------------------------------------------------
+4.1 POST /variables
+
+Sets multiple variable values.
+The request body must be a JSON object that maps variable names to values.
+A name can only contain [A-Za-z0-9], and must start with [A-Za-z].
+Example:
+{
+  "myVar1": "my value",
+  "myVar2": 20,
+  "myVar3": null
+}
+Setting a variable to null, is effectively the same as unsetting the variable.
+
+--------------------------------------------------------------------------------
+4.2 POST /variable
+
+Sets a single variable value.
+The variable name is specified as query parameter "name".
+The parameter value can be specified in two ways:
+- query parameter "value": the value type is a string
+- request body: any JSON value
+
+--------------------------------------------------------------------------------
+4.3 GET /variables
+
+Retrieves the values of some or all variables.
+It takes one optional query parameter "names". If you omit it or leave it empty,
+then it retrieves all variables in alphabetical order.
+You can set parameter "names" to a space-delimited list of variables that you
+want to retrieve.
+The response is a JSON object that maps variable names to values.
+Example:
+{
+  "myVar1": "my value",
+  "myVar2": 20,
+  "myVar3": null
+}

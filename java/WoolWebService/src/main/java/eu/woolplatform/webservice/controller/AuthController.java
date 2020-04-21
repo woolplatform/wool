@@ -36,7 +36,7 @@ public class AuthController {
 			@RequestBody
 			LoginParams loginParams) throws HttpException, Exception {
 		synchronized (AUTH_LOCK) {
-			return QueryRunner.runAuthQuery(
+			return QueryRunner.runQuery(
 					(version, user) -> doLogin(request, loginParams),
 					versionName, null, response);
 		}
