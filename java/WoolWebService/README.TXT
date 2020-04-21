@@ -95,9 +95,8 @@ the following properties that you need to fill in gradle.properties:
 
 Open a command prompt in:
   <GITDIR>\wool\java\WoolWebService
-Enter a command like this:
+Enter this command:
 > .\gradlew build cargoRedeployRemote
-using the deploy task(s) that you want to run.
 
 If you want to make a clean build and deploy, then enter:
 > .\gradlew clean build cargoRedeployRemote
