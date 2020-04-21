@@ -24,7 +24,10 @@ package eu.woolplatform.wool.parser;
 
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.i18n.I18nLanguageFinder;
-import eu.woolplatform.wool.i18n.*;
+import eu.woolplatform.wool.i18n.WoolTranslatable;
+import eu.woolplatform.wool.i18n.WoolTranslationParser;
+import eu.woolplatform.wool.i18n.WoolTranslationParserResult;
+import eu.woolplatform.wool.i18n.WoolTranslator;
 import eu.woolplatform.wool.model.WoolDialogue;
 import eu.woolplatform.wool.model.WoolDialogueDescription;
 import eu.woolplatform.wool.model.WoolProject;
