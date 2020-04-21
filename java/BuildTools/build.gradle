@@ -1,0 +1,23 @@
+plugins {
+	id 'java'
+	id 'distribution'
+	id 'eclipse-wtp'
+}
+
+group = 'eu.wooplatform'
+version = '1.0.0'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+archivesBaseName = 'buildtools'
+
+distributions {
+	main {
+		distributionBaseName = archivesBaseName
+		contents {
+			from configurations.compileClasspath
+			from jar
+		}
+	}
+}
+
+[distZip, distTar, installDist]*.dependsOn jar
