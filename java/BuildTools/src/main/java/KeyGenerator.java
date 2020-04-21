@@ -11,7 +11,7 @@ public class KeyGenerator {
 	public static final String TYPE_SECURE_PASSWORD = "secure_password";
 	public static final String TYPE_PHPMYADMIN_BLOWFISH =
 			"phpmyadmin_blowfish";
-	public static final String TYPE_BASE64_256BITS = "base64_256bits";
+	public static final String TYPE_BASE64 = "base64";
 	
 	private static final String BLOWFISH_EXLUDE_CHARS = "'\"\\";
 	private static final String CONSONANTS = "bcdfghjklmnpqrstvwxz";
@@ -20,7 +20,8 @@ public class KeyGenerator {
 	
 	private static SecureRandom random = new SecureRandom();
 	
-	private static String[] generateKeys(String type, int repeat) {
+	private static String[] generateKeys(String type, Integer size,
+			int repeat) throws KeyGeneratorException {
 		String[] result = new String[repeat];
 		for (int i = 0; i < repeat; i++) {
 			switch (type) {
@@ -36,13 +37,12 @@ public class KeyGenerator {
 				case TYPE_PHPMYADMIN_BLOWFISH:
 					result[i] = generatePhpMyAdminBlowfish();
 					break;
-				case TYPE_BASE64_256BITS:
-					result[i] = generateBase64Key(256);
+				case TYPE_BASE64:
+					result[i] = generateBase64Key(size);
 					break;
 				default:
-					System.err.println("Key type not implemented: " + type);
-					System.exit(1);
-					return null;
+					throw new KeyGeneratorException(
+							"Key type not implemented: " + type);
 			}
 		}
 		return result;
@@ -116,34 +116,38 @@ public class KeyGenerator {
 		return builder.toString();
 	}
 	
-	private static String generateBase64Key(int bits) {
+	private static String generateBase64Key(Integer bits)
+			throws KeyGeneratorException {
+		if (bits == null)
+			bits = 256;
+		if (bits % 8 != 0)
+			throw new KeyGeneratorException("Size must be a multiple of 8");
 		byte[] bs = new byte[bits / 8];
 		random.nextBytes(bs);
 		return Base64.getEncoder().encodeToString(bs);
 	}
 	
-	private static String parseType(String type) {
+	private static String parseType(String type) throws KeyGeneratorException {
 		String fieldName = "TYPE_" + type.toUpperCase();
 		try {
 			Field field = KeyGenerator.class.getField(fieldName);
-			return (String)field.get(null);
-		} catch (Exception ex) {
-			System.err.println("Invalid type: " + type);
-			System.err.println();
-			exitUsage(1);
-			return null;
+			return (String) field.get(null);
+		} catch (NoSuchFieldException | IllegalAccessException ex) {
+			throw new KeyGeneratorException("Invalid type: " + type);
 		}
 	}
 	
-	private static Integer parseNumber(String numStr) {
+	private static Integer parseNumber(String numStr, Integer min)
+			throws KeyGeneratorException {
+		int result;
 		try {
-			return Integer.parseInt(numStr);
-		} catch (Exception ex) {
-			System.err.println("Not a number: " + numStr);
-			System.err.println();
-			exitUsage(1);
-			return null;
+			result = Integer.parseInt(numStr);
+		} catch (NumberFormatException ex) {
+			throw new KeyGeneratorException("Not a number: " + numStr);
 		}
+		if (min != null && result < min)
+			throw new KeyGeneratorException("Number must be at least " + min);
+		return result;
 	}
 	
 	private static void exitUsage(int exitCode) {
@@ -158,7 +162,11 @@ public class KeyGenerator {
 			out.println("    - alphanum_password: password with alphanumeric characters");
 			out.println("    - secure_password: password with alphanumeric and special characters");
 			out.println("    - phpmyadmin_blowfish");
-			out.println("    - base64_256bits");
+			out.println("    - base64: Base64 key with 256 bits. You may change the size with");
+			out.println("          argument --size");
+			out.println("(-size | --size | -s | --s) SIZE");
+			out.println("    Optional: Size of the key to generate. This depends on the type:");
+			out.println("    - base64: size in bits (default 256)");
 			out.println("(-n | --n) NUMBER");
 			out.println("    Optional: Number of keys to generate. Default: 1.");
 			out.println("(-help | --help | -h | --h)");
@@ -183,6 +191,12 @@ public class KeyGenerator {
 					return;
 				}
 				params.put("type", args[i++]);
+			} else if (key.equals("size") || key.equals("s")) {
+				if (i >= args.length) {
+					exitUsage(1);
+					return;
+				}
+				params.put("size", args[i++]);
 			} else if (key.equals("n")) {
 				if (i >= args.length) {
 					exitUsage(1);
@@ -198,28 +212,23 @@ public class KeyGenerator {
 			}
 		}
 		String type = TYPE_PASSWORD;
-		if (params.containsKey("type")) {
-			type = parseType(params.get("type"));
-			if (type == null)
-				return;
-		}
-		Integer n = 1;
-		if (params.containsKey("n")) {
-			n = parseNumber(params.get("n"));
-			if (n == null)
-				return;
-			if (n <= 0) {
-				System.err.println("Number not greater than 0: " + n);
-				System.err.println();
-				exitUsage(1);
-				return;
+		try {
+			if (params.containsKey("type"))
+				type = parseType(params.get("type"));
+			Integer size = null;
+			if (params.containsKey("size"))
+				size = parseNumber(params.get("size"), 1);
+			Integer n = 1;
+			if (params.containsKey("n"))
+				n = parseNumber(params.get("n"), 1);
+			String[] keys = generateKeys(type, size, n);
+			for (String key : keys) {
+				System.out.println(key);
 			}
-		}
-		String[] keys = generateKeys(type, n);
-		if (keys == null)
-			return;
-		for (String key : keys) {
-			System.out.println(key);
+		} catch (KeyGeneratorException ex) {
+			System.err.println(ex.getMessage());
+			System.err.println();
+			exitUsage(1);
 		}
 	}
 }
