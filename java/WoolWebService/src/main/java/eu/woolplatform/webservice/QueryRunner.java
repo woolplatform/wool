@@ -2,6 +2,8 @@ package eu.woolplatform.webservice;
 
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.webservice.exception.*;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -92,22 +94,33 @@ public class QueryRunner {
 	 */
 	private static String validateDefaultToken(String token)
 			throws UnauthorizedException, DatabaseException {
-		if (token.length() == 0) {
+		Logger logger = AppComponents.getLogger(
+				QueryRunner.class.getSimpleName());
+		if (token.trim().length() == 0) {
+			logger.info("Invalid authentication token: token empty");
 			throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_INVALID,
 					"Authentication token invalid");
 		}
 		AuthDetails details;
 		try {
 			details = AuthToken.parseToken(token);
-		} catch (Exception ex) {
+		} catch (ExpiredJwtException ex) {
+			throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_EXPIRED,
+					"Authentication token expired");
+		} catch (JwtException ex) {
+			logger.info("Invalid authentication token: failed to parse: " +
+					ex.getMessage());
 			throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_INVALID,
 					"Authentication token invalid");
 		}
 		UserCredentials user = UserFile.findUser(details.getSubject());
 		long now = System.currentTimeMillis();
-		if (user == null)
+		if (user == null) {
+			logger.info("Invalid authentication token: user not found: " +
+					details.getSubject());
 			throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_INVALID,
 					"Authentication token invalid");
+		}
 		if (details.getExpiration() != null &&
 				details.getExpiration().getTime() < now) {
 			throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_EXPIRED,

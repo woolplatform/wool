@@ -48,6 +48,7 @@ public class AuthController {
 		validateForbiddenQueryParams(request, "user", "password");
 		String user = loginParams.getUser();
 		String password = loginParams.getPassword();
+		Integer tokenExpiration = loginParams.getTokenExpiration();
 		List<HttpFieldError> fieldErrors = new ArrayList<>();
 		if (user == null || user.length() == 0) {
 			fieldErrors.add(new HttpFieldError("user",
@@ -56,6 +57,10 @@ public class AuthController {
 		if (password == null || password.length() == 0) {
 			fieldErrors.add(new HttpFieldError("password",
 					"Parameter \"password\" not defined"));
+		}
+		if (tokenExpiration != null && tokenExpiration <= 0) {
+			fieldErrors.add(new HttpFieldError("tokenExpiration",
+					"Parameter \"tokenExpiration\" must be greater than 0 or \"never\""));
 		}
 		if (!fieldErrors.isEmpty()) {
 			logger.info("Failed login attempt: " + fieldErrors);

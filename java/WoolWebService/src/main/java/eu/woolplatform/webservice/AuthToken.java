@@ -1,6 +1,7 @@
 package eu.woolplatform.webservice;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.apache.tomcat.util.codec.binary.Base64;
@@ -39,9 +40,9 @@ public class AuthToken {
 	 * 
 	 * @param token the token
 	 * @return the authentication details
-	 * @throws Exception if the token can't be parsed
+	 * @throws JwtException if the token can't be parsed
 	 */
-	public static AuthDetails parseToken(String token) throws Exception {
+	public static AuthDetails parseToken(String token) throws JwtException {
 		Claims claims = Jwts.parser().setSigningKey(getSecretKey())
 				.parseClaimsJws(token).getBody();
 		return new AuthDetails(claims.getSubject(), claims.getIssuedAt(),
