@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class VariableStore {
+public class VariableStoreIO {
 	private static final Object LOCK = new Object();
 
 	private static final String VARSTORE_DIR = "varstore";

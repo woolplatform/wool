@@ -8,7 +8,7 @@ import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
 import eu.woolplatform.webservice.QueryRunner;
 import eu.woolplatform.webservice.exception.*;
-import eu.woolplatform.webservice.model.VariableStore;
+import eu.woolplatform.webservice.model.VariableStoreIO;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +39,7 @@ public class DataController {
 
 	private Map<String,Object> doGetVariables(String user, String names)
 			throws HttpException, Exception {
-		Map<String,?> varStore = VariableStore.readVariables(user);
+		Map<String,?> varStore = VariableStoreIO.readVariables(user);
 		names = names.trim();
 		List<String> nameList;
 		if (names.length() == 0) {
@@ -113,7 +113,7 @@ public class DataController {
 		}
 		Map<String,Object> vars = new HashMap<>();
 		vars.put(name, setValue);
-		VariableStore.writeVariables(user, vars);
+		VariableStoreIO.writeVariables(user, vars);
 		return null;
 	}
 
@@ -158,7 +158,7 @@ public class DataController {
 					String.join(", ", invalidNames));
 			throw new BadRequestException(error);
 		}
-		VariableStore.writeVariables(user, varMap);
+		VariableStoreIO.writeVariables(user, varMap);
 		return null;
 	}
 }

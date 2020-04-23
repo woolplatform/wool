@@ -1,6 +1,9 @@
 package eu.woolplatform.webservice;
 
 import eu.woolplatform.utils.AppComponents;
+import eu.woolplatform.webservice.dialogue.ServiceManager;
+import eu.woolplatform.webservice.dialogue.ServiceManagerConfig;
+import eu.woolplatform.wool.parser.WoolResourceFileLoader;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,6 +27,8 @@ import java.net.URL;
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements
 ApplicationListener<ContextClosedEvent> {
+	private ServiceManager serviceManager;
+
 	/**
 	 * Constructs a new application. It reads service.properties and
 	 * initializes the {@link Configuration Configuration} and the {@link
@@ -48,8 +53,19 @@ ApplicationListener<ContextClosedEvent> {
 		Thread.setDefaultUncaughtExceptionHandler((t, e) ->
 				logger.error("Uncaught exception: " + e.getMessage(), e)
 		);
+
+		ServiceManagerConfig serviceManagerConfig =
+				new DefaultServiceManagerConfig();
+		ServiceManagerConfig.setInstance(serviceManagerConfig);
+		serviceManager = new ServiceManager(new WoolResourceFileLoader(
+				"dialogues"));
+
 		logger.info("WOOL Web Service version: " + config.get(
 				Configuration.VERSION));
+	}
+
+	public ServiceManager getServiceManager() {
+		return serviceManager;
 	}
 
 	@Override

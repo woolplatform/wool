@@ -1,3 +1,5 @@
+import groovy.io.FileType
+
 buildscript {
 	repositories {
 		mavenCentral()
@@ -23,8 +25,10 @@ configurations {
 }
 
 dependencies {
-	implementation 'eu.woolplatform:wool-utils:2.0.0'
-	implementation 'eu.woolplatform:wool-core:2.0.0'
+//	implementation 'eu.woolplatform:wool-utils:2.0.0'
+//	implementation 'eu.woolplatform:wool-core:2.0.0'
+	implementation project(':WoolUtils')
+	implementation project(':WoolCore')
 	implementation 'io.jsonwebtoken:jjwt:0.9.0'
 	implementation 'io.springfox:springfox-swagger2:2.9.2'
 	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
@@ -101,6 +105,54 @@ task updateConfig {
 	}
 }
 
+def listDirFiles(dir, path, writer) {
+	writer.write('"' + dir.name + '":')
+	if (path.size() == 2) {
+		def files = []
+		dir.eachFile(FileType.FILES) { file ->
+			def name = file.name
+			if (name.endsWith('.wool') || name.endsWith('.json'))
+				files << '"' + name + '"'
+		}
+		writer.write('[')
+		writer.write(files.join(','))
+		writer.write(']')
+	} else {
+		writer.write('{')
+		def first = true
+		dir.eachDir() { subdir ->
+			if (first)
+				first = false
+			else
+				writer.write(',')
+			listDirFiles(subdir, path + [dir.name], writer)
+		}
+		writer.write('}')
+	}
+}
+
+task listDialogueFiles {
+	group = 'configuration'
+	description = 'Lists dialogue files and writes them to dialogues.json'
+	
+	doLast() {
+		def dlgDir = file('src/main/resources/dialogues')
+		def dlgFile = file('src/main/resources/dialogues/dialogues.json')
+		dlgFile.withWriter('UTF-8') { writer ->
+			writer.write('{')
+			def first = true
+			dlgDir.eachDir() { dir ->
+				if (first)
+					first = false;
+				else
+					writer.write(',')
+				listDirFiles(dir, [dir.name], writer)
+			}
+			writer.write('}')
+		}
+	}
+}
+
 task updateVersion {
 	group = 'versioning'
 	description = 'Writes the current version to files containing the version number.'
@@ -119,7 +171,7 @@ task checkResources {
 	group = 'build'
 	description = 'Checks if required resource files exist and are up-to-date.'
 	
-	dependsOn updateConfig
+	dependsOn updateConfig, listDialogueFiles
 	
 	doLast() {
 		def resDir = file('src/main/resources')
