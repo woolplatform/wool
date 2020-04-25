@@ -170,19 +170,6 @@ task checkResources {
 	description = 'Checks if required resource files exist and are up-to-date.'
 	
 	dependsOn updateConfig, listDialogueFiles
-	
-	doLast() {
-		def resDir = file('src/main/resources')
-		def resFile = new File(resDir, 'service.properties')
-		if (!resFile.exists())
-			throw new Exception('File service.properties not found. Run updateConfig')
-		Properties props = new Properties()
-		resFile.withInputStream {
-			props.load(it)
-		}
-		if (!props.containsKey('baseUrl'))
-			throw new Exception('File service.properties not up-to-date. Create gradle.properties from gradle.sample.properties and run updateConfig.')
-	}
 }
 
 test {
