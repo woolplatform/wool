@@ -39,7 +39,7 @@ dependencies {
 	cargo 'org.codehaus.cargo:cargo-ant:1.6.5'
 }
 
-def cargoLocalTomcatContainerId = project.hasProperty('localTomcatContainerId') ? localTomcatContainerId : ''
+def cargoLocalTomcatContainerId = project.hasProperty('localTomcatContainerId') ? localTomcatContainerId : 'tomcat8x'
 def cargoTomcatDeployPath = project.hasProperty('tomcatDeployPath') ? tomcatDeployPath : ''
 def cargoRemoteTomcatHost = project.hasProperty('remoteTomcatHost') ? remoteTomcatHost : ''
 def cargoRemoteTomcatUser = project.hasProperty('remoteTomcatUser') ? remoteTomcatUser : ''
