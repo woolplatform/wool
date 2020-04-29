@@ -4,7 +4,7 @@ plugins {
 	id 'eclipse-wtp'
 }
 
-group = 'eu.wooplatform'
+group = 'eu.woolplatform'
 version = '1.0.0'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
