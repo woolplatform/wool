@@ -1,7 +1,7 @@
 ---
 name: WOOL Editor - Bug report
 about: Report bugs related to the WOOL Editor
-title: 'WOOL Editor: '
+title: 'WOOL Editor - Bug: '
 labels: bug, editor
 assignees: borisvanschooten
 
