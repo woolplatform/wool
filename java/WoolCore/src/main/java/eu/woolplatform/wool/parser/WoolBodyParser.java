@@ -22,14 +22,14 @@
 
 package eu.woolplatform.wool.parser;
 
-import java.util.List;
-
 import eu.woolplatform.utils.CurrentIterator;
 import eu.woolplatform.utils.exception.LineNumberParseException;
 import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.model.WoolReply;
 import eu.woolplatform.wool.model.WoolVariableString;
 import eu.woolplatform.wool.model.command.WoolCommand;
+
+import java.util.List;
 
 public class WoolBodyParser {
 	private WoolNodeState nodeState;

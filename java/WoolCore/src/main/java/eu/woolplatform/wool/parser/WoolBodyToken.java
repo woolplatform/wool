@@ -23,6 +23,7 @@
 package eu.woolplatform.wool.parser;
 
 import eu.woolplatform.utils.CurrentIterator;
+import eu.woolplatform.utils.DataFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,6 +96,12 @@ public class WoolBodyToken {
 
 	public void setValue(Object value) {
 		this.value = value;
+	}
+
+	@Override
+	public String toString() {
+		DataFormatter formatter = new DataFormatter();
+		return formatter.format(this, true, true);
 	}
 
 	public static void trimWhitespace(List<WoolBodyToken> tokens) {

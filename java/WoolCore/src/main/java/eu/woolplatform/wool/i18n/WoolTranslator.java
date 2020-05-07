@@ -25,10 +25,14 @@ package eu.woolplatform.wool.i18n;
 import eu.woolplatform.wool.model.WoolDialogue;
 import eu.woolplatform.wool.model.WoolNode;
 import eu.woolplatform.wool.model.WoolNodeBody;
+import eu.woolplatform.wool.model.WoolVariableString;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class can translate {@link WoolNode WoolNode}s given a translation map.
@@ -38,7 +42,9 @@ import java.util.Map;
  * @author Dennis Hofs (RRD)
  */
 public class WoolTranslator {
-	private Map<WoolTranslatable,WoolTranslatable> translations;
+	private Map<String,WoolTranslatable> translations;
+	private Pattern preWhitespaceRegex;
+	private Pattern postWhitespaceRegex;
 
 	/**
 	 * Constructs a new translator.
@@ -46,7 +52,12 @@ public class WoolTranslator {
 	 * @param translations the translation map
 	 */
 	public WoolTranslator(Map<WoolTranslatable,WoolTranslatable> translations) {
-		this.translations = translations;
+		this.translations = new LinkedHashMap<>();
+		for (WoolTranslatable key : translations.keySet()) {
+			this.translations.put(key.toString().trim(), translations.get(key));
+		}
+		preWhitespaceRegex = Pattern.compile("^\\s+");
+		postWhitespaceRegex = Pattern.compile("\\s+$");
 	}
 
 	/**
@@ -88,7 +99,16 @@ public class WoolTranslator {
 	}
 
 	private void translateText(WoolTranslatable text) {
-		WoolTranslatable translation = translations.get(text);
+		String textPlain = text.toString();
+		String preWhitespace = "";
+		String postWhitespace = "";
+		Matcher m = preWhitespaceRegex.matcher(textPlain);
+		if (m.find())
+			preWhitespace = m.group();
+		m = postWhitespaceRegex.matcher(textPlain);
+		if (m.find())
+			postWhitespace = m.group();
+		WoolTranslatable translation = translations.get(text.toString().trim());
 		if (translation == null)
 			return;
 		WoolNodeBody body = text.getParent();
@@ -99,9 +119,17 @@ public class WoolTranslator {
 		for (WoolNodeBody.Segment segment : textSegments) {
 			bodySegments.remove(segment);
 		}
+		if (preWhitespace.length() > 0) {
+			bodySegments.add(insertIndex++, new WoolNodeBody.TextSegment(
+					new WoolVariableString(preWhitespace)));
+		}
 		List<WoolNodeBody.Segment> transSegments = translation.getSegments();
-		for (int i = 0; i < transSegments.size(); i++) {
-			bodySegments.add(insertIndex + i, transSegments.get(i));
+		for (WoolNodeBody.Segment transSegment : transSegments) {
+			bodySegments.add(insertIndex++, transSegment);
+		}
+		if (postWhitespace.length() > 0) {
+			bodySegments.add(insertIndex + 1, new WoolNodeBody.TextSegment(
+					new WoolVariableString(postWhitespace)));
 		}
 		body.clearSegments();
 		for (WoolNodeBody.Segment segment : bodySegments) {

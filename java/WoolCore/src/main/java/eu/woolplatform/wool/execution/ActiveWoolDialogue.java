@@ -22,8 +22,8 @@
 
 package eu.woolplatform.wool.execution;
 
-import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.utils.expressions.EvaluationException;
+import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.model.*;
 import eu.woolplatform.wool.model.command.WoolCommand;
 import eu.woolplatform.wool.model.command.WoolInputCommand;
@@ -94,15 +94,7 @@ public class ActiveWoolDialogue {
 	}
 	
 	// ---------- Setters:
-	
-	public void setCurrentNode(WoolNode currentNode) {
-		this.currentNode = currentNode;
-	}
-	
-	public void setDialogueState(DialogueState dialogueState) {
-		this.dialogueState = dialogueState;
-	}
-	
+
 	/**
 	 * Sets the {@link WoolVariableStore} used to store/retrieve parameters for this {@link ActiveWoolDialogue}.
 	 * @param woolVariableStore the {@link WoolVariableStore} used to store/retrieve parameters for this {@link ActiveWoolDialogue}.

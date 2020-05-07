@@ -92,7 +92,6 @@ public class WoolTranslatableExtractor {
 			List<WoolTranslatable> translatables) {
 		if (containsText(current)) {
 			List<WoolNodeBody.Segment> segments = new ArrayList<>(current);
-			WoolNodeBody.trimWhitespace(segments);
 			translatables.add(new WoolTranslatable(parent, segments));
 		}
 		current.clear();
