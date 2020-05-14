@@ -1428,9 +1428,9 @@ var App = function(name, version, filename) {
 		//	+Math.random()+"&code="+encodeURIComponent(
 		//		data.getSaveData(FILETYPE.WOOL)
 		//	);
-		location.href = "../../html5/simplewoolclient/index.html?editable=true&rand="
+		location.href = "../simplewoolclient/index.html?editable=true&rand="
 			+Math.random()
-			+"&editurl="+encodeURIComponent("../../wooleditor/app/index.html")
+			+"&editurl="+encodeURIComponent("../wooleditor/index.html")
 			+(doContinue ? "&docontinue=true" : "")
 			+urlFileParam
 			//+"&code="+encodeURIComponent(

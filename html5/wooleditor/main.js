@@ -50,7 +50,7 @@ function createWindow () {
 
 
   // and load the index.html of the app.
-  mainWindow.loadFile(app.getAppPath()+'/wooleditor/app/index.html')
+  mainWindow.loadFile(app.getAppPath()+'/wooleditor/index.html')
 }
 
 //window.$ = window.jQuery = require('wooleditor/js/libs/jquery-1.11.2.min.js');

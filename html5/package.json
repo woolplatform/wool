@@ -1,7 +1,7 @@
 {
   "name": "Wool",
   "version": "1.4.0",
-  "main": "wooleditor/app/main.js",
+  "main": "wooleditor/main.js",
   "window": {
     "toolbar": false,
     "position": "center",
