@@ -1,5 +1,5 @@
 # WOOL Platform ReadMe
-Visit www.woolplatform.eu for full documentation, news and updates.
+WOOL is a simple, powerful dialogue platform for creating virtual agent conversations. Visit www.woolplatform.eu for full documentation, news and updates.
 
 ## Repository structure
 This repository is structured as follows:
