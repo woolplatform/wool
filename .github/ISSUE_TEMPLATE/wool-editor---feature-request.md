@@ -7,4 +7,4 @@ assignees: borisvanschooten
 
 ---
 
-** Please describe what you would like to see added or changed to the WOOL Editor: **
+**Please describe what you would like to see added or changed to the WOOL Editor:**
