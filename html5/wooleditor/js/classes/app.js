@@ -938,12 +938,17 @@ var App = function(name, version, filename) {
 	{
 		text = text.replace(/\</g, '&lt;');
 		text = text.replace(/\>/g, '&gt;');
+		text = text.replace(/\[\[([^\]]*)\]\]/g, '<span class="linkbounds">[[</span><span class=" linkname ">$1</span><span class="linkbounds">]]</span>');
+		// why is <p> used? It cannot be nested.
 		text = text.replace(/\&lt;\&lt;(.*?)\&gt;\&gt;/g, '<p class="conditionbounds">&lt;&lt;</p><p class="condition">$1</p><p class="conditionbounds">&gt;&gt;</p>');
-		text = text.replace(/\[\[([^\|]*?)\]\]/g, '<p class="linkbounds">[[</p><p class="linkname">$1</p><p class="linkbounds">]]</p>');
-		text = text.replace(/\[\[([^\[\]]*?)\|([^\[\]]*?)\]\]/g, '<p class="linkbounds">[[</p>$1<p style="color:red"><p class="linkbounds">|</p><p class="linkname">$2</p><p class="linkbounds">]]</p>');
+		//text = text.replace(/\[\[([^\|]*?)\]\]/g, '<p class="linkbounds">[[</p><p class="linkname">$1</p><p class="linkbounds">]]</p>');
+		//text = text.replace(/\[\[([^\[\]]*?)\|([^\[\]]*?)\]\]/g, '<p class="linkbounds">[[</p>$1<p class="linkbounds">|</p><p class="linkname">$2</p><p class="linkbounds">]]</p>');
 		text = text.replace(/\/\/(.*)?($|\n)/g, '<span class="comment">//$1</span>\n');
-		text = text.replace(/\/\*((.|[\r\n])*)?\*\//gm, '<span class="comment">/*$1*/</span>');
-		text = text.replace(/\/\%((.|[\r\n])*)?\%\//gm, '<span class="comment">/%$1%/</span>');
+		// does not work, because it highlights variables in statements
+		//text = text.replace(/(\$[a-zA-Z0-9_]+)/g, '<p class="inlinevariable">$1</p>');
+		// multiline comments not supported
+		//text = text.replace(/\/\*((.|[\r\n])*)?\*\//gm, '<span class="comment">/*$1*/</span>');
+		//text = text.replace(/\/\%((.|[\r\n])*)?\%\//gm, '<span class="comment">/%$1%/</span>');
 
 		// create a temporary document and remove all styles inside comments
 		var div = $("<div>");
@@ -957,8 +962,8 @@ var App = function(name, version, filename) {
 		})
 
 		// unhighlight links that don't exist
-		div.find(".linkname").each(function()
-		{
+		// not working, in Wool we cannot determine easily which part is the link
+		/*div.find(".linkname").each(function() {
 			var name = $(this).text();
 			var found = false;
 			for (var i in self.nodes())
@@ -971,7 +976,7 @@ var App = function(name, version, filename) {
 			}
 			if (!found)
 				$(this).removeClass("linkname");
-		});
+		});*/
 
 		text = div[0].innerHTML;
 		return text;
