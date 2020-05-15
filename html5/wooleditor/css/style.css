@@ -368,8 +368,7 @@ a:hover { color: #000;}
 	position: absolute;
 }
 
-.node
-{
+.node {
 	position: absolute;
 	width: 200px;
 	height: 200px;
@@ -382,9 +381,25 @@ a:hover { color: #000;}
 	transition: border 0.25s;
 }
 
-.node:hover
-{
+.node:hover {
 	border: 1px solid #49eff1;
+}
+
+.node.startNode {
+	border: 2px solid #00c;
+}
+
+.node.startNode .title {
+	padding-left: 0px;
+}
+.node.startNode .title:before {
+	font-size: 22px;
+	content: "▶";
+	color: #00c;
+	margin-right: 5px;
+}
+.node.endNode .body {
+	background: #ccc;
 }
 
 .node .title
