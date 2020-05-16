@@ -21,6 +21,7 @@
  */
 
 package eu.woolplatform.utils.csv;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
@@ -28,13 +29,14 @@ import java.util.List;
 
 import eu.woolplatform.utils.exception.ParseException;
 
-public class CsvParser {
+public class CsvParser implements Closeable {
 	private LineNumberReader reader;
 	
 	public CsvParser(LineNumberReader reader) {
 		this.reader = reader;
 	}
-	
+
+	@Override
 	public void close() throws IOException {
 		reader.close();
 	}
