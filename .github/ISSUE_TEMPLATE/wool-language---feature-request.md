@@ -7,4 +7,4 @@ assignees: ''
 
 ---
 
-** Please describe what you would like to see changed or added to the WOOL language: **
+**Please describe what you would like to see changed or added to the WOOL language:**

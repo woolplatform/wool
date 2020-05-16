@@ -368,8 +368,7 @@ a:hover { color: #000;}
 	position: absolute;
 }
 
-.node
-{
+.node {
 	position: absolute;
 	width: 200px;
 	height: 200px;
@@ -382,9 +381,25 @@ a:hover { color: #000;}
 	transition: border 0.25s;
 }
 
-.node:hover
-{
+.node:hover {
 	border: 1px solid #49eff1;
+}
+
+.node.startNode {
+	border: 2px solid #00c;
+}
+
+.node.startNode .title {
+	padding-left: 0px;
+}
+.node.startNode .title:before {
+	font-size: 22px;
+	content: "▶";
+	color: #00c;
+	margin-right: 5px;
+}
+.node.endNode .body {
+	background: #ccc;
 }
 
 .node .title
@@ -588,32 +603,33 @@ a:hover { color: #000;}
 }
 
 /* --- EDITOR HIGHLIGHTING --- */
+/*This has to match the colours as defined in ACE's theme-wool.js*/
 
 .editor p, .node .body p { display: inline; margin: 0; padding: 0; }
 
-.linkname
-{
-	color: #3ecfe9;
+.linkname {
+	color: #1ab;
 }
 
-.linkbounds
-{
-	color: #0ec0e0;
+.linkbounds {
+	color: #1cd;
+	font-weight: bold;
 }
 
-.condition
-{
+.condition {
 	color: #e93ecf;
 }
 
-.conditionbounds
-{
+.conditionbounds {
 	color: #e00ec0;
 }
 
-.comment
-{
-	color: #44fe66;
+.comment {
+	color: #2a2;
+}
+
+.inlinevariable {
+	color: #22f;
 }
 
 /* --- NODE DELETE --- */

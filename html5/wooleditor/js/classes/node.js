@@ -11,7 +11,7 @@ var Node = function() {
 	this.title = ko.observable("Node" + this.index());
 	this.tags = ko.observable("");
 	this.speaker = ko.observable("");
-	this.body = ko.observable("Empty Text");
+	this.body = ko.observable("");
 	// alternative way to get x,y, because there may a be delay getting them
 	// through css
 	this.assignedx = 0;

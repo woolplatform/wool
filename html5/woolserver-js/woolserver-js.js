@@ -187,6 +187,7 @@ function WoolNodeContext(vars) {
 	}
 }
 
+// Helper fields:
 // links - can be used for editor to show arrows
 // texts - can be used for translation.  The node's text lines are trimmed,
 //         with \n added to each line. 
@@ -319,7 +320,6 @@ function WoolNode(dialogue,lines) {
 			return null;
 		}
 	}
-	if (this.body.length==0) logError("error",null,"Node has no body");
 	// get key-value pairs from head
 	for (var i=0; i<this.head.length; i++) {
 		if (this.head[i] == "") continue;
@@ -328,6 +328,17 @@ function WoolNode(dialogue,lines) {
 			this.param[matches[1]] = matches[2];
 		} else {
 			logError("error",null,"Encountered unparseable line in head: "+this.head[i]);
+		}
+	}
+	var isEndNode = this.param.title == "End";
+	if (!isEndNode && this.body.length==0) {
+		logError("error",null,"Node has no body");
+	}
+	if (isEndNode) {
+		if ( this.body.length >= 2
+		||  (this.body.length == 1 && this.body[0].trim() != "") 
+		) {
+			logError("error",null,"End node should have empty body");
 		}
 	}
 	if (this.param.speaker) dialogue.speakers[speaker] = this.param.speaker;

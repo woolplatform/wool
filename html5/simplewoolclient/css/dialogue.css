@@ -48,6 +48,7 @@ img#background {
  	position: fixed;
  	right: 50px;
  	bottom: 0px;
+	pointer-events: none;
 }
 
 @media only screen and (min-width: 600px){

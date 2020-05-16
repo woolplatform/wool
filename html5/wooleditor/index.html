@@ -17,26 +17,26 @@
 	<script type="text/javascript" src="js/libs/ace.js"></script>
 	<script type="text/javascript" src="js/libs/typo.js"></script>
 	<script type="text/javascript" src="js/libs/spellcheck_ace.js"></script>
-	<script type="text/javascript" src="js/libs/theme-yarn.js"></script>
-	<script type="text/javascript" src="js/libs/mode-yarn.js"></script>
+	<script type="text/javascript" src="js/libs/theme-wool.js"></script>
+	<script type="text/javascript" src="js/libs/mode-wool.js"></script>
 
-	<script type="text/javascript" src="../../html5/lib/i18n/gettext.js"></script>
-	<script type="text/javascript" src="../../html5/lib/i18n/i18n.js"></script>
+	<script type="text/javascript" src="../lib/i18n/gettext.js"></script>
+	<script type="text/javascript" src="../lib/i18n/i18n.js"></script>
 
-	<script type="text/javascript" src="../../node_modules/split.js/dist/split.min.js"></script>
-	<script type="text/javascript" src="../../node_modules/jstree/dist/jstree.min.js"></script>
-	<link rel="stylesheet" href="../../node_modules/jstree/dist/themes/default/style.min.css" />
+	<script type="text/javascript" src="../node_modules/split.js/dist/split.min.js"></script>
+	<script type="text/javascript" src="../node_modules/jstree/dist/jstree.min.js"></script>
+	<link rel="stylesheet" href="../node_modules/jstree/dist/themes/default/style.min.css" />
 
 	<!-- various models / classes -->
-	<script type="text/javascript" src="js/classes/filesystem.js"></script>
+	<script type="text/javascript" src="../lib/filesystem.js"></script>
 	<script type="text/javascript" src="js/classes/app.js"></script>
 	<script type="text/javascript" src="js/classes/data.js"></script>
 	<script type="text/javascript" src="js/classes/utils.js"></script>
 	<script type="text/javascript" src="js/classes/node.js"></script>
 	<script type="text/javascript" src="js/classes/filemanager.js"></script>
 
-	<script type="text/javascript" src="../../html5/woolserver-js/woolserver-js-api.js"></script>
-	<script type="text/javascript" src="../../html5/woolserver-js/woolserver-js.js"></script>
+	<script type="text/javascript" src="../woolserver-js/woolserver-js-api.js"></script>
+	<script type="text/javascript" src="../woolserver-js/woolserver-js.js"></script>
 
 	<link rel="stylesheet" href="css/normalize.css">
 	<link rel="stylesheet" href="css/style.css">
@@ -157,7 +157,11 @@
 			<!-- foreach loop  of the nodes -->
 			<div class="nodes">
 				<div class="nodes-holder" data-bind="foreach: { data: app.nodes, as: 'node' }">
-					<div class="node" data-bind="nodeBind: true, css: { inactive: !node.active()}" >
+					<div class="node" data-bind="nodeBind: true, css: {
+						inactive: !node.active(),
+						endNode: node.title()=='End',
+						startNode: node.title()=='Start',
+					}" >
 						<div class="node-warning" data-bind="text: 
 						(node.hasErrors() ? '&#x26a0;' : '')"></div>
 						<div class="title" data-bind="text: 
@@ -165,17 +169,18 @@
 						+':&nbsp;'
 						+node.title(),
 						style: {background:
-						node.colorID() == 0 ? '#EEEEEE' :
-						node.colorID() == 1 ? '#6EA5E0' :
-						node.colorID() == 2 ? '#9EDE74' :
-						node.colorID() == 3 ? '#FFE374' :
-						node.colorID() == 4 ? '#F7A666' :
-						node.colorID() == 5 ? '#C47862' :
-						node.colorID() == 6 ? '#97E1E9' :
-						node.colorID() == 7 ? '#FF7080' :
-						node.colorID() == 8 ? '#D070FF' :
-						node.colorID() == 9 ? '#AAAAAA' :
-						'#eee'}"></div>
+							node.colorID() == 0 ? '#EEEEEE' :
+							node.colorID() == 1 ? '#6EA5E0' :
+							node.colorID() == 2 ? '#9EDE74' :
+							node.colorID() == 3 ? '#FFE374' :
+							node.colorID() == 4 ? '#F7A666' :
+							node.colorID() == 5 ? '#C47862' :
+							node.colorID() == 6 ? '#97E1E9' :
+							node.colorID() == 7 ? '#FF7080' :
+							node.colorID() == 8 ? '#D070FF' :
+							node.colorID() == 9 ? '#AAAAAA' :
+							'#eee'
+						},"></div>
 						<div class="body" data-bind="html: node.clippedBody"></div>
 						<div class="tags" data-bind="html: node.clippedTags"></div>
 						<div class="icon colorDown" data-bind="click: node.cycleColorDown"></div>
@@ -203,7 +208,7 @@
 						<div class="editor" id="editor"
 							data-bind="
 							ace: app.editing().body, 
-							aceOptions: { mode: 'yarn', theme: 'yarn', showPrintMargin: false }">
+							aceOptions: { mode: 'wool', theme: 'wool', showPrintMargin: false }">
 						</div> 
 					</div>
 					<!--<div class="icon close" data-bind="click:app.saveNode"></div>-->

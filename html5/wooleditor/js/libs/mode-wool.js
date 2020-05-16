@@ -1,4 +1,4 @@
-define("ace/mode/yarn",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/text_highlight_rules","ace/mode/behaviour"], function(require, exports, module) {
+define("ace/mode/wool",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/text_highlight_rules","ace/mode/behaviour"], function(require, exports, module) {
 "use strict";
 
 var oop = require("../lib/oop");
@@ -6,7 +6,7 @@ var TextMode = require("./text").Mode;
 var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 var Behaviour = require("./behaviour").Behaviour;
 
-var YarnHighlightRules = function() {
+var WoolHighlightRules = function() {
 
     this.$rules = {
         start: [
@@ -21,23 +21,35 @@ var YarnHighlightRules = function() {
             },
             {
                 token: "paren.llink",
-                regex: "\\[\\[",
+                regex: "^\\[\\[",
                 next: "link"
             },
             {
-                token: "hashtag",
-                regex: "#.+$"
+                token: "inlinevariable",
+                regex: "\\$[a-zA-Z0-9_]+"
             }
         ],
         link: [
             {
-                token: "string.rlink",
-                regex: "\\|\\w*[a-zA-Z0-9 ]+"
+                token: "string.comm",
+                regex: "<<[^>]*>>"
             },
             {
-                token: "string.llink",
-                regex: "[a-zA-Z0-9 ]+"
+                token: "paren.llink",
+                regex: "\\|"
             },
+            {
+                token: "string.rlink",
+                regex: "[^<>\\]]"
+            },
+            //{
+            //    token: "string.rlink",
+            //    regex: "\\|\\w*[a-zA-Z0-9 ]+"
+            //},
+            //{
+            //    token: "string.llink",
+            //    regex: "[a-zA-Z0-9._ ]+"
+            //},
             {
                 token: "paren.rlink",
                 regex: "\\]\\]",
@@ -47,7 +59,7 @@ var YarnHighlightRules = function() {
         comm: [
             {
                 token: "string.comm",
-                regex: "[A-Za-z0-9 _.,!:\"\'/$ ]+"
+                regex: "[^>]+"
             },
             {
                 token: "paren.rcomm",
@@ -60,11 +72,11 @@ var YarnHighlightRules = function() {
 };
 
 var Mode = function() {
-    this.HighlightRules = YarnHighlightRules;
+    this.HighlightRules = WoolHighlightRules;
     this.$behaviour = new Behaviour();
 };
 
-oop.inherits(YarnHighlightRules, TextHighlightRules);
+oop.inherits(WoolHighlightRules, TextHighlightRules);
 oop.inherits(Mode, TextMode);
 
 (function() {
@@ -72,7 +84,7 @@ oop.inherits(Mode, TextMode);
     this.getNextLineIndent = function(state, line, tab) {
         return '';
     };
-    this.$id = "ace/mode/yarn";
+    this.$id = "ace/mode/wool";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
