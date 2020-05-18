@@ -22,18 +22,24 @@
 
 package eu.woolplatform.wool.execution;
 
+import org.joda.time.DateTime;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import eu.woolplatform.utils.expressions.EvaluationException;
 import eu.woolplatform.wool.exception.WoolException;
-import eu.woolplatform.wool.model.*;
+import eu.woolplatform.wool.model.WoolDialogue;
+import eu.woolplatform.wool.model.WoolDialogueDescription;
+import eu.woolplatform.wool.model.WoolNode;
+import eu.woolplatform.wool.model.WoolNodeBody;
+import eu.woolplatform.wool.model.WoolReply;
 import eu.woolplatform.wool.model.command.WoolCommand;
 import eu.woolplatform.wool.model.command.WoolInputCommand;
 import eu.woolplatform.wool.model.command.WoolSetCommand;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerInternal;
-import org.joda.time.DateTime;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * An {@link ActiveWoolDialogue} is a wrapper around a {@link WoolDialogue}, which contains
@@ -55,10 +61,11 @@ public class ActiveWoolDialogue {
 	// ----------- Constructors:
 
 	/**
-	 * Creates an instance of an {@link ActiveWoolDialogue} with a given {@link WoolDialogueDescription} and
-	 * {@link WoolDialogue}.
-	 * @param dialogueDescription
-	 * @param dialogueDefinition
+	 * Creates an instance of an {@link ActiveWoolDialogue} with a given {@link
+	 * WoolDialogueDescription} and {@link WoolDialogue}.
+	 *
+	 * @param dialogueDescription the dialogue description
+	 * @param dialogueDefinition the dialogue definition
 	 */
 	public ActiveWoolDialogue(WoolDialogueDescription dialogueDescription,
 			WoolDialogue dialogueDefinition) {
@@ -194,8 +201,7 @@ public class ActiveWoolDialogue {
 	 * reply options, then the dialogue is considered finished.
 	 * 
 	 * <p>If there is a next node, then it returns the executed version of that
-	 * next {@link WoolNode} which results from a call to the {@link
-	 * #executeWoolNode(WoolNode, DateTime)} function.</p>
+	 * next {@link WoolNode}.</p>
 	 *  
 	 * @param nodePointer the next node pointer from the selected reply
 	 * @param time the time in the time zone of the user. This will be stored
@@ -265,15 +271,14 @@ public class ActiveWoolDialogue {
 		}
 		return result.toString();
 	}
-	
+
 	/**
-	 * Executes the agent statement and reply statements in the specified node
-	 * with respect to the specified variable map. It executes ("if" and "set")
-	 * commands and resolves variables. Any resulting body content that should
-	 * be sent to the client, is added to the (agent or reply) statement body in
-	 * the resulting node. This content can be text or client commands, with all
-	 * variables resolved.
-	 * 
+	 * Executes the agent statement and reply statements in the specified node.
+	 * It executes ("if" and "set") commands and resolves variables. Any
+	 * resulting body content that should be sent to the client, is added to the
+	 * (agent or reply) statement body in the resulting node. This content can
+	 * be text or client commands, with all variables resolved.
+	 *
 	 * @param woolNode a node to execute
 	 * @param time the time in the time zone of the user. This will be stored
 	 * with changes in the variable store.
@@ -290,5 +295,31 @@ public class ActiveWoolDialogue {
 		woolNode.getBody().execute(variables, true, processedBody);
 		processedNode.setBody(processedBody);
 		return processedNode;
-	}	
+	}
+
+	/**
+	 * Executes the agent statement and reply statements in the specified node.
+	 * It executes "if" commands and resolves variables. Any resulting body
+	 * content that should be sent to the client, is added to the (agent or
+	 * reply) statement body in the resulting node. This content can be text or
+	 * client commands, with all variables resolved.
+	 *
+	 * <p>This method does not change the dialogue state and does not change
+	 * any variables. Any "set" commands have no effect.</p>
+	 *
+	 * @param woolNode a node to execute
+	 * @return the executed WoolNode
+	 * @throws EvaluationException if an expression cannot be evaluated
+	 */
+	public WoolNode executeWoolNodeStateless(WoolNode woolNode)
+			throws EvaluationException {
+		WoolNode processedNode = new WoolNode();
+		processedNode.setHeader(woolNode.getHeader());
+		WoolNodeBody processedBody = new WoolNodeBody();
+		Map<String,Object> variables = new LinkedHashMap<>(
+				woolVariableStore.getModifiableMap(false, null));
+		woolNode.getBody().execute(variables, true, processedBody);
+		processedNode.setBody(processedBody);
+		return processedNode;
+	}
 }
