@@ -1,0 +1,118 @@
+title: Start
+tags: 
+speaker: Bob
+colorID: 2
+position: 1266,-458
+---
+The following input field should allow text input between 4 and 8 characters.
+
+[[Your input: <<input type="text" value="$value" min="4" max="8">>.|AllowNumbers]]
+===
+title: AllowNumbers
+tags: 
+speaker: Bob
+colorID: 0
+position: 1568,-460
+---
+Your input was "$value". The following input should not allow numeric input, only text.
+
+[[Your input: <<input type="text" value="$value" allowNumbers="false">>.|AllowSpecialCharacters]]
+===
+title: AllowSpecialCharacters
+tags: 
+speaker: Bob
+colorID: 0
+position: 1867,-461
+---
+Your input was "$value". The following input should not allow special characters.
+
+[[Your input: <<input type="text" value="$value" allowSpecialCharacters="false">>.|AllowSpecialSpaces]]
+===
+title: AllowSpecialSpaces
+tags: 
+speaker: Bob
+colorID: 0
+position: 2172,-461
+---
+Your input was "$value". The following input should not allow spaces.
+
+[[Your input: <<input type="text" value="$value" allowSpaces="false">>.|CapCharacters]]
+===
+title: CapCharacters
+tags: 
+speaker: Bob
+colorID: 0
+position: 2475,-463
+---
+Your input was "$value". The following input field should automatically capitalize each character, but it will allow you to change that if you wish.
+
+[[Your input: <<input type="text" value="$value" capCharacters="true">>.|CapWords]]
+===
+title: CapWords
+tags: 
+speaker: Bob
+colorID: 0
+position: 2803,-467
+---
+Your input was "$value". The following input field should automatically capitalize each new word, but it will allow you to change that if you wish.
+
+[[Your input: <<input type="text" value="$value" capWords="true">>.|CapSentences]]
+===
+title: CapSentences
+tags: 
+speaker: Bob
+colorID: 0
+position: 3115,-471
+---
+Your input was "$value". The following input field should automatically capitalize each new sentence, but it will allow you to change that if you wish.
+
+[[Your input: <<input type="text" value="$value" capSentences="true">>.|ForceCapCharacters]]
+===
+title: ForceCapCharacters
+tags: 
+speaker: Bob
+colorID: 0
+position: 1559,90
+---
+Your input was "$value". The following input field should automatically capitalize each character, and should NOT allow you to change that.
+
+[[Your input: <<input type="text" value="$value" forceCapCharacters="true">>.|ForceCapWords]]
+===
+title: ForceCapWords
+tags: 
+speaker: Bob
+colorID: 0
+position: 1907,88
+---
+Your input was "$value". The following input field should automatically capitalize each new word, and should NOT allow you to change that.
+
+[[Your input: <<input type="text" value="$value" forceCapWords="true">>.|ForceCapSentences]]
+===
+title: ForceCapSentences
+tags: 
+speaker: Bob
+colorID: 0
+position: 2274,90
+---
+Your input was "$value". The following input field should automatically capitalize each new sentence, and should NOT allow you to change that.
+
+[[Your input: <<input type="text" value="$value" forceCapSentences="true">>.|PromoCode]]
+===
+title: PromoCode
+tags: 
+speaker: Bob
+colorID: 0
+position: 1558,400
+---
+Your input was "$value". Finally we show the "promo code" example, combining various parameters:
+
+[[Promo-code: <<input type="text" value="$value" min="4" max="4" allowNumbers="false" allowSpaces="false" allowSpecialCharacters="false" forceCapCharacters="true">>.|ThanksBye]]
+===
+title: ThanksBye
+tags: 
+speaker: Bob
+colorID: 0
+position: 1910,393
+---
+Your input was "$value". That's the end of the test file, thanks!
+===

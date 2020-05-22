@@ -122,7 +122,7 @@ public abstract class WoolAttributesCommand extends WoolCommand {
 			if (!require)
 				return null;
 			throw new LineNumberParseException(String.format(
-					"Attribute \"%s\" not found", name),
+					"Required attribute \"%s\" not found", name),
 					cmdStartToken.getLineNum(), cmdStartToken.getColNum());
 		}
 		WoolBodyToken token = attrs.get(name);
@@ -194,5 +194,25 @@ public abstract class WoolAttributesCommand extends WoolCommand {
 					result, token.getLineNum(), token.getColNum());
 		}
 		return result;
+	}
+
+	protected static Boolean readBooleanAttr(String name,
+		 Map<String,WoolBodyToken> attrs, WoolBodyToken cmdStartToken,
+		 boolean require) throws LineNumberParseException {
+
+		String s = readPlainTextAttr(name, attrs, cmdStartToken, require);
+		if (s == null)
+			return null;
+
+		WoolBodyToken token = attrs.get(name);
+
+		if(s.toLowerCase().equals("true") || s.toLowerCase().equals("false")) {
+			return Boolean.parseBoolean(s.toLowerCase());
+		} else {
+			throw new LineNumberParseException(String.format(
+					"Invalid value for attribute \"%s\" (please use \"true\" or \"false\"", name) + ": " + s,
+					token.getLineNum(), token.getColNum());
+		}
+
 	}
 }
