@@ -9,8 +9,12 @@
 	See: https://stackoverflow.com/questions/52381131/jstree-is-not-a-function-using-jstree-in-electron-js  -->
 	<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
 
+	<!--
 	<script type="text/javascript" src="js/libs/jquery-1.11.2.min.js"></script>
+	-->
+	<script type="text/javascript" src="../node_modules/jquery/dist/jquery.min.js"></script>
 	<script type="text/javascript" src="js/libs/jquery.mousewheel.min.js"></script>
+	<script type="text/javascript" src="../node_modules/jquery-ui-dist/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="js/libs/transit.js"></script>
 	<script type="text/javascript" src="js/libs/knockout-3.3.0.js"></script>
 	<script type="text/javascript" src="js/libs/knockout.ace.js"></script>
@@ -38,6 +42,7 @@
 	<script type="text/javascript" src="../woolserver-js/woolserver-js-api.js"></script>
 	<script type="text/javascript" src="../woolserver-js/woolserver-js.js"></script>
 
+	<link rel="stylesheet" href="../node_modules/jquery-ui-dist/jquery-ui.min.css">
 	<link rel="stylesheet" href="css/normalize.css">
 	<link rel="stylesheet" href="css/style.css">
 </head>
@@ -192,14 +197,34 @@
 				</div>
 			</div>
 
-			<!-- ko if:app.editing() != null -->
+			<script>
+				function speakerAutoComplete() {
+					// XXX we wait a second here, won't work otherwise
+					setTimeout(function() {
+						$("#speakerfield").autocomplete({
+							source: app.getAllSpeakers(),
+							minLength: 0,
+						});
+					// call search function when focused to make menu appear
+					// immediately
+					// https://stackoverflow.com/questions/8401734/jquery-ui-autocomplete-have-the-menu-open-when-user-clicks-in-the-text-box
+					$("#speakerfield").focus(function(event) {
+						$(this).autocomplete( "search" , "" );
+					});
+					}, 500);
+				}
+			</script>
+			<!-- ko template: { if:app.editing() != null, afterRender:
+			speakerAutoComplete() } -->
 			<div class="node-editor" data-bind="mousedown:app.saveNode">
 
 				<div class="form" data-bind="preventBubble: 'click', preventBubble: 'mousedown'">
 					<!--<button onclick='app.editing().compile();'>Compile</button>-->
 					<div id="node-errors" class="node-errors"></div>
 					Speaker:
-					<input type="text" data-bind="value: app.editing().speaker">
+					<input id="speakerfield" type="text" data-bind="
+						value: app.editing().speaker
+					">
 					Title:
 					<input type="text" class="title" data-bind="value: app.editing().title">
 					Tags:

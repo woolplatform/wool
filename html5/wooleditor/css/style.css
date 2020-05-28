@@ -997,4 +997,9 @@ a:hover { color: #000;}
 	background-position: 50% 50%;
 }
 
+/* autocomplete */
+
+.ui-front {
+	z-index: 201;
+}
 

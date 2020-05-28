@@ -53,6 +53,19 @@ var App = function(name, version, filename) {
 		this.fs = new BrowserFileSystem();
 	}
 
+	this.closeEditor = function() {
+		self.editing(null);
+	}
+	this.getAllSpeakers = function() {
+		var speakers = [];
+		var nodes = self.nodes();
+		for (var i in nodes) {
+			var speaker = nodes[i].speaker();
+			if (speakers.indexOf(speaker) == -1)
+				speakers.push(speaker);
+		}
+		return speakers;
+	}
 	// returns: true if start node was added
 	this.addStartNodeIfMissing = function() {
 		// check if Start node present

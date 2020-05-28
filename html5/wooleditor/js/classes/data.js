@@ -22,6 +22,8 @@ var data =
 
 
 	readFile: function(e, filename, clearNodes, element) {
+		// make sure editor is not open with old file
+		app.closeEditor();
 		app.showWaitSpinner(true);
 		app.fs.readFile(this.appendRoot(filename),element[0].files[0],
 			function(error,contents) {
