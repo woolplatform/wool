@@ -38,26 +38,35 @@ import java.util.Map;
 
 /**
  * This WOOL file loader can load files from resources on the classpath. The
- * files should be organized as language/speaker/dialogue-name.wool or
- * language/speaker/dialogue-name.json. Example: en/robin/intro.wool</p>
+ * files should be organized as language/path/to/dialogue-name.wool or
+ * language/path/to/dialogue-name.json. Languages should be encoded with ISO
+ * codes like "en" or "en_GB". Example: en_GB/robin/intro.wool</p>
  *
- * <p>The files should be specified in project file "dialogues.json" in the
- * root directory. This can automatically be generated at build time. It
- * should be structured like:<br />
+ * <p>The files should be specified in file "dialogues.json" in the root
+ * directory. This can automatically be generated at build time. It should be
+ * structured like:<br />
  *<pre>{
- *    "en": {
- *        "robin":[
- *            "dialogue1.wool",
- *            "dialogue2.wool",
- *            "dialogue3.json"
- *        ]
+ *    "en_GB": [
+ *        { "path": [
+ *            { "to": [
+ *                "dialogue1.wool",
+ *                "dialogue2.wool",
+ *                "dialogue3.json"
+ *            ]},
+ *        ]}
  *    }
  *}</pre></p>
+ *
+ * <p>The file contains a JSON object where the keys are ISO language codes.
+ * The value is an array with directory or file entries.<br />
+ * A directory entry is a JSON object with one key: the directory name. The
+ * value is again an array with directory or file entries.<br />
+ * A file entry is a string with the file name.</p>
  *
  * @author Dennis Hofs (RRD)
  */
 public class WoolResourceFileLoader implements WoolFileLoader {
-	private static final String PROJECT_FILE = "dialogues.json";
+	private static final String INDEX_FILE = "dialogues.json";
 
 	private String resourcePath;
 
@@ -73,7 +82,7 @@ public class WoolResourceFileLoader implements WoolFileLoader {
 	@Override
 	public List<WoolFileDescription> listWoolFiles() throws IOException {
 		List<WoolFileDescription> result = new ArrayList<>();
-		String path = resourcePath + "/" + PROJECT_FILE;
+		String path = resourcePath + "/" + INDEX_FILE;
 		InputStream input = getClass().getClassLoader().getResourceAsStream(
 				path);
 		try (Reader reader = new InputStreamReader(input,
@@ -93,29 +102,77 @@ public class WoolResourceFileLoader implements WoolFileLoader {
 
 	private void parseLanguageValue(String language, Object value,
 			List<WoolFileDescription> files) throws ParseException {
-		Map<String,?> map = JsonMapper.convert(value,
-				new TypeReference<Map<String,?>>() {});
-		for (String speaker : map.keySet()) {
-			parseSpeakerValue(language, speaker, map.get(speaker), files);
+		if (value instanceof List) {
+			parseDirectoryList(language, "", (List<?>)value, files);
+		} else if (value == null) {
+			throw new ParseException(
+					"Language value must be a list, found: null");
+		} else {
+			throw new ParseException("Language value must be a list, found: " +
+					value.getClass().getSimpleName());
 		}
 	}
 
-	private void parseSpeakerValue(String language, String speaker,
-			Object value, List<WoolFileDescription> files) throws ParseException {
-		List<String> list = JsonMapper.convert(value,
-				new TypeReference<List<String>>() {});
-		for (String filename : list) {
-			WoolFileDescription descr = new WoolFileDescription(speaker,
-					language, filename);
-			if (filename.endsWith(".wool") || filename.endsWith(".json"))
-				files.add(descr);
+	private void parseDirectoryValue(String language, String prefix,
+			Map<?,?> entry, List<WoolFileDescription> files)
+			throws ParseException {
+		if (entry.size() != 1) {
+			throw new ParseException(String.format(
+					"Directory object must have one key with the directory name, found %s keys",
+					entry.size()));
 		}
+		String name = (String)entry.keySet().iterator().next();
+		Object value = entry.get(name);
+		if (value instanceof List) {
+			parseDirectoryList(language, prefix + name + "/", (List<?>)value,
+					files);
+		} else if (value == null) {
+			throw new ParseException("Directory value must be a list, found: null");
+		} else {
+			throw new ParseException("Directory value must be a list, found: " +
+					value.getClass().getSimpleName());
+		}
+	}
+
+	private void parseDirectoryList(String language, String prefix,
+			List<?> children, List<WoolFileDescription> files)
+			throws ParseException {
+		for (Object child : children) {
+			parseDirectoryChild(language, prefix, child, files);
+		}
+	}
+
+	private void parseDirectoryChild(String language, String prefix,
+			Object entry, List<WoolFileDescription> files)
+			throws ParseException {
+		if (entry instanceof Map) {
+			parseDirectoryValue(language, prefix, (Map<?,?>)entry, files);
+		} else if (entry instanceof String) {
+			parseFileValue(language, prefix, (String)entry, files);
+		} else if (entry == null) {
+			throw new ParseException(
+					"Directory entry must be a map or string, found: null");
+		} else {
+			throw new ParseException(
+					"Directory entry must be a map or string, found: " +
+					entry.getClass().getSimpleName());
+		}
+	}
+
+	private void parseFileValue(String language, String prefix, String entry,
+			List<WoolFileDescription> files) throws ParseException {
+		String path = prefix + entry;
+		if (!entry.endsWith(".wool") && !entry.endsWith(".json")) {
+			throw new ParseException(
+					"File does not have extension .wool or .json: " + path);
+		}
+		files.add(new WoolFileDescription(language, path));
 	}
 
 	@Override
 	public Reader openFile(WoolFileDescription descr) throws IOException {
 		String path = resourcePath + "/" + descr.getLanguage() + "/" +
-				descr.getMainSpeaker() + "/" + descr.getFileName();
+				descr.getFilePath();
 		return new InputStreamReader(getClass().getClassLoader()
 				.getResourceAsStream(path), StandardCharsets.UTF_8);
 	}

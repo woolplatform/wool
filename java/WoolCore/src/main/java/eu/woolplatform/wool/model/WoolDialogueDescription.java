@@ -24,27 +24,20 @@ package eu.woolplatform.wool.model;
 
 public class WoolDialogueDescription {
 	
-	private String mainSpeaker;
 	private String language;
 	private String dialogueName;
 	
 	// -------------------- Constructors
 
-	public WoolDialogueDescription () {	}
+	public WoolDialogueDescription() {	}
 
-	public WoolDialogueDescription (String mainSpeaker, String language,
-			String dialogueName) {
-		this.setMainSpeaker(mainSpeaker);
+	public WoolDialogueDescription(String language, String dialogueName) {
 		this.setLanguage(language);
 		this.setDialogueName(dialogueName);
 	}
 	
 	// -------------------- Getters
 
-	public String getMainSpeaker() {
-		return this.mainSpeaker;
-	}
-	
 	public String getLanguage() {
 		return this.language;
 	}
@@ -54,10 +47,6 @@ public class WoolDialogueDescription {
 	}
 	
 	// -------------------- Setters
-	
-	public void setMainSpeaker(String mainSpeaker) {
-		this.mainSpeaker = mainSpeaker;
-	}
 
 	public void setLanguage(String language) {
 		this.language = language;
@@ -69,8 +58,7 @@ public class WoolDialogueDescription {
 
 	@Override
 	public int hashCode() {
-		int result = mainSpeaker.hashCode();
-		result = 31 * result + language.hashCode();
+		int result = language.hashCode();
 		result = 31 * result + dialogueName.hashCode();
 		return result;
 	}
@@ -82,8 +70,6 @@ public class WoolDialogueDescription {
 		if (obj == null || obj.getClass() != getClass())
 			return false;
 		WoolDialogueDescription other = (WoolDialogueDescription)obj;
-		if (!mainSpeaker.equals(other.mainSpeaker))
-			return false;
 		if (!language.equals(other.language))
 			return false;
 		if (!dialogueName.equals(other.dialogueName))
@@ -92,7 +78,7 @@ public class WoolDialogueDescription {
 	}
 
 	public String toString() {
-		return "Dialogue '" + this.dialogueName + "' with main speaker '" +
-				this.mainSpeaker + "' in language '" + this.language + "'.";
+		return "Dialogue '" + this.dialogueName + "' in language '" +
+				this.language + "'.";
 	}
 }

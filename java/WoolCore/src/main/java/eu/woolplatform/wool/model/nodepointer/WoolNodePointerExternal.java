@@ -22,8 +22,13 @@
 
 package eu.woolplatform.wool.model.nodepointer;
 
+import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.wool.model.WoolDialogue;
 import eu.woolplatform.wool.model.WoolReply;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A pointer to a node that is part of a different dialogue than the dialogue of which the node that is being referred from is a part. 
@@ -35,9 +40,11 @@ public class WoolNodePointerExternal extends WoolNodePointer {
 	
 	private String dialogueId;
 	
-	public WoolNodePointerExternal (String dialogueId, String nodeId) {
+	public WoolNodePointerExternal(String containerDialogueId,
+			String relNextDialogueId, String nodeId) throws ParseException {
 		super(nodeId);
-		this.dialogueId = dialogueId;
+		this.dialogueId = getAbsoluteDialogueId(containerDialogueId,
+				relNextDialogueId);
 	}
 
 	public WoolNodePointerExternal(WoolNodePointerExternal other) {
@@ -53,6 +60,31 @@ public class WoolNodePointerExternal extends WoolNodePointer {
 	 */
 	public String getDialogueId() {
 		return this.dialogueId;
+	}
+
+	private static String getAbsoluteDialogueId(String containerDialogueId,
+			String relNextDialogueId) throws ParseException {
+		if (relNextDialogueId.startsWith("/"))
+			return relNextDialogueId.substring(1);
+		List<String> relPath = Arrays.asList(relNextDialogueId.split("/"));
+		String relPathStr = String.join("/", relPath);
+		List<String> absPath = new ArrayList<>(Arrays.asList(
+				containerDialogueId.split("/")));
+		absPath.remove(absPath.size() - 1);
+		String containerPathStr = String.join("/", absPath);
+		for (String relPathElem : relPath) {
+			if (relPathElem.equals("..")) {
+				if (absPath.isEmpty()) {
+					throw new ParseException(String.format(
+							"Relative path \"%s\" goes above root from \"%s\"",
+							relPathStr, containerPathStr));
+				}
+				absPath.remove(absPath.size() - 1);
+			} else {
+				absPath.add(relPathElem);
+			}
+		}
+		return String.join("/", absPath);
 	}
 	
 	// ---------- Functions:

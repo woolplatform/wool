@@ -28,12 +28,21 @@ import java.util.List;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 
 public class WoolNodeState {
+	private String dialogueName;
 	private String title = null;
 	private String speaker = null;
 	private int speakerLine = 0;
 	private int speakerColumn = 0;
 	private int nextReplyId = 1;
 	private List<NodePointerToken> nodePointerTokens = new ArrayList<>();
+
+	public WoolNodeState(String dialogueName) {
+		this.dialogueName = dialogueName;
+	}
+
+	public String getDialogueName() {
+		return dialogueName;
+	}
 
 	public String getTitle() {
 		return title;

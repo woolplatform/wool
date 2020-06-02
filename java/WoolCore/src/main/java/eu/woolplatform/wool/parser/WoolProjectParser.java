@@ -91,19 +91,36 @@ public class WoolProjectParser {
 		List<WoolFileDescription> dialogueFiles = new ArrayList<>();
 		List<WoolFileDescription> translationFiles = new ArrayList<>();
 		for (WoolFileDescription file : files) {
-			if (file.getFileName().endsWith(".wool"))
+			if (file.getFilePath().endsWith(".wool"))
 				dialogueFiles.add(file);
-			else if (file.getFileName().endsWith(".json"))
+			else if (file.getFilePath().endsWith(".json"))
 				translationFiles.add(file);
 		}
+		Set<String> dialogueNames = new HashSet<>();
 		for (WoolFileDescription descr : dialogueFiles) {
 			dlgDescrSet.add(fileDescriptionToDialogueDescription(descr));
 			WoolParserResult dlgReadResult = parseDialogueFile(descr);
 			if (dlgReadResult.getParseErrors().isEmpty()) {
 				dialogues.put(descr, dlgReadResult.getDialogue());
+				dialogueNames.add(dlgReadResult.getDialogue()
+						.getDialogueName());
 			} else {
 				getParseErrors(readResult, descr).addAll(
 						dlgReadResult.getParseErrors());
+			}
+		}
+		if (readResult.getParseErrors().isEmpty()) {
+			// validate referenced dialogues in external node pointers
+			for (WoolFileDescription descr : dialogues.keySet()) {
+				WoolDialogue dlg = dialogues.get(descr);
+				for (String refName : dlg.getDialoguesReferenced()) {
+					if (!dialogueNames.contains(refName)) {
+						getParseErrors(readResult, descr).add(
+								new ParseException(String.format(
+								"Found external node pointer in dialogue %s to unknown dialogue %s",
+								dlg.getDialogueName(), refName)));
+					}
+				}
 			}
 		}
 		for (WoolFileDescription descr : translationFiles) {
@@ -112,7 +129,7 @@ public class WoolProjectParser {
 			if (dlgDescrSet.contains(dlgDescr)) {
 				getParseErrors(readResult, descr).add(new ParseException(
 						String.format("Found both translation file \"%s\" and dialogue file \"%s.wool\"",
-						descr.getFileName(), dlgDescr.getDialogueName()) + ": " +
+						descr.getFilePath(), dlgDescr.getDialogueName()) + ": " +
 						descr));
 				continue;
 			}
@@ -183,7 +200,7 @@ public class WoolProjectParser {
 		for (WoolFileDescription descr : translations.keySet()) {
 			WoolDialogueDescription dlgDescr =
 					fileDescriptionToDialogueDescription(descr);
-			WoolDialogue source = findSourceDialogue(dlgDescr.getMainSpeaker(),
+			WoolDialogue source = findSourceDialogue(
 					dlgDescr.getDialogueName());
 			if (source == null) {
 				getParseErrors(readResult, descr).add(new ParseException(
@@ -198,14 +215,12 @@ public class WoolProjectParser {
 		}
 	}
 
-	private WoolDialogue findSourceDialogue(String mainSpeaker, String dlgName) {
+	private WoolDialogue findSourceDialogue(String dlgName) {
 		List<WoolFileDescription> matches = new ArrayList<>();
 		for (WoolFileDescription descr : dialogues.keySet()) {
-			String currDlgName = fileNameToDialogueName(descr.getFileName());
-			if (descr.getMainSpeaker().equals(mainSpeaker) &&
-					currDlgName.equals(dlgName)) {
+			String currDlgName = fileNameToDialogueName(descr.getFilePath());
+			if (currDlgName.equals(dlgName))
 				matches.add(descr);
-			}
 		}
 		if (matches.isEmpty())
 			return null;
@@ -227,7 +242,7 @@ public class WoolProjectParser {
 
 	private WoolParserResult parseDialogueFile(WoolFileDescription description)
 			throws IOException {
-		String dlgName = fileNameToDialogueName(description.getFileName());
+		String dlgName = fileNameToDialogueName(description.getFilePath());
 		try (WoolParser woolParser = new WoolParser(dlgName,
 				fileLoader.openFile(description))) {
 			return woolParser.readDialogue();
@@ -244,9 +259,8 @@ public class WoolProjectParser {
 	private WoolDialogueDescription fileDescriptionToDialogueDescription(
 			WoolFileDescription descr) {
 		WoolDialogueDescription result = new WoolDialogueDescription();
-		result.setMainSpeaker(descr.getMainSpeaker());
 		result.setLanguage(descr.getLanguage());
-		result.setDialogueName(fileNameToDialogueName(descr.getFileName()));
+		result.setDialogueName(fileNameToDialogueName(descr.getFilePath()));
 		return result;
 	}
 
@@ -258,7 +272,6 @@ public class WoolProjectParser {
 	}
 
 	private String fileDescriptionToPath(WoolFileDescription descr) {
-		return descr.getLanguage() + "/" + descr.getMainSpeaker() + "/" +
-				descr.getFileName();
+		return descr.getLanguage() + "/" + descr.getFilePath();
 	}
 }

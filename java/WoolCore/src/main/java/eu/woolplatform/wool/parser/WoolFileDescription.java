@@ -30,38 +30,26 @@ package eu.woolplatform.wool.parser;
  */
 public class WoolFileDescription {
 	
-	private String mainSpeaker;
 	private String language;
-	private String fileName;
+	private String filePath;
 	
 	// -------------------- Constructors
 
 	public WoolFileDescription() {	}
 
 	/**
-	 * Constructs a new description. The file name can be a ".wool" dialogue
-	 * file or a ".json" translation file.
+	 * Constructs a new description. The file can be a ".wool" dialogue file or
+	 * a ".json" translation file.
 	 *
-	 * @param mainSpeaker the main speaker
 	 * @param language the language code (for example en_GB)
-	 * @param fileName the file name (.wool or .json)
+	 * @param filePath file path (.wool or .json)
 	 */
-	public WoolFileDescription(String mainSpeaker, String language, String fileName) {
-		this.setMainSpeaker(mainSpeaker);
+	public WoolFileDescription(String language, String filePath) {
 		this.setLanguage(language);
-		this.setFileName(fileName);
+		this.setFilePath(filePath);
 	}
 	
 	// -------------------- Getters
-
-	/**
-	 * Returns the main speaker.
-	 *
-	 * @return the main speaker
-	 */
-	public String getMainSpeaker() {
-		return this.mainSpeaker;
-	}
 
 	/**
 	 * Return the language code (for example en_GB).
@@ -73,25 +61,16 @@ public class WoolFileDescription {
 	}
 
 	/**
-	 * Returns the file name. This can be a ".wool" dialogue file or a ".json"
+	 * Returns the file path. This can be a ".wool" dialogue file or a ".json"
 	 * translation file.
 	 *
-	 * @return the file name (.wool or .json)
+	 * @return the file path (.wool or .json)
 	 */
-	public String getFileName() {
-		return this.fileName;
+	public String getFilePath() {
+		return this.filePath;
 	}
 	
 	// -------------------- Setters
-
-	/**
-	 * Sets the main speaker.
-	 *
-	 * @param mainSpeaker the main speaker
-	 */
-	public void setMainSpeaker(String mainSpeaker) {
-		this.mainSpeaker = mainSpeaker;
-	}
 
 	/**
 	 * Sets the language code (for example en_GB).
@@ -103,13 +82,13 @@ public class WoolFileDescription {
 	}
 
 	/**
-	 * Sets the file name. This can be a ".wool" dialogue file or a ".json"
+	 * Sets the file path. This can be a ".wool" dialogue file or a ".json"
 	 * translation file.
 	 *
-	 * @param fileName the file name (.wool or .json)
+	 * @param filePath the file path (.wool or .json)
 	 */
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
 	}
 
 	@Override
@@ -119,33 +98,29 @@ public class WoolFileDescription {
 		if (obj == null || getClass() != obj.getClass())
 			return false;
 		WoolFileDescription other = (WoolFileDescription)obj;
-		if (!mainSpeaker.equals(other.mainSpeaker))
-			return false;
 		if (!language.equals(other.language))
 			return false;
-		if (!fileName.equals(other.fileName))
+		if (!filePath.equals(other.filePath))
 			return false;
 		return true;
 	}
 
 	@Override
 	public int hashCode() {
-		int result = mainSpeaker.hashCode();
-		result = 31 * result + language.hashCode();
-		result = 31 * result + fileName.hashCode();
+		int result = language.hashCode();
+		result = 31 * result + filePath.hashCode();
 		return result;
 	}
 
 	public String toString() {
 		String fileType;
-		if (fileName.endsWith(".wool"))
+		if (filePath.endsWith(".wool"))
 			fileType = "Dialogue file";
-		else if (fileName.endsWith(".json"))
+		else if (filePath.endsWith(".json"))
 			fileType = "Translation file";
 		else
 			fileType = "Unknown file";
-		return String.format(
-				"%s \"%s\" with main speaker \"%s\" in language \"%s\"",
-				fileType, fileName, mainSpeaker, language);
+		return String.format("%s \"%s\" in language \"%s\"",
+				fileType, filePath, language);
 	}
 }

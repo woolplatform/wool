@@ -34,10 +34,16 @@ import eu.woolplatform.wool.model.nodepointer.WoolNodePointerInternal;
 import eu.woolplatform.wool.parser.WoolNodeState.NodePointerToken;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class WoolParser implements AutoCloseable {
 	public static final String NODE_NAME_REGEX = "[A-Za-z0-9_-]+";
+	public static final String DIALOGUE_NAME_REGEX =
+			"(" + NODE_NAME_REGEX + "/)*" + NODE_NAME_REGEX;
+	public static final String EXTERNAL_NODE_POINTER_REGEX =
+			"/?" + "((..)|(" + NODE_NAME_REGEX + ")/)*" + NODE_NAME_REGEX +
+			"\\." + NODE_NAME_REGEX;
 	
 	private String dialogueName;
 	private LineColumnNumberReader reader;
@@ -70,12 +76,8 @@ public class WoolParser implements AutoCloseable {
 	}
 	
 	private void init(String dialogueName, InputStream input) {
-		try {
-			init(dialogueName, new InputStreamReader(input, "UTF-8"));
-		} catch (UnsupportedEncodingException ex) {
-			throw new RuntimeException("UTF-8 not supported: " +
-					ex.getMessage(), ex);
-		}
+		init(dialogueName, new InputStreamReader(input,
+				StandardCharsets.UTF_8));
 	}
 	
 	private void init(String dialogueName, Reader reader) {
@@ -105,7 +107,7 @@ public class WoolParser implements AutoCloseable {
 	 */
 	public WoolParserResult readDialogue() throws IOException {
 		WoolParserResult result = new WoolParserResult();
-		if (!dialogueName.matches("[A-Za-z0-9_-]+")) {
+		if (!dialogueName.matches(DIALOGUE_NAME_REGEX)) {
 			result.getParseErrors().add(new ParseException(
 					"Invalid dialogue name: " + dialogueName));
 		}
@@ -153,7 +155,7 @@ public class WoolParser implements AutoCloseable {
 		return result;
 	}
 	
-	private class ReadWoolNodeResult {
+	private static class ReadWoolNodeResult {
 		public WoolNode node = null;
 		public WoolNodeParseException parseException = null;
 		public boolean readNodeEnd = false;
@@ -173,7 +175,7 @@ public class WoolParser implements AutoCloseable {
 	 */
 	private ReadWoolNodeResult readNode() throws IOException {
 		ReadWoolNodeResult result = new ReadWoolNodeResult();
-		WoolNodeState nodeState = new WoolNodeState();
+		WoolNodeState nodeState = new WoolNodeState(dialogueName);
 		try {
 			boolean inHeader = true;
 			Map<String,String> headerMap = new LinkedHashMap<>();

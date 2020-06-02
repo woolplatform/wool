@@ -28,6 +28,7 @@ import java.util.List;
 
 import eu.woolplatform.utils.CurrentIterator;
 import eu.woolplatform.utils.exception.LineNumberParseException;
+import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.model.WoolReply;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
@@ -138,21 +139,28 @@ public class WoolReplyParser {
 					nodePointerToken.getColNum());
 		}
 		String nodePointerStr = (String)nodePointerToken.getValue();
-		if (!nodePointerStr.matches(WoolParser.NODE_NAME_REGEX +
-				"(\\." + WoolParser.NODE_NAME_REGEX + ")?")) {
+		WoolNodePointer result;
+		if (nodePointerStr.matches(WoolParser.NODE_NAME_REGEX)) {
+			result = new WoolNodePointerInternal(nodePointerStr);
+		} else if (nodePointerStr.matches(
+				WoolParser.EXTERNAL_NODE_POINTER_REGEX)) {
+			int sep = nodePointerStr.lastIndexOf('.');
+			try {
+				result = new WoolNodePointerExternal(
+						nodeState.getDialogueName(),
+						nodePointerStr.substring(0, sep),
+						nodePointerStr.substring(sep + 1));
+			} catch (ParseException ex) {
+				throw new LineNumberParseException(
+						"Invalid node pointer in reply: " + ex.getMessage(),
+						nodePointerToken.getLineNum(),
+						nodePointerToken.getColNum(), ex);
+			}
+		} else {
 			throw new LineNumberParseException(
 					"Invalid node pointer in reply: " + nodePointerStr,
 					nodePointerToken.getLineNum(),
 					nodePointerToken.getColNum());
-		}
-		int sep = nodePointerStr.indexOf('.');
-		WoolNodePointer result;
-		if (sep == -1) {
-			result = new WoolNodePointerInternal(nodePointerStr);
-		} else {
-			result = new WoolNodePointerExternal(
-					nodePointerStr.substring(0, sep),
-					nodePointerStr.substring(sep + 1));
 		}
 		nodeState.addNodePointerToken(result, nodePointerToken);
 		return result;
