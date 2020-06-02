@@ -169,8 +169,8 @@ public class WoolDialogue {
 
 	/**
 	 * Returns the {@link WoolNode} with the given identifier or title.
-	 * @param nodeId
-	 * @return
+	 * @param nodeId the node ID
+	 * @return the node
 	 */
 	public WoolNode getNodeById(String nodeId) {
 		return nodes.get(nodeId.toLowerCase());

@@ -164,7 +164,6 @@ public class ServiceManager {
 			return dlg;
 		throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
 				"Pre-loaded dialogue not found for dialogue '" + soughtDialogueDescription.getDialogueName() +
-				"' with main speaker '" + soughtDialogueDescription.getMainSpeaker() +
 				"' in language '"+soughtDialogueDescription.getLanguage() + "'.");
 	}
 	
