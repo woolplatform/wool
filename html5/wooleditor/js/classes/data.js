@@ -152,12 +152,6 @@ var data =
 		}
 		else if (type == FILETYPE.YARNTEXT
 		||       type == FILETYPE.WOOL) {
-			if (clearNodes) {
-				app.recordSavedChanges(content);
-			} else {
-				// append -> content unknown
-				app.recordSavedChanges(null);
-			}
 			var convertSpeaker = type == FILETYPE.YARNTEXT;
 			console.log("YARN: "+convertSpeaker);
 			var lines = content.split("\n");
@@ -366,6 +360,12 @@ var data =
 		if (warnings.length) alert(warnings.join("\n"));
 		if (app.addStartNodeIfMissing()) {
 			alert("Added missing Start node.");
+		}
+		if (clearNodes) {
+			app.recordSavedChanges(content);
+		} else {
+			// append -> content unknown
+			app.recordSavedChanges(null);
 		}
 	},
 

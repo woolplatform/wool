@@ -561,7 +561,8 @@ var App = function(name, version, filename) {
 	}
 
 	this.recordSavedChanges = function(content) {
-		this.lastSavedSource = content;
+		//this.lastSavedSource = content;
+		this.lastSavedSource = data.getSaveData(FILETYPE.WOOL);
 	}
 
 	// NOTE: check does not work for file format changes,

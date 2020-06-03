@@ -49,6 +49,34 @@ function createWindow () {
   })
 
 
+// https://github.com/electron/electron/issues/20400#issuecomment-539586029
+
+  const isWindows = process.platform === 'win32'
+                    || process.platform === 'win64';
+  let needsFocusFix = false;
+  let triggeringProgrammaticBlur = false;
+
+  mainWindow.on('blur', (event) => {
+    if(!triggeringProgrammaticBlur) {
+      needsFocusFix = true;
+    }
+  })
+
+  mainWindow.on('focus', (event) => {
+    if(isWindows && needsFocusFix) {
+      needsFocusFix = false;
+      triggeringProgrammaticBlur = true;
+      setTimeout(function () {
+        mainWindow.blur();
+        mainWindow.focus();
+        setTimeout(function () {
+          triggeringProgrammaticBlur = false;
+        }, 100);
+      }, 100);
+    }
+  })
+
+
   // and load the index.html of the app.
   mainWindow.loadFile(app.getAppPath()+'/wooleditor/index.html')
 }

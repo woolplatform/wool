@@ -188,7 +188,7 @@ FileManager.prototype.createContextMenu = function(node) {
 
 FileManager.prototype.loadWoolFile = function(filename) {
 	if (!app.areChangesSaved()) {
-		var confirm = window.confirm("Changes not saved, proceed?");
+		var confirm = window.confirm("Changes may not have been saved, proceed?");
 		if (!confirm) return;
 	}
 	data.openFile(null, filename,[ {files: [filename]} ]);
