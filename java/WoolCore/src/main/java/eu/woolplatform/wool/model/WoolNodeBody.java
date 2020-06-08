@@ -274,7 +274,7 @@ public class WoolNodeBody {
 		Set<WoolNodePointer> set = new HashSet<>();
 		getNodePointers(set);
 		List<WoolNodePointer> result = new ArrayList<>(set);
-		result.sort(this::compareNodePointers);
+		Collections.sort(result, this::compareNodePointers);
 		return result;
 	}
 	

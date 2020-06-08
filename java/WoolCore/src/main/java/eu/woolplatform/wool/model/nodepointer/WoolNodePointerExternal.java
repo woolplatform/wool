@@ -28,6 +28,7 @@ import eu.woolplatform.wool.model.WoolReply;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -67,11 +68,11 @@ public class WoolNodePointerExternal extends WoolNodePointer {
 		if (relNextDialogueId.startsWith("/"))
 			return relNextDialogueId.substring(1);
 		List<String> relPath = Arrays.asList(relNextDialogueId.split("/"));
-		String relPathStr = String.join("/", relPath);
+		String relPathStr = joinString("/", relPath);
 		List<String> absPath = new ArrayList<>(Arrays.asList(
 				containerDialogueId.split("/")));
 		absPath.remove(absPath.size() - 1);
-		String containerPathStr = String.join("/", absPath);
+		String containerPathStr = joinString("/", absPath);
 		for (String relPathElem : relPath) {
 			if (relPathElem.equals("..")) {
 				if (absPath.isEmpty()) {
@@ -84,7 +85,19 @@ public class WoolNodePointerExternal extends WoolNodePointer {
 				absPath.add(relPathElem);
 			}
 		}
-		return String.join("/", absPath);
+		return joinString("/", absPath);
+	}
+
+	private static String joinString(String delimiter, List<String> list) {
+		if (list.isEmpty())
+			return "";
+		Iterator<String> it = list.iterator();
+		StringBuilder result = new StringBuilder(it.next());
+		while (it.hasNext()) {
+			result.append(delimiter);
+			result.append(it.next());
+		}
+		return result.toString();
 	}
 	
 	// ---------- Functions:
