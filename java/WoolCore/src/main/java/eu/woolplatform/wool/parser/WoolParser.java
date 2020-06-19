@@ -222,7 +222,7 @@ public class WoolParser implements AutoCloseable {
 			}
 			WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
 			WoolNodeBody body = bodyParser.parse(bodyTokens, Arrays.asList(
-					"action", "if", "set"));
+					"action", "if", "random", "set"));
 			if (header.getTitle().toLowerCase().equals("end"))
 				validateEndNode(header, body, bodyTokens);
 			nodePointerTokens.addAll(nodeState.getNodePointerTokens());

@@ -37,9 +37,9 @@ import java.util.*;
  * <p><ul>
  * <li>Directly in the node. In this case it specifies the agent statement with
  * possible commands and user replies.</li>
- * <li>As part of a clause in a {@link WoolIfCommand WoolIfCommand}. The content
- * is the same as directly in the node. The only difference is that it is
- * performed conditionally.</li>
+ * <li>As part of a clause in a {@link WoolIfCommand WoolIfCommand} or {@link
+ * WoolRandomCommand WoolRandomCommand}. The content is the same as directly in
+ * the node. The only difference is that it is performed conditionally.</li>
  * <li>As part of a {@link WoolReply WoolReply}. In this case it specifies the
  * user statement with possible commands, but no replies. Note that the UI shows
  * these statements as options immediately along with the agent statement. This
@@ -62,13 +62,17 @@ import java.util.*;
  * automatically merged into one.</p>
  * 
  * <p>The type of commands depend on the context. Directly in the node or in a
- * {@link WoolIfCommand WoolIfCommand}, it can be:</p>
+ * {@link WoolIfCommand WoolIfCommand} or {@link WoolRandomCommand
+ * WoolRandomCommand}, it can be:</p>
  * 
  * <p><ul>
  * <li>{@link WoolActionCommand WoolActionCommand}: Actions to perform along
  * with the agent's text statement.</li>
  * <li>{@link WoolIfCommand WoolIfCommand}: Contains clauses, each with a {@link
  * WoolNodeBody WoolNodeBody} specifying conditional statements, replies and
+ * commands.</li>
+ * <li>{@link WoolRandomCommand WoolRandomCommand}: Contains clauses, each with
+ * a {@link WoolNodeBody WoolNodeBody} specifying statements, replies and
  * commands.</li>
  * <li>{@link WoolSetCommand WoolSetCommand}: Sets a variable value.</li>
  * </ul></p>

@@ -196,10 +196,11 @@ public class WoolIfCommand extends WoolExpressionCommand {
 		checkNoAssignment(cmdStartToken, parsedIf.name, parsedIf.expression);
 		while (true) {
 			WoolBodyParser bodyParser = new WoolBodyParser(nodeState);
-			WoolBodyParser.ParseUntilIfClauseResult bodyParse =
-					bodyParser.parseUntilIfClause(tokens, Arrays.asList(
-					"action", "if", "set"));
-			if (bodyParse.ifClauseStartToken == null) {
+			WoolBodyParser.ParseUntilCommandClauseResult bodyParse =
+					bodyParser.parseUntilCommandClause(tokens,
+					Arrays.asList("action", "if", "random", "set"),
+					Arrays.asList("elseif", "else", "endif"));
+			if (bodyParse.cmdClauseStartToken == null) {
 				throw new LineNumberParseException(
 						"Command \"if\" not terminated",
 						cmdStartToken.getLineNum(), cmdStartToken.getColNum());
@@ -210,8 +211,8 @@ public class WoolIfCommand extends WoolExpressionCommand {
 			} else {
 				command.setElseClause(bodyParse.body);
 			}
-			WoolBodyToken clauseStartToken = bodyParse.ifClauseStartToken;
-			String clauseName = bodyParse.ifClauseName;
+			WoolBodyToken clauseStartToken = bodyParse.cmdClauseStartToken;
+			String clauseName = bodyParse.cmdClauseName;
 			content = readCommandContent(clauseStartToken, tokens);
 			switch (clauseName) {
 			case "elseif":

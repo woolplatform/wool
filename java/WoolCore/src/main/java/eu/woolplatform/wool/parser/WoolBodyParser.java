@@ -29,6 +29,7 @@ import eu.woolplatform.wool.model.WoolReply;
 import eu.woolplatform.wool.model.WoolVariableString;
 import eu.woolplatform.wool.model.command.WoolCommand;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class WoolBodyParser {
@@ -43,22 +44,37 @@ public class WoolBodyParser {
 		CurrentIterator<WoolBodyToken> it = new CurrentIterator<>(
 				tokens.iterator());
 		it.moveNext();
-		ParseUntilIfClauseResult result = parseUntilIfClause(it, validCommands);
-		if (result.ifClauseStartToken != null) {
-			WoolBodyToken token = it.getCurrent();
-			throw new LineNumberParseException(String.format(
-					"Unexpected command \"%s\"", result.ifClauseName),
-					token.getLineNum(), token.getColNum());
-		}
+		ParseUntilCommandClauseResult result = parseUntilCommandClause(it,
+				validCommands, new ArrayList<>());
 		return result.body;
 	}
-	
-	public ParseUntilIfClauseResult parseUntilIfClause(
-			CurrentIterator<WoolBodyToken> tokens, List<String> validCommands)
-			throws LineNumberParseException {
-		ParseUntilIfClauseResult result = new ParseUntilIfClauseResult();
+
+	/**
+	 * Parse the specified tokens until a subclause of a command is found. There
+	 * are two commands that can have subclauses:
+	 *
+	 * <p><ul>
+	 * <li>if: has subclauses "elseif", "else" and "endif"</li>
+	 * <li>random: has subclauses "or" and "endrandom"</li>
+	 * </ul></p>
+	 *
+	 * <p>If any command token is found that is not in "validCommands" or in
+	 * "validCommandClauses", then this method throws a parse exception.</p>
+	 *
+	 * @param tokens the tokens
+	 * @param validCommands valid commands
+	 * @param validCommandClauses valid command clauses
+	 * @return the result
+	 * @throws LineNumberParseException if a parse error occurs
+	 */
+	public ParseUntilCommandClauseResult parseUntilCommandClause(
+			CurrentIterator<WoolBodyToken> tokens, List<String> validCommands,
+			List<String> validCommandClauses) throws LineNumberParseException {
+		ParseUntilCommandClauseResult result =
+				new ParseUntilCommandClauseResult();
 		result.body = new WoolNodeBody();
-		while (result.ifClauseStartToken == null && tokens.getCurrent() != null) {
+		while (result.cmdClauseStartToken == null &&
+				tokens.getCurrent() != null) {
 			WoolBodyToken token = tokens.getCurrent();
 			switch (token.getType()) {
 			case TEXT:
@@ -76,11 +92,10 @@ public class WoolBodyParser {
 				WoolCommandParser cmdParser = new WoolCommandParser(
 						validCommands, nodeState);
 				String name = cmdParser.readCommandName(tokens);
-				if (name.equals("elseif") || name.equals("else") ||
-						name.equals("endif")) {
-					result.ifClauseStartToken = token;
-					result.ifClauseName = name;
-				} else if (!name.equals("if") &&
+				if (validCommandClauses.contains(name)) {
+					result.cmdClauseStartToken = token;
+					result.cmdClauseName = name;
+				} else if (!name.equals("if") && !name.equals("random") &&
 						!result.body.getReplies().isEmpty()) {
 					throw new LineNumberParseException(
 							"Found << after reply", token.getLineNum(),
@@ -120,11 +135,11 @@ public class WoolBodyParser {
 		}
 		return false;
 	}
-	
-	public class ParseUntilIfClauseResult {
+
+	public static class ParseUntilCommandClauseResult {
 		public WoolNodeBody body;
-		public WoolBodyToken ifClauseStartToken = null;
-		public String ifClauseName = null;
+		public WoolBodyToken cmdClauseStartToken = null;
+		public String cmdClauseName = null;
 	}
 	
 	private WoolVariableString parseTextSegment(

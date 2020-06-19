@@ -196,6 +196,35 @@ public abstract class WoolAttributesCommand extends WoolCommand {
 		return result;
 	}
 
+	protected static Float readFloatAttr(String name,
+			Map<String,WoolBodyToken> attrs, WoolBodyToken cmdStartToken,
+			boolean require, Float min, Float max)
+			throws LineNumberParseException {
+		String s = readPlainTextAttr(name, attrs, cmdStartToken, require);
+		if (s == null)
+			return null;
+		WoolBodyToken token = attrs.get(name);
+		float result;
+		try {
+			result = Float.parseFloat(s);
+		} catch (NumberFormatException ex) {
+			throw new LineNumberParseException(String.format(
+					"Invalid value for attribute \"%s\"", name) + ": " + s,
+					token.getLineNum(), token.getColNum());
+		}
+		if (min != null && result < min) {
+			throw new LineNumberParseException(String.format(
+					"Value for attribute \"%s\" < %s", name, min) + ": " +
+					result, token.getLineNum(), token.getColNum());
+		}
+		if (max != null && result > max) {
+			throw new LineNumberParseException(String.format(
+					"Value for attribute \"%s\" > %s", name, max) + ": " +
+					result, token.getLineNum(), token.getColNum());
+		}
+		return result;
+	}
+
 	protected static Boolean readBooleanAttr(String name,
 		 Map<String,WoolBodyToken> attrs, WoolBodyToken cmdStartToken,
 		 boolean require) throws LineNumberParseException {

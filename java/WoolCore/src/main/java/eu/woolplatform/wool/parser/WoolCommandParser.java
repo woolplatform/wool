@@ -26,11 +26,7 @@ import java.util.List;
 
 import eu.woolplatform.utils.CurrentIterator;
 import eu.woolplatform.utils.exception.LineNumberParseException;
-import eu.woolplatform.wool.model.command.WoolActionCommand;
-import eu.woolplatform.wool.model.command.WoolCommand;
-import eu.woolplatform.wool.model.command.WoolIfCommand;
-import eu.woolplatform.wool.model.command.WoolInputCommand;
-import eu.woolplatform.wool.model.command.WoolSetCommand;
+import eu.woolplatform.wool.model.command.*;
 
 public class WoolCommandParser {
 	private List<String> validCommands;
@@ -89,6 +85,8 @@ public class WoolCommandParser {
 			return WoolIfCommand.parse(startToken, tokens, nodeState);
 		case "input":
 			return WoolInputCommand.parse(startToken, tokens, nodeState);
+		case "random":
+			return WoolRandomCommand.parse(startToken, tokens, nodeState);
 		case "set":
 			return WoolSetCommand.parse(startToken, tokens, nodeState);
 		default:

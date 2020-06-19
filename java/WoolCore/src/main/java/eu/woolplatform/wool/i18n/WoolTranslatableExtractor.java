@@ -29,6 +29,7 @@ import eu.woolplatform.wool.model.WoolVariableString;
 import eu.woolplatform.wool.model.command.WoolCommand;
 import eu.woolplatform.wool.model.command.WoolIfCommand;
 import eu.woolplatform.wool.model.command.WoolInputCommand;
+import eu.woolplatform.wool.model.command.WoolRandomCommand;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +37,8 @@ import java.util.List;
 /**
  * This class can extract all translatable segments (plain text, variables and
  * &lt;&lt;input&gt;&gt; commands) from a {@link WoolNode WoolNode} or {@link
- * WoolNodeBody WoolNodeBody}. This includes translatables within if commands
- * and replies.
+ * WoolNodeBody WoolNodeBody}. This includes translatables within "if" and
+ * "random" commands and replies.
  *
  * @author Dennis Hofs (RRD)
  */
@@ -63,6 +64,11 @@ public class WoolTranslatableExtractor {
 					WoolIfCommand ifCmd = (WoolIfCommand)cmd;
 					finishCurrentTranslatableSegment(body, current, result);
 					result.addAll(getTranslatableSegmentsFromIfCommand(ifCmd));
+				} else if (cmd instanceof WoolRandomCommand) {
+					WoolRandomCommand rndCmd = (WoolRandomCommand)cmd;
+					finishCurrentTranslatableSegment(body, current, result);
+					result.addAll(getTranslatableSegmentsFromRandomCommand(
+							rndCmd));
 				} else if (cmd instanceof WoolInputCommand) {
 					current.add(segment);
 				}
@@ -84,6 +90,15 @@ public class WoolTranslatableExtractor {
 		}
 		if (ifCmd.getElseClause() != null)
 			result.addAll(extractFromBody(ifCmd.getElseClause()));
+		return result;
+	}
+
+	private List<WoolTranslatable> getTranslatableSegmentsFromRandomCommand(
+			WoolRandomCommand rndCmd) {
+		List<WoolTranslatable> result = new ArrayList<>();
+		for (WoolRandomCommand.Clause clause : rndCmd.getClauses()) {
+			result.addAll(extractFromBody(clause.getStatement()));
+		}
 		return result;
 	}
 

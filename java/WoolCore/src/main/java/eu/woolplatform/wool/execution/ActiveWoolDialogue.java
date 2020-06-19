@@ -274,10 +274,10 @@ public class ActiveWoolDialogue {
 
 	/**
 	 * Executes the agent statement and reply statements in the specified node.
-	 * It executes ("if" and "set") commands and resolves variables. Any
-	 * resulting body content that should be sent to the client, is added to the
-	 * (agent or reply) statement body in the resulting node. This content can
-	 * be text or client commands, with all variables resolved.
+	 * It executes ("if", "random" and "set") commands and resolves variables.
+	 * Any resulting body content that should be sent to the client, is added to
+	 * the (agent or reply) statement body in the resulting node. This content
+	 * can be text or client commands, with all variables resolved.
 	 *
 	 * @param woolNode a node to execute
 	 * @param time the time in the time zone of the user. This will be stored
@@ -299,10 +299,10 @@ public class ActiveWoolDialogue {
 
 	/**
 	 * Executes the agent statement and reply statements in the specified node.
-	 * It executes "if" commands and resolves variables. Any resulting body
-	 * content that should be sent to the client, is added to the (agent or
-	 * reply) statement body in the resulting node. This content can be text or
-	 * client commands, with all variables resolved.
+	 * It executes "if" and "random" commands and resolves variables. Any
+	 * resulting body content that should be sent to the client, is added to the
+	 * (agent or reply) statement body in the resulting node. This content can
+	 * be text or client commands, with all variables resolved.
 	 *
 	 * <p>This method does not change the dialogue state and does not change
 	 * any variables. Any "set" commands have no effect.</p>
