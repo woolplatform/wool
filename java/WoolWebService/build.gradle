@@ -104,22 +104,22 @@ task updateConfig {
 }
 
 def listDirFiles(dir, writer) {
-	writer.write('[');
-	def first = true;
+	writer.write('[')
+	def first = true
 	dir.eachFile() { child ->
-		if (first)
-			first = false;
-		else
+		if (!first)
 			writer.write(',')
 		if (child.isDirectory()) {
-			writer.write('{"' + child.name + '":');
-			listDirFiles(child, writer);
-			writer.write('}');
-		} else {
+			writer.write('{"' + child.name + '":')
+			listDirFiles(child, writer)
+			writer.write('}')
+			first = false
+		} else if (child.name.endsWith('.json') || child.name.endsWith('.wool')) {
 			writer.write('"' + child.name + '"')
+			first = false
 		}
 	}
-	writer.write(']');
+	writer.write(']')
 }
 
 task listDialogueFiles {
