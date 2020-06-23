@@ -195,12 +195,14 @@ public class ConversationalAgent {
 			return nextWoolNode;
 		}
 		else {
+			String language = activeWoolDialogue.getDialogueDescription()
+					.getLanguage();
 			setActiveDialogueCompleted();
 			WoolNodePointerExternal externalNodePointer =
 					(WoolNodePointerExternal)nodePointer;
 			String dialogueId = externalNodePointer.getDialogueId();
 			String nodeId = externalNodePointer.getNodeId();
-			return userService.startDialogue(dialogueId, nodeId, null);
+			return userService.startDialogue(dialogueId, nodeId, language);
 		}
 	}
 
