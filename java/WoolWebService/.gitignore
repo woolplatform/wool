@@ -8,3 +8,4 @@
 /gradle.*.properties
 !/gradle.sample.properties
 /src/main/resources/service.properties
+/src/main/resources/dialogues/dialogues.json
