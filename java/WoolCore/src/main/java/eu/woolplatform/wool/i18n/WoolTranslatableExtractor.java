@@ -105,31 +105,32 @@ public class WoolTranslatableExtractor {
 	private void finishCurrentTranslatableSegment(WoolNodeBody parent,
 			List<WoolNodeBody.Segment> current,
 			List<WoolTranslatable> translatables) {
-		if (containsText(current)) {
+		if (hasContent(current)) {
 			List<WoolNodeBody.Segment> segments = new ArrayList<>(current);
 			translatables.add(new WoolTranslatable(parent, segments));
 		}
 		current.clear();
 	}
 
-	private boolean containsText(List<WoolNodeBody.Segment> segments) {
+	private boolean hasContent(List<WoolNodeBody.Segment> segments) {
 		for (WoolNodeBody.Segment segment : segments) {
 			if (segment instanceof WoolNodeBody.TextSegment) {
 				WoolNodeBody.TextSegment textSegment =
 						(WoolNodeBody.TextSegment)segment;
 				WoolVariableString string = textSegment.getText();
-				if (containsText(string))
+				if (hasContent(string))
+					return true;
+			} else if (segment instanceof WoolNodeBody.CommandSegment) {
+				WoolNodeBody.CommandSegment cmdSegment =
+						(WoolNodeBody.CommandSegment)segment;
+				if (cmdSegment.getCommand() instanceof WoolInputCommand)
 					return true;
 			}
 		}
 		return false;
 	}
 
-	private boolean containsText(WoolVariableString string) {
-		for (WoolVariableString.Segment segment : string.getSegments()) {
-			if (segment instanceof WoolVariableString.TextSegment)
-				return true;
-		}
-		return false;
+	private boolean hasContent(WoolVariableString string) {
+		return !string.getSegments().isEmpty() && !string.isWhitespace();
 	}
 }
