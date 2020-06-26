@@ -32,6 +32,7 @@ import eu.woolplatform.wool.model.WoolDialogue;
 import eu.woolplatform.wool.model.WoolDialogueDescription;
 import eu.woolplatform.wool.model.WoolProject;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.*;
@@ -273,5 +274,89 @@ public class WoolProjectParser {
 
 	private String fileDescriptionToPath(WoolFileDescription descr) {
 		return descr.getLanguage() + "/" + descr.getFilePath();
+	}
+
+	private static void showUsage() {
+		System.out.println("Usage:");
+		System.out.println("java " + WoolProjectParser.class.getName() + " [options] <projectdir>");
+		System.out.println("    Parse WOOL project directory and print a summary of each dialogue");
+		System.out.println("");
+		System.out.println("Options:");
+		System.out.println("-h -? --help");
+		System.out.println("    Print this usage message");
+	}
+
+	public static void main(String[] args) {
+		String dirname = null;
+		int i = 0;
+		while (i < args.length) {
+			String arg = args[i++];
+			if (arg.equals("-h") || arg.equals("-?") || arg.equals("--help")) {
+				showUsage();
+				return;
+			} else {
+				dirname = arg;
+			}
+		}
+		if (dirname == null) {
+			showUsage();
+			System.exit(1);
+			return;
+		}
+		File dir = new File(dirname);
+		if (!dir.exists()) {
+			System.err.println("ERROR: Directory not found: " + dirname);
+			System.exit(1);
+			return;
+		}
+		try {
+			dir = dir.getCanonicalFile();
+		} catch (IOException ex) {}
+		if (!dir.isDirectory()) {
+			System.err.println("ERROR: Path is not a directory: " + dir.getAbsolutePath());
+			System.exit(1);
+			return;
+		}
+		WoolProjectParserResult readResult;
+		try {
+			WoolFileLoader fileLoader = new WoolDirectoryFileLoader(dir);
+			WoolProjectParser parser = new WoolProjectParser(fileLoader);
+			readResult = parser.parse();
+		} catch (IOException ex) {
+			System.err.println(
+					"ERROR: Can't read WOOL project from directory: " +
+					dir.getAbsolutePath() + ": " + ex.getMessage());
+			System.exit(1);
+			return;
+		}
+		if (!readResult.getParseErrors().isEmpty()) {
+			for (String key : readResult.getParseErrors().keySet()) {
+				System.err.println("ERROR: Failed to parse file: " + key);
+				List<ParseException> errors = readResult.getParseErrors().get(
+						key);
+				for (ParseException ex : errors) {
+					System.err.println(ex.getMessage());
+				}
+			}
+			System.exit(1);
+			return;
+		}
+		for (String key : readResult.getWarnings().keySet()) {
+			System.err.println("WARNING: " + key);
+			List<String> errors = readResult.getWarnings().get(key);
+			for (String error : errors) {
+				System.err.println(error);
+			}
+		}
+		System.out.println("Finished parsing WOOL project from directory: " +
+				dir.getAbsolutePath());
+		Map<WoolDialogueDescription,WoolDialogue> dialogues =
+				readResult.getProject().getDialogues();
+		for (WoolDialogueDescription dialogue : dialogues.keySet()) {
+			System.out.println("----------");
+			System.out.println("DIALOGUE " + dialogue.getDialogueName() +
+					" (" + dialogue.getLanguage() + ")");
+			System.out.println(dialogues.get(dialogue));
+		}
 	}
 }
