@@ -44,12 +44,13 @@ import java.util.Set;
  */
 public abstract class WoolInputCommand extends WoolAttributesCommand {
 	public static final String TYPE_TEXT = "text";
+	public static final String TYPE_LONGTEXT = "longtext";
 	public static final String TYPE_NUMERIC = "numeric";
 	public static final String TYPE_SET = "set";
 	public static final String TYPE_TIME = "time";
 
 	private static final List<String> VALID_TYPES = Arrays.asList(
-			TYPE_TEXT, TYPE_NUMERIC, TYPE_SET, TYPE_TIME);
+			TYPE_TEXT, TYPE_LONGTEXT, TYPE_NUMERIC, TYPE_SET, TYPE_TIME);
 	
 	private String type;
 
@@ -118,6 +119,8 @@ public abstract class WoolInputCommand extends WoolAttributesCommand {
 		switch (type) {
 			case TYPE_TEXT:
 				return WoolInputTextCommand.parse(cmdStartToken, attrs);
+			case TYPE_LONGTEXT:
+				return WoolInputLongtextCommand.parse(cmdStartToken, attrs);
 			case TYPE_NUMERIC:
 				return WoolInputNumericCommand.parse(cmdStartToken, attrs);
 			case TYPE_SET:

@@ -5,25 +5,25 @@ import eu.woolplatform.wool.parser.WoolBodyToken;
 
 import java.util.Map;
 
-public class WoolInputTextCommand extends WoolInputAbstractTextCommand {
-	public WoolInputTextCommand(String variableName) {
-		super(TYPE_TEXT, variableName);
+public class WoolInputLongtextCommand extends WoolInputAbstractTextCommand {
+	public WoolInputLongtextCommand(String variableName) {
+		super(TYPE_LONGTEXT, variableName);
 	}
 
-	public WoolInputTextCommand(WoolInputTextCommand other) {
+	public WoolInputLongtextCommand(WoolInputLongtextCommand other) {
 		super(other);
 	}
 
 	@Override
-	public WoolInputTextCommand clone() {
-		return new WoolInputTextCommand(this);
+	public WoolInputLongtextCommand clone() {
+		return new WoolInputLongtextCommand(this);
 	}
 
 	public static WoolInputCommand parse(WoolBodyToken cmdStartToken,
 			Map<String,WoolBodyToken> attrs) throws LineNumberParseException {
 		String variableName = readVariableAttr("value", attrs, cmdStartToken,
 				true);
-		WoolInputTextCommand command = new WoolInputTextCommand(variableName);
+		WoolInputLongtextCommand command = new WoolInputLongtextCommand(variableName);
 		WoolInputAbstractTextCommand.parseAttributes(command, cmdStartToken,
 				attrs);
 		return command;
