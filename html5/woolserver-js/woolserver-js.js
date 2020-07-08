@@ -360,6 +360,15 @@ function WoolNode(dialogue,lines) {
 	var alllines=""; // collect subsequent lines for translation
 	for (var i=0; i<this.body.length; i++) {
 		var line = this.body[i];
+		// warn about unescaped http:// https://
+		if (line.match(/http:[\/][\/]/)) {
+			logError("warning", i,
+				"Unescaped URL, did you mean 'http:\\//'" );
+		}
+		if (line.match(/https:[\/][\/]/)) {
+			logError("warning", i,
+				"Unescaped URL, did you mean 'https:\\//'" );
+		}
 		// XXX also matches string literals, so in this parser, it is
 		// ignored inside << ... >> or [[ ... ]].
 		var linecommentchar = line.indexOf('//');
@@ -370,11 +379,24 @@ function WoolNode(dialogue,lines) {
 			if ( (lhs.indexOf("<<") >= 0 && rhs.indexOf(">>") >= 0)
 			||   (lhs.indexOf("[[") >= 0 && rhs.indexOf("]]") >= 0) ) {
 				// inside, do nothing
+				// NOTE: officially a comment can be inside an option or action
 			} else {
-				// not inside, keep left part only
-				line = lhs;
+				// not inside
+				// check if slash is escaped
+				if (linecommentchar > 0
+				&& line.substring(linecommentchar-1,linecommentchar) == "\\") {
+					// first character is escaped, ignore
+				} else {
+					//keep left part only
+					line = lhs;
+				}
 			}
 		}
+
+		// remove escape characters
+		line = line.replace(/\\(.)/g,
+			function(match, $1, offset, original) { return $1;} );
+		
 		line = line.trim();
 		this.body[i] = line;
 		if (line == "") continue;
@@ -557,7 +579,8 @@ function WoolNode(dialogue,lines) {
 		}
 		// plain line
 		var matches = /^([a-zA-Z0-9_]+):\s*(.*)$/.exec(line);
-		if (matches) {
+		//if (matches) {
+		if (false) {
 			// with speaker
 			var speaker = matches[1];
 			//if (alllines) alllines += "\n";

@@ -10,6 +10,12 @@ var WoolHighlightRules = function() {
 
     this.$rules = {
         start: [
+			// line comment symbol preceded by '\' is marked as plain text
+            {
+                token: "text",
+                regex: "[\\\\](?://.+$)"
+            },
+			// otherwise, line comment symbol starts comment
             {
                 token: "comment",
                 regex: "//.+$"
