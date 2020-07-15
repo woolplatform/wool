@@ -766,8 +766,26 @@ var App = function(name, version, filename) {
 		var node = new Node();
 		
 		self.nodes.push(node);
-		if (typeof x != "undefined") node.x(x-100);
-		if (typeof y != "undefined") node.y(y-100);
+		//var center = this.getNodesCenter();
+		// default coordinate is center of screen
+		var center = {
+			x: self.transformOrigin[0] * -1 / self.cachedScale,
+			y: self.transformOrigin[1] * -1 / self.cachedScale,
+		};
+		var rootofs = self.domroot.offset();
+		center.x += (self.domroot.width()/2) / self.cachedScale;
+		center.y += (self.domroot.height()/2) / self.cachedScale;
+		if (!isNaN(x)) {
+			node.x(x-100);
+		} else {
+			console.log("center"+center.x);
+			node.x(center.x);
+		}
+		if (!isNaN(y)) {
+			node.y(y-100);
+		} else {
+			node.y(center.y);
+		}
 		self.updateNodeLinks();
 		self.recordNodeAction("created", node);
 
@@ -1282,16 +1300,22 @@ var App = function(name, version, filename) {
 
 	this.center = function() {
 		self.resetUIState();
+		var avg = this.getNodesCenter()
+		if (avg) 
+			self.warpToNodeXY(avg.x, avg.y);
+	}
+
+	this.getNodesCenter = function() {
+		var nrNodes = self.nodes().length;
+		if (nrNodes == 0) return null;
 		var avgx=0;
 		var avgy=0;
-		var nrNodes = self.nodes().length;
 		for (var i=0; i<nrNodes; i++) {
 			var node = self.nodes()[i];
 			avgx += node.x();
 			avgy += node.y();
 		}
-		if (nrNodes>0)
-			self.warpToNodeXY(avgx / nrNodes, avgy/nrNodes);
+		return { x: avgx / nrNodes, y: avgy/nrNodes }
 	}
 
 	this.arrangeSpiral = function()

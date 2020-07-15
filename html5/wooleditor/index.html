@@ -204,6 +204,11 @@
 						$("#speakerfield").autocomplete({
 							source: app.getAllSpeakers(),
 							minLength: 0,
+							select: function( event, ui ) {
+								// set selected value forcibly to ensure 
+								// it is saved.
+								app.editing().speaker(ui.item.value);
+							}
 						});
 					// call search function when focused to make menu appear
 					// immediately
@@ -311,7 +316,7 @@
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
 			if (!filePath) filePath = "unnamed";
-			var app = new App("Wool Editor", "1.4.3",filePath);
+			var app = new App("Wool Editor", "1.5",filePath);
 			app.run();
 			if (app.isNwjs) {
 				Split(["#filepanel","#editpanel"],{
