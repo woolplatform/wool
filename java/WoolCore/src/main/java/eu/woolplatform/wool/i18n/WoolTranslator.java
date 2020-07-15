@@ -128,7 +128,7 @@ public class WoolTranslator {
 			bodySegments.add(insertIndex++, transSegment);
 		}
 		if (postWhitespace.length() > 0) {
-			bodySegments.add(insertIndex + 1, new WoolNodeBody.TextSegment(
+			bodySegments.add(insertIndex, new WoolNodeBody.TextSegment(
 					new WoolVariableString(postWhitespace)));
 		}
 		body.clearSegments();
