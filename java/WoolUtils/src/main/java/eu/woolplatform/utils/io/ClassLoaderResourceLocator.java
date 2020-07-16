@@ -28,14 +28,14 @@ import java.io.InputStream;
 import java.net.URL;
 
 /**
- * This resource locator can locate resources using the class loader or a
- * specified class. When using a specified class, the resource is searched from
- * the package path of that class. Otherwise the resource is searched from
- * the root.
+ * This resource locator can locate resources using the class loader, from a
+ * root path, or a specified class. When using a specified class, the resource
+ * is searched from the package path of that class.
  *
  * @author Dennis Hofs (RRD)
  */
 public class ClassLoaderResourceLocator implements ResourceLocator {
+	private String rootPath = null;
 	private Class<?> loadClass = null;
 
 	/**
@@ -43,6 +43,16 @@ public class ClassLoaderResourceLocator implements ResourceLocator {
 	 * class loader.
 	 */
 	public ClassLoaderResourceLocator() {
+	}
+
+	/**
+	 * Constructs a new resource locator that will locate resources from the
+	 * specified root path.
+	 *
+	 * @param rootPath the root path (without trailing slash)
+	 */
+	public ClassLoaderResourceLocator(String rootPath) {
+		this.rootPath = rootPath;
 	}
 
 	/**
@@ -77,9 +87,13 @@ public class ClassLoaderResourceLocator implements ResourceLocator {
 	 * @return the resource URL or null
 	 */
 	private URL findResource(String path) {
-		if (loadClass == null)
-			return getClass().getClassLoader().getResource(path);
-		else
+		if (rootPath != null && rootPath.length() > 0) {
+			return getClass().getClassLoader().getResource(rootPath + "/" +
+					path);
+		} else if (loadClass != null) {
 			return loadClass.getResource(path);
+		} else {
+			return getClass().getClassLoader().getResource(path);
+		}
 	}
 }
