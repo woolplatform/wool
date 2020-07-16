@@ -54,10 +54,25 @@ public class WoolTranslator {
 	public WoolTranslator(Map<WoolTranslatable,WoolTranslatable> translations) {
 		this.translations = new LinkedHashMap<>();
 		for (WoolTranslatable key : translations.keySet()) {
-			this.translations.put(key.toString().trim(), translations.get(key));
+			this.translations.put(getNormalizedText(key),
+					translations.get(key));
 		}
 		preWhitespaceRegex = Pattern.compile("^\\s+");
 		postWhitespaceRegex = Pattern.compile("\\s+$");
+	}
+
+	private String getNormalizedText(WoolTranslatable translatable) {
+		String norm = translatable.toString().trim();
+		if (norm.isEmpty())
+			return norm;
+		String[] words = norm.split("\\s+");
+		StringBuilder result = new StringBuilder();
+		for (int i = 0; i < words.length; i++) {
+			if (i > 0)
+				result.append(" ");
+			result.append(words[i]);
+		}
+		return result.toString();
 	}
 
 	/**
@@ -108,7 +123,8 @@ public class WoolTranslator {
 		m = postWhitespaceRegex.matcher(textPlain);
 		if (m.find())
 			postWhitespace = m.group();
-		WoolTranslatable translation = translations.get(text.toString().trim());
+		WoolTranslatable translation = translations.get(getNormalizedText(
+				text));
 		if (translation == null)
 			return;
 		WoolNodeBody body = text.getParent();
