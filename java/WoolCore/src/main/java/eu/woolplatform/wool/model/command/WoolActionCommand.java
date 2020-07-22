@@ -148,14 +148,20 @@ public class WoolActionCommand extends WoolAttributesCommand {
 	@Override
 	public void executeBodyCommand(Map<String, Object> variables,
 			WoolNodeBody processedBody) throws EvaluationException {
+		WoolActionCommand processedCommand = executeReplyCommand(variables);
+		processedBody.addSegment(new WoolNodeBody.CommandSegment(
+				processedCommand));
+	}
+
+	public WoolActionCommand executeReplyCommand(Map<String,Object> variables)
+			throws EvaluationException {
 		WoolActionCommand processedCommand = new WoolActionCommand(type,
 				value.execute(variables));
 		for (String param : parameters.keySet()) {
 			WoolVariableString value = parameters.get(param);
 			processedCommand.addParameter(param, value.execute(variables));
 		}
-		processedBody.addSegment(new WoolNodeBody.CommandSegment(
-				processedCommand));
+		return processedCommand;
 	}
 
 	@Override
