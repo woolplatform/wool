@@ -228,7 +228,14 @@ public class WoolReply {
 		statement.execute(variables, false, processedStatement);
 		WoolReply result = new WoolReply(replyId, processedStatement,
 				nodePointer);
-		result.commands = commands;
+		for (WoolCommand command : commands) {
+			if (command instanceof WoolActionCommand) {
+				WoolActionCommand actionCmd = (WoolActionCommand)command;
+				result.addCommand(actionCmd.executeReplyCommand(variables));
+			} else {
+				result.addCommand(command);
+			}
+		}
 		return result;
 	}
 
