@@ -237,7 +237,7 @@ function WoolNode(dialogue,lines) {
 		if (inBody) {
 			this.body.push(line);
 		} else {
-			this.head.push(line);
+			this.head.push(line.trim());
 		}
 	}
 	function removeLiteralStrings(expr) {
@@ -440,10 +440,14 @@ function WoolNode(dialogue,lines) {
 		// remove escape characters
 		line = line.replace(/\\(.)/g,
 			function(match, $1, offset, original) { return $1;} );
-		
+
+		var lineuntrimmed = line + "\n";
 		line = line.trim();
 		this.body[i] = line;
-		if (line == "") continue;
+		if (line == "") {
+			alllines += lineuntrimmed;
+			continue;
+		}
 		var matches1 = /^<<random\s*(.*)\s*>>$/.exec(line);
 		var matches2 = /^<<or\s*(.*)\s*>>$/.exec(line);
 		if (matches1 || matches2) {
@@ -689,7 +693,7 @@ function WoolNode(dialogue,lines) {
 			// without speaker
 			//if (alllines) alllines += "\n";
 			//alllines += line;
-			alllines += line + "\n";
+			alllines += lineuntrimmed;
 			this.body[i] = "C.addLine("+JSON.stringify(line)+");";
 			continue;
 		}
@@ -722,7 +726,7 @@ function WoolDialogue(woolsource) {
 	this.nodeMap = {};
 	var nodelines = [];
 	for (var i=0; i<this.source.length; i++) {
-		var line = this.source[i].trim();
+		var line = this.source[i];
 		if (line == "===") {
 			if (nodelines.length > 0) {
 				this.nodes.push(new WoolNode(this,nodelines));
