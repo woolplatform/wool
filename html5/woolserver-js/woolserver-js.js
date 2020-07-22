@@ -146,6 +146,7 @@ function WoolNodeContext(vars) {
 	this.inputreply = null;
 	this.choices = [];
 
+	this.randomvalues = []; // [ID -> value]
 	this.addLine = function(line,speaker) {
 		this.text += line + "\n";
 		if (speaker) this.speakers.push(speaker);
@@ -185,6 +186,12 @@ function WoolNodeContext(vars) {
 	this.doAction = function(params) {
 		alert("Action called: "+JSON.stringify(params));
 	}
+	this.setRandom = function(id,min,max) {
+		this.randomvalues[id] = min + Math.random()*(max-min);
+	}
+	this.getRandom = function(id) {
+		return this.randomvalues[id];
+	}
 }
 
 // Helper fields:
@@ -202,6 +209,15 @@ function WoolNode(dialogue,lines) {
 		self.errors.push({level:level,line:line,msg:msg});
 		console.log("Logged error: "+level+" "+line+" "+msg);
 	}
+
+	// info for random variables: [ randID -> randweightrunningtotal ]
+	this.randvars = [];
+	// next free ID, produces unique ID for each random clause in node
+	this.nextrandID = 0;
+	// stack of IDs for nested random statements. When statement starts,
+	// new ID is pushed; when statement ends, top ID is popped.
+	// Top of stack is ID of current random statement.
+	this.randstack = [];
 
 	this.head = [];
 	this.body = [];
@@ -320,6 +336,34 @@ function WoolNode(dialogue,lines) {
 			return null;
 		}
 	}
+	// random ----------------------------------------------------------
+	function startRandom() {
+		self.randvars[self.nextrandID] = 0;
+		self.randstack.push(self.nextrandID++);
+	}
+	function endRandom() {
+		if (self.randstack.length == 0) {
+			logError("error",i, "<<endrandom>> without matching <<random>>");
+			return;
+		}
+		self.randstack.pop();
+	}
+	function getRandomID() {
+		if (self.randstack.length == 0) {
+			logError("error",i, "Not in <<random>> statement.");
+			return 99999;
+		}
+		return self.randstack[self.randstack.length-1];
+	}
+	function getRandomWeight() {
+		var id = getRandomID();
+		return self.randvars[id];
+	}
+	function addRandomWeight(weight) {
+		var id = getRandomID();
+		if (self.randvars[id] == null) self.randvars[id] = 0;
+		self.randvars[id] += weight;
+	}
 	// get key-value pairs from head
 	for (var i=0; i<this.head.length; i++) {
 		if (this.head[i] == "") continue;
@@ -400,6 +444,56 @@ function WoolNode(dialogue,lines) {
 		line = line.trim();
 		this.body[i] = line;
 		if (line == "") continue;
+		var matches1 = /^<<random\s*(.*)\s*>>$/.exec(line);
+		var matches2 = /^<<or\s*(.*)\s*>>$/.exec(line);
+		if (matches1 || matches2) {
+			if (alllines) {
+				// flush text in between conditionals
+				this.texts[alllines.trim()] = true;
+				alllines=""
+			}
+			var paramsstr = "";
+			var weight = 1;
+			if (matches1) {
+				startRandom();
+				paramsstr = matches1[1];
+			} else {
+				paramsstr = matches2[1];
+			}
+			params = parseKeyValList(paramsstr);
+			if (params == null) {
+				logError("error",i,"Cannot parse random parameters: '"
+					+ paramsstr + "'");
+			} else {
+				// any other parameters are ignored
+				if (params.weight) {
+					if (isNaN(params.weight) || params.weight < 0) {
+						logError("error",i,"Illegal random weight: '"
+							+ params.weight + "'");
+					} else {
+						weight = parseFloat(params.weight);
+					}
+				}
+			}
+			addRandomWeight(weight);
+			var weight = getRandomWeight();
+			this.body[i] =
+				(matches2 ? "} else " : "")
+				+"if (C.getRandom("+getRandomID()
+				+") <= "+weight+") {";
+			continue;
+		}
+		var matches = /^<<endrandom\s*>>$/.exec(line);
+		if (matches) {
+			if (alllines) {
+				// flush text in between conditionals
+				this.texts[alllines.trim()] = true;
+				alllines=""
+			}
+			endRandom();
+			this.body[i] = "}";
+			continue;
+		}
 		var matches = /^<<(else)?if\s+(.+)\s*>>$/.exec(line);
 		if (matches) {
 			if (alllines) {
@@ -604,12 +698,19 @@ function WoolNode(dialogue,lines) {
 	//console.log("Parsing function:");
 	//console.log(this.body.join("\n"));
 	// turn code into function
+	var funcprefix = "";
+	for (var randvar in this.randvars) {
+		if (!this.randvars.hasOwnProperty(randvar)) continue;
+		var totalweight = this.randvars[randvar];
+		funcprefix += "C.setRandom("+randvar+",0,"+totalweight+");\n";
+	}
 	try {
-		this.func = new Function("C", this.body.join("\n") );
+		this.func = new Function("C", funcprefix+this.body.join("\n") );
 	} catch (e) {
 		logError("fatal",null,
 			"Script error: "+e);
 		console.log(e);
+		console.log(funcprefix+this.body.join("\n"));
 	}
 	dialogue.nodeMap[this.param.title] = this;
 }

@@ -159,13 +159,16 @@ var errors = {};
 for (var i=0; i<directServer.dialogues[dialogueID].nodes.length; i++) {
 	var node = directServer.dialogues[dialogueID].nodes[i];
 	if (node.errors.length) {
-		errorsFound=true;
-		errors[node.param.title] = [];
 		for (var j=0; j<node.errors.length; j++) {
 			var err = node.errors[j];
+			if (err.level == "warning" || err.level == "notice") continue;
+			if (!errors[node.param.title]) errors[node.param.title] = [];
 			errors[node.param.title].push(
 				(err.line!==null ? "Line "+(err.line+1)+":" : "")
 				+err.msg+" ("+err.level+")");
+		}
+		if (errors[node.param.title]) {
+			errorsFound=true;
 		}
 	}
 }
