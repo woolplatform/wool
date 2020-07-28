@@ -91,13 +91,17 @@ directServer.getNode = function() {
 		speaker = ctx.speakers[0];
 	}
 	if (node.param["speaker"]) speaker = node.param["speaker"];
+	var statement = "";
+	for (var i=0; i<ctx.text.length; i++) {
+		statement += __ ? __(ctx.text[i].trim()) : ctx.text[i];
+	}
 	var ret = {
 		id: node.param.title,
 		colorID: node.param.colorID,
 		// TODO
 		speakersInDialogue: ctx.speakers,
 		speaker: speaker,
-		statement: directServer.substituteVars(ctx,ctx.text),
+		statement: directServer.substituteVars(ctx,statement),
 		multimedia: null,
 		replies: []
 	};
@@ -298,7 +302,8 @@ function _directServer_progress_dialogue(par) {
 			keepVars: true,
 		});
 	} else {
-		directServer.currentnode = directServer.currentdialogue.nodeMap[replyId];
+		directServer.currentnode = directServer.currentdialogue.nodeMap[
+			replyId.trim().toLowerCase() ];
 		directServer.currentnodectx = new WoolNodeContext(
 			directServer.currentnodectx.vars
 		);

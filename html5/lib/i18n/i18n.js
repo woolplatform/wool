@@ -20,6 +20,29 @@ var _i18n = window.i18n({
 //                       error is null or error string
 // charmapping (optional) - function(string) -> string that maps chars
 
+
+// if set to true, normalize strings by replacing all whitespace by a single
+// space
+_i18n.enableNormalization = function(enable) {
+	_i18n._normalize = enable;
+}
+
+_i18n.normalizeString = function(string) {
+	if (!_i18n._normalize) return string;
+	var ret = string.replace(/\s+/g," ");
+	console.log("#"+ret);
+	return ret;
+}
+
+_i18n.normalizeStrings = function(json) {
+	var ret = {};
+	for (var key in json) {
+		if (!json.hasOwnProperty(key)) continue;
+		ret[_i18n.normalizeString(key)] = _i18n.normalizeString(json[key]);
+	}
+	return ret;
+}
+
 // string follows gettext (PO) format
 // charmapping - optional function(String) for mapping special chars in strings
 _i18n.readPODef = function(string,charmapping) {
@@ -145,6 +168,7 @@ _i18n.readPODef = function(string,charmapping) {
 	}
 	// write last definition
 	WritePODef(msgelem);
+	ret = _i18n.normalizeStrings(ret);
 	// make exception for "" key. Here, lines are split into elements
 	var options = ret[""].split('\n');
 	ret[""] = {
@@ -162,6 +186,15 @@ _i18n.readPODef = function(string,charmapping) {
 		}
 	}
 	console.log(ret);
+	this.loadJSON(ret);
+}
+
+_i18n.clearDictionary = function(language) {
+	var ret = {}
+	ret[""] = {
+		"plural-forms": "nplurals=2; plural=(n != 1);",
+		"language": language,
+	};
 	this.loadJSON(ret);
 }
 
@@ -188,6 +221,7 @@ function(data,locale,pluralForms,charmapping) {
 	if (!locale) locale="nl";
 	if (!pluralForms) pluralForms="nplurals=2; plural=(n!=1);";
 	var json = JSON.parse(data);
+	json = _i18n.normalizeStrings(json);
 	json[""] = {
 		"language": locale,
 		"plural-forms": pluralForms,
@@ -198,11 +232,15 @@ function(data,locale,pluralForms,charmapping) {
 
 _i18n._getGettextContext = function(string) {
 	var res = string.split("|");
-	if (res.length == 1) return { ctxt: null, str: string };
-	return {
-		ctxt: res.shift(),
-		str: res.join(""),
+	if (res.length == 1) return {
+		ctxt: null,
+		str: _i18n.normalizeString(string)
 	};
+	var ret = {
+		ctxt: res.shift(),
+		str: _i18n.normalizeString(res.join("")),
+	};
+	return ret;
 }
 
 // shortcuts ------------------------------------------------------------

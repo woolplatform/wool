@@ -137,6 +137,7 @@
 						<a class="item" download="file.wool" href='#' onclick="return data.saveFileDialog(this,FILETYPE.WOOL,data.getSaveData(FILETYPE.WOOL));">Save...</a>
 						<a class="item" download="file.csv" href='#' onclick="data.saveFileDialog(this,FILETYPE.JSON,data.getSaveData(FILETYPE.JSON));">Export Poeditor Terms</a>
 						<span class="item" data-bind="click: data.tryOpenLang">Load Translation</span>
+						<span class="item" data-bind="click: data.clearDictionary">Remove Translations</span>
 						<!-- ko if:data.editingPath() != null -->
 						<!--
 						<span class="item" data-bind="click: data.trySaveCurrent">Save</span>
@@ -285,6 +286,7 @@
 				</div>
 				<div style='clear:both;'>
 					<span class="app-filename" data-bind="text:app.filename"></span>
+					<span class="app-nrofnodes" data-bind="text:app.numberOfNodes()"></span>
 				</div>
 			</div>
 
@@ -316,7 +318,7 @@
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
 			if (!filePath) filePath = "unnamed";
-			var app = new App("Wool Editor", "1.5",filePath);
+			var app = new App("Wool Editor", "1.6",filePath);
 			app.run();
 			if (app.isNwjs) {
 				Split(["#filepanel","#editpanel"],{
