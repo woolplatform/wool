@@ -139,7 +139,7 @@ In subsequent queries you must include the token in header X-Auth-Token.
 
 Sets multiple variable values.
 The request body must be a JSON object that maps variable names to values.
-A name can only contain [A-Za-z0-9], and must start with [A-Za-z].
+A name can only contain [A-Za-z0-9_], and must start with [A-Za-z].
 Example:
 {
   "myVar1": "my value",

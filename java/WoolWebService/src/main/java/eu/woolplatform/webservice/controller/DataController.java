@@ -49,7 +49,7 @@ public class DataController {
 			List<String> invalidNames = new ArrayList<>();
 			String[] nameArray = names.split("\\s+");
 			for (String name : nameArray) {
-				if (!name.matches("[A-Za-z][A-Za-z0-9]*"))
+				if (!name.matches("[A-Za-z][A-Za-z0-9_]*"))
 					invalidNames.add(name);
 			}
 			if (!invalidNames.isEmpty()) {
@@ -86,7 +86,7 @@ public class DataController {
 	private Object doSetVariable(HttpServletRequest request, String user,
 			String name, String value) throws HttpException, Exception {
 		List<HttpFieldError> errors = new ArrayList<>();
-		if (!name.matches("[A-Za-z][A-Za-z0-9]*")) {
+		if (!name.matches("[A-Za-z][A-Za-z0-9_]*")) {
 			errors.add(new HttpFieldError("name",
 					"Invalid variable name: " + name));
 		}
@@ -149,7 +149,7 @@ public class DataController {
 		}
 		List<String> invalidNames = new ArrayList<>();
 		for (String name : varMap.keySet()) {
-			if (!name.matches("[A-Za-z][A-Za-z0-9]*"))
+			if (!name.matches("[A-Za-z][A-Za-z0-9_]*"))
 				invalidNames.add(name);
 		}
 		if (!invalidNames.isEmpty()) {
