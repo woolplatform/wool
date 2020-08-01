@@ -191,7 +191,7 @@ FileManager.prototype.loadWoolFile = function(filename) {
 		var confirm = window.confirm("Changes may not have been saved, proceed?");
 		if (!confirm) return;
 	}
-	data.openFile(null, filename,[ {files: [filename]} ]);
+	data.openFile(null, filename, null); //[ {files: [filename]} ]);
 }
 
 FileManager.prototype.sendSelectBaseDir = function(elem) {

@@ -32,6 +32,7 @@ var App = function(name, version, filename) {
   	this.isNwjs = false;
 
 	this.lastSavedSource = null;
+	//this.unsavedChanges = false; // TODO
 
 	this.urlParameters = Utils.getUrlParameters();
 
@@ -51,6 +52,10 @@ var App = function(name, version, filename) {
 		this.fs = new NodeFileSystem();
 	} else {
 		this.fs = new BrowserFileSystem();
+	}
+
+	this.numberOfNodes = function() {
+		return "("+self.nodes().length+" nodes)";
 	}
 
 	this.closeEditor = function() {
@@ -561,16 +566,24 @@ var App = function(name, version, filename) {
 	}
 
 	this.recordSavedChanges = function(content) {
-		//this.lastSavedSource = content;
-		this.lastSavedSource = data.getSaveData(FILETYPE.WOOL);
+		this.lastSavedSource = content;
+		// XXX coordinates are not set properly with this function
+		// (they are all the same)
+		//this.lastSavedSource = data.getSaveData(FILETYPE.WOOL);
 	}
 
 	// NOTE: check does not work for file format changes,
 	// in particular the "tags:" field was added later, and old files will
 	// always report unsaved.
 	this.areChangesSaved = function() {
-		var newsource = data.getSaveData(FILETYPE.WOOL);
-		return newsource == this.lastSavedSource;
+		var newsource = data.normalizeSource(data.getSaveData(FILETYPE.WOOL));
+		var oldsource = data.normalizeSource(this.lastSavedSource);
+		// test output for changesnotsaved bug test
+		// file1:
+		//console.log(newsource);
+		// file2:
+		//console.log(oldsource);
+		return newsource == oldsource;
 	}
 
 	this.showWaitSpinner = function(show) {

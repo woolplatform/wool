@@ -126,11 +126,19 @@ a:hover { color: #000;}
 	font-weight: bold;
 	font-size: 1.5em;
 	margin-top: 8px;
+	float:left;
 }
 .app-filename::after{
 	content: ".wool";
 }
 
+.app-nrofnodes{
+	font-weight: bold;
+	font-size: 1.5em;
+	margin-top: 8px;
+	margin-left: 15px;
+	float:left;
+}
 
 .app-title {
 	font-weight: bold;

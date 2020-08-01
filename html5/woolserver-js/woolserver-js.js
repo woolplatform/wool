@@ -139,7 +139,7 @@ function WoolNodeContext(vars) {
 	this.vars = vars;
 	// no speaker defined: speaker = "UNKNOWN";
 	this.speakers = [];
-	this.text = "";
+	this.text = [""]; // array of (translateable) strings
 	this.media = null;
 	this.type = "default";
 	this.afreply = null;
@@ -148,8 +148,13 @@ function WoolNodeContext(vars) {
 
 	this.randomvalues = []; // [ID -> value]
 	this.addLine = function(line,speaker) {
-		this.text += line + "\n";
+		this.text[this.text.length-1] += line + "\n";
 		if (speaker) this.speakers.push(speaker);
+	}
+	// start new translatable text block
+	this.newTextBlock = function() {
+		console.log("##newTextBlock");
+		if (this.text[this.text.length-1] != "") this.text.push("");
 	}
 	this.addMultimedia = function(type,param) {
 		this.media = {type: type, param: param};
@@ -237,7 +242,7 @@ function WoolNode(dialogue,lines) {
 		if (inBody) {
 			this.body.push(line);
 		} else {
-			this.head.push(line);
+			this.head.push(line.trim());
 		}
 	}
 	function removeLiteralStrings(expr) {
@@ -402,6 +407,7 @@ function WoolNode(dialogue,lines) {
 	// '[[' <replyText> '| <dialogueNodeID> ']]'
 	// '[[' <dialogueNodeID> ']]'   (autoforward)
 	var alllines=""; // collect subsequent lines for translation
+	var addlineprefix = ""; // code to add before addLine statement
 	for (var i=0; i<this.body.length; i++) {
 		var line = this.body[i];
 		// warn about unescaped http:// https://
@@ -440,16 +446,21 @@ function WoolNode(dialogue,lines) {
 		// remove escape characters
 		line = line.replace(/\\(.)/g,
 			function(match, $1, offset, original) { return $1;} );
-		
+
+		var lineuntrimmed = line + "\n";
 		line = line.trim();
 		this.body[i] = line;
-		if (line == "") continue;
+		if (line == "") {
+			alllines += lineuntrimmed;
+			continue;
+		}
 		var matches1 = /^<<random\s*(.*)\s*>>$/.exec(line);
 		var matches2 = /^<<or\s*(.*)\s*>>$/.exec(line);
 		if (matches1 || matches2) {
 			if (alllines) {
 				// flush text in between conditionals
 				this.texts[alllines.trim()] = true;
+				addlineprefix = "C.newTextBlock();";
 				alllines=""
 			}
 			var paramsstr = "";
@@ -487,6 +498,7 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			if (alllines) {
 				// flush text in between conditionals
+				addlineprefix = "C.newTextBlock();";
 				this.texts[alllines.trim()] = true;
 				alllines=""
 			}
@@ -498,6 +510,7 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			if (alllines) {
 				// flush text in between conditionals
+				addlineprefix = "C.newTextBlock();";
 				this.texts[alllines.trim()] = true;
 				alllines=""
 			}
@@ -512,6 +525,7 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			if (alllines) {
 				// flush text in between conditionals
+				addlineprefix = "C.newTextBlock();";
 				this.texts[alllines.trim()] = true;
 				alllines=""
 			}
@@ -522,6 +536,7 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			if (alllines) {
 				// flush text in between conditionals
+				addlineprefix = "C.newTextBlock();";
 				this.texts[alllines.trim()] = true;
 				alllines=""
 			}
@@ -582,6 +597,7 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			// XXX textinput also accepts min, max
 			var desc = matches[1];
+			if (__) desc = __(desc);
 			var optid = matches[2];
 			var actionsstr = matches[3];
 			this.links.push({line:i,node:optid});
@@ -621,6 +637,7 @@ function WoolNode(dialogue,lines) {
 			}
 			var matches = /^(.*)(<<input\s+)(.+)(\s*>>)(.*)$/.exec(desc);
 			if (matches) {
+				
 				var beforeText = matches[1];
 				var inputparams_str = matches[3];
 				var afterText = matches[5];
@@ -671,26 +688,33 @@ function WoolNode(dialogue,lines) {
 			logError("error",i,"Cannot parse [[ ... ]] statement");
 			continue;
 		}
+		// now, catch unclosed [[ .. ]]
+		var matches = /^\[\[/.exec(line);
+		if (matches) {
+			logError("warning",i,"Unclosed [[ ... ]] statement");
+		}
 		// plain line
 		var matches = /^([a-zA-Z0-9_]+):\s*(.*)$/.exec(line);
 		//if (matches) {
 		if (false) {
-			// with speaker
+			// with speaker (is now obsolete)
 			var speaker = matches[1];
 			//if (alllines) alllines += "\n";
 			//alllines += matches[2];
 			alllines += matches[2] + "\n";
 			dialogue.speakers[speaker] = speaker;
-			this.body[i] = "C.addLine("+
+			this.body[i] = addlineprefix+"C.addLine("+
 				JSON.stringify(matches[2])+","
 				+JSON.stringify(speaker)+");";
+			addlineprefix = "";
 			continue;
 		} else {
 			// without speaker
 			//if (alllines) alllines += "\n";
 			//alllines += line;
-			alllines += line + "\n";
-			this.body[i] = "C.addLine("+JSON.stringify(line)+");";
+			alllines += lineuntrimmed;
+			this.body[i] = addlineprefix+"C.addLine("+JSON.stringify(line)+");";
+			addlineprefix = "";
 			continue;
 		}
 	}
@@ -712,7 +736,7 @@ function WoolNode(dialogue,lines) {
 		console.log(e);
 		console.log(funcprefix+this.body.join("\n"));
 	}
-	dialogue.nodeMap[this.param.title] = this;
+	dialogue.nodeMap[this.param.title.trim().toLowerCase()] = this;
 }
 
 function WoolDialogue(woolsource) {
@@ -722,7 +746,7 @@ function WoolDialogue(woolsource) {
 	this.nodeMap = {};
 	var nodelines = [];
 	for (var i=0; i<this.source.length; i++) {
-		var line = this.source[i].trim();
+		var line = this.source[i];
 		if (line == "===") {
 			if (nodelines.length > 0) {
 				this.nodes.push(new WoolNode(this,nodelines));

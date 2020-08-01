@@ -45,7 +45,11 @@ function NodeFileSystem() {
 NodeFileSystem.prototype = new FileSystem();
 
 NodeFileSystem.prototype.readFile = function(path,blob,callback){
-	this.fs.readFile(path, "utf-8", callback);
+	if (blob) {
+		BrowserFileSystem.readFileStatic(path,blob,callback);
+	} else {
+		this.fs.readFile(path, "utf-8", callback);
+	}
 }
 
 NodeFileSystem.prototype.readFileSync = function(path,blob,callback){
@@ -115,7 +119,7 @@ function BrowserFileSystem() {
 }
 BrowserFileSystem.prototype = new FileSystem();
 
-BrowserFileSystem.prototype.readFile = function(path,blob,callback) {
+BrowserFileSystem.readFileStatic = function(path,blob,callback) {
 	var reader = new FileReader();
 	reader.onerror = function(e) {
 		callback("Error reading file",null);
@@ -125,6 +129,7 @@ BrowserFileSystem.prototype.readFile = function(path,blob,callback) {
 	}
 	reader.readAsText(blob);
 }
+BrowserFileSystem.prototype.readFile = BrowserFileSystem.readFileStatic;
 
 BrowserFileSystem.prototype.writeFile = function(path,data,callback) {}
 

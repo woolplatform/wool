@@ -1,0 +1,18 @@
+title: Start
+tags: 
+speaker: 
+colorID: 0
+position: 494,493
+---
+Test random:
+<<random weight="1.5">>
+    Selected 1 (weight 1.5)
+    <<random>>
+    / a (weight 2)
+    <<or weight="2">>
+    / b (weight 1)
+    <<endrandom>>
+<<or>>
+Selected 2 (weight 1)
+<<endrandom>>
+===

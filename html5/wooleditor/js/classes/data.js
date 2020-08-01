@@ -15,6 +15,7 @@ var data =
 		return localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
 	},
 
+	// element[0] contains files[0] File/Blob property
 	// callback: function(element)
 	readFileGeneric: function(e, filename, element, callback) {
 		app.fs.readFile(this.appendRoot(filename),element[0].files[0],callback);
@@ -25,9 +26,10 @@ var data =
 		// make sure editor is not open with old file
 		app.closeEditor();
 		app.showWaitSpinner(true);
-		app.fs.readFile(this.appendRoot(filename),element[0].files[0],
+		app.fs.readFile(this.appendRoot(filename),
+			element ? element[0].files[0] : null,
 			function(error,contents) {
-			app.showWaitSpinner(false);
+				app.showWaitSpinner(false);
 				if (error) {
 					alert("Error reading file");
 					console.log(error);
@@ -68,6 +70,7 @@ var data =
 		*/
 	},
 
+	// if element not null, element[0] contains files[0] File/Blob property
 	openFile: function(e, filename, element) {
 		data.readFile(e, filename, true, element);
 		app.setCurrentPath(filename);
@@ -369,6 +372,16 @@ var data =
 		}
 	},
 
+	// normalize wool source file for comparison
+	normalizeSource: function(source) {
+		// fix problems with removal of trailing white spaces at commits
+		source = source.replace(/\s*$/gm, "");
+		//source = source.replace(/^title:\s*$/gm, "title:");
+		//source = source.replace(/^speaker:\s*$/gm, "speaker:");
+		//source = source.replace(/^tags:\s*$/gm, "tags:");
+		return source;
+	},
+
 	getSaveData: function(type,node) {
 		var output = "";
 		var content = [];
@@ -427,7 +440,7 @@ var data =
 			//output.push({ term: "Restart", /*context: "UIText",*/ });
 			//// only in Android client + Couch client
 			//output.push({ term: "Finish", /*context: "UIText",*/ });
-			output = JSON.stringify(output);
+			output = JSON.stringify(output,null,4);
 		} else if (type == FILETYPE.WOOL) {
 			for (i = 0; i < content.length; i++)
 			{
@@ -603,6 +616,11 @@ var data =
 
 	tryOpenLang: function() {
 		data.openFileDialog($('#open-lang'), data.openLang);
+	},
+
+	clearDictionary: function() {
+		localStorage.removeItem(App.LOCALSTORAGEPREFIX+"langDefs");
+		alert("Removed translations");
 	},
 
 	tryOpenFolder: function() {
