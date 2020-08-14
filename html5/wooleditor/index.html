@@ -69,23 +69,30 @@
 
 			<!-- search form -->
 			<div class="app-search">
-				Search: 
-				<input type="text" class="search-field"/>
-				<div class="search-speaker search-item">
-					<input type="checkbox" id="search-speaker" />
-					<label for="search-speaker">Speaker</label>
-				</div>
-				<div class="search-title search-item">
-					<input type="checkbox" checked="checked" id="search-title" />
-					<label for="search-title">Title</label>
-				</div>
-				<div class="search-body search-item">
-					<input type="checkbox" id="search-body" />
-					<label for="search-body">Body</label>
-				</div>
-				<div class="search-tags search-item">
-					<input type="checkbox" id="search-tags" />
-					<label for="search-tags">Tags</label>
+				<input type="checkbox" id="searchToggle">
+				<label id="searchToggleLabel" for="searchToggle">
+					<span>Search:</span>
+				</label>
+				<div id="searchBox">
+					<div id="searchBoxInner">
+						<input type="text" class="search-field"/>
+						<div class="search-speaker search-item">
+							<input type="checkbox" id="search-speaker" />
+							<label for="search-speaker">Speaker</label>
+						</div>
+						<div class="search-title search-item">
+							<input type="checkbox" checked="checked" id="search-title" />
+							<label for="search-title">Title</label>
+						</div>
+						<div class="search-body search-item">
+							<input type="checkbox" id="search-body" />
+							<label for="search-body">Body</label>
+						</div>
+						<div class="search-tags search-item">
+							<input type="checkbox" id="search-tags" />
+							<label for="search-tags">Tags</label>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -318,7 +325,7 @@
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
 			if (!filePath) filePath = "unnamed";
-			var app = new App("Wool Editor", "1.6",filePath);
+			var app = new App("Wool Editor", "1.7",filePath);
 			app.run();
 			if (app.isNwjs) {
 				Split(["#filepanel","#editpanel"],{

@@ -141,7 +141,7 @@ directServer.getNode = function() {
 	}
 	if (ctx.inputreply) {
 		var ir = ctx.inputreply;
-		if (ir.min) { // Presence of min/max indicates numeric
+		if (ir.inputtype == "numeric") {
 			ret.replies.push({
 				replyType: "NUMERICINPUT",
 				replyId: ir.optid,

@@ -55,7 +55,8 @@ var App = function(name, version, filename) {
 	}
 
 	this.numberOfNodes = function() {
-		return "("+self.nodes().length+" nodes)";
+		var nr = self.nodes().length;
+		return "("+nr+" node"+(nr==1 ? "" : "s")+")";
 	}
 
 	this.closeEditor = function() {
@@ -206,7 +207,7 @@ var App = function(name, version, filename) {
 				if (dragging) {
 					// We added shiftKey because altKey interferes with
 					// xfce metakey
-					if (e.shiftKey || e.altKey || e.button === 1) {
+					if (e.shiftKey || e.altKey || e.buttons & 4) {
 						//prevents jumping straight back to standard dragging
 						if (MarqueeOn) {
 							MarqueeSelection = [];
@@ -223,12 +224,16 @@ var App = function(name, version, filename) {
 							offset.y = erootY;
 							*/
 
-							var nodes = self.nodes();
+							self.transformOrigin[0] += (erootX - offset.x);
+							self.transformOrigin[1] += (erootY - offset.y);
+
+							/*var nodes = self.nodes();
 							for (var i in nodes)
 							{
 								nodes[i].x(nodes[i].x() + (erootX - offset.x) / self.cachedScale);
 								nodes[i].y(nodes[i].y() + (erootY - offset.y) / self.cachedScale);
-							}
+							}*/
+
 							offset.x = erootX;
 							offset.y = erootY;
 						}

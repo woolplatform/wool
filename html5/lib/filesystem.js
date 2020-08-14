@@ -19,6 +19,12 @@ FileSystem.prototype.readFile = function(path,blob,callback){}
 // callback - function(err)
 FileSystem.prototype.writeFile = function(path,data,callback) {}
 
+// callback - function(err)
+FileSystem.prototype.copyFile = function(srcpath,dstpath,callback) {}
+
+// callback - function(err)
+FileSystem.prototype.deleteFile = function(path,callback) {}
+
 // callback - function(err,files), files is an array of filenames/dirnames
 FileSystem.prototype.readdir = function(path,callback) {}
 
@@ -58,6 +64,15 @@ NodeFileSystem.prototype.readFileSync = function(path,blob,callback){
 
 NodeFileSystem.prototype.writeFile = function(path,data,callback) {
 	this.fs.writeFile(path,data,{encoding: 'utf-8'},callback);
+}
+
+NodeFileSystem.prototype.copyFile = function(srcpath,dstpath,callback) {
+	this.fs.copyFile(srcpath,dstpath,this.fs.constants.COPYFILE_EXCL,
+		callback);
+}
+
+NodeFileSystem.prototype.deleteFile = function(path,callback) {
+	this.fs.unlink(path,callback);
 }
 
 NodeFileSystem.prototype.readdir = function(path,callback) {}

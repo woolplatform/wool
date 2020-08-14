@@ -280,6 +280,44 @@ a:hover { color: #000;}
 	display: inline;
 }
 
+.app-search #searchToggle {
+	display: none;
+}
+
+.app-search #searchToggleLabel {
+	float: left;
+	padding-right: 10px;
+	padding-top: 6px;
+	padding-bottom: 6px;
+}
+.app-search #searchBox {
+	float: left;
+	transition: width .5s;
+	overflow: hidden;
+}
+
+.app-search #searchBoxInner {
+	width: 600px;
+}
+
+.app-search input#searchToggle:checked ~ #searchBox {
+	width: 600px;
+	/*display:block;*/
+}
+.app-search input#searchToggle:checked ~ #searchToggleLabel::before {
+	content: "\25BC";
+}
+
+.app-search input#searchToggle:not(:checked) ~ #searchBox {
+	width: 0px;
+	/*display:none;*/
+}
+.app-search input#searchToggle:not(:checked) ~ #searchToggleLabel::before {
+	content: "\25B2";
+}
+
+
+
 /* --- ZOOM --- */
 
 .app-zoom

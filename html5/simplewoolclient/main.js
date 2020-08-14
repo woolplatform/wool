@@ -335,6 +335,30 @@ if (urlParams.editable) {
 
 // helper functions ---------------------------------------------------
 
+
+function setInputFilter(textbox, inputFilter) {
+	["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(function(event) {
+		textbox.addEventListener(event, function() {
+			if (inputFilter(this.value)) {
+				this.oldValue = this.value;
+				this.oldSelectionStart = this.selectionStart;
+				this.oldSelectionEnd = this.selectionEnd;
+			} else if (this.hasOwnProperty("oldValue")) {
+				this.value = this.oldValue;
+				this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+			} else {
+				this.value = "";
+			}
+		});
+	});
+}
+
+function setNumericInputFilter(textbox) {
+	setInputFilter(textbox,function(value) {
+		return (/^[.,0-9-]*$/.test(value));
+	});
+}
+
 // index=null indicates autoforward reply (no index)
 function handleBasicReply(id,index) {
 	handleDirectServerCall("GET", null,null,
@@ -343,7 +367,7 @@ function handleBasicReply(id,index) {
 		updateNodeUI);
 }
 
-function handleTextReply(id,index) {
+function handleReply(id,index,value) {
 	var value = document.getElementById(id+"_content").value;
 	handleDirectServerCall("GET", null,null,
 		"progress_dialogue/?replyId="+id+"&replyIndex="+index
@@ -351,9 +375,22 @@ function handleTextReply(id,index) {
 			updateNodeUI);
 }
 
+function handleTextReply(id,index) {
+	var value = document.getElementById(id+"_content").value;
+	handleReply(id,index,value);
+}
+
 function handleNumericReply(id,index,min,max) {
-	// TODO
-	handleTextReply(id,index);
+	var value = document.getElementById(id+"_content").value;
+	if (isNaN(value)) {
+		alert("Please input numeric value.");
+		return;
+	}
+	if (value < min || value > max) {
+		alert("Please enter value between "+min+" and "+max+".");
+		return;
+	}
+	handleReply(id,index,value);
 }
 
 function startDialogue() {
@@ -464,6 +501,10 @@ function updateNodeUI(node) {
 			}
 			var func = reply.replyType=="TEXTINPUT"
 				? "handleTextReply" : "handleNumericReply";
+			var minmax =
+				(reply.replyType=="NUMERICINPUT" && reply.min && reply.max)
+					? ","+reply.min+","+reply.max 
+					: "";
 			replyelem.className = "reply-box";
 			replyelem.innerHTML += '<div class="before_statement">' 
 				+ reply.beforeStatement + '</div>';
@@ -474,13 +515,25 @@ function updateNodeUI(node) {
 				+"></input>"
 				+"<input class='"+submitclass+"'"
 				+" onclick='"+func+"(\""
-					+reply.replyId+"\",\""+i+"\")' value='"+__("Send")+"'></input>"
+					+reply.replyId+"\",\""+i+"\""+minmax+")' value='"+__("Send")+"'></input>"
 				+"</div>\n"; /* responseblock */
 			if (reply.afterStatement) {
 				replyelem.innerHTML += '<div class="after_statement">' 
 					+ reply.afterStatement + '</div>';
 			}
-
+			// this gets executed too early, so we use the img onload trick
+			//document.write(
+			//	"<script>"
+			//	+"setNumericInputFilter(document.getElementById('"
+			//		+ reply.replyId + "_content') );"
+			//	+"</script>"
+			//);
+			if (reply.replyType=="NUMERICINPUT") {
+				replyelem.innerHTML += '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8+OFDPQAI/QNSrn40LQAAAABJRU5ErkJggg==" onload="'
+					+"setNumericInputFilter(document.getElementById('"
+					+ reply.replyId + "_content') );"
+					+'" />';
+			}
 		}
 	}
 	localStorage.setItem("simplewoolclient_dialoguestate",directServer.getState());
