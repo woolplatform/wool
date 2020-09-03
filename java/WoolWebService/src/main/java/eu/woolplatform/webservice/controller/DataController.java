@@ -6,11 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
+import eu.woolplatform.webservice.Application;
 import eu.woolplatform.webservice.QueryRunner;
+import eu.woolplatform.webservice.dialogue.UserService;
 import eu.woolplatform.webservice.exception.*;
-import eu.woolplatform.webservice.model.VariableStoreIO;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -22,6 +24,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/v{version}")
 public class DataController {
+	@Autowired
+	Application application;
 
 	@RequestMapping(value="/variables", method=RequestMethod.GET)
 	public Map<String,Object> getVariables(
@@ -39,7 +43,10 @@ public class DataController {
 
 	private Map<String,Object> doGetVariables(String user, String names)
 			throws HttpException, Exception {
-		Map<String,?> varStore = VariableStoreIO.readVariables(user);
+		UserService userService = application.getServiceManager()
+				.getActiveUserService(user);
+		Map<String,?> varStore = userService.variableStore.getModifiableMap(
+				false, null);
 		names = names.trim();
 		List<String> nameList;
 		if (names.length() == 0) {
@@ -111,9 +118,9 @@ public class DataController {
 			}
 			setValue = body.get("value");
 		}
-		Map<String,Object> vars = new HashMap<>();
-		vars.put(name, setValue);
-		VariableStoreIO.writeVariables(user, vars);
+		UserService userService = application.getServiceManager()
+				.getActiveUserService(user);
+		userService.variableStore.setValue(name, setValue, true, null);
 		return null;
 	}
 
@@ -158,7 +165,11 @@ public class DataController {
 					String.join(", ", invalidNames));
 			throw new BadRequestException(error);
 		}
-		VariableStoreIO.writeVariables(user, varMap);
+		UserService userService = application.getServiceManager()
+				.getActiveUserService(user);
+		Map<String,Object> varStore = userService.variableStore
+				.getModifiableMap(true, null);
+		varStore.putAll(varMap);
 		return null;
 	}
 }

@@ -1,6 +1,8 @@
 package eu.woolplatform.webservice.dialogue;
 
 import eu.woolplatform.utils.exception.DatabaseException;
+import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.webservice.model.VariableStoreIO;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.model.WoolDialogue;
@@ -45,6 +47,16 @@ public class UserService {
 		this.userId = userId;
 		this.serviceManager = serviceManager;
 		this.variableStore = new WoolVariableStore();
+		Map<String, ?> vars;
+		try {
+			vars = VariableStoreIO.readVariables(userId);
+		} catch (ParseException ex) {
+			throw new DatabaseException("Failed to read initial variables: " +
+					ex.getMessage(), ex);
+		}
+		Map<String,Object> varStoreMap = this.variableStore.getModifiableMap(
+				false, null);
+		varStoreMap.putAll(vars);
 		this.variableStore.addOnChangeListener(onVarChangeListener);
 		conversationalAgent = new ConversationalAgent(this, variableStore);
 	}
