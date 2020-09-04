@@ -40,9 +40,12 @@ public class DialogueMessageFactory {
 	 * @param woolNode - the {@link WoolNode} to convert to an {@link DialogueMessage}
 	 * @return the {@link DialogueMessage}
 	 */
-	public static DialogueMessage generateDialogueMessage(WoolNode woolNode) {
+	public static DialogueMessage generateDialogueMessage(String dialogueName,
+			WoolNode woolNode) {
 		DialogueMessage dialogueMessage = new DialogueMessage();
 		WoolNodeBody body = woolNode.getBody();
+		dialogueMessage.setDialogue(dialogueName);
+		dialogueMessage.setNode(woolNode.getTitle());
 		dialogueMessage.setSpeaker(woolNode.getHeader().getSpeaker());
 		dialogueMessage.setStatement(generateDialogueStatement(body));
 		for (WoolReply reply : body.getReplies()) {

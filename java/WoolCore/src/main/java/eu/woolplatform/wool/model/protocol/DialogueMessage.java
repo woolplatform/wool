@@ -37,9 +37,27 @@ import java.util.List;
  * @author Dennis Hofs (RRD)
  */
 public class DialogueMessage {
+	private String dialogue;
+	private String node;
 	private String speaker;
 	private DialogueStatement statement;
 	private List<ReplyMessage> replies = new ArrayList<>();
+
+	public String getDialogue() {
+		return dialogue;
+	}
+
+	public void setDialogue(String dialogue) {
+		this.dialogue = dialogue;
+	}
+
+	public String getNode() {
+		return node;
+	}
+
+	public void setNode(String node) {
+		this.node = node;
+	}
 
 	public String getSpeaker() {
 		return speaker;
