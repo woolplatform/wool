@@ -22,24 +22,19 @@
 
 package eu.woolplatform.wool.execution;
 
-import org.joda.time.DateTime;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import eu.woolplatform.utils.expressions.EvaluationException;
 import eu.woolplatform.wool.exception.WoolException;
-import eu.woolplatform.wool.model.WoolDialogue;
-import eu.woolplatform.wool.model.WoolDialogueDescription;
-import eu.woolplatform.wool.model.WoolNode;
-import eu.woolplatform.wool.model.WoolNodeBody;
-import eu.woolplatform.wool.model.WoolReply;
+import eu.woolplatform.wool.model.*;
 import eu.woolplatform.wool.model.command.WoolCommand;
 import eu.woolplatform.wool.model.command.WoolInputCommand;
 import eu.woolplatform.wool.model.command.WoolSetCommand;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerInternal;
+import org.joda.time.DateTime;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An {@link ActiveWoolDialogue} is a wrapper around a {@link WoolDialogue}, which contains
@@ -55,7 +50,6 @@ public class ActiveWoolDialogue {
 	private WoolDialogueDescription dialogueDescription;
 	private WoolDialogue dialogueDefinition;
 	private WoolNode currentNode;
-	private DialogueState dialogueState;
 	private WoolVariableStore woolVariableStore;
 		
 	// ----------- Constructors:
@@ -71,7 +65,6 @@ public class ActiveWoolDialogue {
 			WoolDialogue dialogueDefinition) {
 		this.dialogueDescription = dialogueDescription;
 		this.dialogueDefinition = dialogueDefinition;
-		this.dialogueState = DialogueState.INACTIVE;
 	}
 	
 	// ---------- Getters:
@@ -87,11 +80,7 @@ public class ActiveWoolDialogue {
 	public WoolNode getCurrentNode() {
 		return currentNode;
 	}
-	
-	public DialogueState getDialogueState() {
-		return dialogueState;
-	}
-	
+
 	/**
 	 * Returns the {@link WoolVariableStore} associated with this {@link ActiveWoolDialogue}.
 	 * @return the {@link WoolVariableStore} associated with this {@link ActiveWoolDialogue}.
@@ -109,7 +98,11 @@ public class ActiveWoolDialogue {
 	public void setWoolVariableStore(WoolVariableStore woolVariableStore) {
 		this.woolVariableStore = woolVariableStore;
 	}
-	
+
+	public void setCurrentNode(WoolNode currentNode) {
+		this.currentNode = currentNode;
+	}
+
 	// ---------- Convenience:
 	
 	/**
@@ -151,7 +144,6 @@ public class ActiveWoolDialogue {
 	 */
 	public WoolNode startDialogue(String nodeId, DateTime time)
 			throws WoolException, EvaluationException {
-		this.dialogueState = DialogueState.ACTIVE;
 		WoolNode nextNode;
 		if (nodeId == null) {
 			nextNode = dialogueDefinition.getStartNode();
@@ -164,8 +156,6 @@ public class ActiveWoolDialogue {
 			}
 		}
 		this.currentNode = executeWoolNode(nextNode, time);
-		if (this.currentNode.getBody().getReplies().size() == 0)
-			this.dialogueState = DialogueState.FINISHED;
 		return currentNode;
 	}
 	
@@ -216,8 +206,6 @@ public class ActiveWoolDialogue {
 		if (!nodePointer.getNodeId().toLowerCase().equals("end"))
 			nextNode = dialogueDefinition.getNodeById(nodePointer.getNodeId());
 		this.currentNode = nextNode;
-		if (nextNode == null || nextNode.getBody().getReplies().isEmpty())
-			this.dialogueState = DialogueState.FINISHED;
 		if (nextNode != null)
 			this.currentNode = executeWoolNode(nextNode, time);
 		return currentNode;
