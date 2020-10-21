@@ -1,6 +1,6 @@
 var App = function(name, version, filename) {
 	var self = this;
-
+	console.log(filename);
 	// self
 	this.instance = this;
 	this.domroot = null;
@@ -45,6 +45,7 @@ var App = function(name, version, filename) {
 
 	this.$searchField = $(".search-field");
 
+
 	// node-webkit
 	this.isNwjs = detectNodeJS();
 	if (this.isNwjs) {
@@ -62,6 +63,25 @@ var App = function(name, version, filename) {
 	this.closeEditor = function() {
 		self.editing(null);
 	}
+
+	this.getBasicLanguages = function(){
+		var ret = [];
+		for (i=0; i<basicLanguageCodes.length; i++) {
+			var code = basicLanguageCodes[i];
+			ret.push(code[0]+" ("+code[1]+")");
+		}
+		return ret;
+	}
+
+	this.getAllLanguages = function(){
+		var ret = [];
+		for (i=0; i<allLanguageRegionCodes.length; i++) {
+			var code = allLanguageRegionCodes[i];
+			ret.push(code[0]+" ("+code[1]+", "+code[2]+")");
+		}
+		return ret;
+	}
+
 	this.getAllSpeakers = function() {
 		var speakers = [];
 		var nodes = self.nodes();
@@ -588,7 +608,7 @@ var App = function(name, version, filename) {
 		//console.log(newsource);
 		// file2:
 		//console.log(oldsource);
-		return newsource == oldsource;
+		return !oldsource || newsource == oldsource;
 	}
 
 	this.showWaitSpinner = function(show) {
@@ -1574,7 +1594,8 @@ App.LOCALSTORAGEPREFIX="wool_js_";
 
 // addExtension: true = add ".wool" extension
 App.getCurrentPath = function(addExtension) {
-	return localStorage.getItem(App.LOCALSTORAGEPREFIX+"path")
-		+ (addExtension ? ".wool" : "");
+	var ret = localStorage.getItem(App.LOCALSTORAGEPREFIX+"path");
+	if (!ret) return "";
+	return ret + (addExtension ? ".wool" : "");
 }
 

@@ -16,6 +16,8 @@ function FileSystem(fstype) {
 // callback - function(err,data), data is the file content as an utf8 string
 FileSystem.prototype.readFile = function(path,blob,callback){}
 
+FileSystem.prototype.readFileSync = function(path,blob,callback){}
+
 // callback - function(err)
 FileSystem.prototype.writeFile = function(path,data,callback) {}
 
@@ -31,6 +33,12 @@ FileSystem.prototype.readdir = function(path,callback) {}
 // callback - function(err,files), files is an array of relative paths.
 //                                 Trailing slash indicates item is a dir
 FileSystem.prototype.readdirtree = function(path,callback) {}
+
+FileSystem.prototype.existsSync = function(path) {}
+
+FileSystem.prototype.mkdir = function(path,callback) {}
+
+FileSystem.prototype.mkdirSync = function(path) {}
 
 
 // safe - true = check if file exists before overwriting
@@ -108,7 +116,21 @@ NodeFileSystem.prototype.readdirtree = function(path,callback) {
 	walk(path,"",callback);
 }
 
-FileSystem.prototype.renameFile = function(oldpath,newpath,safe,callback) {
+NodeFileSystem.prototype.existsSync = function(path) {
+	return this.fs.existsSync(path);
+}
+
+NodeFileSystem.prototype.mkdir = function(path,callback) {
+	return this.fs.mkdir(path,callback);
+}
+
+NodeFileSystem.prototype.mkdirSync = function(path) {
+	return this.fs.mkdirSync(path);
+}
+
+
+// also renames directories
+NodeFileSystem.prototype.renameFile = function(oldpath,newpath,safe,callback) {
 	var self=this;
 	if (safe) {
 		this.fs.access(newpath,this.fs.constants.F_OK,function(err) {
@@ -124,7 +146,7 @@ FileSystem.prototype.renameFile = function(oldpath,newpath,safe,callback) {
 	}
 }
 
-FileSystem.prototype.getPathAPI = function() { return this.path; }
+NodeFileSystem.prototype.getPathAPI = function() { return this.path; }
 
 // ------------------------------------------------------------------
 // browser-only implementation

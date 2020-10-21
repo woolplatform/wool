@@ -2,19 +2,28 @@ function FileManager() {
 	this.jsTreeInited=false;
 	// indicates that next move_node is undo operation
 	this.revertingMove = false;
+	this.dirsSelectedCallback = null;
 }
 
 FileManager.prototype.getRoot = function() {
 	return localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");
 }
 
+FileManager.prototype.setRoot = function(root) {
+	localStorage.setItem(App.LOCALSTORAGEPREFIX+"root",root);
+}
+
 FileManager.prototype.init = function() {
 	window.addEventListener('message', evt => {
 		if (evt.data.type === 'dirs-selected') {
 			//console.log("Dir selected: "+evt.data.data);
-			localStorage.setItem(App.LOCALSTORAGEPREFIX+"root",
-				evt.data.data);
-			this.updateDirTree();
+			if (!this.dirsSelectedCallback) {
+				this.defaultDirsSelectedCallback(evt);
+			} else {
+				var callback = this.dirsSelectedCallback;
+				this.dirsSelectedCallback = null;
+				callback(evt);
+			}
 		}
 	})
 	this.updateDirTree();
@@ -112,6 +121,8 @@ FileManager.prototype.updateDirTree  = function() {
 				var id = nodedata.node.id;
 				var oldname = nodedata.old;
 				var newname = nodedata.text;
+				// rename cancelled or no change
+				if (oldname==newname) return;
 				var newpath = FileManager.getDir(id,oldname) + newname;
 				// TODO re-append extension if removed by user
 				console.log("New filename: "+newpath);
@@ -125,7 +136,16 @@ FileManager.prototype.updateDirTree  = function() {
 				);
 			}).on("create_node.jstree", function(e,nodedata) {
 				console.log("create_node");
-				if (nodedata.node.original._sourceid) {
+				if (nodedata.node.icon == "jstreedir") {
+					// create folder
+					app.fs.mkdir(data.appendRoot(nodedata.node.id),
+						function(err) {
+							if (err) {
+								alert("Error creating folder.");
+								// TODO remove from jstree
+							}
+						} );
+				} else if (nodedata.node.original._sourceid) {
 					// copy file
 					app.fs.copyFile(
 						data.appendRoot(nodedata.node.original._sourceid),
@@ -259,6 +279,9 @@ FileManager.prototype.doRenameFile = function(err,node,oldtext,oldpath,newpath){
 		}
 		// update jstree
 		$('#filetree').jstree(true).set_id(node, newpath);
+		if (node.icon == "jstreedir") {
+			this.updateDirTree();
+		}
 	}
 }
 
@@ -280,6 +303,7 @@ FileManager.prototype.createContextMenu = function(node) {
 			"createWoolFile" : {
 				"label"             : "Create Wool file",
 				"action"            : function (obj) {
+					// actual file is created by create_node.jstree callback
 					var tree = $('#filetree').jstree(true);
 					var dir = $(node).attr("id");
 					var text = "New File.wool";
@@ -301,6 +325,48 @@ FileManager.prototype.createContextMenu = function(node) {
 				//"submenu"           : {
 				//    /* Collection of objects (the same structure) */
 				//}
+			},
+			"createDir" : {
+				"label"             : "Create folder",
+				"action"            : function (obj) {
+					// actual folder is created by create_node.jstree callback
+					var tree = $('#filetree').jstree(true);
+					var dir = $(node).attr("id");
+					var text = "New Folder";
+					var filename = FileManager.createUniqueFile(dir,
+						dir + "/", text);
+					tree.create_node(dir, {
+						id: dir + "/" + filename,
+						text: filename,
+						icon: "jstreedir",
+					});
+				},
+				// All below are optional
+				"_disabled"         : false,
+				"_class"            : "class",  // class is applied to the item LI node
+				"separator_before"  : false,
+				"separator_after"   : false,
+				// false or string - if does not contain `/` - used as classname
+				"icon"              : false,
+				//"submenu"           : {
+				//    /* Collection of objects (the same structure) */
+				//}
+			},
+			"renameDir" : {
+				// The item label
+				"label"             : "Rename folder",
+				// The function to execute upon a click
+				"action"            : function (obj) {
+					$('#filetree').jstree(true).edit($(node).attr("id"));
+					//console.log($('#filetree').jstree(true).last_error());
+				},
+				// All below are optional
+				"_disabled"         : false,
+				"_class"            : "class",  // class is applied to the item LI node
+				"separator_before"  : false,
+				"separator_after"   : false,
+				// false or string - if does not contain `/` - used as classname
+				"icon"              : false,
 			},
 		}
 	} else { // jstreefile
@@ -386,9 +452,24 @@ FileManager.prototype.loadWoolFile = function(filename) {
 }
 
 FileManager.prototype.sendSelectBaseDir = function(elem) {
+	this.dirsSelectedCallback = null;
 	window.postMessage({type: 'select-dirs'})
 }
 
+FileManager.prototype.sendSelectDirCustom = function(elem,callback) {
+	this.dirsSelectedCallback = callback;
+	window.postMessage({type: 'select-dirs'})
+}
+
+
+FileManager.prototype.defaultDirsSelectedCallback = function(evt) {
+	this.setRoot(evt.data.data);
+	this.updateDirTree();
+	wizard.closeAll();
+}
+
+
+// currently unused
 FileManager.prototype.selectBaseDir = function(elem) {
 	alert(elem.value);
 	//localStorage.getItem(App.LOCALSTORAGEPREFIX+"root");

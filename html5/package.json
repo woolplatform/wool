@@ -1,6 +1,6 @@
 {
   "name": "Wool",
-  "version": "1.4.0",
+  "version": "1.8.0",
   "main": "wooleditor/main.js",
   "window": {
     "toolbar": false,
@@ -13,10 +13,13 @@
   },
   "scripts": {
     "start": "electron .",
-    "start-debug": "electron --inspect=9229 ."
+    "start-debug": "electron --inspect=9229 .",
+    "build": "electron-packager --platform win32 .",
+    "build2": "electron-packager --platform darwin ."
   },
   "devDependencies": {
-    "electron": "^8.1.1"
+    "electron": "^8.1.1",
+    "electron-packager": "^15.1.0"
   },
   "dependencies": {
     "jquery": "^3.4.1",
