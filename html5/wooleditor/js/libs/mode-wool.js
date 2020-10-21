@@ -27,7 +27,7 @@ var WoolHighlightRules = function() {
             },
             {
                 token: "paren.llink",
-                regex: "^\\[\\[",
+                regex: "^\\s*\\[\\[",
                 next: "link"
             },
             {

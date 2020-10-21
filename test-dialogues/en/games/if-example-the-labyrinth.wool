@@ -1,0 +1,182 @@
+title: Start
+tags: 
+speaker: Narrator
+colorID: 2
+position: -143,303
+---
+LD47 warmup game made with <a href="https:\//www.woolplatform.eu/">Wool</a>
+<br><br>
+Try to escape the labyrinth!
+
+<<set $hasSword=false>>
+<<set $cutTree=false>>
+
+[[Start the game|Room11]]
+===
+title: Room11
+tags: 
+speaker: Narrator
+colorID: 0
+position: 255,304
+---
+You are in a labyrinth.<br><br>
+
+<<if $cutTree>>
+    There is a hollow tree stump here, with a ladder going down.
+<<else>>
+    There is a dead tree here.
+<<endif>>
+
+<<if $cutTree>>
+    [[Climb ladder|UnderTree]]    
+<<else>>
+    <<if $hasAxe>>
+        [[Cut down tree|Room11|<<set $cutTree = true>>]]
+    <<endif>>
+<<endif>>
+
+[[North|Room31]]
+[[South|Room21]]
+===
+title: Room12
+tags: 
+speaker: Narrator
+colorID: 0
+position: 525,298
+---
+You are in a labyrinth.<br><br>
+
+There is a sign here. It says: "One P, Two O, Three L".
+
+
+[[North|Room32]]
+[[East|Room13]]
+===
+title: Room13
+tags: 
+speaker: Narrator
+colorID: 0
+position: 803,303
+---
+You are in a labyrinth.<br>
+
+
+[[North|Room33]]
+[[West|Room12]]
+===
+title: Room21
+tags: 
+speaker: Narrator
+colorID: 0
+position: 253,573
+---
+You are in a labyrinth.<br>
+
+
+[[North|Room11]]
+[[South|Room31]]
+[[East|Room22]]
+[[West|Room23]]
+===
+title: Room22
+tags: 
+speaker: Narrator
+colorID: 0
+position: 526,575
+---
+You are in a labyrinth.<br>
+
+
+[[East|Room23]]
+[[West|Room21]]
+[[South|Room32]]
+===
+title: Room23
+tags: 
+speaker: Narrator
+colorID: 0
+position: 810,573
+---
+You are in a labyrinth.<br><br>
+
+There is a sign here. It says: "LOOP".
+
+[[East|Room21]]
+[[West|Room22]]
+===
+title: Room31
+tags: 
+speaker: Narrator
+colorID: 0
+position: 253,852
+---
+You are in a labyrinth.<br>
+
+[[North|Room21]]
+[[South|Room11]]
+===
+title: Room32
+tags: 
+speaker: Narrator
+colorID: 0
+position: 534,847
+---
+You are in a labyrinth.<br>
+
+
+[[North|Room22]]
+[[South|Room12]]
+===
+title: Room33
+tags: 
+speaker: Narrator
+colorID: 0
+position: 807,844
+---
+You are in a labyrinth.<br>
+
+
+<<if !$hasAxe>>
+    There is an axe here.
+
+[[Pick up axe|Room33|<<set $hasAxe = true>>]]
+<<endif>>
+
+[[South|Room13]]
+===
+title: UnderTree
+tags: 
+speaker: Guard
+colorID: 1
+position: -143,634
+---
+You found the exit under the tree! But you are not finished yet. Tell me the pass code to continue!
+
+[[I don't have the pass code|Room11]]
+
+[[The code is: <<input type="numeric" value="$code">>|UnderTreePasscode]]
+
+===
+title: UnderTreePasscode
+tags: 
+speaker: Guard
+colorID: 1
+position: -147,927
+---
+<<if $code == "3221">>
+    That is correct! You may pass.
+    [[Pass|Finished]]
+<<else>>
+    Wrong code!
+    [[Try again|UnderTree]]
+<<endif>>
+===
+title: Finished
+tags: 
+speaker: Narrator
+colorID: 2
+position: -146,1213
+---
+
+Congratulations, you escaped!
+===

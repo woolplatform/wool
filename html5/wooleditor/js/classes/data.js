@@ -73,7 +73,7 @@ var data =
 	// if element not null, element[0] contains files[0] File/Blob property
 	openFile: function(e, filename, element) {
 		data.readFile(e, filename, true, element);
-		app.setCurrentPath(filename);
+		if ( (e && !app.isNwjs) || !e) app.setCurrentPath(filename);
 
 		app.resetUIState();
 		app.refreshWindowTitle(filename);
@@ -374,6 +374,7 @@ var data =
 
 	// normalize wool source file for comparison
 	normalizeSource: function(source) {
+		if (!source) return "";
 		// fix problems with removal of trailing white spaces at commits
 		source = source.replace(/\s*$/gm, "");
 		//source = source.replace(/^title:\s*$/gm, "title:");

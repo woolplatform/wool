@@ -26,6 +26,8 @@
 
 	<script type="text/javascript" src="../lib/i18n/gettext.js"></script>
 	<script type="text/javascript" src="../lib/i18n/i18n.js"></script>
+	<script type="text/javascript" src="../lib/i18n/language_region_codes.js"></script>
+	<script type="text/javascript" src="../lib/rrdwizard.js"></script>
 
 	<script type="text/javascript" src="../node_modules/split.js/dist/split.min.js"></script>
 	<script type="text/javascript" src="../node_modules/jstree/dist/jstree.min.js"></script>
@@ -47,22 +49,304 @@
 	<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+	<script>
+	// clear all persistent storage
+	/*localStorage.removeItem(App.LOCALSTORAGEPREFIX+"root");
+	localStorage.removeItem(App.LOCALSTORAGEPREFIX+"uistate");
+	localStorage.removeItem(App.LOCALSTORAGEPREFIX+"path");
+	localStorage.removeItem(App.LOCALSTORAGEPREFIX+"langDefs");
+	localStorage.removeItem(App.LOCALSTORAGEPREFIX+"buffer");*/
+	</script>
 
 	<div id='waitoverlay'>
 	</div>
 
+	<!-- wizard UI -->
+	<div id='wizardoverlay' class='app-bg'>
+
+		<div class='wizard app-bg-light' id='startwool' style='text-align:center;'>
+			<img src="images/wool-logo-300.png" style='margin-top:40px;' />
+			<div class='title' >Welcome to WOOL!</div>
+			<div class='button' onclick="wizard.open('newproject');">Create new WOOL project</div>
+			<div class='button' onclick="filemgr.sendSelectBaseDir();">Open WOOL project</div>
+		</div>
+
+		<div class='wizard app-bg-light' id='newproject'>
+			<div class='wizardprogress'>
+				<div>Create new project</div>
+				<div><b>1. Project Location</b></div>
+				<div>2. Languages</div>
+				<div>3. Finished!</div>
+			</div>
+			<div class='wizardform'>
+				<div class='wizard-nav'>
+					<button class='prevbutton' 
+						onclick='if (App.getCurrentPath()) { wizard.closeAll(); } else { wizard.open("startwool"); } '>
+					Cancel</button>
+					<button class='nextbutton' onclick='wizard.open("selectlanguage");'
+						data-bind="enable: projectDir"
+					>Next</button>
+				</div>
+
+				<div class='title' >Create new project</div>
+				<div>Please select a folder name for your WOOL project, and
+				choose where the project should be stored.</div>
+				<div class='field'>
+					<div class='fieldleft'>Project name</div> 
+					<div class='fieldright'>
+						<input class='filefield' id="wizard_project_name"
+							onchange="wizardCreateProject.setProjectDir()"
+							onkeyrelease='wizardCreateProject.setProjectDir()'
+							onpaste='wizardCreateProject.setProjectDir()'
+							oninput='wizardCreateProject.setProjectDir()'
+							type="text"> </input>
+					</div>
+				</div>
+				<div class='field'>
+					<div class='fieldleft'>Project directory</div>
+					<div class='fieldright'>
+						<input class='filefield' id="wizard_project_dir"
+						onchange="wizardCreateProject.setProjectDir()"
+						onkeyrelease='wizardCreateProject.setProjectDir()'
+						onpaste='wizardCreateProject.setProjectDir()'
+						oninput='wizardCreateProject.setProjectDir()'
+						type="text" webkitdirectory directory> </input> 
+						<button onclick='wizardCreateProject.openProjectDir()'>Select ...</button>
+					</div>
+				</div>
+
+				<div class='field' id="wizard_project_stored_title"
+				style='padding-top:30px; font-weight:bold;'>
+				</div>
+
+				<div class='field' id="wizard_project_stored"
+				style='padding-bottom:30px;'>
+				</div>
+
+			</div>
+		</div>
+
+		<div class='wizard app-bg-light' id='selectlanguage'>
+			<div class='wizardprogress'>
+				<div>Create new project</div>
+				<div>1. Project Location</div>
+				<div><b>2. Languages</b></div>
+				<div>3. Finished!</div>
+			</div>
+
+			<div class='wizardform'>
+
+				<div class='wizard-nav'>
+					<button class='prevbutton' onclick='if (App.getCurrentPath()) { wizard.closeAll(); } else { wizard.open("startwool"); }'>
+					Cancel</button>
+					<button class='nextbutton' onclick='wizard.open("newproject");'>
+					Previous</button>
+					<button class='nextbutton'
+						onclick='wizardCreateProject.finish();'
+						data-bind="enable: defaultLanguage"
+					>Finish</button>
+				</div>
+
+				<div>Select which language will be used by default in this
+				project. You can enter the ISO code for the language, and
+				optionally
+				region, or select a code from a basic or full language set.</div>
+				<ul>
+					<li><label><input type="radio" name="languageSet" value="simple"
+					 checked = "checked"
+					 onclick='languageAutoComplete("wizard_defaultlanguage","simple");'>
+						Basic language set
+					</input></label>
+					<li><label><input type="radio" name="languageSet" value="full"
+					 onclick='languageAutoComplete("wizard_defaultlanguage","full");'>
+						Full language set
+					</input></label>
+				</ul>
+
+				<div class='field'>
+					<div class='fieldleft'>Default Language:</div>
+					<div class='fieldright'>
+						<input id="wizard_defaultlanguage" class='filefield' type="text" data-bind="value: defaultLanguage"/>
+					</div>
+				</div>
+				<!--<div class='field'>
+					<div class='fieldleft'></div>
+					<div class='fieldright'>
+						<div data-bind="text: defaultLanguageKnown"/>
+					</div>
+				</div>-->
+
+			</div>
+		</div>
+
+		<div class='wizard app-bg-light' id='createproject_cannot_init'>
+			<div class='wizardprogress'>
+				<div>Create new project</div>
+				<div>1. Project Location</div>
+				<div>2. Languages</div>
+				<div>3. Finished!</div>
+			</div>
+
+			<div class='wizardform'>
+				<div class='wizard-nav'>
+					<button class='prevbutton'
+					 onclick='wizard.open("selectlanguage");'>
+					Previous</button>
+				</div>
+
+				<div class='title'>Error</div>
+				<div>Cannot initialize project because an error occurred.</div>
+			</div>
+		</div>
+
+
+		<div class='wizard app-bg-light' id='createproject_finished'>
+			<div class='wizardprogress'>
+				<div>Create new project</div>
+				<div>1. Project Location</div>
+				<div>2. Languages</div>
+				<div><b>3. Finished!</b></div>
+			</div>
+
+			<div class='wizardform'>
+				<div class='wizard-nav'>
+					<button class='prevbutton' onclick='wizard.closeAll();'>
+					Let's go!</button>
+				</div>
+
+				<div class='title'>Finished!</div>
+				<div>Your project is now set up.</div>
+
+			</div>
+		</div>
+
+		<script>
+			var WizardCreateProject = function() {
+				var self = this;
+				this.projectDir = ko.observable(null);
+				this.defaultLanguage = ko.observable("");
+				this.finish = function() {
+					if (app.fs.existsSync(wizardCreateProject.projectDir())) {
+						wizard.open("createproject_cannot_init");
+						return;
+					}
+					app.fs.mkdirSync(this.projectDir());
+					app.fs.mkdirSync(this.projectDir()
+						+ "/" + this.getDefaultLanguage());
+					var filePath = this.projectDir()
+						+ "/" + this.getDefaultLanguage() + "/start.wool";
+					app.fs.writeFile(filePath,
+						 "title: Start\n"
+						+"tags: \n"
+						+"speaker: Bob\n"
+						+"colorID: 1\n"
+						+"---\n"
+						+"Your first node.\n"
+						+"\n"
+						+"[[Great!|Start]]\n",
+						function(err) {
+							if (err) {
+								wizard.open("createproject_cannot_init");
+							} else {
+								app.setCurrentPath(filePath);
+								filemgr.setRoot(self.projectDir());
+								filemgr.updateDirTree();
+								wizard.open("createproject_finished");
+							}
+						}
+					);
+				};
+				this.getDefaultLanguage = function() {
+					var lang = this.defaultLanguage().trim().split(" ");
+					if (lang.length >= 1) return lang[0];
+					return "en";
+				};
+				this.setProjectDir = function() {
+					var dir = document.getElementById("wizard_project_dir").value;
+					var name = document.getElementById("wizard_project_name").value;
+					if (dir && name) {
+						wizardCreateProject.projectDir(dir + "/" + name);
+						document.getElementById("wizard_project_stored_title")
+							.innerText
+							= "Your project will be stored under:"
+						document.getElementById("wizard_project_stored").innerText
+							= wizardCreateProject.projectDir();
+					} else {
+						wizardCreateProject.projectDir(null);
+						document.getElementById("wizard_project_stored_title")
+							.innerText = "";
+						document.getElementById("wizard_project_stored").innerText
+							= "";
+					}
+				}
+				this.openProjectDir = function () {
+					if (filemgr) {
+						filemgr.sendSelectDirCustom(null,selectedProjectDir);
+					}
+				}
+			};
+			var wizardCreateProject = new WizardCreateProject();
+			/*wizardCreateProject.defaultLanguageKnown = ko.pureComputed(
+				function() {
+					var codes = app.getAllLanguages();
+					codes.concat(app.getBasicLanguages());
+					var lang = this.defaultLanguage().trim().split(" ");
+					if (lang.length >= 1) {
+						console.log(lang[0]);
+					return "language_unknown";
+					}
+					return "language_no";
+				}, wizardCreateProject);*/
+			ko.applyBindings(wizardCreateProject,
+				document.getElementById("wizardoverlay"));
+			// callback for select directory
+			function selectedProjectDir(evt) {
+				document.getElementById("wizard_project_dir").value
+					= evt.data.data;
+				wizardCreateProject.setProjectDir();
+			}
+			// type: simple or full
+			function languageAutoComplete(elemid,type) {
+				$("#"+elemid).autocomplete({
+					source: type=="full" 
+						? app.getAllLanguages() : app.getBasicLanguages() ,
+					minLength: 0,
+					select: function( event, ui ) {
+						// set selected value forcibly to ensure 
+						// it is saved.
+						wizardCreateProject.defaultLanguage(ui.item.value);
+					},
+					appendTo: "#wizardoverlay",
+				});
+				// call search function when focused to make menu appear
+				// immediately
+				// https://stackoverflow.com/questions/8401734/jquery-ui-autocomplete-have-the-menu-open-when-user-clicks-in-the-text-box
+				$("#"+elemid).focus(function(event) {
+					console.log("focus");
+					$(this).autocomplete( "search" , "" );
+				});
+			}
+		</script>
+	</div> <!-- wizardoverlay -->
+
+
+	<!-- file tree UI -->
 	<div id='filepanel' class="split">
 		<div id="filepanelheader">
 			<!-- nwjs style: input type="file" onchange='selectBaseDir(this);' nwdirectory /> -->
-			<button onclick='filemgr.sendSelectBaseDir();'>Select Wool directory</button>
-			<button onclick='filemgr.updateDirTree();'>Reload directory</button>
+			<button class='button' onclick='wizard.open("newproject");'>New project</button>
+			<button class='button' onclick='filemgr.sendSelectBaseDir();'>Open project</button>
+			<button class='button' onclick='filemgr.updateDirTree();'>Reload directory</button>
 		</div>
 		<div id="fileroot"></div>
 		<div id="filetree"></div>
 	</div>
+
+
+	<!-- edit canvas UI -->
 	<div id='editpanel' class="split">
 		<!-- Fancy Background -->
-		<div id="app-bg">&nbsp;</div>
+		<div class="app-bg">&nbsp;</div>
 
 		<!-- Entry Point / Container -->
 		<div id="app" tabindex="0">
@@ -137,7 +421,7 @@
 				<div class="menu">
 					<span class="title">File</span>
 					<div class="dropdown">
-						<span class="item" data-bind="click: data.tryClearData">New project...</span>
+						<span class="item" data-bind="click: data.tryClearData">New ...</span>
 						<span class="item" data-bind="click: data.tryOpenFile">Open...</span>
 						<!--<span class="item" data-bind="click: data.tryOpenFolder">Open Folder...</span>-->
 						<span class="item" data-bind="click: data.tryAppend">Append...</span>
@@ -324,8 +608,8 @@
 		<script type="text/javascript">
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
-			if (!filePath) filePath = "unnamed";
-			var app = new App("Wool Editor", "1.7",filePath);
+			var app = new App("Wool Editor", "1.8",
+				filePath ? filePath : "unnamed");
 			app.run();
 			if (app.isNwjs) {
 				Split(["#filepanel","#editpanel"],{
@@ -337,10 +621,16 @@
 				});
 				var filemgr = new FileManager();
 				filemgr.init();
+				var wizard = new Wizard("wizardoverlay");
+				languageAutoComplete("wizard_defaultlanguage");
+				if (!App.getCurrentPath()) {
+					wizard.open("startwool");
+				}
 			} else {
 				$("#filepanel").hide();
 				$("#editpanel").css("width","100%");
 			}
+
 		</script>
 	</div>
 
