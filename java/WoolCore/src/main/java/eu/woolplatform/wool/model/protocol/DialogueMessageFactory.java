@@ -22,6 +22,7 @@
 
 package eu.woolplatform.wool.model.protocol;
 
+import eu.woolplatform.wool.execution.ExecuteNodeResult;
 import eu.woolplatform.wool.model.WoolNode;
 import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.model.WoolReply;
@@ -33,20 +34,24 @@ import eu.woolplatform.wool.model.nodepointer.WoolNodePointerInternal;
 public class DialogueMessageFactory {
 	
 	/**
-	 * Generates an {@link DialogueMessage} based on the given {@link WoolNode}.
-	 * The node should have been executed already, so it should not contain
-	 * variables or "if" and "set" commands.
+	 * Generates a DialogueMessage based on the given executed node. Since the
+	 * node has already been executed, it should not contain variables or "if"
+	 * and "set" commands.
 	 * 
-	 * @param woolNode - the {@link WoolNode} to convert to an {@link DialogueMessage}
-	 * @return the {@link DialogueMessage}
+	 * @param executedNode the executed node
+	 * @return the DialogueMessage
 	 */
-	public static DialogueMessage generateDialogueMessage(String dialogueName,
-			WoolNode woolNode) {
+	public static DialogueMessage generateDialogueMessage(
+			ExecuteNodeResult executedNode) {
 		DialogueMessage dialogueMessage = new DialogueMessage();
-		WoolNodeBody body = woolNode.getBody();
-		dialogueMessage.setDialogue(dialogueName);
-		dialogueMessage.setNode(woolNode.getTitle());
-		dialogueMessage.setSpeaker(woolNode.getHeader().getSpeaker());
+		WoolNode node = executedNode.getWoolNode();
+		WoolNodeBody body = node.getBody();
+		dialogueMessage.setDialogue(executedNode.getDialogueId());
+		dialogueMessage.setNode(node.getTitle());
+		dialogueMessage.setLoggedDialogueId(executedNode.getLoggedDialogueId());
+		dialogueMessage.setLoggedInteractionIndex(
+				executedNode.getInteractionIndex());
+		dialogueMessage.setSpeaker(node.getHeader().getSpeaker());
 		dialogueMessage.setStatement(generateDialogueStatement(body));
 		for (WoolReply reply : body.getReplies()) {
 			dialogueMessage.addReply(generateDialogueReply(reply));

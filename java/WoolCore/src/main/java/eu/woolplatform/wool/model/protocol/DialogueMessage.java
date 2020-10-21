@@ -39,6 +39,8 @@ import java.util.List;
 public class DialogueMessage {
 	private String dialogue;
 	private String node;
+	private String loggedDialogueId;
+	private int loggedInteractionIndex;
 	private String speaker;
 	private DialogueStatement statement;
 	private List<ReplyMessage> replies = new ArrayList<>();
@@ -57,6 +59,22 @@ public class DialogueMessage {
 
 	public void setNode(String node) {
 		this.node = node;
+	}
+
+	public String getLoggedDialogueId() {
+		return loggedDialogueId;
+	}
+
+	public void setLoggedDialogueId(String loggedDialogueId) {
+		this.loggedDialogueId = loggedDialogueId;
+	}
+
+	public int getLoggedInteractionIndex() {
+		return loggedInteractionIndex;
+	}
+
+	public void setLoggedInteractionIndex(int loggedInteractionIndex) {
+		this.loggedInteractionIndex = loggedInteractionIndex;
 	}
 
 	public String getSpeaker() {
