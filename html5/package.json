@@ -22,7 +22,7 @@
     "electron-packager": "^15.1.0"
   },
   "dependencies": {
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "jquery-ui-dist": "^1.12.1",
     "jstree": "^3.3.8",
     "split.js": "^1.5.11"
