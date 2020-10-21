@@ -18,7 +18,7 @@
     "build2": "electron-packager --platform darwin ."
   },
   "devDependencies": {
-    "electron": "^8.1.1",
+    "electron": "^8.5.2",
     "electron-packager": "^15.1.0"
   },
   "dependencies": {
