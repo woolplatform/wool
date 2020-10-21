@@ -3,7 +3,7 @@
 // i18n additional class defs ------------------------------------------------
 
 // create "instance"
-var _i18n = window.i18n({
+var _i18n = i18n({
 	ctxt_delimiter: "|",
 });
 
@@ -241,6 +241,12 @@ _i18n._getGettextContext = function(string) {
 		str: _i18n.normalizeString(res.join("")),
 	};
 	return ret;
+}
+
+// language definition (the content of the "" key) is supplied as a separate parameter
+_i18n.loadJSONSeparate = function(jsonData,langdef, domain) {
+    jsonData[""] = langdef;
+    _i18n.loadJSON(jsonData,domain);
 }
 
 // shortcuts ------------------------------------------------------------

@@ -91,7 +91,7 @@ replies: array of { replyType, replyId, statement, endsDialogue[bool],
 
 replyType one of: AUTOFORWARD, BASIC, TEXTINPUT, NUMERICINPUT
 
-multimedia: 
+multimedia:
 { multimediaType [one of IMAGE,VIDEO,TIMER], resourceName (image),
   timerDuration (timer) }
 
@@ -121,7 +121,7 @@ _setUISettingsURL = _baseURL + "set-ui-settings/" + _accountId + "/" + _userId;
 -------------------------------------------------------------------
 login-handler.js:
 
-_loginURL = baseURL + _userName + "&password=" + _password;  
+_loginURL = baseURL + _userName + "&password=" + _password;
 -> returns raw token
 
 
@@ -202,7 +202,7 @@ function WoolNodeContext(vars) {
 // Helper fields:
 // links - can be used for editor to show arrows
 // texts - can be used for translation.  The node's text lines are trimmed,
-//         with \n added to each line. 
+//         with \n added to each line.
 //         XXX translation of strings with substitute vars is not supported yet!
 function WoolNode(dialogue,lines) {
 	//console.log("Created node! Lines:"+lines.length);
@@ -332,7 +332,7 @@ function WoolNode(dialogue,lines) {
 			var actionparams = parseKeyValList(matches[1]);
 			if (actionparams === null) {
 				logError("error",i,
-					"Cannot parse parameter string '"
+					"Cannot parse parameter string '"
 					+matches[1]+"'");
 				return null;
 			}
@@ -385,7 +385,7 @@ function WoolNode(dialogue,lines) {
 	}
 	if (isEndNode) {
 		if ( this.body.length >= 2
-		||  (this.body.length == 1 && this.body[0].trim() != "") 
+		||  (this.body.length == 1 && this.body[0].trim() != "")
 		) {
 			logError("error",null,"End node should have empty body");
 		}
@@ -403,7 +403,7 @@ function WoolNode(dialogue,lines) {
 	// '<<multimedia' 'type=image' 'name='<name> '>>'
 	// '<<multimedia' 'type=video' 'name='<name> '>>'
 	// '<<multimedia' 'type=timer' 'duration='<duration> '>>'
-	// 
+	//
 	// '[[' <replyText> '| <dialogueNodeID> ']]'
 	// '[[' <dialogueNodeID> ']]'   (autoforward)
 	var alllines=""; // collect subsequent lines for translation
@@ -647,7 +647,7 @@ function WoolNode(dialogue,lines) {
 				//var textSegment = beforeText+"%1"+afterText;
 				var inputparams = parseKeyValList(inputparams_str);
 				if (inputparams === null) {
-					logError("error",i,"Cannot parse parameter string '"
+					logError("error",i,"Cannot parse parameter string '"
 						+inputparams_str+"'");
 					continue;
 				}
@@ -771,12 +771,30 @@ function directServerLoadDialogue(dialogueID,data) {
 }
 
 function directServerLoadNodeDialogue(dialogueID,filepath,overwrite) {
+    if (typeof NodeFileSystem == "undefined") return;
 	var fs = new NodeFileSystem();
 	var data = fs.readFileSync(filepath);
 	if (overwrite || !directServer.dialogues[dialogueID]) {
 		directServer.dialogues[dialogueID] = new WoolDialogue(data);
 	}
 	return data;
+}
+
+function directServerGetPath(newPath) {
+    if (typeof NodeFileSystem == "undefined") return newPath;
+    var fs = new NodeFileSystem();
+    if (newPath.indexOf("/") != 0 && newPath.indexOf("\\") != 0) {
+        // relative path
+        var curPath=fs.getPathAPI().dirname(directServer.currentdialogueId);
+        newPath = fs.getPathAPI().normalize(fs.getPathAPI().join(
+            "/", curPath, newPath) );
+    } else {
+        // absolute path -> add language
+        // TODO define alternative language code
+        newPath = fs.getPathAPI().normalize(fs.getPathAPI().join(
+            "/","en",newPath) );
+    }
+    return newPath;
 }
 
 // load set of dialogues from index file via ajax -------------------------
@@ -834,5 +852,6 @@ function directServerLoadDialogues(callback) {
 		}
 	});
 }
+
 
 

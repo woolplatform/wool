@@ -48,13 +48,18 @@ directServer.getState = function() {
 }
 
 directServer.setState = function(json) {
+    console.log("CTX:"+json);
 	var state = JSON.parse(json);
 	directServer.currentdialogueId = state.currentdialogueId;
-	directServer.currentdialogue = directServer.dialogues[directServer.currentdialogueId];
-	var idx = directServer.findNodeIdx(state.currentnodeid);
-	directServer.currentnode = directServer.currentdialogue.nodes[idx];
 	directServer.currentnodectx = new WoolNodeContext(state.currentnodectxvars);
-	directServer.currentnode.func(directServer.currentnodectx);
+    console.log(directServer.currentnodectx);
+    if (state.currentdialogueId) {
+        // if current dialogue is defined, currentnodeid is assumed to be defined also
+        directServer.currentdialogue = directServer.dialogues[directServer.currentdialogueId];
+        var idx = directServer.findNodeIdx(state.currentnodeid);
+        directServer.currentnode = directServer.currentdialogue.nodes[idx];
+        directServer.currentnode.func(directServer.currentnodectx);
+    }
 }
 
 directServer.findNodeIdx = function(id) {
@@ -236,11 +241,12 @@ function _directServer_start_dialogue(par) {
 	directServer.currentdialogueId = par.dialogueId;
 	if (!par.startNodeId) par.startNodeId = "Start";
 	directServer.currentdialogue = directServer.dialogues[par.dialogueId];
+    console.log(par.dialogueId)
 	// start node is node named "Start", otherwise first node
 	var node = directServer.currentdialogue.nodes[0];
 	var idx = directServer.findNodeIdx(par.startNodeId);
 	if (idx!==null) node = directServer.currentdialogue.nodes[idx];
-	directServer.currentnode = node;	
+	directServer.currentnode = node;
 	// pass kb variables here
 	var vars = {};
 	if (par.keepVars && directServer.currentnodectx) {
@@ -257,22 +263,8 @@ function _directServer_progress_dialogue(par) {
 	var newDialogueId = null; // defined when jumping to different dialogue
 	var pathSep = replyId.lastIndexOf(".");
 	if (pathSep >= 0) {
-		var fs = new NodeFileSystem();
-		var newPath = replyId.substring(0,pathSep);
-		replyId = replyId.substring(pathSep+1);
-		if (newPath.indexOf("/") != 0 && newPath.indexOf("\\") != 0) {
-			// relative path
-			var curPath=fs.getPathAPI().dirname(directServer.currentdialogueId);
-			newPath = fs.getPathAPI().normalize(fs.getPathAPI().join(
-				"/", curPath, newPath) );
-		} else {
-			// absolute path -> add language
-			// TODO define alternative language code
-			newPath = fs.getPathAPI().normalize(fs.getPathAPI().join(
-				"/","en",newPath) );
-		}
-		newDialogueId = newPath;
-		//alert("Dialogue jump "+newPath+"#"+replyId);
+        newDialogueId = directServerGetPath(replyId.substring(0,pathSep));
+  		replyId = replyId.substring(pathSep+1);
 	}
 	var replydef = typeof par.replyIndex != 'undefined'
 		? directServer.currentnodectx.choices[par.replyIndex]
@@ -296,6 +288,7 @@ function _directServer_progress_dialogue(par) {
 		directServer.jumpedToNewDialogue = true;
 		directServerLoadNodeDialogue(newDialogueId,
 			directServer.rootDir + newDialogueId + ".wool");
+        console.log("startDialogue "+newDialogueId)
 		return _directServer_start_dialogue({
 			dialogueId: newDialogueId,
 			startNodeId: replyId,
@@ -319,4 +312,5 @@ function _directServer_progress_dialogue(par) {
 		return directServer.getNode();
 	}
 }
+
 
