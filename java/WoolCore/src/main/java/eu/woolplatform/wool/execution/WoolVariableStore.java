@@ -35,7 +35,7 @@ import java.util.*;
  * @author Harm op den Akker
  */
 public class WoolVariableStore {
-	private Map<String,Object> variableMap = new HashMap<>();
+	private final Map<String,Object> variableMap = new HashMap<>();
 
 	private final List<OnChangeListener> onChangeListeners = new ArrayList<>();
 
@@ -74,7 +74,9 @@ public class WoolVariableStore {
 	 */
 	public void setValue(String name, Object value, boolean save,
 			DateTime time) {
-		variableMap.put(name,value);
+		synchronized (variableMap) {
+			variableMap.put(name, value);
+		}
 		if (save)
 			notifyOnChange(new WoolVariableStoreChange.Put(name, value, time));
 	}
@@ -86,7 +88,9 @@ public class WoolVariableStore {
 	 * @return the associated value of the variable ({@link String}, {@link Number}, {@link Boolean}, null)
 	 */
 	public Object getValue(String name) {
-		return variableMap.get(name);
+		synchronized (variableMap) {
+			return variableMap.get(name);
+		}
 	}
 
 	/**
@@ -114,27 +118,37 @@ public class WoolVariableStore {
 
 		@Override
 		public int size() {
-			return variableMap.size();
+			synchronized (variableMap) {
+				return variableMap.size();
+			}
 		}
 
 		@Override
 		public boolean isEmpty() {
-			return variableMap.isEmpty();
+			synchronized (variableMap) {
+				return variableMap.isEmpty();
+			}
 		}
 
 		@Override
 		public boolean containsKey(Object key) {
-			return variableMap.containsKey(key);
+			synchronized (variableMap) {
+				return variableMap.containsKey(key);
+			}
 		}
 
 		@Override
 		public boolean containsValue(Object value) {
-			return variableMap.containsValue(value);
+			synchronized (variableMap) {
+				return variableMap.containsValue(value);
+			}
 		}
 
 		@Override
 		public Object get(Object key) {
-			return variableMap.get(key);
+			synchronized (variableMap) {
+				return variableMap.get(key);
+			}
 		}
 
 		@Override
@@ -146,7 +160,10 @@ public class WoolVariableStore {
 
 		@Override
 		public Object remove(Object key) {
-			Object result = variableMap.remove(key);
+			Object result;
+			synchronized (variableMap) {
+				result = variableMap.remove(key);
+			}
 			if (save) {
 				notifyOnChange(new WoolVariableStoreChange.Remove((String) key,
 						time));
@@ -156,7 +173,9 @@ public class WoolVariableStore {
 
 		@Override
 		public void putAll(Map<? extends String, ?> m) {
-			variableMap.putAll(m);
+			synchronized (variableMap) {
+				variableMap.putAll(m);
+			}
 			if (save) {
 				Map<String, Object> notifyMap = new LinkedHashMap<>(m);
 				notifyOnChange(new WoolVariableStoreChange.Put(notifyMap, time));
@@ -165,24 +184,32 @@ public class WoolVariableStore {
 
 		@Override
 		public void clear() {
-			variableMap.clear();
+			synchronized (variableMap) {
+				variableMap.clear();
+			}
 			if (save)
 				notifyOnChange(new WoolVariableStoreChange.Clear(time));
 		}
 
 		@Override
 		public Set<String> keySet() {
-			return variableMap.keySet();
+			synchronized (variableMap) {
+				return variableMap.keySet();
+			}
 		}
 
 		@Override
 		public Collection<Object> values() {
-			return variableMap.values();
+			synchronized (variableMap) {
+				return variableMap.values();
+			}
 		}
 
 		@Override
 		public Set<Entry<String, Object>> entrySet() {
-			return variableMap.entrySet();
+			synchronized (variableMap) {
+				return variableMap.entrySet();
+			}
 		}
 	}
 
