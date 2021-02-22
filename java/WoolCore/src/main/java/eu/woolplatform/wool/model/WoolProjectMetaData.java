@@ -4,16 +4,21 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import eu.woolplatform.wool.model.language.WoolLanguageMap;
 
-@JacksonXmlRootElement(localName = "WoolProject")
+@JacksonXmlRootElement(localName = "wool-project")
 public class WoolProjectMetaData {
 
-	@JacksonXmlProperty(localName = "name")
+	@JacksonXmlProperty(isAttribute = true)
 	private String name;
+
+	@JacksonXmlProperty(isAttribute = true, localName = "base-path")
 	private String basePath;
+
 	private String description;
+
+	@JacksonXmlProperty(isAttribute = true)
 	private String version;
 
-	@JacksonXmlProperty(localName = "WoolLanguageMap")
+	@JacksonXmlProperty(localName = "language-map")
 	private WoolLanguageMap woolLanguageMap;
 
 	// ----- Constructors

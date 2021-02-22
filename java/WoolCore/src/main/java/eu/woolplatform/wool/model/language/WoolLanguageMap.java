@@ -8,7 +8,7 @@ import java.util.List;
 
 public class WoolLanguageMap {
 
-	@JacksonXmlProperty(localName = "WoolLanguageSet")
+	@JacksonXmlProperty(localName = "language-set")
 	@JacksonXmlElementWrapper(useWrapping = false)
 	private List<WoolLanguageSet> languageSets;
 

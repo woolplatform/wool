@@ -8,10 +8,10 @@ import java.util.List;
 
 public class WoolLanguageSet {
 
-	@JacksonXmlProperty(localName = "WoolSourceLanguage")
+	@JacksonXmlProperty(localName = "source-language")
 	private WoolSourceLanguage sourceLanguage;
 
-	@JacksonXmlProperty(localName = "TranslationLanguages")
+	@JacksonXmlProperty(localName = "translation-languages")
 	@JacksonXmlElementWrapper(useWrapping = true)
 	private List<WoolTranslationLanguage> translationLanguages;
 
