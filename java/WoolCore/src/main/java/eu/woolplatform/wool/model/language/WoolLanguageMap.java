@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 Innovation Sprint.
+ * Copyright 2019-2021 WOOL Platform.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,8 +25,10 @@ package eu.woolplatform.wool.model.language;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
 import eu.woolplatform.utils.xml.SimpleSAXHandler;
+import eu.woolplatform.utils.xml.XMLWriter;
 import org.xml.sax.Attributes;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,6 +98,16 @@ public class WoolLanguageMap {
 	}
 
 	// ----- XML Handling
+
+	public void writeXML(XMLWriter writer) throws IOException {
+		writer.writeStartElement("language-map");
+
+		for(WoolLanguageSet languageSet : languageSets) {
+			languageSet.writeXML(writer);
+		}
+
+		writer.writeEndElement(); // language-map
+	}
 
 	public static SimpleSAXHandler<WoolLanguageMap> getXMLHandler() {
 		return new XMLHandler();

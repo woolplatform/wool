@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 Innovation Sprint.
+ * Copyright 2019-2021 WOOL Platform.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,8 +25,10 @@ package eu.woolplatform.wool.model.language;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
 import eu.woolplatform.utils.xml.SimpleSAXHandler;
+import eu.woolplatform.utils.xml.XMLWriter;
 import org.xml.sax.Attributes;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,6 +88,24 @@ public class WoolLanguageSet {
 	}
 
 	// ----- XML Handling
+
+	public void writeXML(XMLWriter writer) throws IOException {
+		writer.writeStartElement("language-set");
+
+		writer.writeStartElement("source-language");
+		writer.writeAttribute("name",sourceLanguage.getName());
+		writer.writeAttribute("code",sourceLanguage.getCode());
+		writer.writeEndElement(); // source-language
+
+		for(WoolLanguage language : translationLanguages) {
+			writer.writeStartElement("translation-language");
+			writer.writeAttribute("name",language.getName());
+			writer.writeAttribute("code",language.getCode());
+			writer.writeEndElement();
+		}
+
+		writer.writeEndElement(); // language-set
+	}
 
 	public static SimpleSAXHandler<WoolLanguageSet> getXMLHandler() {
 		return new XMLHandler();
