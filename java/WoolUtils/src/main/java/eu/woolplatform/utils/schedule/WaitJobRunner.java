@@ -58,16 +58,13 @@ public class WaitJobRunner {
 	
 	public boolean run() {
 		long start = System.currentTimeMillis();
-		new Thread() {
-			@Override
-			public void run() {
-				waitJob.run();
-				synchronized (lock) {
-					finished = true;
-					lock.notifyAll();
-				}
+		new Thread(() -> {
+			waitJob.run();
+			synchronized (lock) {
+				finished = true;
+				lock.notifyAll();
 			}
-		}.start();
+		}).start();
 		Logger logger = AppComponents.getLogger(logtag);
 		synchronized (lock) {
 			if (waitLogDelay < timeoutDelay) {
