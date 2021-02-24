@@ -22,7 +22,12 @@
 
 package eu.woolplatform.wool.model.language;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
+import eu.woolplatform.utils.xml.SimpleSAXHandler;
+import org.xml.sax.Attributes;
+
+import java.util.List;
 
 /**
  * A {@link WoolLanguage} defines a language used in a wool project with a
@@ -35,10 +40,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
  */
 public class WoolLanguage {
 
-	@JacksonXmlProperty(isAttribute = true)
 	private String name;
-
-	@JacksonXmlProperty(isAttribute = true)
 	private String code;
 
 	// ----- Constructors
@@ -98,5 +100,40 @@ public class WoolLanguage {
 
 	public String toString() {
 		return "[name:"+name+"] [code:"+code+"]";
+	}
+
+	// ----- XML Handling
+
+	public static SimpleSAXHandler<WoolLanguage> getXMLHandler() {
+		return new XMLHandler();
+	}
+
+	private static class XMLHandler extends AbstractSimpleSAXHandler<WoolLanguage> {
+
+		private WoolLanguage result;
+
+		@Override
+		public void startElement(String name, Attributes atts, List<String> parents) throws ParseException {
+			if(name.equals("source-language") || name.equals("translation-language")) {
+				result = new WoolLanguage();
+				result.setCode(atts.getValue("code"));
+				result.setName(atts.getValue("name"));
+			}
+		}
+
+		@Override
+		public void endElement(String name, List<String> parents) throws ParseException {
+
+		}
+
+		@Override
+		public void characters(String ch, List<String> parents) throws ParseException {
+
+		}
+
+		@Override
+		public WoolLanguage getObject() {
+			return result;
+		}
 	}
 }

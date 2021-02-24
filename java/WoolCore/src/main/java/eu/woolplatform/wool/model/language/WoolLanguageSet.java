@@ -22,8 +22,10 @@
 
 package eu.woolplatform.wool.model.language;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
+import eu.woolplatform.utils.xml.SimpleSAXHandler;
+import org.xml.sax.Attributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +36,7 @@ import java.util.List;
  */
 public class WoolLanguageSet {
 
-	@JacksonXmlProperty(localName = "source-language")
 	private WoolLanguage sourceLanguage;
-
-	@JacksonXmlProperty(localName = "translation-language")
-	@JacksonXmlElementWrapper(useWrapping = false)
 	private List<WoolLanguage> translationLanguages;
 
 	// ----- Constructors
@@ -85,5 +83,53 @@ public class WoolLanguageSet {
 			result += woolLanguage.toString()+"\n";
 		}
 		return result;
+	}
+
+	// ----- XML Handling
+
+	public static SimpleSAXHandler<WoolLanguageSet> getXMLHandler() {
+		return new XMLHandler();
+	}
+
+	private static class XMLHandler extends AbstractSimpleSAXHandler<WoolLanguageSet> {
+
+		private WoolLanguageSet result;
+		private SimpleSAXHandler<WoolLanguage> languageHandler = null;
+
+		@Override
+		public void startElement(String name, Attributes atts, List<String> parents) throws ParseException {
+			if(name.equals("language-set")) {
+				result = new WoolLanguageSet();
+			} else if(name.equals("source-language") || name.equals("translation-language")) {
+				languageHandler = WoolLanguage.getXMLHandler();
+				languageHandler.startElement(name,atts,parents);
+			} else {
+				if(languageHandler != null) languageHandler.startElement(name,atts,parents);
+			}
+		}
+
+		@Override
+		public void endElement(String name, List<String> parents) throws ParseException {
+			if(languageHandler != null) languageHandler.endElement(name,parents);
+			if(name.equals("source-language")) {
+				WoolLanguage sourceLanguage = languageHandler.getObject();
+				result.setSourceLanguage(sourceLanguage);
+				languageHandler = null;
+			} else if(name.equals("translation-language")) {
+				WoolLanguage translationLanguage = languageHandler.getObject();
+				result.addTranslationLanguage(translationLanguage);
+				languageHandler = null;
+			}
+		}
+
+		@Override
+		public void characters(String ch, List<String> parents) throws ParseException {
+
+		}
+
+		@Override
+		public WoolLanguageSet getObject() {
+			return result;
+		}
 	}
 }

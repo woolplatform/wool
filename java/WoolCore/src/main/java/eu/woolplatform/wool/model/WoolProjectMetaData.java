@@ -22,38 +22,32 @@
 
 package eu.woolplatform.wool.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
+import eu.woolplatform.utils.xml.SimpleSAXHandler;
 import eu.woolplatform.wool.exception.WoolDuplicateLanguageCodeException;
 import eu.woolplatform.wool.exception.WoolUnknownLanguageCodeException;
 import eu.woolplatform.wool.model.language.WoolLanguage;
 import eu.woolplatform.wool.model.language.WoolLanguageMap;
 import eu.woolplatform.wool.model.language.WoolLanguageSet;
+import org.xml.sax.Attributes;
+
+import java.util.List;
 
 /**
  * The {@link WoolProjectMetaData} class is the object representation of a wool
  * metadata .xml file. This object can be serialized into an XML file or be constructed
- * from XML using a Jackson XMLMapper. Additionally contains methods for modifying the
+ * from XML using a {@link SimpleSAXHandler}. Additionally contains methods for modifying the
  * contents of a wool project metadata specification.
  *
  * @author Harm op den Akker (Innovation Sprint)
  */
-@JacksonXmlRootElement(localName = "wool-project")
 public class WoolProjectMetaData {
 
-	@JacksonXmlProperty(isAttribute = true)
 	private String name;
-
-	@JsonIgnore
 	private String basePath;
-
 	private String description;
-
-	@JacksonXmlProperty(isAttribute = true)
 	private String version;
-
-	@JacksonXmlProperty(localName = "language-map")
 	private WoolLanguageMap woolLanguageMap;
 
 	// ----- Constructors
@@ -125,6 +119,10 @@ public class WoolProjectMetaData {
 
 	// ----- Setters
 
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	/**
 	 * Sets the the base path of this {@link WoolProject} as a {@link String}.
 	 * @param basePath the the base path of this {@link WoolProject} as a {@link String}.
@@ -132,6 +130,20 @@ public class WoolProjectMetaData {
 	public void setBasePath(String basePath) {
 		this.basePath = basePath;
 	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	public void setWoolLanguageMap(WoolLanguageMap woolLanguageMap) {
+		this.woolLanguageMap = woolLanguageMap;
+	}
+
+
 
 	// ----- Methods
 
@@ -224,7 +236,81 @@ public class WoolProjectMetaData {
 		result += "[basePath:"+basePath+"]\n";
 		result += "[description:"+description+"]\n";
 		result += "[version:"+version+"]\n";
-		result += woolLanguageMap.toString();
+		if(woolLanguageMap != null)
+			result += woolLanguageMap.toString();
 		return result;
+	}
+
+	// ----- XML Handling
+
+	public static SimpleSAXHandler<WoolProjectMetaData> getXMLHandler() {
+		return new XMLHandler();
+	}
+
+	private static class XMLHandler extends AbstractSimpleSAXHandler<WoolProjectMetaData> {
+
+		private WoolProjectMetaData result;
+		private int rootLevel = 0;
+		private boolean inDescription = false;
+		private SimpleSAXHandler<WoolLanguageMap> languageMapHandler = null;
+
+		@Override
+		public void startElement(String name, Attributes atts, List<String> parents) throws ParseException {
+
+			if(rootLevel == 0) {
+				if(!name.equals("wool-project")) {
+					throw new ParseException("Expected element 'wool-project' while parsing wool project metadata, found '"+name+"'.");
+				} else {
+					result = new WoolProjectMetaData();
+					if(atts.getValue("name") == null) {
+						throw new ParseException("Missing attribute 'name' in element 'wool-project' while parsing wool project metadata.");
+					} else {
+						result.setName(atts.getValue("name"));
+					}
+					if(atts.getValue("version") != null) {
+						result.setVersion(atts.getValue("version"));
+					} else {
+						result.setVersion("");
+					}
+					rootLevel++;
+				}
+			} else if(rootLevel == 1) {
+				if(name.equals("description")) {
+					inDescription = true;
+				} else if(name.equals("language-map")) {
+					languageMapHandler = WoolLanguageMap.getXMLHandler();
+					languageMapHandler.startElement(name,atts,parents);
+				} else {
+					if(languageMapHandler != null) {
+						languageMapHandler.startElement(name,atts,parents);
+					} else {
+						throw new ParseException("Unexpected element while parsing wool project metadata: '"+name+"'");
+					}
+				}
+			}
+		}
+
+		@Override
+		public void endElement(String name, List<String> parents) throws ParseException {
+			if(languageMapHandler != null) {
+				languageMapHandler.endElement(name,parents);
+			} else if (name.equals("description")) inDescription = false;
+
+			if(name.equals("language-map")) {
+				result.setWoolLanguageMap(languageMapHandler.getObject());
+			}
+		}
+
+		@Override
+		public void characters(String ch, List<String> parents) throws ParseException {
+			if(inDescription) {
+				result.setDescription(ch);
+			}
+		}
+
+		@Override
+		public WoolProjectMetaData getObject() {
+			return result;
+		}
 	}
 }

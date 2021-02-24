@@ -22,8 +22,10 @@
 
 package eu.woolplatform.wool.model.language;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
+import eu.woolplatform.utils.xml.SimpleSAXHandler;
+import org.xml.sax.Attributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +38,6 @@ import java.util.List;
  */
 public class WoolLanguageMap {
 
-	@JacksonXmlProperty(localName = "language-set")
-	@JacksonXmlElementWrapper(useWrapping = false)
 	private List<WoolLanguageSet> languageSets;
 
 	// ----- Constructors
@@ -93,5 +93,49 @@ public class WoolLanguageMap {
 			result += wls.toString();
 		}
 		return result;
+	}
+
+	// ----- XML Handling
+
+	public static SimpleSAXHandler<WoolLanguageMap> getXMLHandler() {
+		return new XMLHandler();
+	}
+
+	private static class XMLHandler extends AbstractSimpleSAXHandler<WoolLanguageMap> {
+
+		private WoolLanguageMap result = null;
+		private SimpleSAXHandler<WoolLanguageSet> languageSetHandler = null;
+
+		@Override
+		public void startElement(String name, Attributes atts, List<String> parents) throws ParseException {
+			if(name.equals("language-map")) {
+				result = new WoolLanguageMap();
+			} else if(name.equals("language-set")) {
+				languageSetHandler = WoolLanguageSet.getXMLHandler();
+				languageSetHandler.startElement(name,atts,parents);
+			} else {
+				if(languageSetHandler != null) languageSetHandler.startElement(name,atts,parents);
+			}
+		}
+
+		@Override
+		public void endElement(String name, List<String> parents) throws ParseException {
+			if(languageSetHandler != null) languageSetHandler.endElement(name,parents);
+			if(name.equals("language-set")) {
+				WoolLanguageSet languageSet = languageSetHandler.getObject();
+				result.addLanguageSet(languageSet);
+				languageSetHandler = null;
+			}
+		}
+
+		@Override
+		public void characters(String ch, List<String> parents) throws ParseException {
+
+		}
+
+		@Override
+		public WoolLanguageMap getObject() {
+			return result;
+		}
 	}
 }
