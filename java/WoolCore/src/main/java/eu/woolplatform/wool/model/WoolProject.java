@@ -43,32 +43,92 @@ public class WoolProject {
 	private Map<WoolDialogueDescription,Map<WoolTranslatable,List<WoolContextTranslation>>> translations =
 			new LinkedHashMap<>();
 
+	/**
+	 * Returns all available dialogues in this project. This includes source
+	 * dialogues as well as translated dialogues with the default {@link
+	 * WoolTranslationContext WoolTranslationContext}.
+	 *
+	 * @return the available dialogues (source and translations with default
+	 * context)
+	 */
 	public Map<WoolDialogueDescription, WoolDialogue> getDialogues() {
 		return dialogues;
 	}
 
+	/**
+	 * Sets all available dialogues in this project. This includes source
+	 * dialogues as well as translated dialogues with the default {@link
+	 * WoolTranslationContext WoolTranslationContext}.
+	 *
+	 * @param dialogues the available dialogues (source and translations with
+	 * default context)
+	 */
 	public void setDialogues(
 			Map<WoolDialogueDescription,WoolDialogue> dialogues) {
 		this.dialogues = dialogues;
 	}
 
+	/**
+	 * Returns the source dialogues. This excludes any translations.
+	 *
+	 * @return the source dialogues (no translations)
+	 */
 	public Map<WoolDialogueDescription, WoolDialogue> getSourceDialogues() {
 		return sourceDialogues;
 	}
 
+	/**
+	 * Sets the source dialogues. This excludes any translations
+	 *
+	 * @param sourceDialogues the source dialogues (no translations)
+	 */
 	public void setSourceDialogues(
 			Map<WoolDialogueDescription,WoolDialogue> sourceDialogues) {
 		this.sourceDialogues = sourceDialogues;
 	}
 
+	/**
+	 * Returns the translations of all phrases per dialogue. This method returns
+	 * a map from a dialogue key to a translation map.
+	 *
+	 * <p>A translation map is a map from a source phrase to a list of
+	 * translated phrases, with different contexts.</p>
+	 *
+	 * @return the translations
+	 */
 	public Map<WoolDialogueDescription,Map<WoolTranslatable,List<WoolContextTranslation>>> getTranslations() {
 		return translations;
 	}
 
+	/**
+	 * Sets the translations of all phrases per dialogue. This method returns a
+	 * map from a dialogue key to a translation map.
+	 *
+	 * <p>A translation map is a map from a source phrase to a list of
+	 * translated phrases, with different contexts.</p>
+	 *
+	 * @param translations the translations
+	 */
 	public void setTranslations(Map<WoolDialogueDescription,Map<WoolTranslatable,List<WoolContextTranslation>>> translations) {
 		this.translations = translations;
 	}
 
+	/**
+	 * Returns a translated dialogue for the specified translation context.
+	 * This method first searches a source dialogue for the specified
+	 * description (name and language). If found, no translation is needed and
+	 * the source dialogue is returned. Otherwise it searches a source dialogue
+	 * with the specified dialogue name and a translation set for the specified
+	 * language. If found, it translates the dialogue with the translation
+	 * context, and then returns the translated dialogue.
+	 *
+	 * <p>If no source dialogue or translation is found, this method returns
+	 * null.</p>
+	 *
+	 * @param descr the dialogue description (name and language)
+	 * @param context the translation context
+	 * @return the translated dialogue or null
+	 */
 	public WoolDialogue getTranslatedDialogue(WoolDialogueDescription descr,
 			WoolTranslationContext context) {
 		WoolDialogue dialogue = sourceDialogues.get(descr);
