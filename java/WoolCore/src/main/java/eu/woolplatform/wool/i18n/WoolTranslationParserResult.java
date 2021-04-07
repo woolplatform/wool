@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Map;
 
 public class WoolTranslationParserResult {
-	private Map<WoolTranslatable,WoolTranslatable> translations = null;
+	private Map<WoolTranslatable,List<WoolContextTranslation>> translations = null;
 	private List<ParseException> parseErrors = new ArrayList<>();
 	private List<String> warnings = new ArrayList<>();
 
-	public Map<WoolTranslatable,WoolTranslatable> getTranslations() {
+	public Map<WoolTranslatable,List<WoolContextTranslation>> getTranslations() {
 		return translations;
 	}
 
 	public void setTranslations(
-			Map<WoolTranslatable,WoolTranslatable> translations) {
+			Map<WoolTranslatable,List<WoolContextTranslation>> translations) {
 		this.translations = translations;
 	}
 

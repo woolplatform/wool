@@ -22,20 +22,29 @@
 
 package eu.woolplatform.wool.parser;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.i18n.I18nLanguageFinder;
+import eu.woolplatform.wool.i18n.WoolContextTranslation;
 import eu.woolplatform.wool.i18n.WoolTranslatable;
+import eu.woolplatform.wool.i18n.WoolTranslationContext;
 import eu.woolplatform.wool.i18n.WoolTranslationParser;
 import eu.woolplatform.wool.i18n.WoolTranslationParserResult;
 import eu.woolplatform.wool.i18n.WoolTranslator;
 import eu.woolplatform.wool.model.WoolDialogue;
 import eu.woolplatform.wool.model.WoolDialogueDescription;
 import eu.woolplatform.wool.model.WoolProject;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.*;
 
 /**
  * This class can read an entire WOOL project consisting of ".wool" dialogue
@@ -44,15 +53,14 @@ import java.util.*;
  * @author Dennis Hofs (RRD)
  */
 public class WoolProjectParser {
-
 	private WoolFileLoader fileLoader;
 
 	private Map<WoolFileDescription, WoolDialogue> dialogues =
 			new LinkedHashMap<>();
-	private Map<WoolFileDescription,Map<WoolTranslatable,WoolTranslatable>> translations =
+	private Map<WoolFileDescription,Map<WoolTranslatable,List<WoolContextTranslation>>> translations =
 			new LinkedHashMap<>();
 
-	private Map<WoolDialogueDescription, WoolDialogue> translatedDialogues =
+	private Map<WoolDialogueDescription,WoolDialogue> translatedDialogues =
 			new LinkedHashMap<>();
 
 	public WoolProjectParser(WoolFileLoader fileLoader) {
@@ -70,6 +78,20 @@ public class WoolProjectParser {
 			return result;
 		WoolProject project = new WoolProject();
 		project.setDialogues(translatedDialogues);
+		Map<WoolDialogueDescription,WoolDialogue> sourceDialogues =
+				new LinkedHashMap<>();
+		for (WoolFileDescription descr : dialogues.keySet()) {
+			sourceDialogues.put(fileDescriptionToDialogueDescription(descr),
+					dialogues.get(descr));
+		}
+		project.setSourceDialogues(sourceDialogues);
+		Map<WoolDialogueDescription,Map<WoolTranslatable,List<WoolContextTranslation>>> dlgTranslations =
+				new LinkedHashMap<>();
+		for (WoolFileDescription descr : translations.keySet()) {
+			dlgTranslations.put(fileDescriptionToDialogueDescription(descr),
+					translations.get(descr));
+		}
+		project.setTranslations(dlgTranslations);
 		result.setProject(project);
 		return result;
 	}
@@ -183,15 +205,6 @@ public class WoolProjectParser {
 	 * @param readResult the read result
 	 */
 	private void createTranslatedDialogues(WoolProjectParserResult readResult) {
-		try {
-			doCreateTranslatedDialogues(readResult);
-		} finally {
-			dialogues.clear();
-			translations.clear();
-		}
-	}
-
-	private void doCreateTranslatedDialogues(WoolProjectParserResult readResult) {
 		for (WoolFileDescription descr : dialogues.keySet()) {
 			WoolDialogueDescription dlgDescr =
 					fileDescriptionToDialogueDescription(descr);
@@ -209,8 +222,8 @@ public class WoolProjectParser {
 						descr));
 				continue;
 			}
-			WoolTranslator translator = new WoolTranslator(translations.get(
-					descr));
+			WoolTranslator translator = new WoolTranslator(
+					new WoolTranslationContext(), translations.get(descr));
 			WoolDialogue translated = translator.translate(source);
 			translatedDialogues.put(dlgDescr, translated);
 		}

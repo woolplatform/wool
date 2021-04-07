@@ -22,17 +22,17 @@
 
 package eu.woolplatform.wool.i18n;
 
-import eu.woolplatform.wool.model.WoolDialogue;
-import eu.woolplatform.wool.model.WoolNode;
-import eu.woolplatform.wool.model.WoolNodeBody;
-import eu.woolplatform.wool.model.WoolVariableString;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import eu.woolplatform.wool.model.WoolDialogue;
+import eu.woolplatform.wool.model.WoolNode;
+import eu.woolplatform.wool.model.WoolNodeBody;
+import eu.woolplatform.wool.model.WoolVariableString;
 
 /**
  * This class can translate {@link WoolNode WoolNode}s given a translation map.
@@ -42,7 +42,8 @@ import java.util.regex.Pattern;
  * @author Dennis Hofs (RRD)
  */
 public class WoolTranslator {
-	private Map<String,WoolTranslatable> translations;
+	private WoolTranslationContext context;
+	private Map<String,List<WoolContextTranslation>> translations;
 	private Pattern preWhitespaceRegex;
 	private Pattern postWhitespaceRegex;
 
@@ -51,7 +52,9 @@ public class WoolTranslator {
 	 *
 	 * @param translations the translation map
 	 */
-	public WoolTranslator(Map<WoolTranslatable,WoolTranslatable> translations) {
+	public WoolTranslator(WoolTranslationContext context,
+			Map<WoolTranslatable,List<WoolContextTranslation>> translations) {
+		this.context = context;
 		this.translations = new LinkedHashMap<>();
 		for (WoolTranslatable key : translations.keySet()) {
 			this.translations.put(getNormalizedText(key),
@@ -86,7 +89,8 @@ public class WoolTranslator {
 	public WoolDialogue translate(WoolDialogue dialogue) {
 		dialogue = new WoolDialogue(dialogue);
 		for (WoolNode node : dialogue.getNodes()) {
-			translateBody(node.getBody());
+			translateBody(node.getHeader().getSpeaker(),
+					WoolSourceTranslatable.USER, node.getBody());
 		}
 		return dialogue;
 	}
@@ -101,19 +105,22 @@ public class WoolTranslator {
 	 */
 	public WoolNode translate(WoolNode node) {
 		node = new WoolNode(node);
-		translateBody(node.getBody());
+		translateBody(node.getHeader().getSpeaker(),
+				WoolSourceTranslatable.USER, node.getBody());
 		return node;
 	}
 
-	private void translateBody(WoolNodeBody body) {
+	private void translateBody(String speaker, String addressee,
+			WoolNodeBody body) {
 		WoolTranslatableExtractor extractor = new WoolTranslatableExtractor();
-		List<WoolTranslatable> translatables = extractor.extractFromBody(body);
-		for (WoolTranslatable translatable : translatables) {
+		List<WoolSourceTranslatable> translatables = extractor.extractFromBody(
+				speaker, addressee, body);
+		for (WoolSourceTranslatable translatable : translatables) {
 			translateText(translatable);
 		}
 	}
 
-	private void translateText(WoolTranslatable text) {
+	private void translateText(WoolSourceTranslatable text) {
 		String textPlain = text.toString();
 		String preWhitespace = "";
 		String postWhitespace = "";
@@ -123,14 +130,16 @@ public class WoolTranslator {
 		m = postWhitespaceRegex.matcher(textPlain);
 		if (m.find())
 			postWhitespace = m.group();
-		WoolTranslatable translation = translations.get(getNormalizedText(
-				text));
-		if (translation == null)
+		List<WoolContextTranslation> transList = translations.get(
+				getNormalizedText(text.getTranslatable()));
+		if (transList == null)
 			return;
-		WoolNodeBody body = text.getParent();
+		WoolTranslatable translation = findContextTranslation(text, transList);
+		WoolNodeBody body = text.getTranslatable().getParent();
 		List<WoolNodeBody.Segment> bodySegments = new ArrayList<>(
 				body.getSegments());
-		List<WoolNodeBody.Segment> textSegments = text.getSegments();
+		List<WoolNodeBody.Segment> textSegments = text.getTranslatable()
+				.getSegments();
 		int insertIndex = body.getSegments().indexOf(textSegments.get(0));
 		for (WoolNodeBody.Segment segment : textSegments) {
 			bodySegments.remove(segment);
@@ -151,5 +160,59 @@ public class WoolTranslator {
 		for (WoolNodeBody.Segment segment : bodySegments) {
 			body.addSegment(segment);
 		}
+	}
+
+	private WoolTranslatable findContextTranslation(
+			WoolSourceTranslatable source,
+			List<WoolContextTranslation> transList) {
+		WoolTranslationContext.Gender speakerGender = getGenderForSpeaker(
+				source.getSpeaker());
+		WoolTranslationContext.Gender addresseeGender = getGenderForSpeaker(
+				source.getAddressee());
+		List<WoolContextTranslation> filtered = filterGender(transList,
+				speakerGender, addresseeGender);
+		if (filtered.isEmpty())
+			return transList.get(0).getTranslation();
+		else
+			return filtered.get(0).getTranslation();
+	}
+
+	private WoolTranslationContext.Gender getGenderForSpeaker(String speaker) {
+		if (speaker.equals(WoolSourceTranslatable.USER))
+			return context.getUserGender();
+		if (context.getAgentGenders().containsKey(speaker))
+			return context.getAgentGenders().get(speaker);
+		return context.getDefaultAgentGender();
+	}
+
+	private static List<WoolContextTranslation> filterGender(
+			List<WoolContextTranslation> terms,
+			WoolTranslationContext.Gender speakerGender,
+			WoolTranslationContext.Gender addresseeGender) {
+		List<WoolContextTranslation> result = new ArrayList<>();
+		if (speakerGender == null)
+			speakerGender = WoolTranslationContext.Gender.MALE;
+		if (addresseeGender == null)
+			addresseeGender = WoolTranslationContext.Gender.MALE;
+		for (WoolContextTranslation term : terms) {
+			if (speakerGender == WoolTranslationContext.Gender.MALE &&
+					term.getContext().contains("female_speaker")) {
+				continue;
+			}
+			if (addresseeGender == WoolTranslationContext.Gender.MALE &&
+					term.getContext().contains("female_addressee")) {
+				continue;
+			}
+			if (speakerGender == WoolTranslationContext.Gender.FEMALE &&
+					term.getContext().contains("male_speaker")) {
+				continue;
+			}
+			if (addresseeGender == WoolTranslationContext.Gender.FEMALE &&
+					term.getContext().contains("male_addressee")) {
+				continue;
+			}
+			result.add(term);
+		}
+		return result;
 	}
 }

@@ -43,12 +43,14 @@ import java.util.List;
  * @author Dennis Hofs (RRD)
  */
 public class WoolTranslatableExtractor {
-	public List<WoolTranslatable> extractFromNode(WoolNode node) {
-		return extractFromBody(node.getBody());
+	public List<WoolSourceTranslatable> extractFromNode(WoolNode node) {
+		return extractFromBody(node.getHeader().getSpeaker(),
+				WoolSourceTranslatable.USER, node.getBody());
 	}
 
-	public List<WoolTranslatable> extractFromBody(WoolNodeBody body) {
-		List<WoolTranslatable> result = new ArrayList<>();
+	public List<WoolSourceTranslatable> extractFromBody(String speaker,
+			String addressee, WoolNodeBody body) {
+		List<WoolSourceTranslatable> result = new ArrayList<>();
 		List<WoolNodeBody.Segment> current = new ArrayList<>();
 		for (int i = 0; i < body.getSegments().size(); i++) {
 			WoolNodeBody.Segment segment = body.getSegments().get(i);
@@ -62,52 +64,65 @@ public class WoolTranslatableExtractor {
 				WoolCommand cmd = cmdSegment.getCommand();
 				if (cmd instanceof WoolIfCommand) {
 					WoolIfCommand ifCmd = (WoolIfCommand)cmd;
-					finishCurrentTranslatableSegment(body, current, result);
-					result.addAll(getTranslatableSegmentsFromIfCommand(ifCmd));
+					finishCurrentTranslatableSegment(speaker, addressee, body,
+							current, result);
+					result.addAll(getTranslatableSegmentsFromIfCommand(speaker,
+							addressee, ifCmd));
 				} else if (cmd instanceof WoolRandomCommand) {
 					WoolRandomCommand rndCmd = (WoolRandomCommand)cmd;
-					finishCurrentTranslatableSegment(body, current, result);
+					finishCurrentTranslatableSegment(speaker, addressee, body,
+							current, result);
 					result.addAll(getTranslatableSegmentsFromRandomCommand(
-							rndCmd));
+							speaker, addressee, rndCmd));
 				} else if (cmd instanceof WoolInputCommand) {
 					current.add(segment);
 				}
 			}
 		}
-		finishCurrentTranslatableSegment(body, current, result);
+		finishCurrentTranslatableSegment(speaker, addressee, body, current,
+				result);
 		for (WoolReply reply : body.getReplies()) {
-			if (reply.getStatement() != null)
-				result.addAll(extractFromBody(reply.getStatement()));
+			if (reply.getStatement() != null) {
+				result.addAll(extractFromBody(addressee, speaker,
+						reply.getStatement()));
+			}
 		}
 		return result;
 	}
 
-	private List<WoolTranslatable> getTranslatableSegmentsFromIfCommand(
-			WoolIfCommand ifCmd) {
-		List<WoolTranslatable> result = new ArrayList<>();
+	private List<WoolSourceTranslatable> getTranslatableSegmentsFromIfCommand(
+			String speaker, String addressee, WoolIfCommand ifCmd) {
+		List<WoolSourceTranslatable> result = new ArrayList<>();
 		for (WoolIfCommand.Clause clause : ifCmd.getIfClauses()) {
-			result.addAll(extractFromBody(clause.getStatement()));
+			result.addAll(extractFromBody(speaker, addressee,
+					clause.getStatement()));
 		}
-		if (ifCmd.getElseClause() != null)
-			result.addAll(extractFromBody(ifCmd.getElseClause()));
+		if (ifCmd.getElseClause() != null) {
+			result.addAll(extractFromBody(speaker, addressee,
+					ifCmd.getElseClause()));
+		}
 		return result;
 	}
 
-	private List<WoolTranslatable> getTranslatableSegmentsFromRandomCommand(
-			WoolRandomCommand rndCmd) {
-		List<WoolTranslatable> result = new ArrayList<>();
+	private List<WoolSourceTranslatable> getTranslatableSegmentsFromRandomCommand(
+			String speaker, String addressee, WoolRandomCommand rndCmd) {
+		List<WoolSourceTranslatable> result = new ArrayList<>();
 		for (WoolRandomCommand.Clause clause : rndCmd.getClauses()) {
-			result.addAll(extractFromBody(clause.getStatement()));
+			result.addAll(extractFromBody(speaker, addressee,
+					clause.getStatement()));
 		}
 		return result;
 	}
 
-	private void finishCurrentTranslatableSegment(WoolNodeBody parent,
+	private void finishCurrentTranslatableSegment(String speaker,
+			String addressee, WoolNodeBody parent,
 			List<WoolNodeBody.Segment> current,
-			List<WoolTranslatable> translatables) {
+			List<WoolSourceTranslatable> translatables) {
 		if (hasContent(current)) {
 			List<WoolNodeBody.Segment> segments = new ArrayList<>(current);
-			translatables.add(new WoolTranslatable(parent, segments));
+			WoolSourceTranslatable translatable = new WoolSourceTranslatable(
+					speaker, addressee, new WoolTranslatable(parent, segments));
+			translatables.add(translatable);
 		}
 		current.clear();
 	}

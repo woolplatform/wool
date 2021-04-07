@@ -23,6 +23,23 @@
 package eu.woolplatform.wool.i18n;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import eu.woolplatform.utils.exception.LineNumberParseException;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.io.FileUtils;
@@ -31,14 +48,6 @@ import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.parser.WoolBodyParser;
 import eu.woolplatform.wool.parser.WoolBodyToken;
 import eu.woolplatform.wool.parser.WoolBodyTokenizer;
-
-import java.io.*;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * This class can parse a WOOL translation file. The file should contain a
@@ -84,7 +93,7 @@ public class WoolTranslationParser {
 	public static WoolTranslationParserResult parse(Reader reader)
 			throws IOException {
 		WoolTranslationParserResult result = new WoolTranslationParserResult();
-		Map<WoolTranslatable, WoolTranslatable> translations =
+		Map<WoolTranslatable,List<WoolContextTranslation>> translations =
 				new LinkedHashMap<>();
 		String json = FileUtils.readFileString(reader);
 		if (json.trim().isEmpty()) {
@@ -99,19 +108,19 @@ public class WoolTranslationParser {
 			result.getParseErrors().add(ex);
 			return result;
 		}
-		parse(map, translations, result);
+		parse(new LinkedHashSet<>(), map, translations, result);
 		if (result.getParseErrors().isEmpty())
 			result.setTranslations(translations);
 		return result;
 	}
 
-	private static void parse(Map<String,?> map,
-			Map<WoolTranslatable,WoolTranslatable> translations,
+	private static void parse(Set<String> context, Map<String,?> map,
+			Map<WoolTranslatable,List<WoolContextTranslation>> translations,
 			WoolTranslationParserResult parseResult) {
 		for (String key : map.keySet()) {
 			Object value = map.get(key);
 			if (value instanceof String) {
-				parseTranslatable(key, (String)value, translations,
+				parseTranslatable(context, key, (String)value, translations,
 						parseResult);
 			} else {
 				parseContextMap(key, value, translations, parseResult);
@@ -119,23 +128,27 @@ public class WoolTranslationParser {
 		}
 	}
 
-	private static void parseTranslatable(String key, String value,
-			Map<WoolTranslatable,WoolTranslatable> translations,
+	private static void parseTranslatable(Set<String> context, String key,
+			String value,
+			Map<WoolTranslatable,List<WoolContextTranslation>> translations,
 			WoolTranslationParserResult parseResult) {
 		boolean success = true;
-		WoolTranslatable transKey = null;
+		WoolTranslatable source = null;
 		try {
-			transKey = parseTranslationString(key);
+			source = parseTranslationString(key);
 		} catch (ParseException ex) {
 			parseResult.getParseErrors().add(new ParseException(String.format(
 					"Failed to parse translation key \"%s\"", key) + ": " +
 					ex.getMessage(), ex));
 			success = false;
 		}
-		if (transKey != null && translations.containsKey(transKey)) {
-			parseResult.getParseErrors().add(new ParseException(
-					"Found duplicate translation key: " + transKey));
-			success = false;
+		if (source != null) {
+			try {
+				checkDuplicateTranslation(source, context, translations);
+			} catch (ParseException ex) {
+				parseResult.getParseErrors().add(ex);
+				success = false;
+			}
 		}
 		if (value.trim().isEmpty()) {
 			parseResult.getWarnings().add(String.format(
@@ -151,13 +164,41 @@ public class WoolTranslationParser {
 					": " + value + ": " + ex.getMessage(), ex));
 			success = false;
 		}
-		if (success)
-			translations.put(transKey, transValue);
+		if (success) {
+			List<WoolContextTranslation> transList = translations.get(source);
+			if (transList == null) {
+				transList = new ArrayList<>();
+				translations.put(source, transList);
+			}
+			transList.add(new WoolContextTranslation(context, transValue));
+		}
+	}
+
+	private static void checkDuplicateTranslation(WoolTranslatable source,
+			Set<String> context,
+			Map<WoolTranslatable,List<WoolContextTranslation>> translations)
+			throws ParseException {
+		if (!translations.containsKey(source))
+			return;
+		List<WoolContextTranslation> sourceTrans = translations.get(source);
+		for (WoolContextTranslation trans : sourceTrans) {
+			if (trans.getContext().equals(context)) {
+				throw new ParseException(String.format(
+						"Found duplicate translation \"%s\" with context %s",
+						source, context));
+			}
+		}
 	}
 
 	private static void parseContextMap(String key, Object value,
-			Map<WoolTranslatable,WoolTranslatable> translations,
+			Map<WoolTranslatable,List<WoolContextTranslation>> translations,
 			WoolTranslationParserResult parseResult) {
+		String contextListStr = key.trim();
+		Set<String> context = new LinkedHashSet<>();
+		if (!contextListStr.isEmpty()) {
+			String[] contextList = contextListStr.split("\\s+");
+			Collections.addAll(context, contextList);
+		}
 		Map<String,?> map;
 		try {
 			map = JsonMapper.convert(value,
@@ -168,7 +209,7 @@ public class WoolTranslationParser {
 					key + "\": " + ex.getMessage(), ex));
 			return;
 		}
-		parse(map, translations, parseResult);
+		parse(context, map, translations, parseResult);
 	}
 
 	private static WoolTranslatable parseTranslationString(String translation)
@@ -192,7 +233,12 @@ public class WoolTranslationParser {
 					": " + ex.getError());
 		}
 		WoolTranslatableExtractor extractor = new WoolTranslatableExtractor();
-		List<WoolTranslatable> translatables = extractor.extractFromBody(body);
+		List<WoolSourceTranslatable> sourceTranslatables =
+				extractor.extractFromBody(null, null, body);
+		List<WoolTranslatable> translatables = new ArrayList<>();
+		for (WoolSourceTranslatable sourceTranslatable : sourceTranslatables) {
+			translatables.add(sourceTranslatable.getTranslatable());
+		}
 		if (translatables.size() == 0) {
 			throw new ParseException(
 					"Invalid translation string: " + translation +
