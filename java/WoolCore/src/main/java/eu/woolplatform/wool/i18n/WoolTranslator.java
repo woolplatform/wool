@@ -121,7 +121,7 @@ public class WoolTranslator {
 	}
 
 	private void translateText(WoolSourceTranslatable text) {
-		String textPlain = text.toString();
+		String textPlain = text.getTranslatable().toString();
 		String preWhitespace = "";
 		String postWhitespace = "";
 		Matcher m = preWhitespaceRegex.matcher(textPlain);
