@@ -30,10 +30,19 @@ import java.util.List;
 import eu.woolplatform.utils.exception.ParseException;
 
 public class CsvParser implements Closeable {
+	private char separator = ',';
 	private LineNumberReader reader;
 	
 	public CsvParser(LineNumberReader reader) {
 		this.reader = reader;
+	}
+
+	public char getSeparator() {
+		return separator;
+	}
+
+	public void setSeparator(char separator) {
+		this.separator = separator;
 	}
 
 	@Override
@@ -77,7 +86,7 @@ public class CsvParser implements Closeable {
 					start = i;
 				}
 			} else if (prevQuote) {
-				if (c != ',') {
+				if (c != separator) {
 					throw new ParseException(String.format(
 							"Found character %s after \" (line %s, column %s)",
 							(char)c, lineNum, i + 1));
@@ -87,7 +96,7 @@ public class CsvParser implements Closeable {
 				stringBuilder = null;
 				prevQuote = false;
 				start = i + 1;
-			} else if (stringBuilder == null && c == ',') {
+			} else if (stringBuilder == null && c == separator) {
 				addColumn(line.substring(start, i), result);
 				atColStart = true;
 				start = i + 1;

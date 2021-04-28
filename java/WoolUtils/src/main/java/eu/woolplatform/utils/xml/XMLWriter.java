@@ -22,38 +22,28 @@
 
 package eu.woolplatform.utils.xml;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An XML writer provides convenient methods to produce XML code.
  * 
  * @author Dennis Hofs
  */
-public class XMLWriter {
+public class XMLWriter implements Closeable {
 	private String newline;
 	private BufferedWriter writer;
 	// elemStack contains open elements. The top of the stack is in front.
-	private List<String> elemStack = new ArrayList<String>();
+	private List<String> elemStack = new ArrayList<>();
 	private Position position = Position.END_ELEMENT;
 	
 	private enum Position {
@@ -72,7 +62,7 @@ public class XMLWriter {
 	 */
 	public XMLWriter(OutputStream out) throws IOException {
 		writer = new BufferedWriter(new OutputStreamWriter(out,
-				Charset.forName("UTF-8")));
+				StandardCharsets.UTF_8));
 		init();
 	}
 	
@@ -103,10 +93,9 @@ public class XMLWriter {
 	/**
 	 * Closes this XML writer.
 	 */
-	public void close() {
-		try {
-			writer.close();
-		} catch (IOException ex) {}
+	@Override
+	public void close() throws IOException {
+		writer.close();
 	}
 	
 	/**
