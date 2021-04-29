@@ -173,20 +173,14 @@ SimpleSAXHandler<T> {
 		try {
 			Method method = clazz.getMethod("values");
 			array = (Object[])method.invoke(null);
-		} catch (NoSuchMethodException ex) {
-			throw new ParseException("Can't get enum values: " +
-					ex.getMessage(), ex);
-		} catch (InvocationTargetException ex) {
-			throw new ParseException("Can't get enum values: " +
-					ex.getMessage(), ex);
-		} catch (IllegalAccessException ex) {
+		} catch (NoSuchMethodException | InvocationTargetException |
+				IllegalAccessException ex) {
 			throw new ParseException("Can't get enum values: " +
 					ex.getMessage(), ex);
 		}
 		for (Object item : array) {
-			if (item.toString().toLowerCase().equals(s.toLowerCase())) {
+			if (item.toString().equalsIgnoreCase(s))
 				return clazz.cast(item);
-			}
 		}
 		throw new ParseException("Invalid value of attribute \"" + name +
 				"\": " + s);
