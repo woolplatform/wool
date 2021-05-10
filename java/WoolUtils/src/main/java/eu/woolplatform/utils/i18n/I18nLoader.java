@@ -22,6 +22,9 @@
 
 package eu.woolplatform.utils.i18n;
 
+import eu.woolplatform.utils.AppComponents;
+import org.slf4j.Logger;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,8 +36,9 @@ import java.util.Map;
  * reference. You can get a resource set with {@link
  * #getI18n(String, Locale, boolean, Class) getI18n()}, which will try to load
  * the set at the first call. It uses {@link I18nResourceFinder
- * I18nResourceFinder} to find a matching properties file, in .properties
- * format or .xml format. Note that a .properties file will be loaded as UTF-8.
+ * I18nResourceFinder} to find a matching file, in .properties format,
+ * properties .xml format, or key-string pair .json format. Note that a
+ * .properties file will be loaded as UTF-8.
  * 
  * @author Dennis Hofs (RRD)
  */
@@ -43,7 +47,7 @@ public class I18nLoader {
 	private static I18nLoader instance = null;
 	
 	private final Object lock = new Object();
-	private Map<I18nKey,I18n> i18nMap = new HashMap<I18nKey,I18n>();
+	private Map<I18nKey,I18n> i18nMap = new HashMap<>();
 
 	/**
 	 * This private constructor is used in {@link #getInstance()
@@ -83,7 +87,7 @@ public class I18nLoader {
 	 */
 	public I18n getI18n(String baseName, Locale locale, boolean honorifics,
 			Class<?> loadClass) throws RuntimeException {
-		List<Locale> locales = new ArrayList<Locale>();
+		List<Locale> locales = new ArrayList<>();
 		locales.add(locale);
 		return getI18n(baseName, locales, honorifics, loadClass);
 	}
@@ -122,7 +126,7 @@ public class I18nLoader {
 	/**
 	 * The key in the map of i18n message resources.
 	 */
-	private class I18nKey {
+	private static class I18nKey {
 		private String baseName;
 		private List<Locale> locales;
 		private boolean honorifics;

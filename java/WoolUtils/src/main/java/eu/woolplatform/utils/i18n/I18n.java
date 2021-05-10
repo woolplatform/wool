@@ -22,25 +22,25 @@
 
 package eu.woolplatform.utils.i18n;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.woolplatform.utils.AppComponents;
+import eu.woolplatform.utils.io.ClassLoaderResourceLocator;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
-
-import eu.woolplatform.utils.AppComponents;
-import eu.woolplatform.utils.io.ClassLoaderResourceLocator;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * This class defines a set of i18n message resources. An instance of this
  * class is normally obtained from {@link I18nLoader I18nLoader}. It uses
- * {@link I18nResourceFinder I18nResourceFinder} to find a matching properties
- * file, in .properties format or .xml format. Note that a .properties file
- * will be loaded as UTF-8.
+ * {@link I18nResourceFinder I18nResourceFinder} to find a matching file,
+ * in .properties format, properties .xml format, or key-string pair .json
+ * format. Note that a .properties file will be loaded as UTF-8.
  * 
  * <p>When you have an instance, you can call {@link #get(String) get()} to
  * get message strings.</p>
@@ -55,7 +55,7 @@ public class I18n {
 	private boolean honorifics;
 	private Class<?> loadClass;
 
-	private Properties properties;
+	private Map<String,String> properties;
 	
 	/**
 	 * Constructs a new instance. It finds a matching resource (.properties or
@@ -87,7 +87,11 @@ public class I18n {
 	 * @return the message string
 	 */
 	public String get(String code) {
-		return properties.getProperty(code, code);
+		String s = properties.get(code);
+		if (s != null)
+			return s;
+		else
+			return code;
 	}
 	
 	/**
@@ -97,6 +101,7 @@ public class I18n {
 	 * resource can't be loaded
 	 */
 	private void loadMessages() throws RuntimeException {
+		Logger logger = AppComponents.getLogger(LOGTAG);
 		properties = null;
 		I18nResourceFinder finder = new I18nResourceFinder(baseName);
 		finder.setUserLocales(locales);
@@ -106,11 +111,16 @@ public class I18n {
 		try {
 			if (finder.find()) {
 				properties = loadMessagesFromProperties(finder);
-			} else {
+			}
+			if (properties == null) {
 				finder.setExtension("xml");
-				if (finder.find()) {
+				if (finder.find())
 					properties = loadMessagesFromXml(finder);
-				}
+			}
+			if (properties == null) {
+				finder.setExtension("json");
+				if (finder.find())
+					properties = loadMessagesFromJson(finder);
 			}
 		} catch (IOException ex) {
 			throw new RuntimeException("Can't read message resources from " +
@@ -118,7 +128,6 @@ public class I18n {
 		}
 		if (properties == null)
 			throw new RuntimeException("No message resources found");
-		Logger logger = AppComponents.getLogger(LOGTAG);
 		logger.info("Loaded i18n messages from resource: " + finder.getName());
 	}
 	
@@ -130,20 +139,19 @@ public class I18n {
 	 * @return the properties
 	 * @throws IOException if a reading error occurs
 	 */
-	private Properties loadMessagesFromProperties(I18nResourceFinder finder)
+	private Map<String,String> loadMessagesFromProperties(
+			I18nResourceFinder finder)
 	throws IOException {
 		Properties properties = new Properties();
-		InputStream input = finder.openStream();
-		Reader reader = null;
-		try {
-			reader = new InputStreamReader(input, "UTF-8");
+		try (Reader reader = new InputStreamReader(finder.openStream(),
+				StandardCharsets.UTF_8)) {
 			properties.load(reader);
-			return properties;
-		} finally {
-			if (reader != null)
-				reader.close();
-			else
-				input.close();
+			HashMap<String,String> map = new HashMap<>();
+			for (Object key : properties.keySet()) {
+				String strKey = (String)key;
+				map.put(strKey, properties.getProperty(strKey));
+			}
+			return map;
 		}
 	}
 	
@@ -154,15 +162,27 @@ public class I18n {
 	 * @return the properties
 	 * @throws IOException if a reading error occurs
 	 */
-	private Properties loadMessagesFromXml(I18nResourceFinder finder)
+	private Map<String,String> loadMessagesFromXml(I18nResourceFinder finder)
 	throws IOException {
 		Properties properties = new Properties();
-		InputStream input = finder.openStream();
-		try {
+		try (InputStream input = finder.openStream()) {
 			properties.loadFromXML(input);
-			return properties;
-		} finally {
-			input.close();
+			HashMap<String,String> map = new HashMap<>();
+			for (Object key : properties.keySet()) {
+				String strKey = (String)key;
+				map.put(strKey, properties.getProperty(strKey));
+			}
+			return map;
+		}
+	}
+
+	private Map<String,String> loadMessagesFromJson(I18nResourceFinder finder)
+			throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		try (Reader reader = new InputStreamReader(finder.openStream(),
+				StandardCharsets.UTF_8)) {
+			return mapper.readValue(reader,
+					new TypeReference<Map<String,String>>() {});
 		}
 	}
 }
