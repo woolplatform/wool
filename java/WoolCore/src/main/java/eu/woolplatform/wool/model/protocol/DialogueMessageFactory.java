@@ -46,7 +46,8 @@ public class DialogueMessageFactory {
 		DialogueMessage dialogueMessage = new DialogueMessage();
 		WoolNode node = executedNode.getWoolNode();
 		WoolNodeBody body = node.getBody();
-		dialogueMessage.setDialogue(executedNode.getDialogueId());
+		dialogueMessage.setDialogue(executedNode.getDialogue()
+				.getDialogueName());
 		dialogueMessage.setNode(node.getTitle());
 		dialogueMessage.setLoggedDialogueId(executedNode.getLoggedDialogueId());
 		dialogueMessage.setLoggedInteractionIndex(
@@ -92,7 +93,7 @@ public class DialogueMessageFactory {
 		if (reply.getNodePointer() instanceof WoolNodePointerInternal) {
 			WoolNodePointerInternal pointer =
 					(WoolNodePointerInternal)reply.getNodePointer();
-			if (pointer.getNodeId().toLowerCase().equals("end"))
+			if (pointer.getNodeId().equalsIgnoreCase("end"))
 				replyMsg.setEndsDialogue(true);
 		}
 		for (WoolCommand cmd : reply.getCommands()) {

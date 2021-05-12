@@ -1,23 +1,24 @@
 package eu.woolplatform.wool.execution;
 
+import eu.woolplatform.wool.model.WoolDialogue;
 import eu.woolplatform.wool.model.WoolNode;
 
 public class ExecuteNodeResult {
-	private String dialogueId;
+	private WoolDialogue dialogue;
 	private WoolNode woolNode;
 	private String loggedDialogueId;
 	private int interactionIndex;
 
-	public ExecuteNodeResult(String dialogueId, WoolNode woolNode,
+	public ExecuteNodeResult(WoolDialogue dialogue, WoolNode woolNode,
 			String loggedDialogueId, int interactionIndex) {
-		this.dialogueId = dialogueId;
+		this.dialogue = dialogue;
 		this.woolNode = woolNode;
 		this.loggedDialogueId = loggedDialogueId;
 		this.interactionIndex = interactionIndex;
 	}
 
-	public String getDialogueId() {
-		return dialogueId;
+	public WoolDialogue getDialogue() {
+		return dialogue;
 	}
 
 	public WoolNode getWoolNode() {

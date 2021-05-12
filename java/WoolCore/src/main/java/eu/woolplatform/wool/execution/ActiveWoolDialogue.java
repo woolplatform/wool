@@ -273,7 +273,7 @@ public class ActiveWoolDialogue {
 	 * @return the executed WoolNode
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	private WoolNode executeWoolNode(WoolNode woolNode, DateTime time)
+	public WoolNode executeWoolNode(WoolNode woolNode, DateTime time)
 			throws EvaluationException {
 		WoolNode processedNode = new WoolNode();
 		processedNode.setHeader(woolNode.getHeader());
