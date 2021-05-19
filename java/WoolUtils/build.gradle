@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '2.2.4'
+version = '2.2.5'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 archivesBaseName = 'wool-utils'
@@ -92,12 +92,12 @@ publishing {
 					developer {
 						id = 'hopdenakker'
 						name = 'Harm op den Akker'
-						email = 'h.opdenakker@rrd.nl'
+						email = 'hopdenakker@innovationsprint.eu'
 					}
 					developer {
 						id = 'tbeinema'
 						name = 'Tessa Beinema'
-						email = 't.beinema@rrd.nl'
+						email = 't.c.beinema@utwente.nl'
 					}					
 				}
 				

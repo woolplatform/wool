@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '2.2.4'
+version = '2.2.5'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 archivesBaseName = 'wool-core'
@@ -18,13 +18,13 @@ repositories {
 }
 
 dependencies {
-	api "eu.woolplatform:wool-utils:2.2.4"
-	api "org.slf4j:slf4j-api:1.7.25"
-	api "com.fasterxml.jackson.core:jackson-annotations:2.9.7"
-	api "com.fasterxml.jackson.core:jackson-core:2.9.7"
-	api "com.fasterxml.jackson.core:jackson-databind:2.9.7"
-	api "joda-time:joda-time:2.10.5"
-	testImplementation 'junit:junit:4.12'
+	api "eu.woolplatform:wool-utils:2.2.5"
+	api 'org.slf4j:slf4j-api:1.7.30'
+	api 'com.fasterxml.jackson.core:jackson-core:2.12.3'
+	api 'com.fasterxml.jackson.core:jackson-annotations:2.12.3'
+	api 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
+	api 'joda-time:joda-time:2.10.10'
+	testImplementation 'junit:junit:4.13.2'
 }
 
 jar {
