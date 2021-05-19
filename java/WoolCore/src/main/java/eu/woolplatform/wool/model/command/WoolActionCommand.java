@@ -49,6 +49,7 @@ import eu.woolplatform.wool.parser.WoolNodeState;
  * <ul>
  *     <li>image</li>
  *     <li>video</li>
+ *     <li>link</li>
  *     <li>generic</li>
  * </ul>
  * 
@@ -57,10 +58,11 @@ import eu.woolplatform.wool.parser.WoolNodeState;
 public class WoolActionCommand extends WoolAttributesCommand {
 	public static final String TYPE_IMAGE = "image";
 	public static final String TYPE_VIDEO = "video";
+	public static final String TYPE_LINK = "link";
 	public static final String TYPE_GENERIC = "generic";
 	
 	private static final List<String> VALID_TYPES = Arrays.asList(
-			TYPE_IMAGE, TYPE_VIDEO, TYPE_GENERIC);
+			TYPE_IMAGE, TYPE_VIDEO, TYPE_LINK, TYPE_GENERIC);
 	
 	private String type;
 	private WoolVariableString value;

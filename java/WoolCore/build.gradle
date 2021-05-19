@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '2.2.2'
+version = '2.2.4'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 archivesBaseName = 'wool-core'
@@ -18,8 +18,7 @@ repositories {
 }
 
 dependencies {
-	api project(':WoolUtils');
-//	api "eu.woolplatform:wool-utils:2.2.2"
+	api "eu.woolplatform:wool-utils:2.2.4"
 	api "org.slf4j:slf4j-api:1.7.25"
 	api "com.fasterxml.jackson.core:jackson-annotations:2.9.7"
 	api "com.fasterxml.jackson.core:jackson-core:2.9.7"
@@ -91,12 +90,12 @@ publishing {
 					developer {
 						id = 'hopdenakker'
 						name = 'Harm op den Akker'
-						email = 'h.opdenakker@rrd.nl'
+						email = 'hopdenakker@innovationsprint.eu'
 					}
 					developer {
 						id = 'tbeinema'
 						name = 'Tessa Beinema'
-						email = 't.beinema@rrd.nl'
+						email = 't.c.beinema@utwente.nl'
 					}					
 				}
 				

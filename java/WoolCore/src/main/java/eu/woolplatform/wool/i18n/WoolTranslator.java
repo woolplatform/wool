@@ -50,6 +50,7 @@ public class WoolTranslator {
 	/**
 	 * Constructs a new translator.
 	 *
+	 * @param context the translation context
 	 * @param translations the translation map
 	 */
 	public WoolTranslator(WoolTranslationContext context,

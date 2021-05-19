@@ -51,4 +51,16 @@ public class I18nUtils {
 		else
 			return new Locale(parts[0], parts[1], parts[2]);
 	}
+
+	public static String localeToLanguageTag(Locale locale) {
+		StringBuilder builder = new StringBuilder(
+				locale.getLanguage().toLowerCase());
+		if (locale.getCountry().isEmpty())
+			return builder.toString();
+		builder.append("-").append(locale.getCountry().toUpperCase());
+		if (locale.getVariant().isEmpty())
+			return builder.toString();
+		builder.append("-").append(locale.getVariant().toLowerCase());
+		return builder.toString();
+	}
 }

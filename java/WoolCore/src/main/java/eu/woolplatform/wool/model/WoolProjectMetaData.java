@@ -190,7 +190,7 @@ public class WoolProjectMetaData {
 	 * @param name the name of the source language to add.
 	 * @param code the code of the source language to add.
 	 * @throws WoolDuplicateLanguageCodeException in case a language with the given {@code code} already exists in this wool project.
-	 * @returns the newly created {@link WoolLanguageSet}
+	 * @return the newly created {@link WoolLanguageSet}
 	 */
 	public WoolLanguageSet addSourceLanguage(String name, String code) throws WoolDuplicateLanguageCodeException {
 		if(languageExists(code)) throw new WoolDuplicateLanguageCodeException("A language with the given language code '"+code+"' is already defined in this wool project.",code);
