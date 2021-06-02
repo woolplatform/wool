@@ -49,7 +49,8 @@ public class DialogueMessageFactory {
 		dialogueMessage.setDialogue(executedNode.getDialogue()
 				.getDialogueName());
 		dialogueMessage.setNode(node.getTitle());
-		dialogueMessage.setLoggedDialogueId(executedNode.getLoggedDialogueId());
+		dialogueMessage.setLoggedDialogueId(executedNode.getLoggedDialogue()
+				.getId());
 		dialogueMessage.setLoggedInteractionIndex(
 				executedNode.getInteractionIndex());
 		dialogueMessage.setSpeaker(node.getHeader().getSpeaker());

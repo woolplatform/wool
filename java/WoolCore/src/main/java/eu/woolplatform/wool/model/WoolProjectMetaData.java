@@ -263,8 +263,8 @@ public class WoolProjectMetaData {
 
 	/**
 	 * Writes this {@link WoolProjectMetaData} to file using the given {@link XMLWriter}.
-	 * @param writer
-	 * @throws IOException
+	 * @param writer the XML writer
+	 * @throws IOException if a writing error occurs
 	 */
 	public void writeXML(XMLWriter writer) throws IOException {
 		writer.writeStartElement("wool-project");
@@ -284,7 +284,7 @@ public class WoolProjectMetaData {
 	/**
 	 * Returns a {@link SimpleSAXHandler} that is able to parse the contents of an .xml file
 	 * to a {@link WoolProjectMetaData} object.
-	 * @return
+	 * @return the XMl handler
 	 */
 	public static SimpleSAXHandler<WoolProjectMetaData> getXMLHandler() {
 		return new XMLHandler();

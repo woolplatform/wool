@@ -8,17 +8,17 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '2.2.5'
+version = '2.2.6'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 archivesBaseName = 'wool-core'
 
 repositories {
-	jcenter()
+	mavenCentral()
 }
 
 dependencies {
-	api "eu.woolplatform:wool-utils:2.2.5"
+	api "eu.woolplatform:wool-utils:2.2.6"
 	api 'org.slf4j:slf4j-api:1.7.30'
 	api 'com.fasterxml.jackson.core:jackson-core:2.12.3'
 	api 'com.fasterxml.jackson.core:jackson-annotations:2.12.3'
