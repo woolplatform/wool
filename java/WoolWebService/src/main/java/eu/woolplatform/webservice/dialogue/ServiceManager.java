@@ -2,13 +2,20 @@ package eu.woolplatform.webservice.dialogue;
 
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.webservice.exception.HttpFieldError;
 import eu.woolplatform.wool.exception.WoolException;
+import eu.woolplatform.wool.i18n.WoolTranslationContext;
 import eu.woolplatform.wool.model.WoolDialogue;
 import eu.woolplatform.wool.model.WoolDialogueDescription;
 import eu.woolplatform.wool.model.WoolProject;
 import eu.woolplatform.wool.parser.WoolFileLoader;
 import eu.woolplatform.wool.parser.WoolProjectParser;
 import eu.woolplatform.wool.parser.WoolProjectParserResult;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,29 +154,55 @@ public class ServiceManager {
 	
 	// ---------- Dialogue Management:
 
-	/**
-	 * Retrieves the dialogue definition for the specified description, or throws
-	 * a {@link WoolException WoolException} with {@link
-	 * WoolException.Type#DIALOGUE_NOT_FOUND DIALOGUE_NOT_FOUND} if no such
-	 * dialogue definition exists in this service manager.
-	 * 
-	 * @param soughtDialogueDescription the sought dialogue description
-	 * @return the {@link WoolDialogue} containing the Wool dialogue representation.
-	 * @throws WoolException if the dialogue definition is not found
-	 */
-	public WoolDialogue getDialogueDefinition(WoolDialogueDescription soughtDialogueDescription) throws WoolException {
-		WoolDialogue dlg = woolProject.getDialogues().get(
-				soughtDialogueDescription);
+	public WoolDialogue getDialogueDefinition(WoolDialogueDescription descr,
+			WoolTranslationContext translationContext) throws WoolException {
+		WoolDialogue dlg;
+		if (translationContext == null)
+			dlg = woolProject.getDialogues().get(descr);
+		else
+			dlg = woolProject.getTranslatedDialogue(descr, translationContext);
 		if (dlg != null)
 			return dlg;
 		throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
-				"Pre-loaded dialogue not found for dialogue '" + soughtDialogueDescription.getDialogueName() +
-				"' in language '"+soughtDialogueDescription.getLanguage() + "'.");
+				"Pre-loaded dialogue not found for dialogue '" + descr.getDialogueName() +
+				"' in language '"+descr.getLanguage() + "'.");
 	}
 	
 	public List<WoolDialogueDescription> getAvailableDialogues() {
 		List<WoolDialogueDescription> result = new ArrayList<>();
 		result.addAll(woolProject.getDialogues().keySet());
 		return result;
+	}
+
+	public static DateTime parseTimeParameters(String time, String timezone,
+			List<HttpFieldError> errors) {
+		DateTimeZone parsedTimezone = null;
+		LocalDateTime parsedTime = null;
+		int errorsStart = errors.size();
+		if (timezone == null || timezone.length() == 0) {
+			parsedTimezone = DateTimeZone.getDefault();
+		} else {
+			try {
+				parsedTimezone = DateTimeZone.forID(timezone);
+			} catch (IllegalArgumentException ex) {
+				errors.add(new HttpFieldError("timezone",
+						"Invalid value for field \"timezone\": " + timezone));
+			}
+		}
+		if (time == null || time.length() == 0) {
+			parsedTime = new LocalDateTime(parsedTimezone);
+		} else {
+			DateTimeFormatter parser = DateTimeFormat.forPattern(
+					"yyyy-MM-dd'T'HH:mm:ss.SSS");
+			try {
+				parsedTime = parser.parseLocalDateTime(time);
+			} catch (IllegalArgumentException ex) {
+				errors.add(errorsStart, new HttpFieldError("time",
+						"Invalid value for field \"time\": " + time));
+			}
+		}
+		if (!errors.isEmpty())
+			return null;
+		return parsedTime.toDateTime(parsedTimezone);
 	}
 }
