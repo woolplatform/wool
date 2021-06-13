@@ -559,7 +559,9 @@ public abstract class TaskScheduler {
 		}
 		Throwable exception = null;
 		try {
+			logger.info("BEFORE FIXED RATE TASK: " + task);
 			task.run(context, taskId, now, scheduleParams);
+			logger.info("AFTER FIXED RATE TASK: " + task);
 		} catch (Throwable ex) {
 			exception = ex;
 		}
