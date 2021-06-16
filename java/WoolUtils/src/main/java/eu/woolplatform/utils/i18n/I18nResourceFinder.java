@@ -22,14 +22,14 @@
 
 package eu.woolplatform.utils.i18n;
 
+import eu.woolplatform.utils.io.ClassLoaderResourceLocator;
+import eu.woolplatform.utils.io.ResourceLocator;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import eu.woolplatform.utils.io.ClassLoaderResourceLocator;
-import eu.woolplatform.utils.io.ResourceLocator;
 
 /**
  * This class can find i18n resources. After construction you can set
@@ -165,17 +165,47 @@ public class I18nResourceFinder {
 	public boolean find() {
 		locale = null;
 		name = null;
+		List<FoundResource> foundList = findList();
+		if (!foundList.isEmpty()) {
+			FoundResource found = foundList.get(0);
+			this.locale = found.locale;
+			this.name = found.name;
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Finds a list of resources in order of preference that best match the
+	 * specified properties. The returned list is empty if no match is found.
+	 *
+	 * @return the found resources
+	 */
+	public List<FoundResource> findList() {
 		List<Locale> prefLocales = new ArrayList<>(userLocales);
 		prefLocales.add(Locale.UK);
 		prefLocales.add(Locale.US);
 		prefLocales.add(Locale.ENGLISH);
+		List<FoundResource> result = new ArrayList<>();
 		for (Locale locale : prefLocales) {
-			if (findResource(locale))
+			List<FoundResource> localeList = findResources(locale);
+			for (FoundResource resource : localeList) {
+				if (!containsResource(result, resource))
+					result.add(resource);
+			}
+		}
+		return result;
+	}
+
+	private boolean containsResource(List<FoundResource> list,
+			FoundResource resource) {
+		for (FoundResource other : list) {
+			if (resource.getName().equals(other.getName()))
 				return true;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * You can call this method after {@link #find() find()} returned true. It
 	 * returns the locale of the found resource. This may be different than the
@@ -208,16 +238,27 @@ public class I18nResourceFinder {
 	public InputStream openStream() throws IOException {
 		return resourceLocator.openResource(name);
 	}
+
+	/**
+	 * Opens the stream for the specified found resource.
+	 *
+	 * @param resource the found resource
+	 * @return the input stream for the resource
+	 * @throws IOException if the resource can't be opened
+	 */
+	public InputStream openStream(FoundResource resource) throws IOException {
+		return resourceLocator.openResource(resource.name);
+	}
 	
 	/**
-	 * Tries to find a resource matching the specified locale (and only that
-	 * locale). If a resource is found, it will set the member variables
-	 * "locale", "name" and "url" and it returns true.
+	 * Finds a list of resources in order of preference that best match the
+	 * specified locale (and only that locale). The returned list is empty if
+	 * no match is found.
 	 * 
 	 * @param locale the locale
-	 * @return true if a matching resource was found, false otherwise
+	 * @return the found resources
 	 */
-	private boolean findResource(Locale locale) {
+	private List<FoundResource> findResources(Locale locale) {
 		List<String> prefResources = new ArrayList<>();
 		if (locale.getCountry().length() > 0) {
 			addPrefResource(prefResources, String.format("%s_%s_%s",
@@ -231,14 +272,12 @@ public class I18nResourceFinder {
 		addPrefResource(prefResources, locale.getLanguage());
 		addPrefResource(prefResources, honorifics ? "v" : "t");
 		addPrefResource(prefResources, null);
+		List<FoundResource> result = new ArrayList<>();
 		for (String name : prefResources) {
-			if (resourceLocator.resourceExists(name)) {
-				this.locale = locale;
-				this.name = name;
-				return true;
-			}
+			if (resourceLocator.resourceExists(name))
+				result.add(new FoundResource(locale, name));
 		}
-		return false;
+		return result;
 	}
 
 	private void addPrefResource(List<String> prefResources, String tokens) {
@@ -252,5 +291,23 @@ public class I18nResourceFinder {
 		if (extension != null)
 			name += "." + extension;
 		prefResources.add(name);
+	}
+
+	public static class FoundResource {
+		private Locale locale;
+		private String name;
+
+		private FoundResource(Locale locale, String name) {
+			this.locale = locale;
+			this.name = name;
+		}
+
+		public Locale getLocale() {
+			return locale;
+		}
+
+		public String getName() {
+			return name;
+		}
 	}
 }

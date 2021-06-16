@@ -22,15 +22,15 @@
 
 package eu.woolplatform.utils.json;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * This deserializer can read a string value or null and convert it to an enum
@@ -71,13 +71,8 @@ JsonDeserializer<T> {
 					String.class);
 			Object resultObj = method.invoke(null, s);
 			result = enumClass.cast(resultObj);
-		} catch (NoSuchMethodException ex) {
-			exception = ex;
-		} catch (InvocationTargetException ex) {
-			exception = ex;
-		} catch (IllegalAccessException ex) {
-			exception = ex;
-		} catch (IllegalArgumentException ex) {
+		} catch (NoSuchMethodException | InvocationTargetException |
+				IllegalAccessException | IllegalArgumentException ex) {
 			exception = ex;
 		}
 		if (exception != null) {

@@ -55,7 +55,7 @@ public class I18n {
 	private boolean honorifics;
 	private Class<?> loadClass;
 
-	private Map<String,String> properties;
+	private List<Map<String,String>> properties = new ArrayList<>();
 	
 	/**
 	 * Constructs a new instance. It finds a matching resource (.properties or
@@ -87,11 +87,13 @@ public class I18n {
 	 * @return the message string
 	 */
 	public String get(String code) {
-		String s = properties.get(code);
-		if (s != null)
-			return s;
-		else
-			return code;
+		String s;
+		for (Map<String,String> map : properties) {
+			s = map.get(code);
+			if (s != null)
+				return s;
+		}
+		return code;
 	}
 	
 	/**
@@ -102,7 +104,7 @@ public class I18n {
 	 */
 	private void loadMessages() throws RuntimeException {
 		Logger logger = AppComponents.getLogger(LOGTAG);
-		properties = null;
+		properties = new ArrayList<>();
 		I18nResourceFinder finder = new I18nResourceFinder(baseName);
 		finder.setUserLocales(locales);
 		finder.setHonorifics(honorifics);
@@ -112,12 +114,12 @@ public class I18n {
 			if (finder.find()) {
 				properties = loadMessagesFromProperties(finder);
 			}
-			if (properties == null) {
+			if (properties.isEmpty()) {
 				finder.setExtension("xml");
 				if (finder.find())
 					properties = loadMessagesFromXml(finder);
 			}
-			if (properties == null) {
+			if (properties.isEmpty()) {
 				finder.setExtension("json");
 				if (finder.find())
 					properties = loadMessagesFromJson(finder);
@@ -126,24 +128,35 @@ public class I18n {
 			throw new RuntimeException("Can't read message resources from " +
 					finder.getName() + ": " + ex.getMessage(), ex);
 		}
-		if (properties == null)
+		if (properties.isEmpty())
 			throw new RuntimeException("No message resources found");
 		logger.info("Loaded i18n messages from resource: " + finder.getName());
 	}
-	
+
+	private List<Map<String,String>> loadMessagesFromProperties(
+			I18nResourceFinder finder) throws IOException {
+		List<Map<String,String>> result = new ArrayList<>();
+		List<I18nResourceFinder.FoundResource> resources = finder.findList();
+		for (I18nResourceFinder.FoundResource resource : resources) {
+			result.add(loadMessagesFromProperties(finder, resource));
+		}
+		return result;
+	}
+
 	/**
 	 * Loads a properties file in .properties format. The file is loaded as
 	 * UTF-8.
 	 * 
 	 * @param finder the finder where the resource was found
+	 * @param resource the found resource
 	 * @return the properties
 	 * @throws IOException if a reading error occurs
 	 */
 	private Map<String,String> loadMessagesFromProperties(
-			I18nResourceFinder finder)
-	throws IOException {
+			I18nResourceFinder finder,
+			I18nResourceFinder.FoundResource resource) throws IOException {
 		Properties properties = new Properties();
-		try (Reader reader = new InputStreamReader(finder.openStream(),
+		try (Reader reader = new InputStreamReader(finder.openStream(resource),
 				StandardCharsets.UTF_8)) {
 			properties.load(reader);
 			HashMap<String,String> map = new HashMap<>();
@@ -154,18 +167,29 @@ public class I18n {
 			return map;
 		}
 	}
-	
+
+	private List<Map<String,String>> loadMessagesFromXml(
+			I18nResourceFinder finder) throws IOException {
+		List<Map<String,String>> result = new ArrayList<>();
+		List<I18nResourceFinder.FoundResource> resources = finder.findList();
+		for (I18nResourceFinder.FoundResource resource : resources) {
+			result.add(loadMessagesFromXml(finder, resource));
+		}
+		return result;
+	}
+
 	/**
 	 * Loads a properties file in .xml format.
 	 * 
 	 * @param finder the finder where the resource was found
+	 * @param resource the found resource
 	 * @return the properties
 	 * @throws IOException if a reading error occurs
 	 */
-	private Map<String,String> loadMessagesFromXml(I18nResourceFinder finder)
-	throws IOException {
+	private Map<String,String> loadMessagesFromXml(I18nResourceFinder finder,
+			I18nResourceFinder.FoundResource resource) throws IOException {
 		Properties properties = new Properties();
-		try (InputStream input = finder.openStream()) {
+		try (InputStream input = finder.openStream(resource)) {
 			properties.loadFromXML(input);
 			HashMap<String,String> map = new HashMap<>();
 			for (Object key : properties.keySet()) {
@@ -176,10 +200,20 @@ public class I18n {
 		}
 	}
 
-	private Map<String,String> loadMessagesFromJson(I18nResourceFinder finder)
-			throws IOException {
+	private List<Map<String,String>> loadMessagesFromJson(
+			I18nResourceFinder finder) throws IOException {
+		List<Map<String,String>> result = new ArrayList<>();
+		List<I18nResourceFinder.FoundResource> resources = finder.findList();
+		for (I18nResourceFinder.FoundResource resource : resources) {
+			result.add(loadMessagesFromJson(finder, resource));
+		}
+		return result;
+	}
+
+	private Map<String,String> loadMessagesFromJson(I18nResourceFinder finder,
+			I18nResourceFinder.FoundResource resource) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
-		try (Reader reader = new InputStreamReader(finder.openStream(),
+		try (Reader reader = new InputStreamReader(finder.openStream(resource),
 				StandardCharsets.UTF_8)) {
 			return mapper.readValue(reader,
 					new TypeReference<Map<String,String>>() {});

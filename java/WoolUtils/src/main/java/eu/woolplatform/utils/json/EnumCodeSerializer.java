@@ -22,14 +22,14 @@
 
 package eu.woolplatform.utils.json;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * This serializer calls method code() on an enum and writes it as an integer
@@ -48,13 +48,8 @@ public class EnumCodeSerializer extends JsonSerializer<Enum<?>> {
 		try {
 			Method method = value.getClass().getMethod("code");
 			code = (Integer)method.invoke(value);
-		} catch (NoSuchMethodException ex) {
-			exception = ex;
-		} catch (InvocationTargetException ex) {
-			exception = ex;
-		} catch (IllegalAccessException ex) {
-			exception = ex;
-		} catch (IllegalArgumentException ex) {
+		} catch (NoSuchMethodException | InvocationTargetException |
+				IllegalAccessException | IllegalArgumentException ex) {
 			exception = ex;
 		}
 		if (exception != null) {
