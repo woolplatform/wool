@@ -45,7 +45,7 @@ FileSystem.prototype.mkdirSync = function(path) {}
 // callback - function(err)
 FileSystem.prototype.renameFile = function(oldpath,newpath,safe,callback) {}
 
-FileSystem.prototype.getPathAPI = function(path) {}
+FileSystem.prototype.getPathAPI = function(path) { return { sep: "/"} }
 
 
 // ------------------------------------------------------------------
@@ -66,8 +66,13 @@ NodeFileSystem.prototype.readFile = function(path,blob,callback){
 	}
 }
 
-NodeFileSystem.prototype.readFileSync = function(path,blob,callback){
-	return this.fs.readFileSync(path, "utf-8");
+NodeFileSystem.prototype.readFileSync = function(path,blob,callback) {
+	try {
+		return this.fs.readFileSync(path, "utf-8");
+	} catch (err) {
+		if (callback) callback(err);
+		return null;
+	}
 }
 
 NodeFileSystem.prototype.writeFile = function(path,data,callback) {
@@ -121,11 +126,11 @@ NodeFileSystem.prototype.existsSync = function(path) {
 }
 
 NodeFileSystem.prototype.mkdir = function(path,callback) {
-	return this.fs.mkdir(path,callback);
+	return this.fs.mkdir(path,{recursive:true},callback);
 }
 
 NodeFileSystem.prototype.mkdirSync = function(path) {
-	return this.fs.mkdirSync(path);
+	return this.fs.mkdirSync(path,{recursive:true});
 }
 
 

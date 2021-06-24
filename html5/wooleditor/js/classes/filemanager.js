@@ -1,8 +1,12 @@
-function FileManager() {
+// dirtreeUpdatedCallback: function(dirtree)
+function FileManager(dirtreeUpdatedCallback) {
 	this.jsTreeInited=false;
 	// indicates that next move_node is undo operation
 	this.revertingMove = false;
 	this.dirsSelectedCallback = null;
+	// { <path>: { type: "FILE"/"DIR", name: <string>, content: [] }
+	this.dirtree = { };
+	this.dirtreeUpdatedCallback = dirtreeUpdatedCallback;
 }
 
 FileManager.prototype.getRoot = function() {
@@ -44,12 +48,30 @@ FileManager.prototype.updateDirTree  = function() {
 		}
 		// convert ["FILE"/"DIR",name,fullpath] to
 		// [id:fullpath,text:name,parent,icon]
+		self.dirtree = { };
 		var jstdata = [];
 		for (var i=0; i<res.length; i++) {
 			var item = res[i];
 			var basedir = item[2].substring(0,
 				item[2].length - item[1].length - 1);
 			if (basedir.length == 0) basedir = "#";
+			if (!self.dirtree[basedir]) {
+				self.dirtree[basedir] = {
+					type: "DIR",
+					content: [item[2]],
+				};
+			} else {
+				self.dirtree[basedir].content.push(item[2]);
+			}
+			if (!self.dirtree[item[2]]) {
+				self.dirtree[item[2]] = {
+					type: item[0],
+					name: item[1],
+					content: [],
+				}
+			} else {
+				self.dirtree[item[2]].name = item[1];
+			}
 			jstdata.push({
 				id: item[2],
 				text: item[1],
@@ -57,7 +79,8 @@ FileManager.prototype.updateDirTree  = function() {
 				icon: item[0]=="DIR" ? "jstreedir":"jstreefile",
 			});
 		}
-		if (!this.jsTreeInited) {
+
+		if (!self.jsTreeInited) {
 			//$.jstree.defaults.unique.duplicate = function(name,counter) {
 			//	console.log("!!"+name+"#"+counter);
 			//};
@@ -140,10 +163,11 @@ FileManager.prototype.updateDirTree  = function() {
 					// create folder
 					app.fs.mkdir(data.appendRoot(nodedata.node.id),
 						function(err) {
-							if (err) {
-								alert("Error creating folder.");
-								// TODO remove from jstree
-							}
+							self.doCreateFile(err,nodedata.node);
+							//if (err) {
+							//	alert("Error creating folder.");
+							//	// TODO remove from jstree
+							//}
 						} );
 				} else if (nodedata.node.original._sourceid) {
 					// copy file
@@ -172,6 +196,12 @@ FileManager.prototype.updateDirTree  = function() {
 						// ignore error
 					}
 				);
+				// update dirtree
+				delete self.dirtree[nodedata.node.id];
+				self.refreshDirtreeRefs();
+				if (self.dirtreeUpdatedCallback) {
+					self.dirtreeUpdatedCallback(self.dirtree);
+				}
 				console.log(nodedata);
 			}).on("move_node.jstree", function(e,nodedata) {
 				console.log("move_node");
@@ -184,7 +214,7 @@ FileManager.prototype.updateDirTree  = function() {
 				var id = nodedata.node.id;
 				var text = nodedata.node.text;
 				var newdir = nodedata.parent;
-				var newpath = newdir + "/" + text;
+				var newpath = newdir + app.fs.getPathAPI().sep + text;
 				if (confirm("Move file '"+id+"' to "+newdir+"?")) {
 					app.fs.renameFile(
 						data.appendRoot(id),
@@ -198,13 +228,29 @@ FileManager.prototype.updateDirTree  = function() {
 					self.doRenameFile(true,nodedata.node,text,id,newpath);
 				}
 			});
-			this.jsTreeInited=true;
+			self.jsTreeInited=true;
 		}
-		console.log(jstdata);
 		$('#filetree').jstree(true).settings.core.data=jstdata;
 		$('#filetree').jstree(true).refresh();
+		if (self.dirtreeUpdatedCallback) {
+			self.dirtreeUpdatedCallback(self.dirtree);
+		}
 	});
 }
+
+// refresh this.dirtree content fields
+FileManager.prototype.refreshDirtreeRefs = function() {
+	for (var path in this.dirtree) {
+		this.dirtree[path].content = [];
+	}
+	for (var path in this.dirtree) {
+		if (path == "#") continue;
+		var filename = this.dirtree[path].name;
+		var theparent = FileManager.getDir(path,filename,true);
+		this.dirtree[theparent].content.push(path);
+	}
+}
+
 
 // get directory of node, given id (full path) and text (filename)
 FileManager.getDir = function(id,text,noTrailingSeparator) {
@@ -249,14 +295,14 @@ FileManager.createUniqueFile = function(dir,dirwithsep,text) {
 
 FileManager.getBaseFilename = function(id) {
 	var dotpos = id.lastIndexOf(".");
-	var slashpos = id.lastIndexOf("/");
+	var slashpos = id.lastIndexOf(app.fs.getPathAPI().sep);
 	if (dotpos == -1 || dotpos < slashpos) return id;
 	return id.substring(0,dotpos);
 }
 
 FileManager.getFileExtension = function(id) {
 	var dotpos = id.lastIndexOf(".");
-	var slashpos = id.lastIndexOf("/");
+	var slashpos = id.lastIndexOf(app.fs.getPathAPI().sep);
 	if (dotpos == -1 || dotpos < slashpos) return "";
 	return id.substring(dotpos);
 }
@@ -277,21 +323,44 @@ FileManager.prototype.doRenameFile = function(err,node,oldtext,oldpath,newpath){
 		if (App.getCurrentPath(true) == oldpath) {
 			app.setCurrentPath(newpath);
 		}
-		// update jstree
+		// update jstree and dirtree
 		$('#filetree').jstree(true).set_id(node, newpath);
 		if (node.icon == "jstreedir") {
 			this.updateDirTree();
+		} else {
+			if (oldpath != newpath) {
+				this.dirtree[newpath] = {
+					type: node.icon=="jstreefile" ? "FILE" : "DIR",
+					name: node.text,
+					content: this.dirtree[oldpath].content,
+				}
+				delete this.dirtree[oldpath];
+				this.refreshDirtreeRefs();
+				if (this.dirtreeUpdatedCallback) {
+					this.dirtreeUpdatedCallback(this.dirtree);
+				}
+			}
 		}
 	}
 }
 
+// called afer creating file or dir
 FileManager.prototype.doCreateFile = function(err,node){
 	if (err) {
 		// revert jstree changes
 		$('#filetree').jstree(true).delete_node(node);
-		alert("Error creating file: "+err);
+		alert("Error creating file or folder: "+err);
 	} else {
-		// success -> nothing needs to be done
+		// success -> nothing needs to be done in jstree
+		this.dirtree[node.id] = {
+			type: node.icon=="jstreefile" ? "FILE" : "DIR",
+			name: node.text,
+			content: [],
+		};
+		this.refreshDirtreeRefs();
+		if (this.dirtreeUpdatedCallback) {
+			this.dirtreeUpdatedCallback(this.dirtree);
+		}
 	}
 }
 
@@ -308,9 +377,9 @@ FileManager.prototype.createContextMenu = function(node) {
 					var dir = $(node).attr("id");
 					var text = "New File.wool";
 					var filename = FileManager.createUniqueFile(dir,
-						dir + "/", text);
+						dir + app.fs.getPathAPI().sep  , text);
 					tree.create_node(dir, {
-						id: dir + "/" + filename,
+						id: dir + app.fs.getPathAPI().sep + filename,
 						text: filename,
 						icon: "jstreefile",
 					});
@@ -334,9 +403,9 @@ FileManager.prototype.createContextMenu = function(node) {
 					var dir = $(node).attr("id");
 					var text = "New Folder";
 					var filename = FileManager.createUniqueFile(dir,
-						dir + "/", text);
+						dir + app.fs.getPathAPI().sep, text);
 					tree.create_node(dir, {
-						id: dir + "/" + filename,
+						id: dir + app.fs.getPathAPI().sep + filename,
 						text: filename,
 						icon: "jstreedir",
 					});

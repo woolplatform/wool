@@ -145,6 +145,7 @@ function WoolNodeContext(vars) {
 	this.afreply = null;
 	this.inputreply = null;
 	this.choices = [];
+    this.pendingActions = [];
 
 	this.randomvalues = []; // [ID -> value]
 	this.addLine = function(line,speaker) {
@@ -189,7 +190,8 @@ function WoolNodeContext(vars) {
 		});
 	}
 	this.doAction = function(params) {
-		alert("Action called: "+JSON.stringify(params));
+		console.log("Action called: "+JSON.stringify(params));
+        this.pendingActions.push(params)
 	}
 	this.setRandom = function(id,min,max) {
 		this.randomvalues[id] = min + Math.random()*(max-min);
@@ -204,6 +206,9 @@ function WoolNodeContext(vars) {
 // texts - can be used for translation.  The node's text lines are trimmed,
 //         with \n added to each line.
 //         XXX translation of strings with substitute vars is not supported yet!
+// agenttexts - subset of texts spoken by agent
+// usertexts - subset of texts spoken by agent (note: can have overlap with
+//             agenttexts)
 function WoolNode(dialogue,lines) {
 	//console.log("Created node! Lines:"+lines.length);
 	var self=this;
@@ -230,6 +235,8 @@ function WoolNode(dialogue,lines) {
 	this.errors = []; // array of {level, line, msg}
 	this.links = []; // array of {linenr,nodename}, used for editor
 	this.texts = {}; // array { <text> => true}, for translation
+	this.agenttexts = {}; // array { <text> => true}, for translation
+	this.usertexts = {}; // array { <text> => true}, for translation
 	var inBody=false;
 	for (var i=0; i<lines.length; i++) {
 		var line = lines[i];
@@ -460,6 +467,7 @@ function WoolNode(dialogue,lines) {
 			if (alllines) {
 				// flush text in between conditionals
 				this.texts[alllines.trim()] = true;
+				this.agenttexts[alllines.trim()] = true;
 				addlineprefix = "C.newTextBlock();";
 				alllines=""
 			}
@@ -500,6 +508,7 @@ function WoolNode(dialogue,lines) {
 				// flush text in between conditionals
 				addlineprefix = "C.newTextBlock();";
 				this.texts[alllines.trim()] = true;
+				this.agenttexts[alllines.trim()] = true;
 				alllines=""
 			}
 			endRandom();
@@ -512,6 +521,7 @@ function WoolNode(dialogue,lines) {
 				// flush text in between conditionals
 				addlineprefix = "C.newTextBlock();";
 				this.texts[alllines.trim()] = true;
+				this.agenttexts[alllines.trim()] = true;
 				alllines=""
 			}
 			checkExpressionForSingleEquals(matches[2], i);
@@ -527,6 +537,7 @@ function WoolNode(dialogue,lines) {
 				// flush text in between conditionals
 				addlineprefix = "C.newTextBlock();";
 				this.texts[alllines.trim()] = true;
+				this.agenttexts[alllines.trim()] = true;
 				alllines=""
 			}
 			this.body[i] = "} else {";
@@ -538,6 +549,7 @@ function WoolNode(dialogue,lines) {
 				// flush text in between conditionals
 				addlineprefix = "C.newTextBlock();";
 				this.texts[alllines.trim()] = true;
+				this.agenttexts[alllines.trim()] = true;
 				alllines=""
 			}
 			this.body[i] = "}";
@@ -597,7 +609,14 @@ function WoolNode(dialogue,lines) {
 		if (matches) {
 			// XXX textinput also accepts min, max
 			var desc = matches[1];
-			if (__) desc = __(desc);
+			if (__) {
+				var origdesc = desc;
+				desc = __("_user|"+origdesc);
+				// not found? try without context
+				if (desc == origdesc) {
+					desc = __(origdesc);
+				}
+			}
 			var optid = matches[2];
 			var actionsstr = matches[3];
 			this.links.push({line:i,node:optid});
@@ -660,6 +679,7 @@ function WoolNode(dialogue,lines) {
 					continue;
 				}
 				this.texts[textSegment] = true;
+				this.usertexts[textSegment] = true;
 				this.body[i] = "C.addInputReply('"
 					+optid+"',"
 					+JSON.stringify(beforeText)+",'"
@@ -673,6 +693,7 @@ function WoolNode(dialogue,lines) {
 				continue;
 			} else {
 				this.texts[desc] = true;
+				this.usertexts[desc] = true;
 				this.body[i] = "C.addReplyChoice("
 					+JSON.stringify(optid)+","
 					+JSON.stringify(desc)+","
@@ -718,7 +739,10 @@ function WoolNode(dialogue,lines) {
 			continue;
 		}
 	}
-	if (alllines) this.texts[alllines.trim()] = true;
+	if (alllines) {
+		this.texts[alllines.trim()] = true;
+		this.agenttexts[alllines.trim()] = true;
+	}
 	//console.log("Parsing function:");
 	//console.log(this.body.join("\n"));
 	// turn code into function
@@ -780,19 +804,34 @@ function directServerLoadNodeDialogue(dialogueID,filepath,overwrite) {
 	return data;
 }
 
-function directServerGetPath(newPath) {
+function directServerLoadNodeTranslation(filepath) {
+	console.log("Loading translation: "+filepath);
+    if (typeof NodeFileSystem == "undefined") return;
+	var fs = new NodeFileSystem();
+	var langDefs = fs.readFileSync(filepath);
+	_i18n.clearDictionary("nl");
+	if (langDefs) _i18n.ReadJSONFromString(langDefs,"nl");
+}
+
+function directServerGetPath(newPath,languageCode) {
     if (typeof NodeFileSystem == "undefined") return newPath;
+	if (!languageCode) languageCode = "en";
     var fs = new NodeFileSystem();
     if (newPath.indexOf("/") != 0 && newPath.indexOf("\\") != 0) {
         // relative path
         var curPath=fs.getPathAPI().dirname(directServer.currentdialogueId);
+		// replace top level directory
+		if (curPath.startsWith("/"+directServer.defaultLanguage)
+		||  curPath.startsWith("\\"+directServer.defaultLanguage) ) {
+			curPath = "/" + languageCode 
+				+ curPath.substring(directServer.defaultLanguage.length+1);
+		}
         newPath = fs.getPathAPI().normalize(fs.getPathAPI().join(
             "/", curPath, newPath) );
     } else {
         // absolute path -> add language
-        // TODO define alternative language code
         newPath = fs.getPathAPI().normalize(fs.getPathAPI().join(
-            "/","en",newPath) );
+            "/",languageCode,newPath) );
     }
     return newPath;
 }
@@ -852,6 +891,5 @@ function directServerLoadDialogues(callback) {
 		}
 	});
 }
-
 
 

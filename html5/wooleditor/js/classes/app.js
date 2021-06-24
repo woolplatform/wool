@@ -10,6 +10,13 @@ var App = function(name, version, filename) {
 	this.editing = ko.observable(null);
 	this.editor = null; // ace editor object
 	this.deleting = ko.observable(null);
+	this.translating = ko.observable(null);
+	this.languages = ko.observableArray([]);
+	this.defaultLanguage = ko.observable(
+		localStorage.getItem(App.LOCALSTORAGEPREFIX+"defaultlanguage") );
+	this.selectedLanguage = ko.observable(
+		localStorage.getItem(App.LOCALSTORAGEPREFIX+"language") );
+	this.editingAgent= ko.observable(null);
 	this.nodes = ko.observableArray([]);
 	this.cachedScale = 1;
 	this.canvas;
@@ -45,6 +52,7 @@ var App = function(name, version, filename) {
 
 	this.$searchField = $(".search-field");
 
+	this.metadata = new Metadata();
 
 	// node-webkit
 	this.isNwjs = detectNodeJS();
@@ -60,8 +68,9 @@ var App = function(name, version, filename) {
 		return "("+nr+" node"+(nr==1 ? "" : "s")+")";
 	}
 
-	this.closeEditor = function() {
+	this.closeEditors = function() {
 		self.editing(null);
+		self.translating(null);
 	}
 
 	this.getBasicLanguages = function(){
@@ -478,7 +487,7 @@ var App = function(name, version, filename) {
         });
         
 		this.domroot.on('keydown', function(e) {
-			if (self.editing() || self.$searchField.is(':focus') || e.ctrlKey || e.metaKey) return;                                                    
+			if (self.translating() || self.editing() || self.$searchField.is(':focus') || e.ctrlKey || e.metaKey) return;                                                    
 			var scale = self.cachedScale || 1,
 				movement = scale * 400;
 
@@ -561,10 +570,6 @@ var App = function(name, version, filename) {
 		self.translate();
 
 	} // this.run()
-
-	this.clearLangDefs = function() {
-		localStorage.removeItem(App.LOCALSTORAGEPREFIX+"langDefs");
-	}
 
 	this.getNodesConnectedTo = function(toNode)
 	{
@@ -1500,7 +1505,7 @@ var App = function(name, version, filename) {
 		var content = data.getSaveData(FILETYPE.WOOL);
 		window.name = JSON.stringify({
 			sourceCode: content,
-			langDefs: localStorage.getItem(App.LOCALSTORAGEPREFIX+"langDefs"),
+			langDefs: self.getLangDefs(),
 		});
 		//var elem = document.getElementById("woolclient-popup");
 		//elem.style.display="block";
@@ -1583,6 +1588,282 @@ var App = function(name, version, filename) {
 		this.filename(dnewpath);
 		localStorage.setItem(App.LOCALSTORAGEPREFIX+"path", dnewpath);
 		this.refreshWindowTitle();
+	}
+
+	/* Translation --------------------------------------- */
+	/* Current language defs and phrases are stored in localStorage.
+	 * For Desktop, every time a new wool file or a language is selected,
+	 * it tries to load the corresponding json file, and store the results
+	 * in localStorage. */
+
+	// localStorage -------------------------------------------------
+
+	this.clearLangDefs = function() {
+		localStorage.removeItem(App.LOCALSTORAGEPREFIX+"langDefs");
+	}
+	this.setLangDefs = function(data) {
+		localStorage.setItem(App.LOCALSTORAGEPREFIX+"langDefs",data);
+	}
+	this.getLangDefs = function(jsonify) {
+		var langDefs = localStorage.getItem(App.LOCALSTORAGEPREFIX+"langDefs");
+		if (!jsonify) return langDefs;
+		if (langDefs) {
+			langDefs = JSON.parse(langDefs);
+		} else {
+			langDefs = {};
+		}
+		return langDefs;
+	}
+
+	// misc translation functions ------------------------------------------
+
+	this.getTranslationJsonPath = function() {
+		var woolpath = App.getCurrentPath();
+		var jsonpath = self.selectedLanguage()
+			+ woolpath.substring(self.defaultLanguage().length)
+			+ ".json";
+		//jsonpath = jsonpath.replace(/[.]wool$/i, ".json");
+		return jsonpath;
+	}
+
+	// Called when language or wool file changed. If language is
+	// default language, clears langDefs.
+	this.loadLangDefsFromJSON = function() {
+		if (!app.isNwjs) return;
+		if (self.selectedLanguage() == self.defaultLanguage()) {
+			self.clearLangDefs();
+		} else {
+			var jsonpath = self.getTranslationJsonPath();
+			app.fs.readFile(data.appendRoot(jsonpath), null,
+				function(error,contents) {
+					if (error) {
+						self.clearLangDefs();
+						alert("Could not load translation json file '"
+							+jsonpath+"'.");
+					} else {
+						console.log("Loaded translation file "+jsonpath);
+						self.setLangDefs(contents);
+					}
+				}
+			);
+			
+		}
+	}
+
+	// called when FileManager updated its dir tree. 
+	// Updates languages, defaultLanguage, selectedLanguage
+	this.dirtreeUpdated = function(dirtree) {
+		console.log("Dirtree updated. Getting languages.");
+		var rootcontents = dirtree["#"].content;
+		var languages = [];
+		var foundSelected = false;
+		var foundDefault = false;
+		var newDefault = false;
+		var nrWoolFilesInDefault = -1;
+		for (var idx in rootcontents) {
+			var dir = rootcontents[idx];
+			if (dirtree[dir].type != "DIR") continue;
+			languages.push(dir);
+			// count wool files in subtree
+			var nrWoolFiles = 0;
+			for (var path in dirtree) {
+				if (path.startsWith(dir)&&path.toLowerCase().endsWith(".wool"))
+					nrWoolFiles++;
+			}
+			console.log("nrWoolFiles in "+dir+"="+nrWoolFiles);
+			if (nrWoolFiles > nrWoolFilesInDefault) {
+				newDefault = dir;
+				nrWoolFilesInDefault = nrWoolFiles;
+			}
+			if (self.selectedLanguage() == dir) foundSelected = true;
+			// first language found is new default if needed
+		}
+		if (newDefault) {
+			self.defaultLanguage(newDefault);
+			localStorage.setItem(App.LOCALSTORAGEPREFIX+"defaultlanguage",
+				newDefault);
+			console.log("Default language is set to "+newDefault);
+		}
+		// make sure selectLanguage is called
+		if (!foundSelected && newDefault) {
+			self.selectLanguage(newDefault);
+		} else {
+			self.selectLanguage(self.selectedLanguage());
+		}
+		self.languages(languages);
+	}
+
+	// split translation term, returns {context, phrase}
+	this.parseGettextPhrase = function(string) {
+		var textspkr = string.split("|");
+		if (textspkr.length == 1) return {
+			context: "",
+			phrase: string,
+		};
+		var context = textspkr.shift();
+		var phrase = textspkr.join("|");
+		return {
+			context: context,
+			phrase: phrase,
+		};
+	}
+
+
+	// translation UI --------------------------------------------------
+
+	// call if language is selected, editor is inited, filetree is refreshed
+	this.selectLanguage = function(lang) {
+		console.log("Language selected: "+lang);
+		localStorage.setItem(App.LOCALSTORAGEPREFIX+"language", lang);
+		self.selectedLanguage(lang);
+		self.loadLangDefsFromJSON();
+	}
+
+	/* Get translation nodes for editor screen
+	* Context flags:
+	* - formal / informal
+	* - male_speaker / female_speaker
+	* - male_addressee / female_addressee
+	* Phrase metadata:
+	* - source nodes
+	* - agent or user (name of agent can be derived from source node)
+	* Same phrase can be in multiple nodes, but can also be uttered by
+	* the user and multiple agents.  The front end knows the speaker and
+	* recipient for each phrase, so it can add the appropriate context.
+	*/
+	this.getTranslationNodes = function() {
+		var nodes = self.nodes();
+		var ret = [];
+		for (var i in nodes) {
+			var node = nodes[i];
+			if (node.title() == "End") continue;
+			node.compile(true);
+			node.getTextsForTranslation();
+			ret.push(nodes[i]);
+		}
+		// get orphaned translations
+		var orphans = [];
+		var langDefs = app.getLangDefs(true);
+		for (text in langDefs) {
+			if (self.langDefMarks[text]) continue;
+			var textspkr = app.parseGettextPhrase(text);
+			if (langDefs[text] == "") continue;
+			orphans.push({
+				speaker: textspkr.context ? textspkr.context : "UNKNOWN",
+				source: textspkr.phrase,
+				translation: ko.observable(langDefs[text]),
+			});
+		}
+		// orphaned translations are in a mock node for KO template's sake
+		if (orphans.length > 0) {
+			var orphansNode = {
+				isOrphansNode: true,
+				title: "Orphaned translations",
+				//compile: function(force) {/* dummy */},
+				//getTextsForTranslation: function() { /* dummy */},
+				translationTexts: ko.observableArray(orphans),
+			};
+			ret.push(orphansNode);
+			self.translationOrphansNode = orphansNode;
+		} else {
+			self.translationOrphansNode = null;
+		}
+		return ret;
+	}
+	this.startTranslating = function() {
+		if (this.defaultLanguage() == this.selectedLanguage()) {
+			alert("Please set language other than '"
+				+this.defaultLanguage()+"'");
+			return;
+		}
+		self.clearLangDefMarks();
+		self.translating(true);
+	}
+	this.saveTranslation = function() {
+		// copy nodes into new array and add orphans node if applicable
+		var nodes0 = self.nodes();
+		var nodes = [];
+		for (var i in nodes0) {
+			if (nodes0[i].title() == "End") continue;
+			nodes.push(nodes0[i]);
+		}
+		if (self.translationOrphansNode)
+			nodes.push(self.translationOrphansNode);
+		var jsondefs = {};
+		for (var i in nodes) {
+			var texts = nodes[i].translationTexts();
+			for (var j in texts) {
+				// delete empty texts when in orphans node
+				if (nodes[i].isOrphansNode && texts[j].translation()=="")
+					continue;
+				jsondefs[texts[j].speaker+"|"+texts[j].source] = 
+					texts[j].translation();
+			}
+		}
+		var jsonpath = self.getTranslationJsonPath();
+		var jsonpathdir = app.fs.getPathAPI().dirname(jsonpath);
+		var jsonstring = JSON.stringify(jsondefs, null, 4);
+		self.setLangDefs(jsonstring);
+		// make sure directory exists
+		app.fs.mkdirSync(data.appendRoot(jsonpathdir));
+		app.fs.writeFile(data.appendRoot(jsonpath),
+			jsonstring,
+			function(err) {
+				if (err) {
+					alert("Error saving translation: "+err);
+				} else {
+					alert("Translation saved.");
+					if (filemgr) filemgr.updateDirTree();
+				}
+			}
+		);
+		this.translating(null);
+	}
+	this.discardTranslation = function() {
+		var accept = confirm("Discard changes?");
+		if (!accept) return;
+		this.translating(null);
+
+	}
+	// clear marks
+	this.clearLangDefMarks = function() {
+		self.langDefMarks = {};
+	}
+	// langDefs - {phrase:translation}, phrase can be with or w/o speaker
+	// context.
+	// return translation, or "" if none found
+	this.getAndMarkLangDef = function(langDefs,speaker,text) {
+		if (!speaker) speaker = "UNKNOWN";
+		var trans = langDefs[speaker+"|"+text];
+		if (trans) {
+			self.langDefMarks[speaker+"|"+text] = true;
+		} else {
+			trans = langDefs[text];
+			if (trans) {
+				self.langDefMarks[text] = true;
+			}
+		}
+		if (!trans) trans = "";
+		return trans;
+	}
+
+
+	/* Agents (unused) --------------------------------------- */
+
+	this.editAgent = function(agentname) {
+		var agent = this.metadata.getAgent(agentname);
+		if (!agent) {
+			agent = new AgentProperties(agentname,"dynamic",agentname);
+			this.metadata.addAgent(agent);
+		}
+		this.editingAgent(this.metadata.getAgent(agentname));
+	}
+	/* not used yet */
+	this.saveAgent = function() {
+		alert("Save agent");
+		this.metadata.addAgent(this.editingAgent());
+		this.metadata.save(data.getRoot())
+		this.editingAgent(null);
 	}
 }
 

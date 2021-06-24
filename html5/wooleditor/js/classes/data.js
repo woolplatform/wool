@@ -24,7 +24,7 @@ var data =
 
 	readFile: function(e, filename, clearNodes, element) {
 		// make sure editor is not open with old file
-		app.closeEditor();
+		app.closeEditors();
 		app.showWaitSpinner(true);
 		app.fs.readFile(this.appendRoot(filename),
 			element ? element[0].files[0] : null,
@@ -75,6 +75,7 @@ var data =
 		data.readFile(e, filename, true, element);
 		if ( (e && !app.isNwjs) || !e) app.setCurrentPath(filename);
 
+		app.loadLangDefsFromJSON();
 		app.resetUIState();
 		app.refreshWindowTitle(filename);
 	},
@@ -84,7 +85,7 @@ var data =
 			if (err) {
 				alert("Error reading file");
 			} else {
-				localStorage.setItem(App.LOCALSTORAGEPREFIX+"langDefs",data);
+				app.setLangDefs(data);
 				alert("Loaded language definitions.");
 			}
 		});
@@ -412,6 +413,7 @@ var data =
 				output += JSON.stringify(text)+"\n";
 			}
 		} else if (type == FILETYPE.JSON) {
+			// filetype json indicates POEditor terms
 			//output = JSON.stringify(content, null, "\t");
 			alltexts = {};
 			for (var i = 0; i < nodes.length; i ++) {
@@ -620,7 +622,7 @@ var data =
 	},
 
 	clearDictionary: function() {
-		localStorage.removeItem(App.LOCALSTORAGEPREFIX+"langDefs");
+		app.clearLangDefs();
 		alert("Removed translations");
 	},
 

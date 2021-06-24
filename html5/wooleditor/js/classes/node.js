@@ -507,10 +507,65 @@ var Node = function() {
 		return errs.length > 0 || self.linkedToUndefined.length > 0
 			|| self.checkDuplicateTitles();
 	}
+
+	// translation ---------------------------------------------------------
+
+	// called when user edits translation. Updates any copies of this
+	// translation in other nodes.
+	// "this" is translationTexts element {speaker,source,translation}
+	this.updateTranslation = function(value) {
+		var nodes = app.nodes();
+		for (var i in nodes) {
+			if (nodes[i].translationTexts) {
+				//console.log("Updating node:"+nodes[i].title());
+				var texts =  nodes[i].translationTexts();
+				for (var j in texts) {
+					if (texts[j].source != this.source) continue;
+					if (texts[j].speaker != this.speaker) continue;
+					// speaker and source matches => update translation
+					texts[j].translation(value);
+				}
+			}
+		}
+		//console.log(this.speaker+"|"+this.source);
+	}
+	// defines translationTexts
+	// make sure compiledNode is defined before calling (i.e. call compile())
+	this.getTextsForTranslation = function() {
+		var langDefs = app.getLangDefs(true);
+		var ret = [];
+		for (var text in self.compiledNode.agenttexts) {
+			if (text == "") continue;
+			var translation=app.getAndMarkLangDef(langDefs,self.speaker(),text);
+			// XXX "text" seems to be a predefined field in KO
+			var elem = {
+				speaker: self.speaker() ? self.speaker() : "UNKNOWN",
+				source: text,
+				translation: ko.observable(translation),
+			};
+			elem.translation.subscribe(self.updateTranslation,elem);
+			ret.push(elem);
+		}
+		for (var text in self.compiledNode.usertexts) {
+			if (text == "") continue;
+			var translation=app.getAndMarkLangDef(langDefs,"_user",text);
+			// XXX "text" seems to be a predefined field in KO
+			var elem = {
+				speaker: "_user",
+				source: text,
+				translation: ko.observable(translation),
+			};
+			elem.translation.subscribe(self.updateTranslation,elem);
+			ret.push(elem);
+		}
+		self.translationTexts = ko.observableArray(ret);
+	}
 }
 
-ko.bindingHandlers.nodeBind = 
-{
+
+// KO handlers ------------------------------------------------------
+
+ko.bindingHandlers.nodeBind = {
 	init: function(element, valueAccessor, allBindings, viewModel, bindingContext) 
 	{
 		bindingContext.$rawData.element = element;
@@ -522,3 +577,5 @@ ko.bindingHandlers.nodeBind =
 		$(element).on("mousedown", function() { Utils.pushToTop($(element)); });
 	}
 };
+
+

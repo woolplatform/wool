@@ -35,6 +35,7 @@
 
 	<!-- various models / classes -->
 	<script type="text/javascript" src="../lib/filesystem.js"></script>
+	<script type="text/javascript" src="../lib/metadata.js"></script>
 	<script type="text/javascript" src="js/classes/app.js"></script>
 	<script type="text/javascript" src="js/classes/data.js"></script>
 	<script type="text/javascript" src="js/classes/utils.js"></script>
@@ -405,6 +406,10 @@
 					<div class="dropdown">
 						<span class="item" data-bind="click: app.runDialogue">(Re)start</span>
 						<span class="item" data-bind="click: app.contDialogue">Continue</span>
+						<span class="sep">Selected Language</span>
+				  		<!-- ko foreach: { data: app.languages, as: 'lang' } -->
+						<span class="item" data-bind="text: lang, click: app.selectLanguage, css: { active: lang == app.selectedLanguage() }"></span>
+						<!-- /ko -->
 					</div>
 				</div>
 				<div class="menu">
@@ -426,9 +431,10 @@
 						<!--<span class="item" data-bind="click: data.tryOpenFolder">Open Folder...</span>-->
 						<span class="item" data-bind="click: data.tryAppend">Append...</span>
 						<a class="item" download="file.wool" href='#' onclick="return data.saveFileDialog(this,FILETYPE.WOOL,data.getSaveData(FILETYPE.WOOL));">Save...</a>
+						<span class="item" data-bind="click: app.startTranslating">Translate...</span>
 						<a class="item" download="file.csv" href='#' onclick="data.saveFileDialog(this,FILETYPE.JSON,data.getSaveData(FILETYPE.JSON));">Export Poeditor Terms</a>
 						<span class="item" data-bind="click: data.tryOpenLang">Load Translation</span>
-						<span class="item" data-bind="click: data.clearDictionary">Remove Translations</span>
+						<span class="item" data-bind="click: data.clearDictionary">Remove Translation</span>
 						<!-- ko if:data.editingPath() != null -->
 						<!--
 						<span class="item" data-bind="click: data.trySaveCurrent">Save</span>
@@ -547,6 +553,60 @@
 			</div>
 			<!-- /ko -->
 
+			<!-- ko if:app.translating() != null -->
+			<div class="translate">
+
+				<div class="form" data-bind="preventBubble: 'click'">
+
+				  <div class="" data-bind="foreach: { data: app.getTranslationNodes(), as: 'node' }">
+				    <div class="translate-title" data-bind="html: node.title"></div>
+					<div class="" data-bind="
+					foreach: { data:node.translationTexts, as:'text' }">
+						<div class="formblock">
+							<span class="translate-speaker" data-bind="text: (text.speaker ? text.speaker : '<no speaker>') + ':'">
+							</span>
+							<span class="translate-source" data-bind="text: text.source">
+							</span>
+
+							<textarea type="text" class="translate-dest" data-bind="textInput: text.translation, css: { translationEmpty: !text.translation() }">
+							</textarea>
+						</div>
+					</div>
+
+				  </div>
+				  <div class="buttons">
+				    <div class="button" data-bind="click:app.saveTranslation">
+					  <div class="icon close"></div>
+					  Save changes
+				    </div>
+				    <div class="button" data-bind="click:app.discardTranslation">
+				      <div class="icon cancel"></div>
+					  Discard changes
+				    </div>
+				  </div> <!-- buttons -->
+				</div>
+
+			</div>
+			<!-- /ko -->
+
+			<!-- not used yet -->
+			<!-- ko if:app.editingAgent() != null -->
+			<div class="editAgent">
+
+				<div class="form" data-bind="preventBubble: 'click'">
+					Name: <input type="text" data-bind="
+						value: app.editingAgent().name
+					">
+					Gender:
+					<input type="text" data-bind="value: app.editingAgent().gender">
+					ID:
+					<input type="text" data-bind="value: app.editingAgent().id">
+					<div class="icon close" data-bind="click:app.saveAgent"></div>
+				</div>
+
+			</div>
+			<!-- /ko -->
+
 			<!-- ko if:app.deleting() != null -->
 			<div class="node-delete" data-bind="click: function() { app.deleting(null); }">
 
@@ -608,7 +668,7 @@
 		<script type="text/javascript">
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
-			var app = new App("Wool Editor", "1.8",
+			var app = new App("Wool Editor", "1.9",
 				filePath ? filePath : "unnamed");
 			app.run();
 			if (app.isNwjs) {
@@ -619,8 +679,9 @@
 					snapOffset: 0,
 					onDrag: app.translate,
 				});
-				var filemgr = new FileManager();
+				var filemgr = new FileManager(app.dirtreeUpdated);
 				filemgr.init();
+				app.metadata.load(filemgr.getRoot());
 				var wizard = new Wizard("wizardoverlay");
 				languageAutoComplete("wizard_defaultlanguage");
 				if (!App.getCurrentPath()) {

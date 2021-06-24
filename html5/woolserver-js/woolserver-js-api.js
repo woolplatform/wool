@@ -2,7 +2,9 @@
 var directServer = {};
 
 function initDirectServer() {
-	directServer.rootDir = null; // null = unknown
+	directServer.rootDir = null; // (node.js) null = unknown
+	directServer.currentLanguage = "en"; // (node.js)
+	directServer.defaultLanguage = "en"; // (node.js)
 	directServer.jumpedToNewDialogue = false;
 	directServer.availableDialogues = [];
 	directServer.dialogues = {};
@@ -17,6 +19,7 @@ function initDirectServer() {
 	directServer.currentdialogue = null;
 	directServer.currentnode = null;
 	directServer.currentnodectx = null;
+    directServer.pendingActions = [];
 }
 
 initDirectServer();
@@ -30,9 +33,25 @@ directServer.setRootDir = function(rootDir) {
 	directServer.rootDir = rootDir;
 }
 
+directServer.setLanguage = function(defaultLang,currentLang) {
+	if (!defaultLang) defaultLang = "en";
+	if (!currentLang) currentLang = "en";
+	directServer.defaultLanguage = defaultLang;
+	directServer.currentLanguage = currentLang;
+}
+
 directServer.substituteVars = function(ctx,text) {
+    var keys = [];
 	for (var key in ctx.vars) {
 		if (!ctx.vars.hasOwnProperty(key)) continue;
+        keys.push(key);
+    }
+    // sort keys, longest first to prevent substitution of a variable that is a prefix of another
+    keys.sort(function(a,b) {
+        return b.length - a.length;
+    })
+    for (var keyidx in keys) {
+        var key = keys[keyidx];
 		var val = ctx.vars[key];
 		text = text.split("$"+key).join(val);
 	}
@@ -41,10 +60,15 @@ directServer.substituteVars = function(ctx,text) {
 
 directServer.getState = function() {
 	return JSON.stringify({
+        pendingActions: directServer.pendingActions,
 		currentdialogueId: directServer.currentdialogueId,
-		currentnodeid: directServer.currentnode.param.title,
-		currentnodectxvars: directServer.currentnodectx.vars,
+		currentnodeid: directServer.currentnode ? directServer.currentnode.param.title : null,
+		currentnodectxvars: directServer.currentnodectx ? directServer.currentnodectx.vars : null,
 	});
+}
+
+directServer.clearPendingActions = function() {
+    directServer.pendingActions = [];
 }
 
 directServer.setState = function(json) {
@@ -59,6 +83,17 @@ directServer.setState = function(json) {
         var idx = directServer.findNodeIdx(state.currentnodeid);
         directServer.currentnode = directServer.currentdialogue.nodes[idx];
         directServer.currentnode.func(directServer.currentnodectx);
+    }
+}
+
+// returns id of new dialogue, or null if no jump
+directServer.checkDialogueJump = function() {
+    var jumped = directServer.jumpedToNewDialogue;
+    directServer.jumpedToNewDialogue = false;
+    if (jumped) {
+        return directServer.currentdialogueId;
+    } else {
+        return null;
     }
 }
 
@@ -98,7 +133,16 @@ directServer.getNode = function() {
 	if (node.param["speaker"]) speaker = node.param["speaker"];
 	var statement = "";
 	for (var i=0; i<ctx.text.length; i++) {
-		statement += __ ? __(ctx.text[i].trim()) : ctx.text[i];
+		var texti = ctx.text[i].trim();
+		if (__) {
+			var origtexti = texti;
+			texti = __(speaker+"|"+origtexti);
+			// not found? try without context
+			if (texti == origtexti) {
+				texti = __(origtexti);
+			}
+		}
+		statement += texti;
 	}
 	var ret = {
 		id: node.param.title,
@@ -241,12 +285,13 @@ function _directServer_start_dialogue(par) {
 	directServer.currentdialogueId = par.dialogueId;
 	if (!par.startNodeId) par.startNodeId = "Start";
 	directServer.currentdialogue = directServer.dialogues[par.dialogueId];
-    console.log(par.dialogueId)
+    console.log("Starting dialogue: "+par.dialogueId)
 	// start node is node named "Start", otherwise first node
 	var node = directServer.currentdialogue.nodes[0];
 	var idx = directServer.findNodeIdx(par.startNodeId);
 	if (idx!==null) node = directServer.currentdialogue.nodes[idx];
 	directServer.currentnode = node;
+    console.log("Start node: "+idx)
 	// pass kb variables here
 	var vars = {};
 	if (par.keepVars && directServer.currentnodectx) {
@@ -261,9 +306,13 @@ function _directServer_progress_dialogue(par) {
 	// do actions first
 	var replyId = par.replyId;
 	var newDialogueId = null; // defined when jumping to different dialogue
+	var newTranslationPath = null;
 	var pathSep = replyId.lastIndexOf(".");
 	if (pathSep >= 0) {
-        newDialogueId = directServerGetPath(replyId.substring(0,pathSep));
+        newDialogueId = directServerGetPath(replyId.substring(0,pathSep),
+			directServer.defaultLanguage);
+        newTranslationPath = directServerGetPath(replyId.substring(0,pathSep),
+			directServer.currentLanguage);
   		replyId = replyId.substring(pathSep+1);
 	}
 	var replydef = typeof par.replyIndex != 'undefined'
@@ -283,12 +332,21 @@ function _directServer_progress_dialogue(par) {
 			ctx.vars[ctx.inputreply.inputvar] = par.textInput;
 		}
 	}
+    // log actions that were collected in the context
+    if (directServer.currentnodectx.pendingActions) {
+        directServer.pendingActions = directServer.pendingActions.concat(
+                directServer.currentnodectx.pendingActions)
+        //console.log("Added to pendingActions; " + JSON.stringify(directServer.pendingActions))
+    }
 	// jump to new node
 	if (newDialogueId) {
 		directServer.jumpedToNewDialogue = true;
-		directServerLoadNodeDialogue(newDialogueId,
+		// load translations before loading dialogue
+		directServerLoadNodeTranslation(
+			directServer.rootDir + newTranslationPath + ".json");
+   		directServerLoadNodeDialogue(newDialogueId,
 			directServer.rootDir + newDialogueId + ".wool");
-        console.log("startDialogue "+newDialogueId)
+     console.log("startDialogue "+newDialogueId)
 		return _directServer_start_dialogue({
 			dialogueId: newDialogueId,
 			startNodeId: replyId,
@@ -312,5 +370,4 @@ function _directServer_progress_dialogue(par) {
 		return directServer.getNode();
 	}
 }
-
 

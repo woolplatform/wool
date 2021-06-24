@@ -149,6 +149,10 @@ if (urlParams.woolRoot && urlParams.filepath) {
 		alert("Fatal: File path specified but node.js not available");
 	} else {
 		directServer.setRootDir(urlParams.woolRoot);
+		directServer.setLanguage(
+			localStorage.getItem(LOCALSTORAGEPREFIX+"defaultlanguage"),
+			localStorage.getItem(LOCALSTORAGEPREFIX+"language")
+		);
 		if (!sourceCode) {
 			sourceCode = directServerLoadNodeDialogue(dialogueID,
 				urlParams.woolRoot+"/"+urlParams.filepath);
