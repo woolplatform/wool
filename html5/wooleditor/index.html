@@ -568,7 +568,7 @@
 							<span class="translate-source" data-bind="text: text.source">
 							</span>
 
-							<textarea type="text" class="translate-dest" data-bind="textInput: text.translation, css: { translationEmpty: !text.translation() }">
+							<textarea type="text" class="translate-dest" data-bind="textInput: text.translation, css: { translationEmpty: !text.translation() }, translationBind: true ">
 							</textarea>
 						</div>
 					</div>
@@ -668,7 +668,7 @@
 		<script type="text/javascript">
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
-			var app = new App("Wool Editor", "1.9",
+			var app = new App("Wool Editor", "1.10.0",
 				filePath ? filePath : "unnamed");
 			app.run();
 			if (app.isNwjs) {
@@ -691,7 +691,6 @@
 				$("#filepanel").hide();
 				$("#editpanel").css("width","100%");
 			}
-
 		</script>
 	</div>
 

@@ -1,3 +1,36 @@
+h1 {
+	color: #379;
+	font-size: 26px;
+	margin-top: 5px;
+	margin-bottom: 0px;
+}
+
+h2 {
+	color: #379;
+	font-size: 24px;
+	margin-top: 5px;
+	margin-bottom: 0px;
+}
+
+h3 {
+	color: #379;
+	font-size: 22px;
+	margin-top: 5px;
+	margin-bottom: 0px;
+}
+
+code {
+	font-size: 17px;
+}
+
+blockquote {
+	color: #257;
+}
+
+.statement img {
+	max-width: 100%;
+}
+
 .editbox {
 	position: fixed;
 	bottom: 65px;
@@ -74,6 +107,9 @@
 .commandbutton a {
 	text-decoration: none;
 	color: #000;
+}
+.commandbutton.selected {
+	background-color: #88f;
 }
 
 .debugbox {

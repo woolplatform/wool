@@ -799,8 +799,9 @@ a:hover { color: #000;}
 }
 .translate .translate-title {
 	width: 100%;
-	margin-top: 15px;
-	border-top: 2px solid black;
+	margin-top: 20px;
+	border-top: 3px solid #29b;
+	color: #29b;
 	font-size: 24px;
 }
 .translate .translate-speaker {
@@ -808,10 +809,17 @@ a:hover { color: #000;}
 }
 .translate .translate-source {
 	margin-top: 15px;
-
+	user-select: text;
+	white-space: pre-wrap;
 }
 .translate .translate-dest {
+	margin-top: 5px;
 	width: 100%;
+	resize: none;
+	overflow: hidden;
+	min-height: 45px;
+	box-sizing: border-box;
+	border: 2px solid #aaa;
 }
 .translate .translate-dest.translationEmpty {
 	border: 2px solid red;
@@ -932,6 +940,7 @@ a:hover { color: #000;}
 }
 #filepanel {
 	overflow-y: auto;
+	overflow-x: auto;
 	height: 100%;
 }
 
@@ -969,15 +978,6 @@ a:hover { color: #000;}
 	height: 16px;
 }
 */
-
-
-/* remove icon space left of filename to save space */
-.jstree-default .jstree-icon.jstreefile,
-.jstree-default .jstree-icon.jstreedir {
-	display: none;
-}
-
-
 /* todo: give files an icon, one for wool and one for json */
 .jstreefile {
 	background-image: url('../../node_modules/jstree/dist/themes/default/32px.png');
@@ -1173,6 +1173,37 @@ a:hover { color: #000;}
 .jstree-default.jstree-rtl .jstree-last {
   background: transparent;
 }
+
+
+.jstree-default .jstree-icon:empty {
+	width: 0px;
+}
+
+/* remove icon space left of filename to save space */
+.jstree-default .jstree-icon.jstreefile,
+.jstree-default .jstree-icon.jstreedir {
+	width: 14px;
+}
+
+.jstree-default .jstree-icon.jstreedir {
+	background: url('../images/directory14x16.png') no-repeat;
+}
+
+.jstree-default .jstree-icon.jstreefile {
+	background: url('../images/file14x16.png') no-repeat;
+}
+
+/*.jstree-default .jstree-icon.jstreedir:before {
+	content: "*";
+	width: 10px;
+}
+
+.jstree-default .jstree-icon.jstreefile:before {
+	content: "+";
+	width: 10px;
+}*/
+
+
 
 
 #waitoverlay {

@@ -1,0 +1,77 @@
+title: TextStyles
+tags: 
+speaker: Flossie
+colorID: 0
+position: 21,408
+---
+Testing headers and font styles.
+
+# This is H1
+
+## this is H2
+
+### this is H3
+
+**This is boldface** and *this is italic*.
+===
+title: Lists
+tags: 
+speaker: Flossie
+colorID: 0
+position: 291,407
+---
+Testing lists and horizontal rules.
+
+1. number one
+2. number two
+3. number three
+
+- unnumbered one
+- unnumbered two
+- unnumbered three
+
+----
+
+This is a text between horizontal rules
+
+----
+===
+title: Layout
+tags: 
+speaker: Flossie
+colorID: 0
+position: 573,410
+---
+Testing quotes, images, links.
+
+> Blockquote phrase 1.
+> Blockquote phrase 2.
+> Blockquote phrase 3.
+> Blockquote phrase 4.
+> Blockquote phrase 5.
+
+`This is a code quote. This is a code quote. This is a code quote. 
+ This is a code quote. This is a code quote. This is a code quote.
+ This is a code quote. This is a code quote. This is a code quote.`
+
+This is an image: ![Image](https:\//www.woolplatform.eu/editor/wooleditor/images/wool-logo-300.png)
+
+[This is a link to Google](http:\//www.google.nl/)
+===
+title: Start
+tags: 
+speaker: Flossie
+colorID: 0
+position: 281,109
+---
+The Wool standard includes basic markdown support. Check the Basic section of [this cheatsheet](https:\//www.markdownguide.org/cheat-sheet/). You have to set the format to "markdown" (bottom left menu).
+
+The Wool editor currently uses marked.js to format markdown, which can handle more than the basic markdown.
+
+Which markdown features do you want to test?
+
+[[Quotes, images, links|Layout]]
+[[Headers and text styles|TextStyles]]
+[[Lists and horizontal rule|Lists]]
+
+===

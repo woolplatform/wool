@@ -154,7 +154,6 @@ function WoolNodeContext(vars) {
 	}
 	// start new translatable text block
 	this.newTextBlock = function() {
-		console.log("##newTextBlock");
 		if (this.text[this.text.length-1] != "") this.text.push("");
 	}
 	this.addMultimedia = function(type,param) {
@@ -457,10 +456,11 @@ function WoolNode(dialogue,lines) {
 		var lineuntrimmed = line + "\n";
 		line = line.trim();
 		this.body[i] = line;
-		if (line == "") {
-			alllines += lineuntrimmed;
-			continue;
-		}
+		// do not call addLine for empty lines
+		//if (line == "") {
+		//	alllines += lineuntrimmed;
+		//	continue;
+		//}
 		var matches1 = /^<<random\s*(.*)\s*>>$/.exec(line);
 		var matches2 = /^<<or\s*(.*)\s*>>$/.exec(line);
 		if (matches1 || matches2) {

@@ -1638,8 +1638,11 @@ var App = function(name, version, filename) {
 				function(error,contents) {
 					if (error) {
 						self.clearLangDefs();
-						alert("Could not load translation json file '"
-							+jsonpath+"'.");
+						// prevent disruption of init animation
+						setTimeout(function() {
+							alert("No translation json file '"
+								+jsonpath+"'.");
+						}, 500 );
 					} else {
 						console.log("Loaded translation file "+jsonpath);
 						self.setLangDefs(contents);

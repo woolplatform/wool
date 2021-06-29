@@ -21,8 +21,8 @@ var _i18n = i18n({
 // charmapping (optional) - function(string) -> string that maps chars
 
 
-// if set to true, normalize strings by replacing all whitespace by a single
-// space
+// if set to true, normalize source strings by replacing all whitespace by a
+// single space
 _i18n.enableNormalization = function(enable) {
 	_i18n._normalize = enable;
 }
@@ -38,7 +38,8 @@ _i18n.normalizeStrings = function(json) {
 	var ret = {};
 	for (var key in json) {
 		if (!json.hasOwnProperty(key)) continue;
-		ret[_i18n.normalizeString(key)] = _i18n.normalizeString(json[key]);
+		ret[_i18n.normalizeString(key)] = json[key];
+		//ret[_i18n.normalizeString(key)] = _i18n.normalizeString(json[key]);
 	}
 	return ret;
 }
@@ -234,11 +235,11 @@ _i18n._getGettextContext = function(string) {
 	var res = string.split("|");
 	if (res.length == 1) return {
 		ctxt: null,
-		str: _i18n.normalizeString(string)
+		str: string
 	};
 	var ret = {
 		ctxt: res.shift(),
-		str: _i18n.normalizeString(res.join("")),
+		str: res.join(""),
 	};
 	return ret;
 }
@@ -249,48 +250,51 @@ _i18n.loadJSONSeparate = function(jsonData,langdef, domain) {
     _i18n.loadJSON(jsonData,domain);
 }
 
+
+// version that return unnormalized string when no translation found
+_i18n.unnormalizedGettext = function(context, string, arg1, arg2) {
+	var normString = _i18n.normalizeString(string);
+ 	var ret = _i18n.dcnpgettext(null, context, normString, null, null, arg1, arg2);
+	// if result is equal, we assume translation is not found -> return
+	// unnormalized original
+	if (ret == normString) return string;
+	return ret;
+}
+
 // shortcuts ------------------------------------------------------------
 
 function __(string) {
 	var ctxtstr = _i18n._getGettextContext(string);
-	//if (/jutters/.exec(ctxtstr.str)) console.log(ctxtstr);
-	//$res = explode("|",$string);
-	//return portal_translateOptionalContext($text,$context);
  	//return dcnpgettext(domain, msgctxt, msgid, msgid_plural, n /* , extra */);
- 	return _i18n.dcnpgettext(null, ctxtstr.ctxt, ctxtstr.str, null, null);
+ 	//return _i18n.dcnpgettext(null, ctxtstr.ctxt, ctxtstr.str, null, null);
+	return _i18n.unnormalizedGettext(ctxtstr.ctxt, ctxtstr.str);
 }
 
 // 1-parameter version
 function __1(string,arg1) {
 	var ctxtstr = _i18n._getGettextContext(string);
-	//$res = explode("|",$string);
-	//return sprintf(portal_translateOptionalContext($text,$context),$arg1);
 	//return _i18n.strfmt(string,arg1);
- 	return _i18n.dcnpgettext(null, ctxtstr.ctxt, ctxtstr.str, null, null, arg1);
+ 	//return _i18n.dcnpgettext(null, ctxtstr.ctxt, ctxtstr.str, null, null, arg1);
+	return _i18n.unnormalizedGettext(ctxtstr.ctxt, ctxtstr.str, arg1);
 }
 
 // 2-parameter version
 function __2(string,arg1,arg2) {
 	var ctxtstr = _i18n._getGettextContext(string);
-	//$res = explode("|",$string);
-	//return sprintf(portal_translateOptionalContext($text,$context),$arg1,$arg2);
 	//return _i18n.strfmt(string,arg1,arg2);
- 	return _i18n.dcnpgettext(null, ctxtstr.ctxt, ctxtstr.str, null, null,
-		arg1, arg2);
+ 	//return _i18n.dcnpgettext(null, ctxtstr.ctxt, ctxtstr.str, null, null, arg1, arg2);
+	return _i18n.unnormalizedGettext(ctxtstr.ctxt, ctxtstr.str, arg1, arg2);
 }
 
 
 // similar to dngettext
 // pass $context=null for no context
 function n__(context,strings,stringp,n) {
-	//return portal_translateOptionalContext_plural($strings,$stringp,$n,$context);
  	return _i18n.dcnpgettext(null, context, strings, stringp, n);
 }
 
 // similar to dngettext, 1 stands for 1 sprintf parameter
 function n__1(context,strings,stringp,n,arg1) {
-	//return sprintf(portal_translateOptionalContext_plural(
-	//	$strings,$stringp,$n,$context),  $arg1);
 	//return _i18n.strfmt(strings,arg1);
  	return _i18n.dcnpgettext(null, context, strings, stringp, n, arg1);
 }

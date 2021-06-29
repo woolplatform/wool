@@ -578,4 +578,25 @@ ko.bindingHandlers.nodeBind = {
 	}
 };
 
+ko.bindingHandlers.translationBind = {
+	init: function(element, valueAccessor, allBindings, viewModel, bindingContext) 
+	{
+	},
+
+	update: function(element, valueAccessor, allBindings, viewModel, bindingContext) 
+	{
+		//setTimeout(function() {
+			var scroll_height = $(element).get(0).scrollHeight;
+			$(element).css('height', scroll_height + 'px');
+		//}, 1000);
+		// auto-resize translation textareas
+		//https://usefulangle.com/post/41/javascript-textarea-autogrow-adjust-height-based-on-content
+		$(element).on('input', function(eventObject) {
+			var scroll_height = $(element).get(0).scrollHeight;
+			$(element).css('height', scroll_height + 'px');
+		});
+
+	}
+};
+
 

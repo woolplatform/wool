@@ -41,6 +41,7 @@ if (urlParams.resetconfig) {
 function saveConfig() {
 	config.avatar = avatarRes.serialize();
 	config.background = backgroundRes.serialize();
+	config.statementFormat = statementFormat;
 	console.log(config);
 	localStorage.setItem("simplewoolclient_config",JSON.stringify(config));
 }
@@ -73,6 +74,8 @@ if (urlParams.config) {
 
 var avatarRes = new ResourceUI(config.avatar,makeRange(99),0);
 var backgroundRes = new ResourceUI(config.background,makeRange(29),12);
+
+var statementFormat = config.statementFormat ? config.statementFormat : "html";
 
 var isNarrator=false;
 
@@ -135,6 +138,19 @@ if (langDefs) {
 	}
 	_i18n.setLocale("nl");
 }
+
+// configure marked --------------------------------------------------------
+
+var renderer = new marked.Renderer();
+
+renderer.link = function(href, title, text) {
+    var link = marked.Renderer.prototype.link.apply(this, arguments);
+    return link.replace("<a","<a target='_blank'");
+};
+
+marked.setOptions({
+    renderer: renderer
+});
 
 
 // if URL parameters "woolRoot" and "filepath" are supplied, we assume node.js
@@ -272,6 +288,18 @@ function deleteBackground() {
 	updateBackground();
 }
 
+function setStatementFormat(format,updateUI) {
+	statementFormat = format;
+	// select button in editbox
+	var allbuttons = document.getElementsByClassName("formatcommand");
+	for (var i in allbuttons) {
+		allbuttons[i].className = "commandbutton formatcommand";
+	}
+	var button = document.getElementById("format_"+format);
+	button.classList.add("selected");
+	if (updateUI) updateNodeUI(directServer.getNode());
+}
+
 var showingInDebug=null;
 
 // modified encoder for shorter urls
@@ -328,12 +356,18 @@ if (urlParams.editable) {
 		+"<div class='incrementbutton' onclick='deleteBackground();'>&#x1F5D1;</div>"
 		+"<div class='commandbutton' onclick='addBackgroundURL();'>URL</div>"
 		+"</div>"
+		+"<div id='formatcontrols'>Format: "
+		+"<div id='format_markdown' class='commandbutton formatcommand' onclick='setStatementFormat(\"markdown\",true);'>Markdown</div>"
+		+"<div id='format_html'  class='commandbutton formatcommand' onclick='setStatementFormat(\"html\",true);'>HTML</div>"
+		+"</div>"
 		+"<div class='commandbutton' onclick='showUrl();'>Get URL</div>"
 		+"<div class='commandbutton' onclick='showVariables();'>Variables</div>"
 		+edithtml
 		+"</div>\n"
 		+"<div class='currentresourcebox' id='resourceId'></div>\n"
 		+"<div class='currentdialoguebox' id='dialogueId'></div>\n";
+
+	setStatementFormat(statementFormat,false); // updates editbox
 }
 
 
@@ -442,7 +476,10 @@ function updateNodeUI(node) {
 			document.getElementById("agent-name").style.display="block";
 			document.getElementById("agent-name").innerHTML = node.speaker + ":";
 		}
-		document.getElementById("agent-statement").innerHTML = node.statement;
+		document.getElementById("agent-statement").innerHTML =
+			statementFormat == "html" 
+				? node.statement
+				: marked(node.statement);
 	}
 	if (node.id=="End" || node.replies.length==0) {
 		replyelem.className = "reply-box-auto-forward";

@@ -142,7 +142,7 @@ directServer.getNode = function() {
 				texti = __(origtexti);
 			}
 		}
-		statement += texti;
+		statement += texti + "\n";
 	}
 	var ret = {
 		id: node.param.title,
