@@ -1609,6 +1609,7 @@ var App = function(name, version, filename) {
 		if (!jsonify) return langDefs;
 		if (langDefs) {
 			langDefs = JSON.parse(langDefs);
+			langDefs = _i18n.flattenKeyValueJSON(langDefs);
 		} else {
 			langDefs = {};
 		}
@@ -1799,7 +1800,9 @@ var App = function(name, version, filename) {
 				// delete empty texts when in orphans node
 				if (nodes[i].isOrphansNode && texts[j].translation()=="")
 					continue;
-				jsondefs[texts[j].speaker+"|"+texts[j].source] = 
+				if (!jsondefs[texts[j].speaker])
+					jsondefs[texts[j].speaker] = {};
+				jsondefs[texts[j].speaker][texts[j].source] = 
 					texts[j].translation();
 			}
 		}

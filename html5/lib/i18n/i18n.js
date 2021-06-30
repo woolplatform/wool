@@ -213,15 +213,39 @@ function(filename,locale,callback,charmapping) {
 	);
 }
 
+// "context": { "key" : "value" }  =>  "context|key": "value"
+_i18n.flattenKeyValueJSON = function(json0) {
+	var json = {};
+	for (var key in json0) {
+		var value = json0[key];
+		if (typeof value == "object") {
+			for (var subkey in value) {
+				if (!value.hasOwnProperty(subkey)) continue;
+				var subvalue = value[subkey];
+				if (Array.isArray(subvalue)) {
+					console.log("Ignored subcontext: "+subkey);
+				} else {
+					json[key+"|"+subkey] = subvalue;
+				}
+			}
+		} else {
+			json[key] = value;
+		}
+	}
+	return json;
+}
+
 // json supported by gettext.js is similar to the "key-value" json in
-// poeditor. Context does not work because encoded differently. Language +
+// poeditor. Context is encoded as a block with the context as key. Language +
 // pluralforms are also not included in the defs.
 // charmapping not used (yet)
 _i18n.ReadJSONFromString =
 function(data,locale,pluralForms,charmapping) {
 	if (!locale) locale="nl";
 	if (!pluralForms) pluralForms="nplurals=2; plural=(n!=1);";
-	var json = JSON.parse(data);
+	var json0 = JSON.parse(data);
+	// convert key-value json into what i18n expects
+	var json = _i18n.flattenKeyValueJSON(json0);
 	json = _i18n.normalizeStrings(json);
 	json[""] = {
 		"language": locale,

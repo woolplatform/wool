@@ -1,6 +1,6 @@
 {
   "name": "Wool",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "main": "wooleditor/main.js",
   "window": {
     "toolbar": false,
@@ -18,7 +18,7 @@
     "build2": "electron-packager --platform darwin ."
   },
   "devDependencies": {
-    "electron": "^8.5.5",
+    "electron": "^11.4.9",
     "electron-packager": "^15.2.0"
   },
   "dependencies": {

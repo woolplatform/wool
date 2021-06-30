@@ -413,7 +413,8 @@ var data =
 				output += JSON.stringify(text)+"\n";
 			}
 		} else if (type == FILETYPE.JSON) {
-			// filetype json indicates POEditor terms
+			// TODO add agent context
+			// filetype json indicates POEditor terms ("key-value json")
 			//output = JSON.stringify(content, null, "\t");
 			alltexts = {};
 			for (var i = 0; i < nodes.length; i ++) {
