@@ -26,23 +26,17 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.utils.io.FileUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.utils.io.FileUtils;
 
 /**
  * This class can be used to run HTTP requests. At construction it takes a URL.
@@ -269,17 +263,14 @@ public class HttpClient {
 			if (writer != null)
 				return writer;
 		}
-		Writer writer = new OutputStreamWriter(getOutputStream(), "UTF-8");
+		OutputStream out = getOutputStream();
 		synchronized (lock) {
-			if (closed) {
-				writer.close();
+			if (closed)
 				throw new IOException("HttpClient closed");
-			}
-			if (this.writer == null)
-				this.writer = writer;
-			else if (this.writer != writer)
-				writer.close();
-			return this.writer;
+			if (writer != null)
+				return writer;
+			writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+			return writer;
 		}
 	}
 	
@@ -501,17 +492,14 @@ public class HttpClient {
 			if (reader != null)
 				return reader;
 		}
-		Reader reader = new InputStreamReader(getInputStream(), "UTF-8");
+		InputStream input = getInputStream();
 		synchronized (lock) {
-			if (closed) {
-				reader.close();
+			if (closed)
 				throw new IOException("HttpClient closed");
-			}
-			if (this.reader == null)
-				this.reader = reader;
-			else if (this.reader != reader)
-				reader.close();
-			return this.reader;
+			if (reader != null)
+				return reader;
+			reader = new InputStreamReader(input, StandardCharsets.UTF_8);
+			return reader;
 		}
 	}
 
