@@ -22,9 +22,11 @@
 
 package eu.woolplatform.utils.i18n;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.woolplatform.utils.AppComponents;
+import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.io.ClassLoaderResourceLocator;
 import org.slf4j.Logger;
 
@@ -124,8 +126,8 @@ public class I18n {
 				if (finder.find())
 					properties = loadMessagesFromJson(finder);
 			}
-		} catch (IOException ex) {
-			throw new RuntimeException("Can't read message resources from " +
+		} catch (ParseException | IOException ex) {
+			throw new RuntimeException("Can't read message resources for " +
 					finder.getName() + ": " + ex.getMessage(), ex);
 		}
 		if (properties.isEmpty())
@@ -201,7 +203,7 @@ public class I18n {
 	}
 
 	private List<Map<String,String>> loadMessagesFromJson(
-			I18nResourceFinder finder) throws IOException {
+			I18nResourceFinder finder) throws ParseException, IOException {
 		List<Map<String,String>> result = new ArrayList<>();
 		List<I18nResourceFinder.FoundResource> resources = finder.findList();
 		for (I18nResourceFinder.FoundResource resource : resources) {
@@ -211,12 +213,16 @@ public class I18n {
 	}
 
 	private Map<String,String> loadMessagesFromJson(I18nResourceFinder finder,
-			I18nResourceFinder.FoundResource resource) throws IOException {
+			I18nResourceFinder.FoundResource resource) throws ParseException,
+			IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		try (Reader reader = new InputStreamReader(finder.openStream(resource),
 				StandardCharsets.UTF_8)) {
 			return mapper.readValue(reader,
 					new TypeReference<Map<String,String>>() {});
+		} catch (JsonProcessingException ex) {
+			throw new ParseException("Failed to read messages from resource " +
+					resource.getName() + ": " + ex.getMessage(), ex);
 		}
 	}
 }
