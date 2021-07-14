@@ -22,10 +22,7 @@
 
 package eu.woolplatform.wool.i18n;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -170,12 +167,16 @@ public class WoolTranslator {
 				source.getSpeaker());
 		WoolTranslationContext.Gender addresseeGender = getGenderForSpeaker(
 				source.getAddressee());
-		List<WoolContextTranslation> filtered = filterGender(transList,
-				speakerGender, addresseeGender);
+		List<WoolContextTranslation> prevFilter = transList;
+		List<WoolContextTranslation> filtered = filterSpeaker(transList,
+				source.getSpeaker());
 		if (filtered.isEmpty())
-			return transList.get(0).getTranslation();
-		else
-			return filtered.get(0).getTranslation();
+			filtered = prevFilter;
+		prevFilter = filtered;
+		filtered = filterGender(transList, speakerGender, addresseeGender);
+		if (filtered.isEmpty())
+			filtered = prevFilter;
+		return filtered.get(0).getTranslation();
 	}
 
 	private WoolTranslationContext.Gender getGenderForSpeaker(String speaker) {
@@ -186,7 +187,25 @@ public class WoolTranslator {
 		return context.getDefaultAgentGender();
 	}
 
-	private static List<WoolContextTranslation> filterGender(
+	private List<WoolContextTranslation> filterSpeaker(
+			List<WoolContextTranslation> terms, String speaker) {
+		List<WoolContextTranslation> result = new ArrayList<>();
+		String speakerContext = getSpeakerContext(speaker);
+		for (WoolContextTranslation term : terms) {
+			if (term.getContext().contains(speakerContext))
+				result.add(term);
+		}
+		return result;
+	}
+
+	private String getSpeakerContext(String speaker) {
+		if (speaker.equals(WoolSourceTranslatable.USER))
+			return "_user";
+		else
+			return speaker;
+	}
+
+	private List<WoolContextTranslation> filterGender(
 			List<WoolContextTranslation> terms,
 			WoolTranslationContext.Gender speakerGender,
 			WoolTranslationContext.Gender addresseeGender) {
