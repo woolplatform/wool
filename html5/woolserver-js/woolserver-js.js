@@ -416,15 +416,6 @@ function WoolNode(dialogue,lines) {
 	var addlineprefix = ""; // code to add before addLine statement
 	for (var i=0; i<this.body.length; i++) {
 		var line = this.body[i];
-		// warn about unescaped http:// https://
-		if (line.match(/http:[\/][\/]/)) {
-			logError("warning", i,
-				"Unescaped URL, did you mean 'http:\\//'" );
-		}
-		if (line.match(/https:[\/][\/]/)) {
-			logError("warning", i,
-				"Unescaped URL, did you mean 'https:\\//'" );
-		}
 		// XXX also matches string literals, so in this parser, it is
 		// ignored inside << ... >> or [[ ... ]].
 		var linecommentchar = line.indexOf('//');
@@ -445,6 +436,17 @@ function WoolNode(dialogue,lines) {
 				} else {
 					//keep left part only
 					line = lhs;
+					// warn about unescaped http:// https://
+					//if (line.match(/http:[\/][\/]/)) {
+					if (line.endsWith("http:")) {
+						logError("warning", i,
+							"Unescaped URL, did you mean 'http:\\//'" );
+					}
+					//if (line.match(/https:[\/][\/]/)) {
+					if (line.endsWith("https:")) {
+						logError("warning", i,
+							"Unescaped URL, did you mean 'https:\\//'" );
+					}
 				}
 			}
 		}
@@ -608,9 +610,9 @@ function WoolNode(dialogue,lines) {
 		var matches = /^\[\[\s*([^|\]]+)\s*\|\s*([a-zA-Z0-9_.\/-]+)\s*(|.*)?\]\]$/.exec(line);
 		if (matches) {
 			// XXX textinput also accepts min, max
-			var desc = matches[1];
+			var desc = matches[1].trim();
+			var origdesc = desc;
 			if (__) {
-				var origdesc = desc;
 				desc = __("_user|"+origdesc);
 				// not found? try without context
 				if (desc == origdesc) {
@@ -678,8 +680,8 @@ function WoolNode(dialogue,lines) {
 					logError("error",i,"Input: value missing");
 					continue;
 				}
-				this.texts[textSegment] = true;
-				this.usertexts[textSegment] = true;
+				this.texts[origdesc] = true;
+				this.usertexts[origdesc] = true;
 				this.body[i] = "C.addInputReply('"
 					+optid+"',"
 					+JSON.stringify(beforeText)+",'"
@@ -692,8 +694,8 @@ function WoolNode(dialogue,lines) {
 					+");";
 				continue;
 			} else {
-				this.texts[desc] = true;
-				this.usertexts[desc] = true;
+				this.texts[origdesc] = true;
+				this.usertexts[origdesc] = true;
 				this.body[i] = "C.addReplyChoice("
 					+JSON.stringify(optid)+","
 					+JSON.stringify(desc)+","
