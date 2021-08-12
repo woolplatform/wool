@@ -135,65 +135,27 @@ public class WoolNodeBody {
 		segments.clear();
 	}
 
-	/**
-	 * Normalizes whitespace in the text segments. It removes empty lines and
-	 * makes sure that lines end with "\n". Within each line, it trims
-	 * whitespace from the start and end, and it replaces any sequence of
-	 * spaces and tabs with one space.
-	 * 
-	 * <p>This method should only be called if all variables in the text
-	 * segments have been resolved.</p>
-	 * 
-	 * @param trimText true if trailing new lines should be trimmed, false if
-	 * they should be preserved
-	 */
-	private void normalizeWhitespace(boolean trimText) {
-		TextSegment lastText = null;
-		String currLine = null;
+	private void trimText() {
 		Iterator<Segment> it = segments.iterator();
+		TextSegment firstSegment = null;
+		TextSegment lastSegment = null;
 		while (it.hasNext()) {
 			Segment segment = it.next();
 			if (!(segment instanceof TextSegment))
 				continue;
-			TextSegment textSegment = (TextSegment)segment;
-			lastText = textSegment;
-			String text = textSegment.text.evaluate(null);
-			text = text.replaceAll("[\r\n]+", "\n")
-					.replaceAll("[\t ]+", " ");
-			StringBuilder normText = new StringBuilder();
-			int start = 0;
-			int index;
-			while ((index = text.indexOf('\n', start)) != -1) {
-				String line = text.substring(start, index).trim();
-				if (currLine != null && line.isEmpty()) {
-					normText.append("\n");
-				} else if (currLine != null) {
-					normText.append(" " + line + "\n");
-				} else if (!line.isEmpty()) {
-					normText.append(line + "\n");
-				}
-				currLine = null;
-				start = index + 1;
-			}
-			String line = text.substring(start).trim();
-			if (!line.isEmpty()) {
-				if (currLine != null) {
-					currLine += " " + line;
-					normText.append(" " + line);
-				} else {
-					currLine = line;
-					normText.append(line);
-				}
-			}
-			if (normText.length() == 0) {
-				it.remove();
-			} else {
-				textSegment.text = new WoolVariableString(normText.toString());
-			}
+			if (firstSegment == null)
+				firstSegment = (TextSegment)segment;
+			lastSegment = (TextSegment)segment;
 		}
-		if (trimText && lastText != null) {
-			String text = lastText.text.evaluate(null).replaceAll("\\s+$", "");
-			lastText.text = new WoolVariableString(text);
+		if (firstSegment != null) {
+			String text = firstSegment.text.evaluate(null).replaceAll(
+					"^\\s+", "");
+			firstSegment.text = new WoolVariableString(text);
+		}
+		if (lastSegment != null) {
+			String text = lastSegment.text.evaluate(null).replaceAll(
+					"\\s+$", "");
+			lastSegment.text = new WoolVariableString(text);
 		}
 	}
 
@@ -351,7 +313,8 @@ public class WoolNodeBody {
 		for (WoolReply reply : replies) {
 			processedBody.addReply(reply.execute(variables));
 		}
-		processedBody.normalizeWhitespace(trimText);
+		if (trimText)
+			processedBody.trimText();
 	}
 	
 	private void executeTextSegment(TextSegment segment,
