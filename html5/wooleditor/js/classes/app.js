@@ -45,6 +45,7 @@ var App = function(name, version, filename) {
 
 	this.UPDATE_ARROWS_THROTTLE_MS = 50;
 
+	this.waitSpinnerShowing = false;
 
 	//this.editingPath = ko.observable(null);
 
@@ -619,6 +620,7 @@ var App = function(name, version, filename) {
 	this.showWaitSpinner = function(show) {
 		var spinner = document.getElementById("waitoverlay");
 		spinner.style.display = show ? "block" : "none";
+		self.waitSpinnerShowing  = show;
 	}
 
 

@@ -234,22 +234,30 @@
 					app.fs.mkdirSync(this.projectDir());
 					app.fs.mkdirSync(this.projectDir()
 						+ "/" + this.getDefaultLanguage());
+					var relativeFilePath = this.getDefaultLanguage() + "/start.wool";
 					var filePath = this.projectDir()
-						+ "/" + this.getDefaultLanguage() + "/start.wool";
-					app.fs.writeFile(filePath,
+						+ "/" + relativeFilePath;
+					var nodeData = 
 						 "title: Start\n"
 						+"tags: \n"
 						+"speaker: Bob\n"
 						+"colorID: 1\n"
+						+"position: 368,255\n"
 						+"---\n"
 						+"Your first node.\n"
 						+"\n"
-						+"[[Great!|Start]]\n",
+						+"[[Great!|Start]]\n"
+						+"\n"
+						+"===\n";
+					app.fs.writeFile(filePath,nodeData,
 						function(err) {
 							if (err) {
 								wizard.open("createproject_cannot_init");
 							} else {
-								app.setCurrentPath(filePath);
+								app.setCurrentPath(relativeFilePath);
+								data.loadData(nodeData, FILETYPE.WOOL, true);
+								// shut up save changes dialog
+								app.recordSavedChanges(null);
 								filemgr.setRoot(self.projectDir());
 								filemgr.updateDirTree();
 								wizard.open("createproject_finished");
@@ -668,7 +676,7 @@
 		<script type="text/javascript">
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
-			var app = new App("Wool Editor", "1.10.2",
+			var app = new App("Wool Editor", "1.10.3",
 				filePath ? filePath : "unnamed");
 			app.run();
 			if (app.isNwjs) {

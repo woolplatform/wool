@@ -513,6 +513,7 @@ FileManager.prototype.createContextMenu = function(node) {
 }
 
 FileManager.prototype.loadWoolFile = function(filename) {
+	if (app.waitSpinnerShowing) return; // do nothing until file loaded
 	if (!app.areChangesSaved()) {
 		var confirm = window.confirm("Changes may not have been saved, proceed?");
 		if (!confirm) return;

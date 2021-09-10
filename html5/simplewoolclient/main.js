@@ -439,6 +439,16 @@ function startDialogue() {
 
 
 function updateNodeUI(node) {
+	// show actions
+	if (directServer.currentnodectx) {
+		var actions = directServer.currentnodectx.pendingActions;
+		if (actions) {
+			for (var i=0; i<actions.length; i++) {
+				alert("Action called: "+JSON.stringify(actions[i]));
+			}
+		}
+	}
+	directServer.clearPendingActions();
 	var dialogueidview = document.getElementById("dialogueId");
 	if (dialogueidview) dialogueidview.innerText =
 		directServer.currentdialogueId;
