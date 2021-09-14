@@ -157,8 +157,7 @@ public class WoolInputTimeCommand extends WoolInputCommand {
 	@Override
 	public String toString() {
 		char[] escapes = new char[] { '"' };
-		StringBuilder builder = new StringBuilder("<<input type=\"" +
-				TYPE_TIME + "\"");
+		StringBuilder builder = new StringBuilder(toStringStart());
 		builder.append(" value=\"$" + variableName + "\"");
 		builder.append(" granularityMinutes=\"" + granularityMinutes + "\"");
 		if (startTime != null) {

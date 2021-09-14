@@ -89,8 +89,7 @@ public class WoolInputSetCommand extends WoolInputCommand {
 	@Override
 	public String toString() {
 		char[] escapes = new char[] { '"' };
-		StringBuilder builder = new StringBuilder("<<input type=\"" +
-				TYPE_SET + "\"");
+		StringBuilder builder = new StringBuilder(toStringStart());
 		for (int i = 0; i < options.size(); i++) {
 			Option option = options.get(i);
 			builder.append(" value" + (i+1) + "=\"$" +

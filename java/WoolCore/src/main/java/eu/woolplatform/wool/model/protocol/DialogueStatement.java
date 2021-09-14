@@ -83,6 +83,7 @@ public class DialogueStatement {
 	public void addInputSegment(WoolInputCommand inputCommand) {
 		InputSegment segment = new InputSegment();
 		segment.setInputType(inputCommand.getType());
+		segment.setDescription(inputCommand.getDescription());
 		segment.setParameters(inputCommand.getParameters());
 		segments.add(segment);
 	}
@@ -133,6 +134,7 @@ public class DialogueStatement {
 	@JsonSerialize(using=InputSegmentSerializer.class)
 	public static class InputSegment extends Segment {
 		private String inputType;
+		private String description = null;
 		private Map<String,?> parameters = new LinkedHashMap<>();
 
 		public InputSegment() {
@@ -157,6 +159,28 @@ public class DialogueStatement {
 		 */
 		public void setInputType(String inputType) {
 			this.inputType = inputType;
+		}
+
+		/**
+		 * Returns the description of this input command. For example a client can
+		 * use this in input validation messages ("You did not fill in [your
+		 * name]."). The description is optional and may be null.
+		 *
+		 * @return the description or null
+		 */
+		public String getDescription() {
+			return description;
+		}
+
+		/**
+		 * Sets the description of this input command. For example a client can use
+		 * this in input validation messages ("You did not fill in [your name].").
+		 * The description is optional and may be null.
+		 *
+		 * @param description the description or null
+		 */
+		public void setDescription(String description) {
+			this.description = description;
 		}
 
 		/**
@@ -246,6 +270,8 @@ public class DialogueStatement {
 			Map<String,Object> obj = new LinkedHashMap<>();
 			obj.put("segmentType", value.getSegmentType());
 			obj.put("inputType", value.getInputType());
+			if (value.getDescription() != null)
+				obj.put("description", value.getDescription());
 			for (String param : value.getParameters().keySet()) {
 				obj.put(param, value.getParameters().get(param));
 			}
@@ -281,6 +307,15 @@ public class DialogueStatement {
 			}
 			String typeStr = (String)typeObj;
 			segment.setInputType(typeStr);
+			Object descrObj = map.remove("description");
+			if (descrObj != null) {
+				if (!(descrObj instanceof String)) {
+					throw new JsonParseException(p,
+							"Invalid value of property \"description\": " +
+							descrObj);
+				}
+				segment.setDescription((String)descrObj);
+			}
 			segment.setParameters(map);
 			return segment;
 		}

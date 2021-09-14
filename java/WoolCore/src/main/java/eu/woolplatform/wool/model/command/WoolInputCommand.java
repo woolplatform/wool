@@ -27,6 +27,7 @@ import eu.woolplatform.utils.exception.LineNumberParseException;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.model.WoolReply;
+import eu.woolplatform.wool.model.WoolVariableString;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 import eu.woolplatform.wool.parser.WoolBodyToken;
 import eu.woolplatform.wool.parser.WoolNodeState;
@@ -54,6 +55,7 @@ public abstract class WoolInputCommand extends WoolAttributesCommand {
 			TYPE_TEXT, TYPE_LONGTEXT, TYPE_NUMERIC, TYPE_SET, TYPE_TIME);
 	
 	private String type;
+	private String description = null;
 
 	public WoolInputCommand(String type) {
 		this.type = type;
@@ -61,14 +63,49 @@ public abstract class WoolInputCommand extends WoolAttributesCommand {
 
 	public WoolInputCommand(WoolInputCommand other) {
 		this.type = other.type;
+		this.description = other.description;
 	}
 
+	/**
+	 * Returns the type of input command. This should be one of the TYPE_*
+	 * constants defined in this class.
+	 *
+	 * @return the type of input command
+	 */
 	public String getType() {
 		return type;
 	}
 
+	/**
+	 * Sets the type of input command. This should be one of the TYPE_*
+	 * constants defined in this class.
+	 *
+	 * @param type the type of input command
+	 */
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	/**
+	 * Returns the description of this input command. For example a client can
+	 * use this in input validation messages ("You did not fill in [your
+	 * name]."). The description is optional and may be null.
+	 *
+	 * @return the description or null
+	 */
+	public String getDescription() {
+		return description;
+	}
+
+	/**
+	 * Sets the description of this input command. For example a client can use
+	 * this in input validation messages ("You did not fill in [your name].").
+	 * The description is optional and may be null.
+	 *
+	 * @param description the description or null
+	 */
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	/**
@@ -117,20 +154,44 @@ public abstract class WoolInputCommand extends WoolAttributesCommand {
 					"Invalid value for attribute \"type\": " + type,
 					token.getLineNum(), token.getColNum());
 		}
+		WoolInputCommand result;
 		switch (type) {
 			case TYPE_EMAIL:
-				return WoolInputEmailCommand.parse(cmdStartToken, attrs);
+				result = WoolInputEmailCommand.parse(cmdStartToken, attrs);
+				break;
 			case TYPE_TEXT:
-				return WoolInputTextCommand.parse(cmdStartToken, attrs);
+				result = WoolInputTextCommand.parse(cmdStartToken, attrs);
+				break;
 			case TYPE_LONGTEXT:
-				return WoolInputLongtextCommand.parse(cmdStartToken, attrs);
+				result = WoolInputLongtextCommand.parse(cmdStartToken, attrs);
+				break;
 			case TYPE_NUMERIC:
-				return WoolInputNumericCommand.parse(cmdStartToken, attrs);
+				result = WoolInputNumericCommand.parse(cmdStartToken, attrs);
+				break;
 			case TYPE_SET:
-				return WoolInputSetCommand.parse(cmdStartToken, attrs);
+				result = WoolInputSetCommand.parse(cmdStartToken, attrs);
+				break;
 			case TYPE_TIME:
-				return WoolInputTimeCommand.parse(cmdStartToken, attrs);
+				result = WoolInputTimeCommand.parse(cmdStartToken, attrs);
+				break;
+			default:
+				throw new RuntimeException("Unsupported value for input type: " + type);
 		}
-		throw new RuntimeException("Unsupported value for input type: " + type);
+		String description = readPlainTextAttr("description", attrs,
+				cmdStartToken, false);
+		if (description != null && !description.isEmpty())
+			result.setDescription(description);
+		return result;
+	}
+
+	protected String toStringStart() {
+		String result = "<<input type=\"" + type + "\"";
+		if (description != null) {
+			char[] escapes = new char[] { '"' };
+			String escapedDescr = new WoolVariableString(description)
+					.toString(escapes);
+			result += " description=\"" + escapedDescr + "\"";
+		}
+		return result;
 	}
 }

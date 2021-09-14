@@ -84,8 +84,8 @@ public class WoolInputNumericCommand extends WoolInputCommand {
 
 	@Override
 	public String toString() {
-		String result = "<<input type=\"" + TYPE_NUMERIC + "\"" +
-				" value=\"$" + variableName + "\"";
+		String result = toStringStart();
+		result += " value=\"$" + variableName + "\"";
 		if (min != null)
 			result += " min=\"" + min + "\"";
 		if (max != null)

@@ -295,9 +295,8 @@ public abstract class WoolInputAbstractTextCommand extends WoolInputCommand {
 
 	@Override
 	public String toString() {
-		String result = "<<input type=\"" + getType() + "\"" +
-				" value=\"$" + variableName + "\"";
-
+		String result = toStringStart();
+		result += " value=\"$" + variableName + "\"";
 		if (min != null)
 			result += " min=\"" + min + "\"";
 

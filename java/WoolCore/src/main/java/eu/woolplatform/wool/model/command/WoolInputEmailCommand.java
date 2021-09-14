@@ -67,8 +67,9 @@ public class WoolInputEmailCommand extends WoolInputCommand {
 
 	@Override
 	public String toString() {
-		return "<<input type=\"" + TYPE_EMAIL +
-				"\" value=\"$" + variableName + "\">>";
+		String result = toStringStart();
+		result += " value=\"$" + variableName + "\">>";
+		return result;
 	}
 
 	public static WoolInputCommand parse(WoolBodyToken cmdStartToken,
