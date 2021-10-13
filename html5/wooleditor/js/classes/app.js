@@ -57,12 +57,7 @@ var App = function(name, version, filename) {
 
 	// node-webkit
 	this.isNwjs = detectNodeJS();
-	if (this.isNwjs) {
-		//this.gui = require('nw.gui');
-		this.fs = new NodeFileSystem();
-	} else {
-		this.fs = new BrowserFileSystem();
-	}
+	this.fs = getPlatformFileSystem();
 
 	this.numberOfNodes = function() {
 		var nr = self.nodes().length;

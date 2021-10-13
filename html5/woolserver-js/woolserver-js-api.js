@@ -33,9 +33,10 @@ directServer.setRootDir = function(rootDir) {
 	directServer.rootDir = rootDir;
 }
 
-directServer.setLanguage = function(defaultLang,currentLang) {
-	if (!defaultLang) defaultLang = "en";
-	if (!currentLang) currentLang = "en";
+directServer.setLanguage = function(defaultLang,currentLang,defaultValue) {
+	if (!defaultValue) defaultValue = "en";
+	if (!defaultLang) defaultLang = defaultValue;
+	if (!currentLang) currentLang = defaultValue;
 	directServer.defaultLanguage = defaultLang;
 	directServer.currentLanguage = currentLang;
 }
@@ -214,8 +215,18 @@ directServer.getNode = function() {
 	return ret;
 }
 
+directServer.setVar = function(name,value) {
+	if (!directServer.currentnodectx) {
+		console.log("Warning: cannot set variable: no current node context.");
+	} else {
+		directServer.currentnodectx.vars[name] = value;
+	}
+}
 
-
+directServer.getVars = function() {
+	if (!directServer.currentnodectx) return null;
+	return directServer.currentnodectx.vars;
+}
 
 function handleDirectServerCall(type,dataType,headers,callbackURL,
 functionOnSuccess) {
@@ -343,9 +354,11 @@ function _directServer_progress_dialogue(par) {
 		directServer.jumpedToNewDialogue = true;
 		// load translations before loading dialogue
 		directServerLoadNodeTranslation(
-			directServer.rootDir + newTranslationPath + ".json");
+			(directServer.rootDir ? directServer.rootDir : "")
+			+ newTranslationPath + ".json");
    		directServerLoadNodeDialogue(newDialogueId,
-			directServer.rootDir + newDialogueId + ".wool");
+			(directServer.rootDir ? directServer.rootDir : "")
+			+ newDialogueId + ".wool");
      console.log("startDialogue "+newDialogueId)
 		return _directServer_start_dialogue({
 			dialogueId: newDialogueId,

@@ -285,23 +285,23 @@ function WoolNode(dialogue,lines) {
 		// XXX $a == $b is not rewritten, inherits js semantics
 		// XXX shallow parsing, could match string literal
 		// XXX improve number parser, e.g. ".0" not supported
-		expr = expr.replace(/[^=]==\s*true\b/g,  " === true");
-		expr = expr.replace(/[^=]==\s*false\b/g, " === false");
-		expr = expr.replace(/[^=]==\s*0\b/g,     " === 0");
-		expr = expr.replace(/[^=]==\s*0[.]0\b/g, " === 0.0");
-		expr = expr.replace( /\btrue\s*==[^=]/g, "true === ");
-		expr = expr.replace(/\bfalse\s*==[^=]/g, "false === ");
-		expr = expr.replace(    /\b0\s*==[^=]/g, "0 === ");
-		expr = expr.replace(/\b0[.]0\s*==[^=]/g, "0.0 === ");
+		expr = expr.replace(/([^=!])==\s*true\b/g,  "$1 === true");
+		expr = expr.replace(/([^=!])==\s*false\b/g, "$1 === false");
+		expr = expr.replace(/([^=!])==\s*0\b/g,     "$1 === 0");
+		expr = expr.replace(/([^=!])==\s*0[.]0\b/g, "$1 === 0.0");
+		expr = expr.replace( /\btrue\s*==([^=!])/g, "true === $1");
+		expr = expr.replace(/\bfalse\s*==([^=!])/g, "false === $1");
+		expr = expr.replace(    /\b0\s*==([^=!])/g, "0 === $1");
+		expr = expr.replace(/\b0[.]0\s*==([^=!])/g, "0.0 === $1");
 
 		expr = expr.replace(/!=\s*true\b/g,  " !== true");
 		expr = expr.replace(/!=\s*false\b/g, " !== false");
 		expr = expr.replace(/!=\s*0\b/g,     " !== 0");
 		expr = expr.replace(/!=\s*0[.]0\b/g, " !== 0.0");
-		expr = expr.replace( /\btrue\s*!=[^=]/g, "true !== ");
-		expr = expr.replace(/\bfalse\s*!=[^=]/g, "false !== ");
-		expr = expr.replace(    /\b0\s*!=[^=]/g, "0 !== ");
-		expr = expr.replace(/\b0[.]0\s*!=[^=]/g, "0.0 !== ");
+		expr = expr.replace( /\btrue\s*!=/g, "true !== ");
+		expr = expr.replace(/\bfalse\s*!=/g, "false !== ");
+		expr = expr.replace(    /\b0\s*!=/g, "0 !== ");
+		expr = expr.replace(/\b0[.]0\s*!=/g, "0.0 !== ");
 
 		return expr.replace(/[$]([a-zA-Z0-9_]+)/g, function(match,p1) {
 			return "C.vars."+p1;
@@ -528,6 +528,7 @@ function WoolNode(dialogue,lines) {
 			}
 			checkExpressionForSingleEquals(matches[2], i);
 			checkExpressionForBareIds(matches[2], i);
+			//console.log("REWROTE EXPR: "+matches[2] + " => " + rewriteExpression(matches[2]));
 			this.body[i] = (matches[1] ? "} else if (" : "if (")
 				+ rewriteExpression(matches[2])
 				+ ") {";
@@ -797,8 +798,8 @@ function directServerLoadDialogue(dialogueID,data) {
 }
 
 function directServerLoadNodeDialogue(dialogueID,filepath,overwrite) {
-    if (typeof NodeFileSystem == "undefined") return;
-	var fs = new NodeFileSystem();
+    //if (typeof NodeFileSystem == "undefined") return;
+	var fs = getPlatformFileSystem();
 	var data = fs.readFileSync(filepath);
 	if (overwrite || !directServer.dialogues[dialogueID]) {
 		directServer.dialogues[dialogueID] = new WoolDialogue(data);
@@ -808,17 +809,17 @@ function directServerLoadNodeDialogue(dialogueID,filepath,overwrite) {
 
 function directServerLoadNodeTranslation(filepath) {
 	console.log("Loading translation: "+filepath);
-    if (typeof NodeFileSystem == "undefined") return;
-	var fs = new NodeFileSystem();
+    //if (typeof NodeFileSystem == "undefined") return;
+	var fs = getPlatformFileSystem();
 	var langDefs = fs.readFileSync(filepath);
 	_i18n.clearDictionary("nl");
 	if (langDefs) _i18n.ReadJSONFromString(langDefs,"nl");
 }
 
 function directServerGetPath(newPath,languageCode) {
-    if (typeof NodeFileSystem == "undefined") return newPath;
+    //if (typeof NodeFileSystem == "undefined") return newPath;
 	if (!languageCode) languageCode = "en";
-    var fs = new NodeFileSystem();
+	var fs = getPlatformFileSystem();
     if (newPath.indexOf("/") != 0 && newPath.indexOf("\\") != 0) {
         // relative path
         var curPath=fs.getPathAPI().dirname(directServer.currentdialogueId);

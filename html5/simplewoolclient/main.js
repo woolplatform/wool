@@ -3,9 +3,28 @@
 // code - source code of dialogue
 // editable - if defined, make display config editable
 
+// vars - json of key-value pairs, to be entered into the variable store.
+//     Keys are variable names without the "$". Ex:
+//     { "var1": "value1", "var2": 2, "var3": true }
+// resources - json string with list of resources to be preloaded for the
+//     browser version. Example:
+//     [ "nl/file1.wool", "nl/file2.wool", "en/file1.json" ]
+// dialoguepath - path of dialogue to start with. Only applicable when
+//     resources are supplied.
+// defaultlanguage - defaultLanguage and currentLanguage are set to this
+//     value. Is only applicable when resources are supplied.
+// redirecturl - url to redirect to when reaching end of dialogue. All variables
+//     in the variable store are supplied as a GET parameter containing
+//     key-value pairs for each of the variables, following the same format as
+//     the vars input parameter.
+//     Ex: if redirect = "/process.php?dialogue=1&", the full URL will be
+//     "/process.php?dialogue=1&vars=..."
+
 var LOCALSTORAGEPREFIX="wool_js_";
 
 var NARRATOR = "Narrator";
+
+var RESOURCEBASEDIR = "dialogues";
 
 // get urlParams and config ------------------------------------------------
 var urlParams = Utils.getUrlParameters();
@@ -33,11 +52,6 @@ function makeRange(max) {
 	return ret;
 }
 
-if (urlParams.resetconfig) {
-	localStorage.removeItem("simplewoolclient_config");
-	alert("Config reset!");
-}
-
 function saveConfig() {
 	config.avatar = avatarRes.serialize();
 	config.background = backgroundRes.serialize();
@@ -48,13 +62,18 @@ function saveConfig() {
 
 // load config --------------------------------------------------------
 
+if (urlParams.resetconfig) {
+	localStorage.removeItem("simplewoolclient_config");
+	alert("Config reset!");
+}
+
 var config = {
 	// avatar and background ID are:
 	// - number for preset backgrounds 
 	// - URL for custom bg
 	"avatar": null,
 	"background": null,
-}
+};
 //	"avatars": {
 //		"current": 0, // current index in all
 //		"all": [], // all known avatar IDs and URLs
@@ -96,18 +115,33 @@ saveConfig();
 
 
 // Obtain source code and lang defs. Possible sources:
+// - resources: if dialoguepath is defined
 // - URL parameter "code" (langDefs cannot be obtained from url yet)
 // - windowparams.sourceCode and windowparams.langDefs
 
+var defaultLanguage = urlParams.defaultlanguage;
+if (!defaultLanguage) {
+	defaultLanguage = "nl";
+}
+
+var dialogueInitVars = {};
+
+if (urlParams.vars) {
+	var varsjson = JSON.parse(urlParams.vars);
+	if (varsjson) {
+		for (var varsjsonname in varsjson) {
+			dialogueInitVars[varsjsonname] = varsjson[varsjsonname];
+		}
+	}
+}
 
 var sourceCode = null;
 
 var langDefs = null;
 
-// In the node environment, the ID represents the absolute path. If loaded
-// through directServerLoadNodeDialogue, this ensures the initial dialogue is
-// taken from the source code rather than the file.
-var dialogueID = "dialogue";
+// The ID represents the absolute path. Basedir is used by 
+// directServerLoadNodeDialogue when loading a relative path.
+var dialogueID = "/"+defaultLanguage+"/dialogue";
 
 //sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
 
@@ -125,6 +159,7 @@ try {
 
 _i18n.enableNormalization(true);
 
+// NOTE: "nl" is always used for the current language
 _i18n.clearDictionary("nl");
 
 if (langDefs) {
@@ -152,61 +187,6 @@ marked.setOptions({
     renderer: renderer
 });
 
-
-// if URL parameters "woolRoot" and "filepath" are supplied, we assume node.js
-// is available, and we can load new dialogues.  Note that the current
-// dialogue is not loaded from file because it may not have been saved.
-// sourceCode is used instead of file contents every time we jump back to the
-// original dialogue.  If sourceCode is not available, then load it from file
-// anyway.
-if (urlParams.woolRoot && urlParams.filepath) {
-	dialogueID = urlParams.filepath;
-	if (!detectNodeJS()) {
-		alert("Fatal: File path specified but node.js not available");
-	} else {
-		directServer.setRootDir(urlParams.woolRoot);
-		directServer.setLanguage(
-			localStorage.getItem(LOCALSTORAGEPREFIX+"defaultlanguage"),
-			localStorage.getItem(LOCALSTORAGEPREFIX+"language")
-		);
-		if (!sourceCode) {
-			sourceCode = directServerLoadNodeDialogue(dialogueID,
-				urlParams.woolRoot+"/"+urlParams.filepath);
-		} else {
-			directServerLoadDialogue(dialogueID,sourceCode);
-		}
-	}
-} else {
-	directServerLoadDialogue(dialogueID,sourceCode);
-}
-
-
-var errorsFound=false;
-var errors = {};
-for (var i=0; i<directServer.dialogues[dialogueID].nodes.length; i++) {
-	var node = directServer.dialogues[dialogueID].nodes[i];
-	if (node.errors.length) {
-		for (var j=0; j<node.errors.length; j++) {
-			var err = node.errors[j];
-			if (err.level == "warning" || err.level == "notice") continue;
-			if (!errors[node.param.title]) errors[node.param.title] = [];
-			errors[node.param.title].push(
-				(err.line!==null ? "Line "+(err.line+1)+":" : "")
-				+err.msg+" ("+err.level+")");
-		}
-		if (errors[node.param.title]) {
-			errorsFound=true;
-		}
-	}
-}
-if (errorsFound) {
-	showingInDebug="errors";
-	var dbox = document.getElementById("debugarea");
-	dbox.parentNode.style.display="block";
-	dbox.innerHTML = "Errors were found while parsing.\n"
-		+"A list of nodes with errors found in each node follows.\n\n"
-		+JSON.stringify(errors,null,2);
-}
 
 // edit functions ---------------------------------------------------------
 
@@ -328,7 +308,7 @@ function showVariables() {
 	showingInDebug="variables";
 	var dbox = document.getElementById("debugarea");
 	dbox.parentNode.style.display="block";
-	dbox.innerHTML = JSON.stringify(directServer.currentnodectx.vars,null,2);
+	dbox.innerHTML = JSON.stringify(directServer.getVars(),null,2);
 }
 
 if (urlParams.editable) {
@@ -432,13 +412,31 @@ function handleNumericReply(id,index,min,max) {
 }
 
 function startDialogue() {
+	// Hack: preload initial vars into current nodecontext, so they are
+	// present for determining the first action.
+	// TODO pass these vars via start_dialogue
+	directServer.currentnodectx = new WoolNodeContext(dialogueInitVars);
 	handleDirectServerCall("GET", null,null,
-		"start_dialogue/?dialogueId="+encodeURIComponent(dialogueID),
-			updateNodeUI);
+		"start_dialogue/?keepVars=true&dialogueId="
+			+encodeURIComponent(dialogueID),
+		updateNodeUI);
+	//for (var name in dialogueInitVars) {
+	//	directServer.setVar(name, dialogueInitVars[name]);
+	//}
 }
 
 
 function updateNodeUI(node) {
+	// Check if we need to redirect after dialogue end first.
+	// If so, do not update UI
+	if (node.id=="End" || node.replies.length==0) {
+		if (urlParams.redirecturl) {
+			window.location.href = urlParams.redirecturl
+				+ "vars=" + encodeURIComponent(JSON.stringify(
+					directServer.getVars()));
+			return;
+		}
+	}
 	// show actions
 	if (directServer.currentnodectx) {
 		var actions = directServer.currentnodectx.pendingActions;
@@ -491,6 +489,7 @@ function updateNodeUI(node) {
 				? node.statement
 				: marked(node.statement);
 	}
+	// Non-redirect case of dialogue end
 	if (node.id=="End" || node.replies.length==0) {
 		replyelem.className = "reply-box-auto-forward";
 		replyelem.innerHTML =
@@ -590,16 +589,104 @@ function updateNodeUI(node) {
 	localStorage.setItem("simplewoolclient_dialoguestate",directServer.getState());
 }
 
-// start dialogue --------------------------------------------------
+// load resources, start dialogue ------------------------------------------
 
-var prevstate = localStorage.getItem("simplewoolclient_dialoguestate");
-if (urlParams.docontinue) {
-	if (prevstate) {
-		directServer.setState(prevstate);
-		updateNodeUI(directServer.getNode());
+
+var nrResourcesLoaded=0;
+if (urlParams.resources) {
+	var res = JSON.parse(urlParams.resources);
+	if (res) {
+		for (var i=0; i<res.length; i++) {
+			var resname = res[i];
+			BrowserFileSystem.cacheFile(RESOURCEBASEDIR+"/"+resname,resname,
+				function() {
+					console.log("Loaded resource "+resname);
+					nrResourcesLoaded++;
+					if (nrResourcesLoaded == res.length) {
+						startOrResumeDialogue();
+					}
+				},
+				function(errormsg) {
+					console.log("Error reading resource: '"+errormsg+"'");
+				}
+			);
+		}
 	}
 } else {
-	startDialogue();
+	startOrResumeDialogue();
+}
+
+
+function startOrResumeDialogue() {
+	if (urlParams.dialoguepath) {
+		sourceCode=getPlatformFileSystem().readFileSync(urlParams.dialoguepath);
+	}
+	// if URL parameters "woolRoot" and "filepath" are supplied, we assume node.js
+	// is available, and we can load new dialogues.  Note that the current
+	// dialogue is not loaded from file because it may not have been saved.
+	// sourceCode is used instead of file contents every time we jump back to the
+	// original dialogue.  If sourceCode is not available, then load it from file
+	// anyway.
+	if (urlParams.woolRoot && urlParams.filepath) {
+		dialogueID = urlParams.filepath;
+		if (!detectNodeJS()) {
+			alert("Fatal: File path specified but node.js not available");
+		} else {
+			directServer.setRootDir(urlParams.woolRoot);
+			directServer.setLanguage(
+				localStorage.getItem(LOCALSTORAGEPREFIX+"defaultlanguage"),
+				localStorage.getItem(LOCALSTORAGEPREFIX+"language"),
+				defaultLanguage
+			);
+			if (!sourceCode) {
+				sourceCode = directServerLoadNodeDialogue(dialogueID,
+					urlParams.woolRoot+"/"+urlParams.filepath);
+			} else {
+				directServerLoadDialogue(dialogueID,sourceCode);
+			}
+		}
+	} else {
+		directServer.setLanguage(null,null,defaultLanguage);
+		directServerLoadDialogue(dialogueID,sourceCode);
+	}
+
+
+	var errorsFound=false;
+	var errors = {};
+	for (var i=0; i<directServer.dialogues[dialogueID].nodes.length; i++) {
+		var node = directServer.dialogues[dialogueID].nodes[i];
+		if (node.errors.length) {
+			for (var j=0; j<node.errors.length; j++) {
+				var err = node.errors[j];
+				if (err.level == "warning" || err.level == "notice") continue;
+				if (!errors[node.param.title]) errors[node.param.title] = [];
+				errors[node.param.title].push(
+					(err.line!==null ? "Line "+(err.line+1)+":" : "")
+					+err.msg+" ("+err.level+")");
+			}
+			if (errors[node.param.title]) {
+				errorsFound=true;
+			}
+		}
+	}
+	if (errorsFound) {
+		showingInDebug="errors";
+		var dbox = document.getElementById("debugarea");
+		dbox.parentNode.style.display="block";
+		dbox.innerHTML = "Errors were found while parsing.\n"
+			+"A list of nodes with errors found in each node follows.\n\n"
+			+JSON.stringify(errors,null,2);
+	}
+
+	var prevstate = localStorage.getItem("simplewoolclient_dialoguestate");
+	if (urlParams.docontinue) {
+		if (prevstate) {
+			directServer.setState(prevstate);
+			updateNodeUI(directServer.getNode());
+		}
+	} else {
+		startDialogue();
+	}
 }
 
 

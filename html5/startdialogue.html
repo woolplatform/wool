@@ -1,0 +1,53 @@
+<!-- Sample script that shows how to redirect to simplewoolient with the
+     appropriate parameters.  -->
+<html>
+<head>
+<script src="lib/utils.js"></script>
+
+<script>
+	var urlParams = Utils.getUrlParameters();
+	var project = urlParams.project;
+	if (!project) project="pharaon";
+	// determine parameters according to project
+	var	dialoguepath = null;
+	var redirecturl = null;
+	var vars = null;
+	var resources = null;
+	if (project == "pharaon") {
+		dialoguepath = "/nl/"+urlParams.dialogue+".wool";
+		vars = urlParams.vars;
+		//vars = {
+		//	"userFirstName": "Oom Henk",
+		//};
+		resources = [
+			"/nl/nieuwekeuze.wool",
+			"/nl/introductie.wool",
+		];
+		if (urlParams.redirecturl) {
+			redirecturl = urlParams.redirecturl;
+		}
+	}
+	// redirect
+	var hrefparts = [];
+	if (dialoguepath) {
+		hrefparts.push("dialoguepath="
+			+ encodeURIComponent(dialoguepath) );
+	}
+	if (redirecturl) {
+		hrefparts.push("redirecturl="
+			+ encodeURIComponent(redirecturl) );
+	}
+	if (resources) {
+		hrefparts.push("resources="
+			+ encodeURIComponent(JSON.stringify(resources)) );
+	}
+	if (vars) {
+		hrefparts.push("vars="
+			+ encodeURIComponent(vars) );
+	}
+	window.location.href = "simplewoolclient/index.html?" + hrefparts.join("&");
+</script>
+</head>
+<body>
+</body>
+</html>

@@ -5,6 +5,15 @@ function detectNodeJS() {
 	return typeof(process) !== "undefined";
 }
 
+function getPlatformFileSystem() {
+	if (detectNodeJS()) {
+		//this.gui = require('nw.gui');
+		return new NodeFileSystem();
+	} else {
+		return new BrowserFileSystem();
+	}
+}
+
 // ------------------------------------------------------------------
 // abstract class, simulating nodejs fs functions
 
@@ -45,8 +54,25 @@ FileSystem.prototype.mkdirSync = function(path) {}
 // callback - function(err)
 FileSystem.prototype.renameFile = function(oldpath,newpath,safe,callback) {}
 
-FileSystem.prototype.getPathAPI = function(path) { return { sep: "/"} }
+FileSystem.prototype.getPathAPI = function(path) { 
+	return {
+		sep: "/",
+		dirname: function(path) {
+			if (path.indexOf("/") === false) {
+				return "";
+			} else {
+				return path.substring(0,path.lastIndexOf("/"));
+			}
+		},
+		join: function(sep,pathprefix,pathsuffix) {
+			return pathprefix+sep+pathsuffix;
+		},
+		normalize: function(path) { return path; },
+	}
+}
 
+// for BrowserFileSystem, enables readFileSync for cached files
+FileSystem.cacheFile = function(url,path,success,failure){}
 
 // ------------------------------------------------------------------
 // node.js implementation. Assumes node.js is available.
@@ -159,19 +185,36 @@ NodeFileSystem.prototype.getPathAPI = function() { return this.path; }
 function BrowserFileSystem() {
 	FileSystem.apply(this,["browser"]);
 }
+
 BrowserFileSystem.prototype = new FileSystem();
 
+// implements both sync and async
 BrowserFileSystem.readFileStatic = function(path,blob,callback) {
-	var reader = new FileReader();
-	reader.onerror = function(e) {
-		callback("Error reading file",null);
+	if (!blob) {
+		// see if we have a cached file
+		var cachedfile = BrowserFileSystem.filecache[path];
+		if (cachedfile) {
+			if (callback) callback(null,cachedfile);
+			return cachedfile;
+		} else {
+			if (callback) callback("File not found in cache",null);
+		}
+	} else {
+		var reader = new FileReader();
+		reader.onerror = function(e) {
+			if (callback) callback("Error reading file",null);
+		}
+		reader.onload = function(e) {
+			if (callback) callback(null,e.target.result);
+		}
+		reader.readAsText(blob);
 	}
-	reader.onload = function(e) {
-		callback(null,e.target.result);
-	}
-	reader.readAsText(blob);
 }
 BrowserFileSystem.prototype.readFile = BrowserFileSystem.readFileStatic;
+
+BrowserFileSystem.prototype.readFileSync = function(path,blob,callback) {
+	return BrowserFileSystem.readFileStatic(path,blob,null);
+}
 
 BrowserFileSystem.prototype.writeFile = function(path,data,callback) {}
 
@@ -285,3 +328,31 @@ BrowserFileSystem.prototype.readdirtree = function(path,callback) {
 
 
 BrowserFileSystem.prototype.renameFile = null;
+
+
+BrowserFileSystem.filecache = {}; // dirname => content(string)
+
+BrowserFileSystem.cacheFile = function(url,path,success,failure) {
+    var request = new XMLHttpRequest();
+	// https://stackoverflow.com/questions/51000009/i-keep-getting-this-error-xml-parsing-error-syntax-error-but-still-the-website/51000139
+	request.overrideMimeType("text/plain");
+    request.open('GET', url, true);
+    request.onreadystatechange = function () {
+        if (request.readyState === 4) {
+			if (request.status === 200) {
+				if (request.responseText) {
+				//var type = request.getResponseHeader('Content-Type');
+				//if (type.indexOf("text") !== 1) {
+					BrowserFileSystem.filecache[path] = request.responseText;
+					success();
+				} else {
+					failure("Not a text file.");
+				}
+			} else {
+				failure("Response code: "+request.status);
+			}
+        }
+    }
+    request.send(null);
+}
+
