@@ -38,18 +38,14 @@ dependencies {
 	cargo 'org.codehaus.cargo:cargo-ant:1.6.5'
 }
 
-def cargoLocalTomcatContainerId = project.hasProperty('localTomcatContainerId') ? localTomcatContainerId : 'tomcat8x'
 def cargoTomcatDeployPath = project.hasProperty('tomcatDeployPath') ? tomcatDeployPath : ''
 def cargoRemoteTomcatHost = project.hasProperty('remoteTomcatHost') ? remoteTomcatHost : ''
 def cargoRemoteTomcatUser = project.hasProperty('remoteTomcatUser') ? remoteTomcatUser : ''
 def cargoRemoteTomcatPassword = project.hasProperty('remoteTomcatPassword') ? remoteTomcatPassword : ''
-def cargoLocalTomcatHomeDir = project.hasProperty('localTomcatHomeDir') ? localTomcatHomeDir : '.'
-def cargoLocalTomcatAjpPort = project.hasProperty('localTomcatAjpPort') ? localTomcatAjpPort : 0
-def cargoLocalTomcatPort = project.hasProperty('localTomcatPort') ? localTomcatPort : 0
 def cargoRemoteTomcatPort = project.hasProperty('remoteTomcatPort') ? remoteTomcatPort : 0
 
 cargo {
-	containerId = cargoLocalTomcatContainerId
+	containerId = 'tomcat8x'
 
 	deployable {
 		context = cargoTomcatDeployPath
@@ -60,19 +56,6 @@ cargo {
 		username = cargoRemoteTomcatUser
 		password = cargoRemoteTomcatPassword
 	}
-	
-	local {
-		homeDir = file(cargoLocalTomcatHomeDir)
-		outputFile = file('build/logs/tomcat.log')
-		
-		containerProperties {
-			property 'cargo.tomcat.ajp.port', cargoLocalTomcatAjpPort
-		}
-	}
-}
-
-tasks.matching({ it.name =~ /cargo.*Local/ }).each() {
-	it.port = cargoLocalTomcatPort.toInteger()
 }
 
 tasks.matching({ it.name =~ /cargo.*Remote/ }).each() {
