@@ -1,7 +1,13 @@
 ================================================================================
 WOOL WEB SERVICE 1.0.0
-21 April 2020
+October 13, 2021
 Dennis Hofs (d.hofs@rrd.nl)
+Harm op den Akker (hopdenakker@innovationsprint.eu)
+
+Note: A tutorial for setting up and using the WOOL Web Service is available in
+our online Documentation Hub, here:
+
+https://www.woolplatform.eu/docs/wool-platform/dev/tutorials/tutorial-setting-up-webservice.html
 
 ================================================================================
 1 REQUIREMENTS
@@ -67,7 +73,7 @@ http://localhost:8080/
 The web service is configured with this file that needs to be created:
 <GITDIR>\wool\java\WoolWebService\gradle.properties
 
-You can make a copy of this file and change it:
+You can make a copy of this file, rename it to "gradle.properties", and edit it:
 <GITDIR>\wool\java\WoolWebService\gradle.sample.properties
 
 For the secret key, you may use the key generator in the BuildTools. Open a
