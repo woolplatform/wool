@@ -43,12 +43,13 @@ img#background {
 }
 
 #agent_object {
-	width: 450px;
- 	height: 477px;
+	width: 430px;
+ 	height: 457px;
  	position: fixed;
- 	right: 50px;
+ 	right: 20px;
  	bottom: 0px;
 	pointer-events: none;
+	text-align: center;
 }
 
 @media only screen and (min-width: 600px){
@@ -59,7 +60,7 @@ img#background {
 } 
 
 #agent_object .avatarimage {
-	width: 100%;
+	width: auto;
 	height: 100%;
 }
 
@@ -295,7 +296,8 @@ button.reply:last-of-type:before {
 
 button.reply-auto-forward {
 	background: #2889A3;
-	float: right;
+	float: left;
+	margin-left: 20%;
 	padding: 10px 15px 10px 15px;
 	-webkit-border-radius: 5px 5px 5px 5px;
 	-moz-border-radius:  5px 5px 5px 5px;
@@ -303,7 +305,7 @@ button.reply-auto-forward {
 	border: 4px solid #2889A3;
 	color: #fff;
     font-family: "Open Sans", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-    font-size:0.9em;
+    font-size:1.0em;
     text-align: center;
     clear: both;
 }

@@ -15,8 +15,10 @@
 <script src="../lib/filesystem.js"></script>
 <script src="resourceui.js"></script>
 <script type="text/javascript" src="../node_modules/marked/marked.min.js"></script>
+<script src="initheader.js"></script>
 </head>
 <body>
+	<div id="hidden" style="position:absolute; width: 1px; height: 1px; overflow:hidden;"></div>
 	<img id='background'></img>
 	<div class='debugbox'>
 		Debug Window <div class='commandbutton' onclick='this.parentNode.style.display="none";showingInDebug=null;'>Close</div>

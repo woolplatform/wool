@@ -1,34 +1,3 @@
-// valid parameters:
-// config - display config
-// code - source code of dialogue
-// editable - if defined, make display config editable
-
-// vars - json of key-value pairs, to be entered into the variable store.
-//     Keys are variable names without the "$". Ex:
-//     { "var1": "value1", "var2": 2, "var3": true }
-// resources - json string with list of resources to be preloaded for the
-//     browser version. Example:
-//     [ "nl/file1.wool", "nl/file2.wool", "en/file1.json" ]
-// dialoguepath - path of dialogue to start with. Only applicable when
-//     resources are supplied.
-// defaultlanguage - defaultLanguage and currentLanguage are set to this
-//     value. Is only applicable when resources are supplied.
-// redirecturl - url to redirect to when reaching end of dialogue. All variables
-//     in the variable store are supplied as a GET parameter containing
-//     key-value pairs for each of the variables, following the same format as
-//     the vars input parameter.
-//     Ex: if redirect = "/process.php?dialogue=1&", the full URL will be
-//     "/process.php?dialogue=1&vars=..."
-
-var LOCALSTORAGEPREFIX="wool_js_";
-
-var NARRATOR = "Narrator";
-
-var RESOURCEBASEDIR = "dialogues";
-
-// get urlParams and config ------------------------------------------------
-var urlParams = Utils.getUrlParameters();
-
 
 //localStorage.removeItem("simplewoolclient_config");
 
@@ -73,6 +42,8 @@ var config = {
 	// - URL for custom bg
 	"avatar": null,
 	"background": null,
+	// speaker name -> dialogue name -> image filename
+	"avatarmapping": null,
 };
 //	"avatars": {
 //		"current": 0, // current index in all
@@ -142,6 +113,9 @@ var langDefs = null;
 // The ID represents the absolute path. Basedir is used by 
 // directServerLoadNodeDialogue when loading a relative path.
 var dialogueID = "/"+defaultLanguage+"/dialogue";
+if (urlParams.dialoguepath) {
+	dialogueID = urlParams.dialoguepath;
+}
 
 //sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
 
@@ -195,8 +169,18 @@ function updateAvatar() {
 	var controls = document.getElementById("avatarcontrols");
 	if (controls) controls.style.display = isNarrator ? "none" : "block";
 	var elem = document.getElementById("agent_object");
+	var agentid = avatarRes.getCurrentEntity();
+	var dialogueid = directServer.stripDialoguePath(directServer.currentdialogueId);
+	var nodeid = directServer.currentnode.param.title;
+	//console.log("AV "+agentid+"/"+dialogueid+"/"+nodeid);
 	if (isNarrator) {
 		elem.innerHTML="";
+	} else if (config.avatarmapping[agentid]
+	&&         config.avatarmapping[agentid][dialogueid]
+	&&         config.avatarmapping[agentid][dialogueid][nodeid]) {
+		elem.innerHTML = "<img class='avatarimage' src='images/"
+			+ config.avatarmapping[agentid][dialogueid][nodeid]
+			+ "'></img>";
 	} else if (avatarRes.currentIsNumber()) {
 		GenAvataaar(elem,avatarRes.getCurrent());
 	} else {
@@ -600,8 +584,9 @@ if (urlParams.resources) {
 			var resname = res[i];
 			BrowserFileSystem.cacheFile(RESOURCEBASEDIR+"/"+resname,resname,
 				function() {
-					console.log("Loaded resource "+resname);
 					nrResourcesLoaded++;
+					console.log("Loaded resource " + nrResourcesLoaded +
+						"/" + res.length);
 					if (nrResourcesLoaded == res.length) {
 						startOrResumeDialogue();
 					}
@@ -616,8 +601,41 @@ if (urlParams.resources) {
 	startOrResumeDialogue();
 }
 
+var preloadedImages = [];
 
 function startOrResumeDialogue() {
+	// handle avatar mapping file if present
+	var avatarmapping=getPlatformFileSystem().readFileSync("/avatarmapping.csv");
+	if (avatarmapping) {
+		config.avatarmapping = [];
+		var lines = avatarmapping.split(/\r?\n/);
+		for (var i=0; i<lines.length; i++) {
+			if (lines[i] == "") continue;
+			var fields = lines[i].split(/,/);
+			if (fields.length == 0) continue;
+			if (fields.length != 2) {
+				console.log("avatarmapping.csv: unexpected line '"+lines[i]+"'");
+				continue;
+			}
+			var comp = fields[0].split(/[.]/);
+			if (comp.length != 3) {
+				console.log("avatarmapping.csv: unexpected directive '"+fields[0]+"'");
+				continue;
+			}
+			if (!config.avatarmapping[comp[0]]) 
+				config.avatarmapping[comp[0]] = {};
+			if (!config.avatarmapping[comp[0]][comp[1]]) 
+				config.avatarmapping[comp[0]][comp[1]] = {};
+			config.avatarmapping[comp[0]][comp[1]][comp[2]] = fields[1];
+			var img = new Image();
+			img.src = "images/"+fields[1];
+			document.getElementById("hidden").appendChild(img);
+			preloadedImages.push(img);
+			//console.log("AVATAR "+comp[0]+" DIALOGUE "+comp[1]+" NODE "+comp[2]
+			//	+" IMAGE "+fields[1]);
+		}
+		console.log(config.avatarmapping);
+	}
 	if (urlParams.dialoguepath) {
 		sourceCode=getPlatformFileSystem().readFileSync(urlParams.dialoguepath);
 	}

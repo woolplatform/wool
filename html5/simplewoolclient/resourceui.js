@@ -38,6 +38,10 @@ ResourceUI.prototype.switchEntity = function(entityID,defaultIndex) {
 	}
 }
 
+ResourceUI.prototype.getCurrentEntity = function() {
+	return this.currententity;
+}
+
 // Cycle through resources for given entity
 ResourceUI.prototype.inc = function(amount) {
 	this.currentidx += amount;

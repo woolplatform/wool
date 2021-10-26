@@ -41,6 +41,19 @@ directServer.setLanguage = function(defaultLang,currentLang,defaultValue) {
 	directServer.currentLanguage = currentLang;
 }
 
+
+// strip language and ".wool" from dialogue path
+directServer.stripDialoguePath = function(dialoguepath) {
+	var ret = dialoguepath.split(/[\/\\]/);
+	if (ret.length <= 2) return ret;
+	ret.shift();
+	ret.shift();
+	ret = ret.join("/");
+	var ret2 = ret.split(/[.]wool$/i);
+	if (ret2.length == 2) return ret2[0];
+	return ret;
+}
+
 directServer.substituteVars = function(ctx,text) {
     var keys = [];
 	for (var key in ctx.vars) {
