@@ -46,7 +46,7 @@ import java.util.Map;
  * finally to get the response and read data. When you no longer need the
  * client, you should call {@link #close() close()}.
  *
- * <p>It assumes that the server returns response code 200 OK on success. For
+ * <p>It assumes that the server returns response code 2xx on success. For
  * any other response code (including 3xx redirects) it throws a {@link
  * HttpClientException HttpClientException}.</p>
  * 
@@ -371,7 +371,7 @@ public class HttpClient {
 	 * optionally writing data. This method will initialise the connection, get
 	 * the response and open the input if that wasn't done yet.
 	 * 
-	 * <p>If the response code is not 200 OK, it throws a {@link
+	 * <p>If the response code is not 2xx, it throws a {@link
 	 * HttpClientException HttpClientException}. For response codes 4xx or 5xx,
 	 * the exception will contain the content of the error stream.</p>
 	 * 
@@ -397,7 +397,7 @@ public class HttpClient {
 	 * connection, get the response and open the input stream if that wasn't
 	 * done yet.
 	 *
-	 * <p>If the response code is not 200 OK, it throws a {@link
+	 * <p>If the response code is not 2xx, it throws a {@link
 	 * HttpClientException HttpClientException}. For response codes 4xx or 5xx,
 	 * the exception will contain the content of the error stream.</p>
 	 * 
@@ -452,7 +452,7 @@ public class HttpClient {
 			}
 			throw new HttpClientException(respCode, respMessage, errorContent);
 		}
-		if (respCode != 200) {
+		if (respCode / 100 != 2) {
 			throw new HttpClientException(respCode, respMessage, "");
 		}
 		InputStream input = conn.getInputStream();
@@ -475,7 +475,7 @@ public class HttpClient {
 	 * parameters) and optionally writing data. This method will initialise the
 	 * connection, get the response and open the input if that wasn't done yet.
 	 * 
-	 * <p>If the response code is not 200 OK, it throws a {@link
+	 * <p>If the response code is not 2xx, it throws a {@link
 	 * HttpClientException HttpClientException}. For response codes 4xx or 5xx,
 	 * the exception will contain the content of the error stream.</p>
 	 * 
