@@ -22,13 +22,13 @@
 
 package eu.woolplatform.utils.validation;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
 import eu.woolplatform.utils.exception.ParseException;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
  * This class can read values from a map with string keys and perform
@@ -201,18 +201,16 @@ public class MapReader {
 			Method method = enumClass.getMethod("valueOf", String.class);
 			Object result = method.invoke(null, val);
 			return enumClass.cast(result);
-		} catch (NoSuchMethodException ex) {
-		} catch (IllegalAccessException ex) {
-		} catch (InvocationTargetException ex) {
+		} catch (NoSuchMethodException | IllegalAccessException |
+				InvocationTargetException ex) {
 		}
 		try {
 			Method method = enumClass.getMethod("fromStringValue",
 					String.class);
 			Object result = method.invoke(null, val);
 			return enumClass.cast(result);
-		} catch (NoSuchMethodException ex) {
-		} catch (IllegalAccessException ex) {
-		} catch (InvocationTargetException ex) {
+		} catch (NoSuchMethodException | IllegalAccessException |
+				InvocationTargetException ex) {
 		}
 		throw new ParseException(
 				"Invalid value for enum type " + enumClass.getName() +
