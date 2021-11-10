@@ -22,9 +22,9 @@
 
 package eu.woolplatform.utils.i18n;
 
-import java.util.Locale;
-
 import eu.woolplatform.utils.exception.ParseException;
+
+import java.util.Locale;
 
 public class I18nUtils {
 	/**
@@ -52,6 +52,15 @@ public class I18nUtils {
 			return new Locale(parts[0], parts[1], parts[2]);
 	}
 
+	/**
+	 * Converts a locale to a language tag like "en-US". The language tag is the
+	 * same format as in an HTTP Accept-Language header. It always starts with
+	 * a lower-case language code and optionally it may be followed by an
+	 * upper-case country code and a lower-case variant code.
+	 *
+	 * @param locale the locale
+	 * @return the language tag
+	 */
 	public static String localeToLanguageTag(Locale locale) {
 		StringBuilder builder = new StringBuilder(
 				locale.getLanguage().toLowerCase());
@@ -61,6 +70,24 @@ public class I18nUtils {
 		if (locale.getVariant().isEmpty())
 			return builder.toString();
 		builder.append("-").append(locale.getVariant().toLowerCase());
+		return builder.toString();
+	}
+
+	/**
+	 * Converts a locale to a language/country tag like "en-US". The result will
+	 * not contain a variant. The language tag is the same format as in an HTTP
+	 * Accept-Language header. It always starts with a lower-case language code
+	 * and optionally it may be followed by an upper-case country code.
+	 *
+	 * @param locale the locale
+	 * @return the language/country tag
+	 */
+	public static String localeToLanguageCountryTag(Locale locale) {
+		StringBuilder builder = new StringBuilder(
+				locale.getLanguage().toLowerCase());
+		if (locale.getCountry().isEmpty())
+			return builder.toString();
+		builder.append("-").append(locale.getCountry().toUpperCase());
 		return builder.toString();
 	}
 }
