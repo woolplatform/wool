@@ -54,7 +54,7 @@ import java.util.Map;
  * 
  * @author Dennis Hofs (RRD)
  */
-public class HttpClient {
+public class HttpClient implements Closeable {
 	private String method = "GET";
 	private String url;
 	private Map<String,String> queryParams = new LinkedHashMap<>();
@@ -86,6 +86,7 @@ public class HttpClient {
 	 * Closes this client. You should always call this method when you no
 	 * longer need the client.
 	 */
+	@Override
 	public void close() {
 		synchronized (lock) {
 			if (closed)
