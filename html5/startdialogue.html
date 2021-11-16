@@ -14,7 +14,11 @@
 	var vars = null;
 	var resources = null;
 	if (project == "pharaon") {
-		dialoguepath = "/nl/"+urlParams.dialogue+".wool";
+		if (urlParams.dialogue) {
+			dialoguepath = "/nl/"+urlParams.dialogue+".wool";
+		} else {
+			dialoguepath = "/nl/introductie.wool";
+		}
 		vars = urlParams.vars;
 		//vars = {
 		//	"userFirstName": "Oom Henk",

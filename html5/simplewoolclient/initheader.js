@@ -32,7 +32,7 @@ var urlParams = Utils.getUrlParameters();
 
 
 if (urlParams.style) {
-	document.head.innerHTML += '<link rel="stylesheet" type="text/css" href="css/customstyle_'
+	document.head.innerHTML += '<link rel="stylesheet" type="text/css" href="css/custom/'
 		 + urlParams.style + '.css">';
 }
 
