@@ -1,0 +1,23 @@
+{
+    "Bob": {
+        "Hi, my name is Bob, and this is the Default WOOL Test dialogue.": "Ciao, il mio nome è Bob e questo è il dialogo Default WOOL Test.",
+        "This dialogue is very basic, and shows only dialogue flow and ending.": "Questo dialogo è molto semplice e mostra solo il flusso e la fine del dialogo.",
+        "Any node can have zero or more reply options. When there are none, the dialogue is over.": "Ogni nodo può avere zero o più opzioni di risposta. Quando non ce ne sono, il dialogo è finito.",
+        "We deal with statements, reply options, and ending dialogues.": "Ci occupiamo di dichiarazioni, opzioni di risposta e fine dei dialoghi.",
+        "When a node has no reply options, the dialogue will end.": "Quando un nodo non ha opzioni di risposta, il dialogo finisce.",
+        "I have the last say, and I declare this dialogue to be over!": "Ho l'ultima parola e dichiaro che questo dialogo è finito!",
+        "Statements are things that a speaker says, like this!": "Le dichiarazioni sono cose che un oratore dice, come questa!",
+        "Alternatively, a reply option can point to the reserved node name \"End\". When the dialogue reaches this node, the dialogue is also over.": "In alternativa, un'opzione di risposta può puntare al nome del nodo riservato \"End\". Quando il dialogo raggiunge questo nodo, anche il dialogo è finito."
+    },
+    "_user": {
+        "Nice to meet you Bob.": "Piacere di conoscerti Bob.",
+        "Goodbye.": "Arrivederci.",
+        "Tell me more.": "Dimmi di più.",
+        "Dialogue over?": "Dialogo finito?",
+        "Tell me about statements.": "Mi parli delle dichiarazioni.",
+        "Reply Options?": "Opzioni di risposta?",
+        "How do you end a dialogue?": "Come si conclude un dialogo?",
+        "This reply option points to the \"End\" node.": "Questa opzione di risposta punta al nodo \"End\".",
+        "This one points to a node without replies.": "Questo punta a un nodo senza risposte."
+    }
+}

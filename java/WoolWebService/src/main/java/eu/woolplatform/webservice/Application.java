@@ -37,19 +37,29 @@ ApplicationListener<ContextClosedEvent> {
 	 * @throws Exception if the application can't be initialised
 	 */
 	public Application() throws Exception {
-		URL propsUrl = getClass().getClassLoader().getResource(
+
+		// Initialize a Configuration object
+		Configuration config = AppComponents.get(Configuration.class);
+
+		// Load the values from service.properties into the Configuration
+		URL propertiesUrl = getClass().getClassLoader().getResource(
 				"service.properties");
-		if (propsUrl == null) {
+		if (propertiesUrl == null) {
 			throw new Exception("Can't find resource service.properties. " +
 					"Did you run gradlew updateConfig?");
 		}
-		Configuration config = AppComponents.get(Configuration.class);
-		config.loadProperties(propsUrl);
-		propsUrl = getClass().getClassLoader().getResource(
+		config.loadProperties(propertiesUrl);
+
+		// Load the values from deployment.properties into the Configuration (app version number)
+		propertiesUrl = getClass().getClassLoader().getResource(
 				"deployment.properties");
-		config.loadProperties(propsUrl);
+		config.loadProperties(propertiesUrl);
+
+		// Initialize the Logger
 		final Logger logger = AppComponents.getLogger(
 				getClass().getSimpleName());
+
+		// By default, log uncaught exceptions to this logger
 		Thread.setDefaultUncaughtExceptionHandler((t, e) ->
 				logger.error("Uncaught exception: " + e.getMessage(), e)
 		);
