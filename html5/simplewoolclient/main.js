@@ -175,7 +175,8 @@ function updateAvatar() {
 	//console.log("AV "+agentid+"/"+dialogueid+"/"+nodeid);
 	if (isNarrator) {
 		elem.innerHTML="";
-	} else if (config.avatarmapping[agentid]
+	} else if (config.avatarmapping
+	&&         config.avatarmapping[agentid]
 	&&         config.avatarmapping[agentid][dialogueid]
 	&&         config.avatarmapping[agentid][dialogueid][nodeid]) {
 		elem.innerHTML = "<img class='avatarimage' src='images/"
