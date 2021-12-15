@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import java.io.IOException;
 
 public class DefaultServiceManagerConfig extends ServiceManagerConfig {
+
 	public DefaultServiceManagerConfig() {
 	}
 

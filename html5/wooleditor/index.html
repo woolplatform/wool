@@ -197,6 +197,7 @@
 
 				<div class='title'>Error</div>
 				<div>Cannot initialize project because an error occurred.</div>
+				<div id="createproject_errortext" class="errortext"></div>
 			</div>
 		</div>
 
@@ -228,6 +229,7 @@
 				this.defaultLanguage = ko.observable("");
 				this.finish = function() {
 					if (app.fs.existsSync(wizardCreateProject.projectDir())) {
+						document.getElementById("createproject_errortext").innerText="Directory already exists.";
 						wizard.open("createproject_cannot_init");
 						return;
 					}
@@ -252,6 +254,7 @@
 					app.fs.writeFile(filePath,nodeData,
 						function(err) {
 							if (err) {
+								document.getElementById("createproject_errortext").innerText="Cannot write start.wool file.";
 								wizard.open("createproject_cannot_init");
 							} else {
 								app.setCurrentPath(relativeFilePath);
@@ -676,7 +679,7 @@
 		<script type="text/javascript">
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
-			var app = new App("Wool Editor", "1.10.3",
+			var app = new App("Wool Editor", "1.10.4",
 				filePath ? filePath : "unnamed");
 			app.run();
 			if (app.isNwjs) {

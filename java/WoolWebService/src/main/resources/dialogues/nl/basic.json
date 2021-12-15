@@ -1,0 +1,23 @@
+{
+    "Bob": {
+        "Hi, my name is Bob, and this is the Default WOOL Test dialogue.": "Hallo, mijn naam is Bob, en dit is het standaard WOOL Test dialoog.",
+        "This dialogue is very basic, and shows only dialogue flow and ending.": "Dit dialoog is erg basaal, en het laat alleen zien hoe dialogen verlopen en hoe ze eindigen.",
+        "Any node can have zero or more reply options. When there are none, the dialogue is over.": "Een node can nul of meer antwoord opties hebben. Als er geen zijn, is het dialoog voorbij.",
+        "We deal with statements, reply options, and ending dialogues.": "We behandelen uitspraken, antwoord opties, en het eindigen van dialogen.",
+        "When a node has no reply options, the dialogue will end.": "Als een node geen antwoord opties heeft, is het dialoog voorbij.",
+        "I have the last say, and I declare this dialogue to be over!": "Ik heb het laatste woord, en ik verklaar dit dialoog voorbij!",
+        "Statements are things that a speaker says, like this!": "Uitspraken zijn dingen die een spreker zegt, zoals dit!",
+        "Alternatively, a reply option can point to the reserved node name \"End\". When the dialogue reaches this node, the dialogue is also over.": "Een antwoord optie kan ook naar de speciale Node genaamd \"End\" wijzen. Als een dialoog deze speciale node bereikt, is het dialoog voorbij."
+    },
+    "_user": {
+        "Nice to meet you Bob.": "Prettig kennis te maken Bob.",
+        "Goodbye.": "Tot ziens.",
+        "Tell me more.": "Vertel me meer.",
+        "Dialogue over?": "Dialoog voorbij?",
+        "Tell me about statements.": "Vertel me over uitspraken.",
+        "Reply Options?": "Antwoord opties?",
+        "How do you end a dialogue?": "Hoe eindig je een dialoog?",
+        "This reply option points to the \"End\" node.": "Dit antwoord optie wijst naar de \"End\" node.",
+        "This one points to a node without replies.": "Deze wijst naar een node zonder antwoord mogelijkheden."
+    }
+}
