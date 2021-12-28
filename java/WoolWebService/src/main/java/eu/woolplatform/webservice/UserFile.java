@@ -1,8 +1,10 @@
 package eu.woolplatform.webservice;
 
+import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
 import eu.woolplatform.utils.xml.SimpleSAXParser;
+import org.slf4j.Logger;
 import org.xml.sax.Attributes;
 
 import java.io.File;
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserFile {
+
 	public static UserCredentials findUser(String username) {
 		List<UserCredentials> users;
 		try {
@@ -69,7 +72,22 @@ public class UserFile {
 				throw new ParseException(
 						"Empty value in attribute \"password\"");
 			}
-			users.add(new UserCredentials(username, password));
+			String role;
+			try {
+				role = readAttribute(atts, "role");
+
+				if (!(role.equalsIgnoreCase(UserCredentials.USER_ROLE_USER) ||
+						role.equalsIgnoreCase(UserCredentials.USER_ROLE_ADMIN))) {
+					throw new ParseException(
+							"Invalid specification for \"role\": " + role);
+				}
+			} catch (ParseException pe) {
+				role = UserCredentials.USER_ROLE_USER;
+				Logger logger = AppComponents.getLogger(UserFile.class.getSimpleName());
+				logger.warn("Warning while reading users.xml file: User role not defined for user '"
+						+username+"', assuming role '"+role+"'.");
+			}
+			users.add(new UserCredentials(username, password, role));
 		}
 
 		@Override

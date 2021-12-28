@@ -1,7 +1,7 @@
 package eu.woolplatform.webservice;
 
 public enum ProtocolVersion {
-	V1("1");
+	V1("1.1.0");
 	
 	private String versionName;
 	

@@ -7,6 +7,7 @@ import eu.woolplatform.webservice.*;
 import eu.woolplatform.webservice.controller.model.LoginParams;
 import eu.woolplatform.webservice.controller.model.LoginResult;
 import eu.woolplatform.webservice.exception.*;
+import io.swagger.annotations.Api;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.http.MediaType;
@@ -38,7 +39,7 @@ public class AuthController {
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(
 					(version, user) -> doLogin(request, loginParams),
-					versionName, null, response);
+					versionName, null, response, "");
 		}
 	}
 

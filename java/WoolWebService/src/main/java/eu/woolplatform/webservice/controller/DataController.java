@@ -3,6 +3,7 @@ package eu.woolplatform.webservice.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
@@ -12,6 +13,7 @@ import eu.woolplatform.webservice.dialogue.UserService;
 import eu.woolplatform.webservice.exception.*;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
@@ -27,6 +29,8 @@ public class DataController {
 	@Autowired
 	Application application;
 
+	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+
 	@RequestMapping(value="/variables", method=RequestMethod.GET)
 	public Map<String,Object> getVariables(
 			HttpServletRequest request,
@@ -35,16 +39,26 @@ public class DataController {
 			@ApiIgnore
 			String versionName,
 			@RequestParam(value="names", required=false, defaultValue="")
-			String names) throws HttpException, Exception {
-		return QueryRunner.runQuery(
+			String names,
+			@RequestParam(value="woolUserId", required=false, defaultValue="")
+			String woolUserId) throws Exception {
+		if(woolUserId.equals("")) {
+			logger.info("Get /variables?names=" + names);
+			return QueryRunner.runQuery(
 				(version, user) -> doGetVariables(user, names),
-				versionName, request, response);
+				versionName, request, response, woolUserId);
+		} else {
+			logger.info("Get /variables?names=" + names+"&woolUserId="+woolUserId);
+			return QueryRunner.runQuery(
+				(version, user) -> doGetVariables(woolUserId, names),
+				versionName, request, response, woolUserId);
+		}
 	}
 
-	private Map<String,Object> doGetVariables(String user, String names)
+	private Map<String,Object> doGetVariables(String woolUserId, String names)
 			throws HttpException, Exception {
 		UserService userService = application.getServiceManager()
-				.getActiveUserService(user);
+				.getActiveUserService(woolUserId);
 		Map<String,?> varStore = userService.variableStore.getModifiableMap(
 				false, null);
 		names = names.trim();
@@ -84,13 +98,23 @@ public class DataController {
 			@RequestParam(value="name")
 			String name,
 			@RequestParam(value="value", required=false, defaultValue="")
-			String value) throws HttpException, Exception {
-		QueryRunner.runQuery((version, user) ->
+			String value,
+			@RequestParam(value="woolUserId",required=false,defaultValue="")
+			String woolUserId) throws Exception {
+		if(woolUserId.equals("")) {
+			logger.info("Post /variable?name=" + name + "&value=" + value);
+			QueryRunner.runQuery((version, user) ->
 				doSetVariable(request, user, name, value),
-				versionName, request, response);
+				versionName, request, response, woolUserId);
+		} else {
+			logger.info("Post /variable?name=" + name + "&value=" + value + "&woolUserId=" + woolUserId);
+			QueryRunner.runQuery((version, user) ->
+				doSetVariable(request, woolUserId, name, value),
+				versionName, request, response, woolUserId);
+		}
 	}
 
-	private Object doSetVariable(HttpServletRequest request, String user,
+	private Object doSetVariable(HttpServletRequest request, String woolUserId,
 			String name, String value) throws HttpException, Exception {
 		List<HttpFieldError> errors = new ArrayList<>();
 		if (!name.matches("[A-Za-z][A-Za-z0-9_]*")) {
@@ -119,7 +143,7 @@ public class DataController {
 			setValue = body.get("value");
 		}
 		UserService userService = application.getServiceManager()
-				.getActiveUserService(user);
+				.getActiveUserService(woolUserId);
 		userService.variableStore.setValue(name, setValue, true, null);
 		return null;
 	}
@@ -133,12 +157,21 @@ public class DataController {
 			HttpServletResponse response,
 			@PathVariable("version")
 			@ApiIgnore
-			String versionName) throws HttpException, Exception {
-		QueryRunner.runQuery((version, user) -> doSetVariables(request, user),
-				versionName, request, response);
+			String versionName,
+			@RequestParam(value="woolUserId",required=false,defaultValue="")
+			String woolUserId) throws Exception {
+		if(woolUserId.equals("")) {
+			logger.info("Post /variables");
+			QueryRunner.runQuery((version, user) -> doSetVariables(request, user),
+				versionName, request, response, woolUserId);
+		} else {
+			logger.info("Post /variables?woolUserId="+woolUserId);
+			QueryRunner.runQuery((version, user) -> doSetVariables(request, woolUserId),
+				versionName, request, response, woolUserId);
+		}
 	}
 
-	private Object doSetVariables(HttpServletRequest request, String user)
+	private Object doSetVariables(HttpServletRequest request, String woolUserId)
 			throws HttpException, Exception {
 		InputStream input = request.getInputStream();
 		Map<String, ?> varMap;
@@ -166,7 +199,7 @@ public class DataController {
 			throw new BadRequestException(error);
 		}
 		UserService userService = application.getServiceManager()
-				.getActiveUserService(user);
+				.getActiveUserService(woolUserId);
 		Map<String,Object> varStore = userService.variableStore
 				.getModifiableMap(true, null);
 		varStore.putAll(varMap);

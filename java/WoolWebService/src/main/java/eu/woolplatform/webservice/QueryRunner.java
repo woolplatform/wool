@@ -27,7 +27,9 @@ public class QueryRunner {
 	 * ProtocolVersion})
 	 * @param request the HTTP request or null
 	 * @param response the HTTP response (to add header WWW-Authenticate in
-	 * case of 401 Unauthorized)
+	 *                 case of 401 Unauthorized)
+	 * @param woolUserId the "wool user" for which this query should be run, or ""
+	 *                   if this should be for the currently authenticated user
 	 * @return the query result
 	 * @throws HttpException if the query should return an HTTP error status
 	 * @throws Exception if an unexpected error occurs. This results in HTTP
@@ -35,7 +37,7 @@ public class QueryRunner {
 	 */
 	public static <T> T runQuery(AuthQuery<T> query,
 			String versionName, HttpServletRequest request,
-			HttpServletResponse response) throws HttpException, Exception {
+			HttpServletResponse response, String woolUserId) throws HttpException, Exception {
 		ProtocolVersion version;
 		try {
 			version = ProtocolVersion.forVersionName(versionName);
@@ -47,7 +49,13 @@ public class QueryRunner {
 			String user = null;
 			if (request != null)
 				user = validateToken(request);
-			return query.runQuery(version, user);
+			if(woolUserId.equals("") // If the request was made for "this" (authenticated) user
+				|| (woolUserId.equals(user)) // If the request was made for a specific woolUserId that happens to be "this" (authenticated) user
+				|| UserFile.findUser(user).getRole().equals(UserCredentials.USER_ROLE_ADMIN)) { // If "this" user is an admin
+				return query.runQuery(version, user);
+			} else {
+				throw new UnauthorizedException("Attempting to run query for woolUserId '"+woolUserId+"', but currently logged in user '"+user+"' is not an admin.");
+			}
 		} catch (UnauthorizedException ex) {
 			response.addHeader("WWW-Authenticate", "None");
 			throw ex;
@@ -64,8 +72,8 @@ public class QueryRunner {
 	/**
 	 * Validates the authentication token in the specified HTTP request. If no
 	 * token is specified, or the token is empty or invalid, it will throw an
-	 * HttpException with 401 Unauthorized. Otherwise it will return the user
-	 * name for the authenticated user.
+	 * HttpException with 401 Unauthorized. Otherwise, it will return the username
+	 * for the authenticated user.
 	 * 
 	 * @param request the HTTP request
 	 * @return the authenticated user

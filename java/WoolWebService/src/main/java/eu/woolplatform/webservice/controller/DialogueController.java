@@ -58,25 +58,36 @@ public class DialogueController {
 			String dialogueName,
 			@RequestParam(value="language")
 			String language,
+			@RequestParam(value="woolUserId", required=false, defaultValue="")
+			String woolUserId,
 			@RequestParam(value="time", required=false, defaultValue="")
 			String time,
 			@RequestParam(value="timezone", required=false, defaultValue="")
-			String timezone) throws HttpException, Exception {
-		logger.info("Post /start-dialogue?dialogueName=" + dialogueName +
-				"&language=" + language);
-		return QueryRunner.runQuery(
-				(version, user) -> doStartDialogue(user, dialogueName,
-						language, time, timezone),
-				versionName, request, response);
+			String timezone) throws Exception {
+		if(woolUserId.equals("")) {
+			logger.info("Post /start-dialogue?dialogueName=" + dialogueName +
+					"&language=" + language);
+			return QueryRunner.runQuery(
+					(version, user) -> doStartDialogue(user, dialogueName,
+							language, time, timezone),
+					versionName, request, response, woolUserId);
+		} else {
+			logger.info("Post /start-dialogue?dialogueName=" + dialogueName +
+					"&language=" + language+"&userId="+woolUserId);
+			return QueryRunner.runQuery(
+					(version, user) -> doStartDialogue(woolUserId, dialogueName,
+							language, time, timezone),
+					versionName, request, response, woolUserId);
+		}
 	}
 
 	private DialogueMessage doStartDialogue(
-			String userId, String dialogueName, String language, String timeStr,
+			String woolUserId, String dialogueName, String language, String timeStr,
 			String timezone) throws HttpException, DatabaseException,
 			IOException {
 		DateTime time = parseTime(timeStr, timezone);
 		UserService userService = application.getServiceManager()
-				.getActiveUserService(userId);
+				.getActiveUserService(woolUserId);
 		ExecuteNodeResult node;
 		try {
 			node = userService.startDialogue(dialogueName, null, language,
@@ -110,19 +121,30 @@ public class DialogueController {
 			int loggedInteractionIndex,
 			@RequestParam(value="replyId")
 			int replyId,
+			@RequestParam(value="woolUserId", required=false, defaultValue="")
+			String woolUserId,
 			@RequestParam(value="time", required=false, defaultValue="")
 			String time,
 			@RequestParam(value="timezone", required=false, defaultValue="")
-			String timezone) throws HttpException, Exception {
-		logger.info("POST /progress-dialogue?replyId=" + replyId);
-		return QueryRunner.runQuery(
+			String timezone) throws Exception {
+		if(woolUserId.equals("")) {
+			logger.info("POST /progress-dialogue?replyId=" + replyId);
+			return QueryRunner.runQuery(
 				(version, user) -> doProgressDialogue(user, request,
 						loggedDialogueId, loggedInteractionIndex, replyId,
 						time, timezone),
-				versionName, request, response);
+				versionName, request, response, woolUserId);
+		} else {
+			logger.info("POST /progress-dialogue?replyId=" + replyId+"&woolUserId="+woolUserId);
+			return QueryRunner.runQuery(
+				(version, user) -> doProgressDialogue(woolUserId, request,
+					loggedDialogueId, loggedInteractionIndex, replyId,
+					time, timezone),
+				versionName, request, response, woolUserId);
+		}
 	}
 
-	private NullableResponse<DialogueMessage> doProgressDialogue(String userId,
+	private NullableResponse<DialogueMessage> doProgressDialogue(String woolUserId,
 			HttpServletRequest request, String loggedDialogueId,
 			int loggedInteractionIndex, int replyId, String timeStr,
 			String timezone) throws HttpException, DatabaseException,
@@ -145,7 +167,7 @@ public class DialogueController {
 		}
 		try {
 			UserService userService = application.getServiceManager()
-					.getActiveUserService(userId);
+					.getActiveUserService(woolUserId);
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
 			if (!variables.isEmpty())
@@ -173,25 +195,35 @@ public class DialogueController {
 			String loggedDialogueId,
 			@RequestParam(value="loggedInteractionIndex")
 			int loggedInteractionIndex,
+			@RequestParam(value="woolUserId", required=false, defaultValue = "")
+			String woolUserId,
 			@RequestParam(value="time", required=false, defaultValue="")
 			String time,
 			@RequestParam(value="timezone", required=false, defaultValue="")
 			String timezone) throws HttpException, Exception {
-		logger.info("POST /back-dialogue");
-		return QueryRunner.runQuery(
+		if(woolUserId.equals("")) {
+			logger.info("POST /back-dialogue");
+			return QueryRunner.runQuery(
 				(version, user) -> doBackDialogue(user, loggedDialogueId,
 						loggedInteractionIndex, time, timezone),
-				versionName, request, response);
+				versionName, request, response, woolUserId);
+		} else {
+			logger.info("POST /back-dialogue?woolUserId="+woolUserId);
+			return QueryRunner.runQuery(
+				(version, user) -> doBackDialogue(woolUserId, loggedDialogueId,
+						loggedInteractionIndex, time, timezone),
+				versionName, request, response, woolUserId);
+		}
 	}
 
-	private DialogueMessage doBackDialogue(String userId,
+	private DialogueMessage doBackDialogue(String woolUserId,
 			String loggedDialogueId, int loggedInteractionIndex,
 			String timeStr, String timezone) throws HttpException,
 			DatabaseException, IOException {
 		DateTime time = parseTime(timeStr, timezone);
 		try {
 			UserService userService = application.getServiceManager()
-					.getActiveUserService(userId);
+					.getActiveUserService(woolUserId);
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
 			ExecuteNodeResult prevNode = userService.backDialogue(state, time);
@@ -210,23 +242,33 @@ public class DialogueController {
 			String versionName,
 			@RequestParam(value="dialogueName")
 			String dialogueName,
+			@RequestParam(value="woolUserId", required=false, defaultValue="")
+			String woolUserId,
 			@RequestParam(value="time", required=false, defaultValue="")
 			String time,
 			@RequestParam(value="timezone", required=false, defaultValue="")
 			String timezone) throws HttpException, Exception {
-		logger.info("Get /current-dialogue?dialogueName=" + dialogueName);
-		return QueryRunner.runQuery(
+		if(woolUserId.equals("")) {
+			logger.info("Get /current-dialogue?dialogueName=" + dialogueName);
+			return QueryRunner.runQuery(
 				(version, user) -> doGetCurrentDialogue(user, dialogueName,
 						time, timezone),
-				versionName, request, response);
+				versionName, request, response, woolUserId);
+		} else {
+			logger.info("Get /current-dialogue?dialogueName=" + dialogueName+"&woolUserId="+woolUserId);
+			return QueryRunner.runQuery(
+				(version, user) -> doGetCurrentDialogue(woolUserId, dialogueName,
+						time, timezone),
+				versionName, request, response, woolUserId);
+		}
 	}
 
 	private NullableResponse<DialogueMessage> doGetCurrentDialogue(
-			String userId, String dialogueName, String timeStr, String timezone)
+			String woolUserId, String dialogueName, String timeStr, String timezone)
 			throws HttpException, DatabaseException, IOException {
 		DateTime time = parseTime(timeStr, timezone);
 		LoggedDialogue currDlg =
-				LoggedDialogueStoreIO.findLatestOngoingDialogue(userId,
+				LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId,
 				dialogueName);
 		WoolLoggedInteraction lastInteraction = null;
 		if (currDlg != null && !currDlg.getInteractionList().isEmpty()) {
@@ -234,7 +276,7 @@ public class DialogueController {
 					currDlg.getInteractionList().size() - 1);
 		}
 		UserService userService = application.getServiceManager()
-				.getActiveUserService(userId);
+				.getActiveUserService(woolUserId);
 		if (lastInteraction != null && lastInteraction.getMessageSource() ==
 				WoolMessageSource.AGENT) {
 			ExecuteNodeResult node;
@@ -261,16 +303,23 @@ public class DialogueController {
 			@ApiIgnore
 			String versionName,
 			@RequestParam(value="loggedDialogueId")
-			String loggedDialogueId) throws HttpException, Exception {
-		logger.info("POST /cancel-dialogue");
-		QueryRunner.runQuery((version, user) ->
-				doCancelDialogue(user, loggedDialogueId),
-				versionName, request, response);
+			String loggedDialogueId,
+			@RequestParam(value="woolUserId", required=false, defaultValue="")
+			String woolUserId) throws HttpException, Exception {
+		if(woolUserId.equals("")) {
+			logger.info("POST /cancel-dialogue");
+			QueryRunner.runQuery((version, user) -> doCancelDialogue(user, loggedDialogueId),
+				versionName, request, response, woolUserId);
+		} else {
+			logger.info("POST /cancel-dialogue?woolUserId="+woolUserId);
+			QueryRunner.runQuery((version, user) -> doCancelDialogue(woolUserId, loggedDialogueId),
+					versionName, request, response, woolUserId);
+		}
 	}
 
-	private Object doCancelDialogue(String userId, String loggedDialogueId)
+	private Object doCancelDialogue(String woolUserId, String loggedDialogueId)
 			throws HttpException, DatabaseException, IOException {
-		application.getServiceManager().getActiveUserService(userId)
+		application.getServiceManager().getActiveUserService(woolUserId)
 				.cancelDialogue(loggedDialogueId);
 		return null;
 	}
