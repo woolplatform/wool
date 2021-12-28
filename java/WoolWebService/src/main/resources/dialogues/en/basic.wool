@@ -1,5 +1,5 @@
 title: Start
-tags: 
+tags:
 speaker: Bob
 colorID: 2
 position: 758,-148
@@ -10,15 +10,15 @@ Hi, my name is Bob, and this is the Default WOOL Test dialogue.
 [[Goodbye.|End]]
 ===
 title: End
-tags: 
-speaker: 
+tags:
+speaker:
 colorID: 5
 position: 752,255
 ---
 
 ===
 title: Continue
-tags: 
+tags:
 speaker: Bob
 colorID: 0
 position: 1060,-150
@@ -28,7 +28,7 @@ This dialogue is very basic, and shows only dialogue flow and ending.
 [[DialogueMenu]]
 ===
 title: DialogueReplies
-tags: 
+tags:
 speaker: Bob
 colorID: 0
 position: 1690,-152
@@ -40,7 +40,7 @@ Any node can have zero or more reply options. When there are none, the dialogue 
 [[Goodbye.|End]]
 ===
 title: DialogueMenu
-tags: 
+tags:
 speaker: Bob
 colorID: 0
 position: 1355,-148
@@ -52,7 +52,7 @@ We deal with statements, reply options, and ending dialogues.
 [[How do you end a dialogue?|DialogueEnding]]
 ===
 title: DialogueEnding
-tags: 
+tags:
 speaker: Bob
 colorID: 0
 position: 1357,195
@@ -62,7 +62,7 @@ When a node has no reply options, the dialogue will end.
 [[DialogueEnding2]]
 ===
 title: DialogueEnding3
-tags: 
+tags:
 speaker: Bob
 colorID: 5
 position: 1356,726
@@ -70,7 +70,7 @@ position: 1356,726
 I have the last say, and I declare this dialogue to be over!
 ===
 title: DialogueStatements
-tags: 
+tags:
 speaker: Bob
 colorID: 0
 position: 1352,-442
@@ -81,7 +81,7 @@ Statements are things that a speaker says, like this!
 [[Goodbye.|End]]
 ===
 title: DialogueEnding2
-tags: 
+tags:
 speaker: Bob
 colorID: 0
 position: 1357,465

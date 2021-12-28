@@ -9,3 +9,7 @@
 !/gradle.sample.properties
 /src/main/resources/service.properties
 /src/main/resources/dialogues/dialogues.json
+/src/main/resources/dialogues/*
+!/src/main/resources/dialogues/README.md
+!/src/main/resources/dialogues/en/basic.wool
+!/src/main/resources/dialogues/nl/basic.json
