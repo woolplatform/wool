@@ -1,14 +1,10 @@
 title: Start
 tags: 
-speaker: 
+speaker: Test Dummy
 colorID: 0
 position: -84,408
 ---
-This is a test of action statements.
-
-<<action type="generic" value="TEST_ACTION" param1="value1" param2="value2" param3="3">>
-
-This text comes after a generic action.
+This is a test of action statements. Testing image and video actions.
 
 <<action type="image" value="image.png">>
 
@@ -18,15 +14,43 @@ This text comes after an image action.
 
 This text comes after a video action.
 
-[[Open recipe book on page 10|Node1|<<action type="generic" value="OPEN_RECIPE_BOOK" page="10">>]]
-[[Two actions|Node1|<<action type="generic" value="OPEN_RECIPE_BOOK" page="10">><<action type="generic" value="OTHER">>]]
-[[Action + set statement|Node1| <<action type="generic" value="OPEN_RECIPE_BOOK" page="10">> <<set $bool=true>>]]
+[[Open recipe book on page 10|LinkAction|<<action type="generic" value="OPEN_RECIPE_BOOK" page="10">>]]
 ===
-title: Node1
+title: LinkAction
 tags: 
-speaker: 
+speaker: Test Dummy
 colorID: 0
-position: 315,406
+position: 246,406
 ---
-End of dialogue
+Testing action type "link", pointing to google.com.
+
+[[Follow link|TwoActions|<<action type="link" url="https://www.google.com/">>]]
+===
+title: End
+tags: 
+speaker: Test Dummy
+colorID: 0
+position: 878,692
+---
+
+===
+title: TwoActions
+tags: 
+speaker: Test Dummy
+colorID: 0
+position: 573,408
+---
+Testing two actions in reply option.
+
+[[Two actions|ActionSet|<<action type="generic" value="OPEN_RECIPE_BOOK" page="10">><<action type="generic" value="OTHER">>]]
+===
+title: ActionSet
+tags: 
+speaker: Test Dummy
+colorID: 0
+position: 880,407
+---
+Testing action + set statement.
+
+[[Action + set statement|End| <<action type="generic" value="OPEN_RECIPE_BOOK" page="10">> <<set $bool=true>>]]
 ===

@@ -1,6 +1,6 @@
 {
   "name": "Wool",
-  "version": "1.10.3",
+  "version": "1.10.5",
   "main": "wooleditor/main.js",
   "window": {
     "toolbar": false,

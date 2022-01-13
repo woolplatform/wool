@@ -135,7 +135,8 @@ _signupURL = _baseURL +  "auth/signup?user=" + _userName + "&password=" + _passw
 
 // is passed to eval'ed code as C
 // vars: associative array
-function WoolNodeContext(vars) {
+// actions (optional): array of actions
+function WoolNodeContext(vars,actions) {
 	this.vars = vars;
 	// no speaker defined: speaker = "UNKNOWN";
 	this.speakers = [];
@@ -145,7 +146,11 @@ function WoolNodeContext(vars) {
 	this.afreply = null;
 	this.inputreply = null;
 	this.choices = [];
-    this.pendingActions = [];
+	if (actions) {
+	    this.pendingActions = actions;
+	} else {
+	    this.pendingActions = [];
+	}
 
 	this.randomvalues = []; // [ID -> value]
 	this.addLine = function(line,speaker) {

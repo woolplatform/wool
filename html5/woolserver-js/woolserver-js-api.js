@@ -19,7 +19,7 @@ function initDirectServer() {
 	directServer.currentdialogue = null;
 	directServer.currentnode = null;
 	directServer.currentnodectx = null;
-    directServer.pendingActions = [];
+    //directServer.pendingActions = [];
 }
 
 initDirectServer();
@@ -74,17 +74,26 @@ directServer.substituteVars = function(ctx,text) {
 
 directServer.getState = function() {
 	return JSON.stringify({
-        pendingActions: directServer.pendingActions,
+        pendingActions: directServer.currentnodectx 
+			? directServer.currentnodectx.pendingActions
+			: [],
 		currentdialogueId: directServer.currentdialogueId,
-		currentnodeid: directServer.currentnode ? directServer.currentnode.param.title : null,
-		currentnodectxvars: directServer.currentnodectx ? directServer.currentnodectx.vars : null,
+		currentnodeid: directServer.currentnode 
+			? directServer.currentnode.param.title
+			: null,
+		currentnodectxvars: directServer.currentnodectx
+			? directServer.currentnodectx.vars
+			: null,
 	});
 }
 
 directServer.clearPendingActions = function() {
-    directServer.pendingActions = [];
+	if (directServer.currentnodectx) {
+	    directServer.currentnodectx.pendingActions = [];
+	}
 }
 
+// XXX Pending actions not used, should this be added?
 directServer.setState = function(json) {
     console.log("CTX:"+json);
 	var state = JSON.parse(json);
@@ -357,11 +366,12 @@ function _directServer_progress_dialogue(par) {
 		}
 	}
     // log actions that were collected in the context
-    if (directServer.currentnodectx.pendingActions) {
-        directServer.pendingActions = directServer.pendingActions.concat(
-                directServer.currentnodectx.pendingActions)
-        //console.log("Added to pendingActions; " + JSON.stringify(directServer.pendingActions))
-    }
+    //if (directServer.currentnodectx.pendingActions) {
+    //    directServer.pendingActions = directServer.pendingActions.concat(
+    //            directServer.currentnodectx.pendingActions)
+    //    //console.log("Added to pendingActions; " + JSON.stringify(directServer.pendingActions))
+    //	directServer.currentnodectx.pendingActions = [];
+    //}
 	// jump to new node
 	if (newDialogueId) {
 		directServer.jumpedToNewDialogue = true;
@@ -372,7 +382,6 @@ function _directServer_progress_dialogue(par) {
    		directServerLoadNodeDialogue(newDialogueId,
 			(directServer.rootDir ? directServer.rootDir : "")
 			+ newDialogueId + ".wool");
-     console.log("startDialogue "+newDialogueId)
 		return _directServer_start_dialogue({
 			dialogueId: newDialogueId,
 			startNodeId: replyId,
@@ -382,7 +391,8 @@ function _directServer_progress_dialogue(par) {
 		directServer.currentnode = directServer.currentdialogue.nodeMap[
 			replyId.trim().toLowerCase() ];
 		directServer.currentnodectx = new WoolNodeContext(
-			directServer.currentnodectx.vars
+			directServer.currentnodectx.vars,
+			directServer.currentnodectx.pendingActions,
 		);
 		if (typeof directServer.currentnode.func == 'function' ) {
 			try {

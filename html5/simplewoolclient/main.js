@@ -29,31 +29,42 @@ function saveConfig() {
 	localStorage.setItem("simplewoolclient_config",JSON.stringify(config));
 }
 
+function initEmptyConfig() {
+	config = {
+		// avatar and background ID are:
+		// - number for preset backgrounds 
+		// - URL for custom bg
+		"avatar": null,
+		"background": null,
+		// speaker name -> dialogue name -> image filename
+		"avatarmapping": null,
+	};
+	//	"avatars": {
+	//		"current": 0, // current index in all
+	//		"all": [], // all known avatar IDs and URLs
+	//		"mapping": { }, // name -> avatar ID (number) or URL
+	//	}
+	//	"background": 12, // current background
+	//	"backgrounds:" {}, // list of urls 
+	//	"backgroundmapping": {}, // colorID -> background ID
+	//};
+}
+
+function resetConfig() {
+	localStorage.removeItem("simplewoolclient_config");
+	initEmptyConfig();
+}
+
 // load config --------------------------------------------------------
 
 if (urlParams.resetconfig) {
-	localStorage.removeItem("simplewoolclient_config");
+	resetConfig();
 	alert("Config reset!");
 }
 
-var config = {
-	// avatar and background ID are:
-	// - number for preset backgrounds 
-	// - URL for custom bg
-	"avatar": null,
-	"background": null,
-	// speaker name -> dialogue name -> image filename
-	"avatarmapping": null,
-};
-//	"avatars": {
-//		"current": 0, // current index in all
-//		"all": [], // all known avatar IDs and URLs
-//		"mapping": { }, // name -> avatar ID (number) or URL
-//	}
-//	"background": 12, // current background
-//	"backgrounds:" {}, // list of urls 
-//	"backgroundmapping": {}, // colorID -> background ID
-//};
+var config;
+initEmptyConfig();
+
 
 if (urlParams.config) {
 	config = JSON.parse(myDecodeURIComponent(urlParams.config));
@@ -296,6 +307,13 @@ function showVariables() {
 	dbox.innerHTML = JSON.stringify(directServer.getVars(),null,2);
 }
 
+function resetConfigButton() {
+	if (confirm("Reset all avatar and background configuration, and restart dialogue?")) {
+		resetConfig();
+		window.location.reload();
+	}
+}
+
 if (urlParams.editable) {
 	var edithtml = "";
 	if (urlParams.editurl) {
@@ -327,6 +345,7 @@ if (urlParams.editable) {
 		+"</div>"
 		+"<div class='commandbutton' onclick='showUrl();'>Get URL</div>"
 		+"<div class='commandbutton' onclick='showVariables();'>Variables</div>"
+		+"<br/><div class='commandbutton' onclick='resetConfigButton();'>Reset configuration</div>"
 		+edithtml
 		+"</div>\n"
 		+"<div class='currentresourcebox' id='resourceId'></div>\n"
@@ -427,7 +446,16 @@ function updateNodeUI(node) {
 		var actions = directServer.currentnodectx.pendingActions;
 		if (actions) {
 			for (var i=0; i<actions.length; i++) {
-				alert("Action called: "+JSON.stringify(actions[i]));
+				var action = actions[i];
+				if (action.type == "link") {
+					if (action.url) {
+						window.open(action.url,"_blank");
+					} else {
+						alert("Action type 'link' misses required parameter 'url'");
+					}
+				} else {
+					alert("Action called: "+JSON.stringify(actions[i]));
+				}
 			}
 		}
 	}
