@@ -1,9 +1,14 @@
 package eu.woolplatform.webservice;
 
+/**
+ * All endpoints will be available at {base_path}/{protocol_version} whereby
+ * the {protocol_version} is defined by the last available item in this {@code enum}.
+ */
 public enum ProtocolVersion {
-	V1("1.1.0");
+	V1("1.0.0"),
+	V11("1.1.0");
 	
-	private String versionName;
+	private final String versionName;
 	
 	ProtocolVersion(String versionName) {
 		this.versionName = versionName;
