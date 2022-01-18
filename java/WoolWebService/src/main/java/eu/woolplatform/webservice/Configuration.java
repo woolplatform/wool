@@ -22,6 +22,7 @@ public class Configuration extends LinkedHashMap<String,String> {
 	private static final long serialVersionUID = 1L;
 
 	public static final String VERSION = "version";
+	public static final String BUILD = "build";
 	public static final String BASE_URL = "baseUrl";
 	public static final String JWT_SECRET_KEY = "jwtSecretKey";
 	public static final String DATA_DIR = "dataDir";
