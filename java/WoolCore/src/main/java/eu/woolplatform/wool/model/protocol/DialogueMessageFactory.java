@@ -49,10 +49,12 @@ public class DialogueMessageFactory {
 		dialogueMessage.setDialogue(executedNode.getDialogue()
 				.getDialogueName());
 		dialogueMessage.setNode(node.getTitle());
-		dialogueMessage.setLoggedDialogueId(executedNode.getLoggedDialogue()
-				.getId());
-		dialogueMessage.setLoggedInteractionIndex(
-				executedNode.getInteractionIndex());
+		if (executedNode.getLoggedDialogue() != null) {
+			dialogueMessage.setLoggedDialogueId(executedNode.getLoggedDialogue()
+					.getId());
+			dialogueMessage.setLoggedInteractionIndex(
+					executedNode.getInteractionIndex());
+		}
 		dialogueMessage.setSpeaker(node.getHeader().getSpeaker());
 		dialogueMessage.setStatement(generateDialogueStatement(body));
 		for (WoolReply reply : body.getReplies()) {

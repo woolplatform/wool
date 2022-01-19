@@ -40,7 +40,8 @@ import eu.woolplatform.wool.model.WoolVariableString;
  */
 public class WoolTranslator {
 	private WoolTranslationContext context;
-	private Map<String,List<WoolContextTranslation>> translations;
+	private Map<String,List<WoolContextTranslation>> exactTranslations;
+	private Map<String,List<WoolContextTranslation>> normalizedTranslations;
 	private Pattern preWhitespaceRegex;
 	private Pattern postWhitespaceRegex;
 
@@ -53,9 +54,14 @@ public class WoolTranslator {
 	public WoolTranslator(WoolTranslationContext context,
 			Map<WoolTranslatable,List<WoolContextTranslation>> translations) {
 		this.context = context;
-		this.translations = new LinkedHashMap<>();
+		this.exactTranslations = new LinkedHashMap<>();
 		for (WoolTranslatable key : translations.keySet()) {
-			this.translations.put(getNormalizedText(key),
+			this.exactTranslations.put(key.toString().trim(),
+					translations.get(key));
+		}
+		this.normalizedTranslations = new LinkedHashMap<>();
+		for (WoolTranslatable key : translations.keySet()) {
+			this.normalizedTranslations.put(getNormalizedText(key),
 					translations.get(key));
 		}
 		preWhitespaceRegex = Pattern.compile("^\\s+");
@@ -128,8 +134,12 @@ public class WoolTranslator {
 		m = postWhitespaceRegex.matcher(textPlain);
 		if (m.find())
 			postWhitespace = m.group();
-		List<WoolContextTranslation> transList = translations.get(
-				getNormalizedText(text.getTranslatable()));
+		List<WoolContextTranslation> transList = exactTranslations.get(
+				text.getTranslatable().toString().trim());
+		if (transList == null) {
+			transList = normalizedTranslations.get(getNormalizedText(
+					text.getTranslatable()));
+		}
 		if (transList == null)
 			return;
 		WoolTranslatable translation = findContextTranslation(text, transList);
