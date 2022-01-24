@@ -136,26 +136,17 @@ public class WoolNodeBody {
 	}
 
 	private void trimText() {
-		Iterator<Segment> it = segments.iterator();
-		TextSegment firstSegment = null;
-		TextSegment lastSegment = null;
-		while (it.hasNext()) {
-			Segment segment = it.next();
-			if (!(segment instanceof TextSegment))
-				continue;
-			if (firstSegment == null)
-				firstSegment = (TextSegment)segment;
-			lastSegment = (TextSegment)segment;
+		if (!segments.isEmpty() && segments.get(0) instanceof TextSegment) {
+			TextSegment segment = (TextSegment)segments.get(0);
+			String text = segment.text.evaluate(null).replaceAll("^\\s+", "");
+			segment.text = new WoolVariableString(text);
 		}
-		if (firstSegment != null) {
-			String text = firstSegment.text.evaluate(null).replaceAll(
-					"^\\s+", "");
-			firstSegment.text = new WoolVariableString(text);
-		}
-		if (lastSegment != null) {
-			String text = lastSegment.text.evaluate(null).replaceAll(
-					"\\s+$", "");
-			lastSegment.text = new WoolVariableString(text);
+		if (!segments.isEmpty() && segments.get(segments.size() - 1)
+				instanceof TextSegment) {
+			TextSegment segment = (TextSegment)segments.get(
+					segments.size() - 1);
+			String text = segment.text.evaluate(null).replaceAll("\\s+$", "");
+			segment.text = new WoolVariableString(text);
 		}
 	}
 
