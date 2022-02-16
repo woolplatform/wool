@@ -1,5 +1,7 @@
 package eu.woolplatform.utils.io;
 
+import eu.woolplatform.utils.exception.TimeoutException;
+
 public class TimeoutRunner {
 	/**
 	 * Runs the specified runner and waits until it is completed or the time-out
@@ -8,8 +10,9 @@ public class TimeoutRunner {
 	 *
 	 * @param runner the runner
 	 * @param timeout the time-out duration in milliseconds
+	 * @throws TimeoutException if the runner has timed out
 	 */
-	public static void run(Runner runner, int timeout) {
+	public static void run(Runner runner, int timeout) throws TimeoutException {
 		RunState runState = new RunState();
 		new Thread(() -> waitTimeout(runner, timeout, runState)).start();
 		try {
@@ -19,6 +22,10 @@ public class TimeoutRunner {
 				runState.finished = true;
 				runState.lock.notifyAll();
 			}
+		}
+		if (runState.timedOut) {
+			throw new TimeoutException(String.format(
+					"Time-out of %s ms expired", timeout));
 		}
 	}
 
@@ -38,6 +45,7 @@ public class TimeoutRunner {
 			}
 			if (runState.finished)
 				return;
+			runState.timedOut = true;
 		}
 		// time-out expired
 		runner.stop();
@@ -46,6 +54,7 @@ public class TimeoutRunner {
 	private static class RunState {
 		public final Object lock = new Object();
 		public boolean finished = false;
+		public boolean timedOut = false;
 	}
 
 	public interface Runner {
