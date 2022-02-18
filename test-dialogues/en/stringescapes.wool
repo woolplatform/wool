@@ -1,0 +1,71 @@
+title: Start
+tags: 
+speaker: Test Dummy
+colorID: 0
+position: 575,354
+---
+Testing: escapes in statement (select Markdown format to see). 
+
+Escaped comment: https:\//www.google.com/
+
+\[\[double escaped reply option\]\]
+
+\[[single (outer) escaped reply option\]]
+
+[\[single (inner) escaped reply option]\]
+
+
+\<\<double escaped statement\>\>
+
+\<<single (outer) escaped statement\>>
+
+<\<single (inner) escaped statement>\>
+
+
+[[Next test|Node2]]
+===
+title: Node2
+tags: 
+speaker: Test Dummy
+colorID: 0
+position: 891,351
+---
+Testing escapes inside reply options.
+
+[[Testing: \<\<double escaped statement\>\>|Node3]]
+
+[[Testing: \<<single (outer) escaped statement\>>|Node3]]
+
+[[Testing: <\<single (inner) escaped statement>\>|Node3]]
+
+
+[[Testing: \[\[double escaped reply option\]\]|Node3]]
+
+[[Testing: \[[single escaped reply option\]]|Node3]]
+
+[[Testing: [\[single escaped reply option]\]|Node3]]
+===
+title: Node3
+tags: 
+speaker: Test Dummy
+colorID: 0
+position: 890,665
+---
+Testing escaped quotes inside strings.
+
+<<set $string1 = "I said: \"this is a quoted string\".">>
+
+<<set $string2 = "\"quoted\"">>
+
+String1 is '$string1'; string2 is '$string2'.
+
+<<if $string2 == "\"quoted\"">>
+
+String2 is quoted.
+
+<<endif>>
+
+[[Quoted variable and action|Start|<<set $string3 = "\"quoted3a\"">><<action type="generic" value="\"quoted string reply action\"">>]]
+
+[[My name is <<input type="text" label="Your \"name\"" value="$userName">>.|Start|<<set $string3 = "\"quoted3b\"">><<action type="generic" value="\"quoted string input action\"">>]]
+===

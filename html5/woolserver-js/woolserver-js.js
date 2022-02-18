@@ -130,6 +130,19 @@ signup-handler.js: (not used in frail)
 
 _signupURL = _baseURL +  "auth/signup?user=" + _userName + "&password=" + _password;
 
+
+Escape character semantics.
+
+Escape characters are used to escape special Wool characters.
+
+An escaped character is passed as a literal character to the underlying
+representation language (like HTML or Markdown).
+
+Should the translation phrase be the string without escape characters removed?
+This makes sense if the translation phrase can contain Wool code.
+If so, all strings need to be unescaped after translation.
+Define a test case.
+
 */
 
 
@@ -257,9 +270,10 @@ function WoolNode(dialogue,lines) {
 		}
 	}
 	function removeLiteralStrings(expr) {
-		// XXX string escapes not supported
-		expr = expr.replace(/["][^"]*["]/g,"");
-		expr = expr.replace(/['][^']*[']/g,"");
+		expr = expr.replace('/["(?:[^"\\]|\\.)*"/', "");
+		expr = expr.replace("/['(?:[^'\\]|\\.)*'/", "");
+		//expr = expr.replace(/["][^"]*["]/g,"");
+		//expr = expr.replace(/['][^']*[']/g,"");
 		return expr;
 	}
 	// check for existence of bare identifiers (e.g. myVar instead of $myVar)
@@ -316,7 +330,7 @@ function WoolNode(dialogue,lines) {
 	// Returns null on parse error
 	function parseKeyValList(expr) {
 		var ret = {};
-		var regex = /^\s*([a-zA-Z0-9_]+)\s*=\s*"([^"]*)"/;
+		var regex = /^\s*([a-zA-Z0-9_]+)\s*=\s*"((?:[^"\\]|\\.)*)"/;
 		while (true) {
 			var matches = regex.exec(expr);
 			if (!matches) break;
@@ -457,8 +471,10 @@ function WoolNode(dialogue,lines) {
 		}
 
 		// remove escape characters
-		line = line.replace(/\\(.)/g,
-			function(match, $1, offset, original) { return $1;} );
+		// this should be done right before passing the text to
+		// the presentation layer
+		//line = line.replace(/\\(.)/g,
+		//	function(match, $1, offset, original) { return $1;} );
 
 		var lineuntrimmed = line + "\n";
 		line = line.trim();
@@ -573,7 +589,7 @@ function WoolNode(dialogue,lines) {
 			this.body[i] = actfuncitem;
 			continue;
 		}
-		var matches = /^<<multimedia\s+type=image\s+name=([^\]]+)>>$/.exec(line);
+		var matches = /^<<multimedia\s+type=image\s+name=(\w+)\s*>>$/.exec(line);
 		if (matches) {
 			this.body[i] = "C.addMultimedia('image','"+matches[1]+"');";
 			continue;
@@ -604,7 +620,7 @@ function WoolNode(dialogue,lines) {
 			continue;
 		}
 		// autoforward reply, no '|'
-		var matches = /^\[\[\s*([^|\]]+)\s*\]\]$/.exec(line);
+		var matches = /^\[\[\s*([^|]+)\s*\]\]$/.exec(line);
 		if (matches) {
 			var optid = matches[1];
 			this.links.push({line:i,node:optid});
@@ -613,7 +629,7 @@ function WoolNode(dialogue,lines) {
 		}
 
 		// normal reply
-		var matches = /^\[\[\s*([^|\]]+)\s*\|\s*([a-zA-Z0-9_.\/-]+)\s*(|.*)?\]\]$/.exec(line);
+		var matches = /^\[\[\s*([^|]+)\s*\|\s*([a-zA-Z0-9_.\/-]+)\s*(|.*)?\]\]$/.exec(line);
 		if (matches) {
 			// XXX textinput also accepts min, max
 			var desc = matches[1].trim();
@@ -625,6 +641,7 @@ function WoolNode(dialogue,lines) {
 					desc = __(origdesc);
 				}
 			}
+			desc = directServer.stripEscapes(desc);
 			var optid = matches[2];
 			var actionsstr = matches[3];
 			this.links.push({line:i,node:optid});

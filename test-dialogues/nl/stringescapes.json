@@ -1,0 +1,19 @@
+{
+    "Test Dummy": {
+        "Testing: escapes in statement (select Markdown format to see). \n\nEscaped comment: https:\\//www.google.com/\n\n\\[\\[double escaped reply option\\]\\]\n\n\\[[single (outer) escaped reply option\\]]\n\n[\\[single (inner) escaped reply option]\\]\n\n\n\\<\\<double escaped statement\\>\\>\n\n\\<<single (outer) escaped statement\\>>\n\n<\\<single (inner) escaped statement>\\>": "Testen van: escapes in statement (selecteer Markdown formaat om dit goed te zien). \n\nEscaped comment: https:\\//www.google.com/\n\n\\[\\[dubbel escaped reply optie\\]\\]\n\n\\[[enkel (outer) escaped reply optie\\]]\n\n[\\[enkel (inner) escaped reply optie]\\]\n\n\n\\<\\<dubbel escaped statement\\>\\>\n\n\\<<enkel (outer) escaped statement\\>>\n\n<\\<enkel (inner) escaped statement>\\>",
+        "Testing escapes inside reply options.": "Testen van escapes in reply opties.",
+        "Testing escaped quotes inside strings.\n\n\n\nString1 is '$string1'; string2 is '$string2'.": "String1 is gelijk aan '$string1'; string2 is '$string2'.\n",
+        "String2 is quoted.": "String2 is gequote.\n"
+    },
+    "_user": {
+        "Next test": "Volgende test",
+        "Testing: \\<\\<double escaped statement\\>\\>": "Testen van: \\<\\<dubbel escaped statement\\>\\>\n",
+        "Testing: \\<<single (outer) escaped statement\\>>": "Testen van: \\<<enkel (outer) escaped statement\\>>\n",
+        "Testing: <\\<single (inner) escaped statement>\\>": "Testen van: \\<<enkel (inner) escaped statement\\>>\n",
+        "Testing: \\[\\[double escaped reply option\\]\\]": "Testen van: \\[\\[dubbel escaped reply optie\\]\\]\n",
+        "Testing: \\[[single escaped reply option\\]]": "Testen van: \\[\\[enkel escaped reply optie\\]\\]\n",
+        "Testing: [\\[single escaped reply option]\\]": "Testen van: \\[\\[enkel escaped reply optie\\]\\]\n",
+        "Quoted variable and action": "Gequote variabele en action\n",
+        "My name is <<input type=\"text\" label=\"Your \\\"name\\\"\" value=\"$userName\">>.": "Mijn naam is <<input type=\"text\" label=\"Uw\\\"naam\\\"\" value=\"$userName\">>."
+    }
+}

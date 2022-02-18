@@ -41,6 +41,17 @@ directServer.setLanguage = function(defaultLang,currentLang,defaultValue) {
 	directServer.currentLanguage = currentLang;
 }
 
+directServer.stripEscapes = function(text) {
+	// remove escape characters
+	// this should be done right before passing the text to
+	// the presentation layer
+	// XXX quotes are not unescaped, to prevent literal strings from breaking
+	// TODO only unescape quotes outside of strings
+	// String matching expr: '/["(?:[^"\\]|\\.)*"/'
+	text = text.replace('/\\([^"])/g',
+		function(match, $1, offset, original) { return $1;} );
+	return text;
+}
 
 // strip language and ".wool" from dialogue path
 directServer.stripDialoguePath = function(dialoguepath) {
@@ -165,6 +176,7 @@ directServer.getNode = function() {
 				texti = __(origtexti);
 			}
 		}
+		texti = directServer.stripEscapes(texti);
 		statement += texti + "\n";
 	}
 	var ret = {
@@ -363,6 +375,8 @@ function _directServer_progress_dialogue(par) {
 		var ctx = directServer.currentnodectx;
 		if (ctx.inputreply) {
 			ctx.vars[ctx.inputreply.inputvar] = par.textInput;
+			if (ctx.inputreply.action) 
+				ctx.inputreply.action(directServer.currentnodectx);
 		}
 	}
     // log actions that were collected in the context

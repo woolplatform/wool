@@ -84,26 +84,18 @@ saveConfig();
 
 // init ---------------------------------------------------------------
 
-// 3rd party code should load these defs and set the language
-// load language defs directly because we can't load from file without http.
-//_i18n.loadJSON({
-//	"": { "language": "nl", "plural-forms": "nplurals=2; plural=(n != 1);", },
-//	"You:": "Jij:",
-//	"Your response:": "Je antwoord:",
-//	"Continue": "Ga verder",
-//	"Send": "Verstuur",
-//});
-//_i18n.setLocale("en");
-
 
 // Obtain source code and lang defs. Possible sources:
 // - resources: if dialoguepath is defined
 // - URL parameter "code" (langDefs cannot be obtained from url yet)
 // - windowparams.sourceCode and windowparams.langDefs
 
+var defaultLanguageExplicitlyDefined = false;
 var defaultLanguage = urlParams.defaultlanguage;
 if (!defaultLanguage) {
 	defaultLanguage = "nl";
+} else {
+	defaultLanguageExplicitlyDefined = true;
 }
 
 var dialogueInitVars = {};
@@ -128,6 +120,8 @@ if (urlParams.dialoguepath) {
 	dialogueID = urlParams.dialoguepath;
 }
 
+
+
 //sourceCode=localStorage.getItem(LOCALSTORAGEPREFIX+"buffer");
 
 if (urlParams.code) sourceCode = myDecodeURIComponent(urlParams.code);
@@ -146,6 +140,24 @@ _i18n.enableNormalization(true);
 
 // NOTE: "nl" is always used for the current language
 _i18n.clearDictionary("nl");
+
+// As a quick hack, we provide predefined translations for the standard texts,
+// in case resources are provided or the default language is explicitly
+// defined.
+// These will be erased when translations are defined, so you will have to
+// define them there.
+if ((urlParams.resources || defaultLanguageExplicitlyDefined) && defaultLanguage == "nl") {
+	_i18n.loadJSON({
+		"": { "language": "nl", "plural-forms": "nplurals=2; plural=(n != 1);", },
+		"You:": "Jij:",
+		"Your response:": "Je antwoord:",
+		"Continue": "Ga verder",
+		"Send": "Verstuur",
+	});
+	_i18n.setLocale("nl");
+}
+
+
 
 if (langDefs) {
 	// autodetect json or po
@@ -611,7 +623,9 @@ if (urlParams.resources) {
 	if (res) {
 		for (var i=0; i<res.length; i++) {
 			var resname = res[i];
-			BrowserFileSystem.cacheFile(RESOURCEBASEDIR+"/"+resname,resname,
+			BrowserFileSystem.cacheFile(
+				RESOURCEBASEDIR + "/" + resname + Utils.getNocachePar(),
+				resname,
 				function() {
 					nrResourcesLoaded++;
 					console.log("Loaded resource " + nrResourcesLoaded +

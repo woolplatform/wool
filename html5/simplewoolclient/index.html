@@ -3,19 +3,8 @@
 <link rel="stylesheet" href="../lib/svgbackgrounds/backgrounds.css">
 <link rel="stylesheet" href="css/dialogue.css">
 <link rel="stylesheet" href="css/simplewoolclient.css">
-<script src="../lib/polyfills.js"></script>
 <script src="../lib/utils.js"></script>
-<script src="../lib/avataaars/avataaars-pure.js"></script>
-<script src="../lib/avataaars/genavataaar.js"></script>
-<script src="../lib/i18n/gettext.js"></script>
-<script src="../lib/i18n/i18n.js"></script>
-<script src="../lib/kissc.js"></script>
-<script src="../woolserver-js/woolserver-js.js"></script>
-<script src="../woolserver-js/woolserver-js-api.js"></script>
-<script src="../lib/filesystem.js"></script>
-<script src="resourceui.js"></script>
 <script type="text/javascript" src="../node_modules/marked/marked.min.js"></script>
-<script src="initheader.js"></script>
 </head>
 <body>
 	<div id="hidden" style="position:absolute; width: 1px; height: 1px; overflow:hidden;"></div>
@@ -39,6 +28,21 @@
 		</div>
 		<div id='agent_object'></div>
 	</div>
-	<script src="main.js"></script>
+	<script>
+		Utils.addNocacheScripts([
+			"../lib/polyfills.js",
+			"../lib/avataaars/avataaars-pure.js",
+			"../lib/avataaars/genavataaar.js",
+			"../lib/i18n/gettext.js",
+			"../lib/i18n/i18n.js",
+			"../lib/kissc.js",
+			"../lib/filesystem.js",
+			"../woolserver-js/woolserver-js.js",
+			"../woolserver-js/woolserver-js-api.js",
+			"resourceui.js",
+			"initheader.js",
+			"main.js",
+		]);
+	</script>
 </body>
 </html>
