@@ -22,28 +22,16 @@
 
 package eu.woolplatform.utils.schedule;
 
-import org.joda.time.DateTime;
-import org.joda.time.Days;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalDateTime;
-import org.joda.time.LocalTime;
-import org.joda.time.Months;
-import org.joda.time.Years;
-import org.slf4j.Logger;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 import eu.woolplatform.utils.AppComponent;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.ReflectionUtils;
 import eu.woolplatform.utils.exception.HandledException;
 import eu.woolplatform.utils.exception.ParseException;
+import org.joda.time.*;
+import org.slf4j.Logger;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 /**
  * The task scheduler can be used to schedule one-time or repeating tasks to
@@ -559,9 +547,7 @@ public abstract class TaskScheduler {
 		}
 		Throwable exception = null;
 		try {
-			logger.info("BEFORE FIXED RATE TASK: " + task);
 			task.run(context, taskId, now, scheduleParams);
-			logger.info("AFTER FIXED RATE TASK: " + task);
 		} catch (Throwable ex) {
 			exception = ex;
 		}

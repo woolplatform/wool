@@ -22,7 +22,23 @@
 
 package eu.woolplatform.utils.log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LogUtils {
+	public static List<String> splitLongLog(String log, int maxLineLen) {
+		List<String> result = new ArrayList<>();
+		int start = 0;
+		while (start < log.length()) {
+			int end = start + maxLineLen;
+			if (end > log.length())
+				end = log.length();
+			result.add(log.substring(start, end));
+			start += maxLineLen;
+		}
+		return result;
+	}
+
 	public static String asciiBytesToString(byte[] bs) {
 		return asciiBytesToString(bs, 0, bs.length);
 	}
