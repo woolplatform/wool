@@ -86,6 +86,8 @@ img#background {
 	width:70%;
 	margin-bottom: 40px;
  	padding: 25px;
+	padding-top: 10px;
+	padding-bottom: 15px;
     font-size: 1em;
 	border: 1px solid #ce8b15;
 	background: #fff;
@@ -149,6 +151,7 @@ img#background {
 	margin: 0 10px 10px 0;
 	padding: 25px;
 	padding-bottom: 0px;
+	padding-top: 5px;
 	-webkit-border-radius: 25px 25px 25px 5px;
 	-moz-border-radius: 25px 25px 25px 5px;
 	border-radius: 25px 25px 25px 5px;
@@ -311,7 +314,7 @@ button.reply:last-of-type:before {
 button.reply-auto-forward {
 	background: #2889A3;
 	float: left;
-	margin-left: 20%;
+	margin-bottom: 5px;
 	padding: 10px 15px 10px 15px;
 	-webkit-border-radius: 5px 5px 5px 5px;
 	-moz-border-radius:  5px 5px 5px 5px;
@@ -322,6 +325,10 @@ button.reply-auto-forward {
     font-size:1.0em;
     text-align: center;
     clear: both;
+}
+.reply-box-auto-forward button.reply-auto-forward,
+#user-back button.reply-auto-forward {
+	margin-left: 20%;
 }
 
 button.reply-auto-forward:before {
@@ -383,10 +390,12 @@ input.invalid {
 
 input.submit {
 	display: inline-block;
-	max-width: 150px;
+	max-width: 120px;
 	background: #2889A3;
 	font-weight: 600;
 	padding: 15px 15px 15px 15px;
+	padding-left: 5px;
+	padding-right: 5px;
 	-webkit-border-radius: 0px 25px 25px 0px;
 	-moz-border-radius:  0px 25px 25px 0px;
 	border-radius: 0px 25px 25px 0px;

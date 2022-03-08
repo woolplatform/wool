@@ -75,30 +75,6 @@ Utils.generateUUID = function() {
     });
 }
 
-// get random parameter that can be added to url to prevent caching
-// afterExistingPar - true = url already has other parameters
-Utils.getNocachePar = function(afterExistingPar) {
-	var ret = afterExistingPar ? "&" : "?";
-	return ret + "nocache=" + Utils.generateUUID();
-}
-
-// Add script tags to header with nocache parameter.  
-// scripts - array of script paths
-Utils.addNocacheScripts = function(scripts) {
-	if (scripts.length == 0) return;
-	var script = document.createElement('script');
-	script.type = 'text/javascript';
-	// recursive calls via onload to ensure order
-	script.onload = function() {
-		console.log("Loaded: "+scripts[0]);
-		var scripts2 = scripts;
-		scripts2.shift();
-		Utils.addNocacheScripts(scripts2);
-	}
-	script.src = scripts[0] + Utils.getNocachePar();
-	document.head.appendChild(script);
-}
-
 Utils.parseJWT = function(token) {
     var base64Url = token.split('.')[1];
     var base64 = decodeURIComponent(atob(base64Url).split('').map(function(c) {

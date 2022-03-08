@@ -308,6 +308,7 @@ var App = function(name, version, filename) {
 							//test the Marque scaled to the nodes x,y values
 
 							var holder = $(".nodes-holder").offset(); 
+							holder.left -= rootofs.left;
 							var marqueeOverNode = (MarqRect.x2 - holder.left) / scale > nodes[i].x()  
 											   && (MarqRect.x1 - holder.left) / scale < nodes[i].x() + nodes[i].tempWidth
         									   && (MarqRect.y2 - holder.top) / scale > nodes[i].y()   

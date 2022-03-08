@@ -5,6 +5,7 @@ function initDirectServer() {
 	directServer.rootDir = null; // (node.js) null = unknown
 	directServer.currentLanguage = "en"; // (node.js)
 	directServer.defaultLanguage = "en"; // (node.js)
+	directServer.defaultTranslation = null;
 	directServer.jumpedToNewDialogue = false;
 	directServer.availableDialogues = [];
 	directServer.dialogues = {};
@@ -20,6 +21,8 @@ function initDirectServer() {
 	directServer.currentnode = null;
 	directServer.currentnodectx = null;
     //directServer.pendingActions = [];
+	// array of visited nodes for back function
+	directServer.nodeHistory = [];
 }
 
 initDirectServer();
@@ -39,6 +42,11 @@ directServer.setLanguage = function(defaultLang,currentLang,defaultValue) {
 	if (!currentLang) currentLang = defaultValue;
 	directServer.defaultLanguage = defaultLang;
 	directServer.currentLanguage = currentLang;
+}
+
+// use this is no translation is available
+directServer.setDefaultTranslation = function(langDefs) {
+	directServer.defaultTranslation = langDefs;
 }
 
 directServer.stripEscapes = function(text) {
@@ -139,6 +147,9 @@ directServer.findNodeIdx = function(id) {
 	return null;
 }
 
+directServer.canGoBack = function() {
+	return directServer.nodeHistory.length > 0;
+}
 
 /* convert current node and node ctx into node spec for the client, following:
 String id; // node id
@@ -249,6 +260,24 @@ directServer.getNode = function() {
 	return ret;
 }
 
+directServer.gotoNode = function(node) {
+	directServer.currentnode = node;
+	directServer.currentnodectx = new WoolNodeContext(
+		directServer.currentnodectx.vars,
+		directServer.currentnodectx.pendingActions,
+	);
+	if (typeof directServer.currentnode.func == 'function' ) {
+		try {
+			directServer.currentnode.func(directServer.currentnodectx);
+		} catch (e) {
+			directServer.logError("Node "+directServer.currentnode.param["title"]+": runtime script error: "+e);
+		}
+	} else {
+		directServer.logError("Node "+directServer.currentnode.param["title"]+": script compile error.");
+	}
+	return directServer.getNode();
+}
+
 directServer.setVar = function(name,value) {
 	if (!directServer.currentnodectx) {
 		console.log("Warning: cannot set variable: no current node context.");
@@ -337,6 +366,7 @@ function _directServer_start_dialogue(par) {
 	if (idx!==null) node = directServer.currentdialogue.nodes[idx];
 	directServer.currentnode = node;
     console.log("Start node: "+idx)
+	directServer.nodeHistory = [];
 	// pass kb variables here
 	var vars = {};
 	if (par.keepVars && directServer.currentnodectx) {
@@ -347,6 +377,11 @@ function _directServer_start_dialogue(par) {
 	return directServer.getNode();
 }
 
+// par: {
+//     replyId
+//     replyIndex [optional] - index of reply in choices
+//     textInput [optional] - text typed by user
+// }
 function _directServer_progress_dialogue(par) {
 	// do actions first
 	var replyId = par.replyId;
@@ -402,22 +437,16 @@ function _directServer_progress_dialogue(par) {
 			keepVars: true,
 		});
 	} else {
-		directServer.currentnode = directServer.currentdialogue.nodeMap[
-			replyId.trim().toLowerCase() ];
-		directServer.currentnodectx = new WoolNodeContext(
-			directServer.currentnodectx.vars,
-			directServer.currentnodectx.pendingActions,
-		);
-		if (typeof directServer.currentnode.func == 'function' ) {
-			try {
-				directServer.currentnode.func(directServer.currentnodectx);
-			} catch (e) {
-				directServer.logError("Node "+directServer.currentnode.param["title"]+": runtime script error: "+e);
-			}
-		} else {
-			directServer.logError("Node "+directServer.currentnode.param["title"]+": script compile error.");
-		}
-		return directServer.getNode();
+		directServer.nodeHistory.push(directServer.currentnode);
+		var newnode=directServer.gotoNode(directServer.currentdialogue.nodeMap[
+			replyId.trim().toLowerCase() ]);
+		return newnode;
 	}
+}
+
+function _directServer_go_back(par) {
+	if (directServer.nodeHistory.length == 0) return directServer.currentnode;
+	return directServer.gotoNode(directServer.nodeHistory.pop());
+
 }
 

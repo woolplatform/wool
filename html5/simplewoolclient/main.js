@@ -25,6 +25,7 @@ function saveConfig() {
 	config.avatar = avatarRes.serialize();
 	config.background = backgroundRes.serialize();
 	config.statementFormat = statementFormat;
+	config.hasBackButton = hasBackButton;
 	console.log(config);
 	localStorage.setItem("simplewoolclient_config",JSON.stringify(config));
 }
@@ -36,6 +37,8 @@ function initEmptyConfig() {
 		// - URL for custom bg
 		"avatar": null,
 		"background": null,
+		"statementFormat": "html",
+		"hasBackButton": true,
 		// speaker name -> dialogue name -> image filename
 		"avatarmapping": null,
 	};
@@ -77,6 +80,12 @@ var avatarRes = new ResourceUI(config.avatar,makeRange(99),0);
 var backgroundRes = new ResourceUI(config.background,makeRange(29),12);
 
 var statementFormat = config.statementFormat ? config.statementFormat : "html";
+
+var hasBackButton = 
+	config.hasBackButton !== null && typeof config.hasBackButton != "undefined" 
+		? config.hasBackButton 
+		: true;
+if (urlParams.nobackbutton) hasBackButton = false;
 
 var isNarrator=false;
 
@@ -147,14 +156,18 @@ _i18n.clearDictionary("nl");
 // These will be erased when translations are defined, so you will have to
 // define them there.
 if ((urlParams.resources || defaultLanguageExplicitlyDefined) && defaultLanguage == "nl") {
-	_i18n.loadJSON({
-		"": { "language": "nl", "plural-forms": "nplurals=2; plural=(n != 1);", },
-		"You:": "Jij:",
-		"Your response:": "Je antwoord:",
-		"Continue": "Ga verder",
-		"Send": "Verstuur",
-	});
-	_i18n.setLocale("nl");
+	if (!langDefs) {
+		langDefs = JSON.stringify({
+			"": { "language": "nl", "plural-forms": "nplurals=2; plural=(n != 1);", },
+			"You:": "Jij:",
+			"Your response:": "Je antwoord:",
+			"Continue": "Ga verder",
+			"Go back": "Ga terug",
+			"Send": "Verstuur",
+		});
+		directServer.setDefaultTranslation(langDefs);
+	}
+	//_i18n.setLocale("nl");
 }
 
 
@@ -285,7 +298,28 @@ function setStatementFormat(format,updateUI) {
 	}
 	var button = document.getElementById("format_"+format);
 	button.classList.add("selected");
-	if (updateUI) updateNodeUI(directServer.getNode());
+	if (updateUI) {
+		// also saves config
+		updateNodeUI(directServer.getNode());
+	} else {
+		saveConfig();
+	}
+}
+
+// true, false, or undefined = toggle
+function setBackButton(backButton,updateUI) {
+	if (typeof backButton == "undefined" || backButton === null) {
+		backButton = !hasBackButton;
+	}
+	hasBackButton = backButton;
+	var elem = document.getElementById("backbuttoncheckbox");
+	elem.checked = hasBackButton ? "checked" : null;
+	if (updateUI) {
+		// also saves config
+		updateNodeUI(directServer.getNode());
+	} else {
+		saveConfig();
+	}
 }
 
 var showingInDebug=null;
@@ -355,6 +389,9 @@ if (urlParams.editable) {
 		+"<div id='format_markdown' class='commandbutton formatcommand' onclick='setStatementFormat(\"markdown\",true);'>Markdown</div>"
 		+"<div id='format_html'  class='commandbutton formatcommand' onclick='setStatementFormat(\"html\",true);'>HTML</div>"
 		+"</div>"
+		+"<div id='backbuttoncontrols'>Back button: "
+		+"<input type='checkbox' id='backbuttoncheckbox' onclick='setBackButton(null,true);'/>\n"
+		+"</div>"
 		+"<div class='commandbutton' onclick='showUrl();'>Get URL</div>"
 		+"<div class='commandbutton' onclick='showVariables();'>Variables</div>"
 		+"<br/><div class='commandbutton' onclick='resetConfigButton();'>Reset configuration</div>"
@@ -364,6 +401,7 @@ if (urlParams.editable) {
 		+"<div class='currentdialoguebox' id='dialogueId'></div>\n";
 
 	setStatementFormat(statementFormat,false); // updates editbox
+	setBackButton(hasBackButton,false);
 }
 
 
@@ -426,6 +464,13 @@ function handleNumericReply(id,index,min,max) {
 	}
 	handleReply(id,index,value);
 }
+
+function handleBackButton() {
+	handleDirectServerCall("GET", null,null,
+		"go_back/",
+		updateNodeUI);
+}
+
 
 function startDialogue() {
 	// Hack: preload initial vars into current nodecontext, so they are
@@ -529,6 +574,7 @@ function updateNodeUI(node) {
 			"<p id='user-name'>"+__("You:")+"</p>"
 			+"<p id='user-instruction'>"+__("Your response:")+"</p>";
 	}
+	var normalReply=false;
 	for (var i=0; i<node.replies.length; i++) {
 		var reply = node.replies[i];
 		if (reply.replyType=="BASIC") {
@@ -537,6 +583,7 @@ function updateNodeUI(node) {
 				"<button class='reply' onclick='handleBasicReply(\""
 					+reply.replyId+"\",\""+i+"\")'>"
 					+reply.statement+"</button>"
+			normalReply=true;
 		} else if (reply.replyType=="AUTOFORWARD") {
 			replyelem.className = "reply-box-auto-forward";
 			replyelem.innerHTML +=
@@ -609,7 +656,19 @@ function updateNodeUI(node) {
 					+ reply.replyId + "_content') );"
 					+'" />';
 			}
+			normalReply=true;
 		}
+	}
+	var backelem = document.getElementById("user-back");
+	backelem.innerHTML = "";
+	if (directServer.canGoBack() && hasBackButton) {
+		if (normalReply) {
+			backelem = document.getElementById("user-reply");
+			backelem.innerHTML += "<div style='clear:both;' />\n";
+		}
+		backelem.innerHTML +=
+			"<button class='reply-auto-forward' onclick='handleBackButton()'>"
+				+ __("Go back") + "</button>";
 	}
 	localStorage.setItem("simplewoolclient_dialoguestate",directServer.getState());
 }
@@ -624,7 +683,7 @@ if (urlParams.resources) {
 		for (var i=0; i<res.length; i++) {
 			var resname = res[i];
 			BrowserFileSystem.cacheFile(
-				RESOURCEBASEDIR + "/" + resname + Utils.getNocachePar(),
+				RESOURCEBASEDIR + "/" + resname + getNocachePar(),
 				resname,
 				function() {
 					nrResourcesLoaded++;
