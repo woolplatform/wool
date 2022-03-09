@@ -826,6 +826,7 @@ function directServerLoadNodeDialogue(dialogueID,filepath,overwrite) {
 	if (overwrite || !directServer.dialogues[dialogueID]) {
 		directServer.dialogues[dialogueID] = new WoolDialogue(data);
 	}
+	directServer.nodeHistory = [];
 	return data;
 }
 
@@ -834,8 +835,13 @@ function directServerLoadNodeTranslation(filepath) {
     //if (typeof NodeFileSystem == "undefined") return;
 	var fs = getPlatformFileSystem();
 	var langDefs = fs.readFileSync(filepath);
+	if (!langDefs && directServer.defaultTranslation) {
+		langDefs = directServer.defaultTranslation;
+	}
 	_i18n.clearDictionary("nl");
-	if (langDefs) _i18n.ReadJSONFromString(langDefs,"nl");
+	if (langDefs) {
+		_i18n.ReadJSONFromString(langDefs,"nl");
+	}
 }
 
 function directServerGetPath(newPath,languageCode) {
