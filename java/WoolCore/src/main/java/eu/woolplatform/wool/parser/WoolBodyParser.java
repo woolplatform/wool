@@ -108,6 +108,11 @@ public class WoolBodyParser {
 				}
 				break;
 			case REPLY_START:
+				if (nodeState == null) {
+					throw new LineNumberParseException(
+							"Unexpected start of reply [[", token.getLineNum(),
+							token.getColNum());
+				}
 				WoolReplyParser replyParser = new WoolReplyParser(nodeState);
 				WoolReply reply = replyParser.parse(tokens);
 				if (reply.getStatement() == null &&

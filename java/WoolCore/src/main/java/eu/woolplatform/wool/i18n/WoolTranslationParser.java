@@ -202,8 +202,6 @@ public class WoolTranslationParser {
 
 	private static WoolTranslatable parseTranslationString(String translation)
 			throws ParseException {
-		translation = translation.replaceAll("\\[\\[", "\\\\[[")
-				.replaceAll("]]", "\\\\]]");
 		WoolBodyTokenizer tokenizer = new WoolBodyTokenizer();
 		List<WoolBodyToken> tokens;
 		try {
