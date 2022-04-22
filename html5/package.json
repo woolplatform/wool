@@ -25,7 +25,7 @@
     "jquery": "^3.6.0",
     "jquery-ui-dist": "^1.12.1",
     "jstree": "^3.3.11",
-    "marked": "^2.1.2",
+    "marked": "^4.0.10",
     "split.js": "^1.6.4"
   }
 }
