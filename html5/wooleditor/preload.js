@@ -18,10 +18,19 @@ process.once('loaded', () => {
 		}
 	})
 	
-	// put this preload for main-window to give it prompt()
+	// own prompt / alert / confirm implementations
 	window.prompt = function(title, val){
 	  return ipcRenderer.sendSync('prompt', {title, val})
 	}
+
+	window.alert = function(title){
+	  return ipcRenderer.sendSync('alert', {title})
+	}
+
+	window.confirm = function(title){
+	  return ipcRenderer.sendSync('confirm', {title})
+	}
+
 })
 
 

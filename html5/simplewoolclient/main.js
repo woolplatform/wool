@@ -325,8 +325,11 @@ function setBackButton(backButton,updateUI) {
 var showingInDebug=null;
 
 // modified encoder for shorter urls
-function myEncodeURIComponent(string) {
-	return encodeURIComponent(kissc.compress(string));
+function myEncodeURIComponent(string,notzipped) {
+	if (!notzipped) {
+		string = kissc.compress(string);
+	}
+	return encodeURIComponent(string);
 }
 
 function myDecodeURIComponent(string) {
@@ -335,15 +338,15 @@ function myDecodeURIComponent(string) {
 	return ret;
 }
 
-function showUrl() {
+function showUrl(zipped) {
 	showingInDebug="URL";
 	var dbox = document.getElementById("debugarea");
 	dbox.parentNode.style.display="block";
 
 	dbox.innerHTML = window.location.protocol + "//" +
 		window.location.host + window.location.pathname
-		+ "?config=" + myEncodeURIComponent(JSON.stringify(config))
-		+ "&code=" + myEncodeURIComponent(sourceCode);
+		+ "?config=" + myEncodeURIComponent(JSON.stringify(config),!zipped)
+		+ "&code=" + myEncodeURIComponent(sourceCode,!zipped);
 }
 
 function showVariables() {
@@ -392,9 +395,10 @@ if (urlParams.editable) {
 		+"<div id='backbuttoncontrols'>Back button: "
 		+"<input type='checkbox' id='backbuttoncheckbox' onclick='setBackButton(null,true);'/>\n"
 		+"</div>"
-		+"<div class='commandbutton' onclick='showUrl();'>Get URL</div>"
-		+"<div class='commandbutton' onclick='showVariables();'>Variables</div>"
-		+"<br/><div class='commandbutton' onclick='resetConfigButton();'>Reset configuration</div>"
+		+"<div class='commandbutton' onclick='showUrl(false);'>Get URL</div>"
+		+"<div class='commandbutton' onclick='showUrl(true);'>Get URL zipped</div>"
+		+"<br/><div class='commandbutton' onclick='showVariables();'>Variables</div>"
+		+"<div class='commandbutton' onclick='resetConfigButton();'>Reset config</div>"
 		+edithtml
 		+"</div>\n"
 		+"<div class='currentresourcebox' id='resourceId'></div>\n"
