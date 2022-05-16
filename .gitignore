@@ -1,2 +1,3 @@
 node_modules/
 java/WoolCore/.idea/
+java/wool-variable-service/src/main/resources/application.properties
