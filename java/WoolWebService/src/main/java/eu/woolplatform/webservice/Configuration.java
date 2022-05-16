@@ -26,6 +26,8 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public static final String BASE_URL = "baseUrl";
 	public static final String JWT_SECRET_KEY = "jwtSecretKey";
 	public static final String DATA_DIR = "dataDir";
+	public static final String VARIABLE_SERVICE_URL = "variableServiceUrl";
+	public static final String VARIABLE_SERVICE_API_TOKEN = "VariableServiceApiToken";
 
 	private static final Object LOCK = new Object();
 	private static Configuration instance = null;
