@@ -5,8 +5,12 @@ WOOL is a simple, powerful dialogue platform for creating virtual agent conversa
 This repository is structured as follows:
 
   * html5 - Contains all web and javascript tools, including the WOOL Editor
-  * java - Contains all Java libraries
-  * test-dialogues - Contains a number of sample .wool scripts
+  * java - Contains the libraries and tools written in the Java Language:
+    * WoolCore - Implementation of the Gold Standard WOOL Language Parser in Java.
+    * WoolUtils - A library of utility functions used throughout other Wool Projects.
+    * WoolWebService - A Spring Boot application (Web Service) that can execute WOOL Dialogues server-side.
+    * WoolExternalVariableServiceDummy - A dummy implementation of an "External WOOL Variable Service".
+  * test-dialogues - Contains a number of sample .wool scripts and .json file used for testing.
 
 ## WOOL Editor Desktop version
 The WOOL Editor can be used online (see www.woolplatform.eu), but can also be run as a Desktop application. While we are working on a user-friendly installer, you can run it as follows:
