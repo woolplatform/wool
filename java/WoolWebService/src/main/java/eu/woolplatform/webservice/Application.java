@@ -70,8 +70,14 @@ ApplicationListener<ContextClosedEvent> {
 		serviceManager = new ServiceManager(new WoolResourceFileLoader(
 				"dialogues"));
 
-		logger.info("WOOL Web Service version: " + config.get(
-				Configuration.VERSION));
+		logger.info("Successfully started WOOL Web Service.");
+		logger.info("Service Version: " + config.get(Configuration.VERSION));
+		logger.info("Build: " + "(in development)"); // TODO: Automatically populate "Build" config parameter
+		logger.info("External Variable Service Enabled: "+config.get(Configuration.EXTERNAL_VARIABLE_SERVICE_ENABLED));
+		if(Boolean.parseBoolean(config.get(Configuration.EXTERNAL_VARIABLE_SERVICE_ENABLED))) {
+			logger.info("External Variable Service URL: "+config.get(Configuration.EXTERNAL_VARIABLE_SERVICE_URL));
+		}
+
 	}
 
 	public ServiceManager getServiceManager() {

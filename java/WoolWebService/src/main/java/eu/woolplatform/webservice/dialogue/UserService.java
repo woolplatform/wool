@@ -8,7 +8,6 @@ import eu.woolplatform.utils.i18n.I18nUtils;
 import eu.woolplatform.webservice.model.LoggedDialogue;
 import eu.woolplatform.webservice.model.LoggedDialogueStoreIO;
 import eu.woolplatform.webservice.model.VariableStoreIO;
-import eu.woolplatform.webservice.model.VariableService;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.execution.ActiveWoolDialogue;
 import eu.woolplatform.wool.execution.ExecuteNodeResult;
@@ -47,18 +46,15 @@ public class UserService {
 	// -------------------- Constructors
 	
 	/**
-	 * Instantiates an {@link UserService} for a given user, identified
+	 * Instantiates a {@link UserService} for a given user, identified
 	 * by the associated {@code accountId} and {@code userId}.
 	 * @param userId - A unique identifier of the current user this {@link UserService} is interacting with.
 	 * @param serviceManager the server's {@link ServiceManager} instance.
+	 * @param onVarChangeListener
 	 */
 	public UserService(String userId, ServiceManager serviceManager,
 			WoolVariableStore.OnChangeListener onVarChangeListener)
 			throws DatabaseException, IOException {
-		//Printing Variable Service config parameters.
-		VariableService varService = new VariableService();
-		Logger logger = AppComponents.getLogger(getClass().getSimpleName());
-		logger.info(varService.variableServiceDefined());
 
 		this.userId = userId;
 		this.serviceManager = serviceManager;
