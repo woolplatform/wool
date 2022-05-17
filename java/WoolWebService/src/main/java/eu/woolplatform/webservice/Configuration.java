@@ -16,6 +16,8 @@ import eu.woolplatform.utils.AppComponent;
  * as constants in this class.
  * 
  * @author Dennis Hofs (RRD)
+ * @author Tessa Beinema
+ * @author Harm op den Akker
  */
 @AppComponent
 public class Configuration extends LinkedHashMap<String,String> {
@@ -26,6 +28,9 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public static final String BASE_URL = "baseUrl";
 	public static final String JWT_SECRET_KEY = "jwtSecretKey";
 	public static final String DATA_DIR = "dataDir";
+	public static final String EXTERNAL_VARIABLE_SERVICE_ENABLED = "externalVariableServiceEnabled";
+	public static final String EXTERNAL_VARIABLE_SERVICE_URL = "externalVariableServiceUrl";
+	public static final String EXTERNAL_VARIABLE_SERVICE_API_TOKEN = "externalVariableServiceApiToken";
 
 	private static final Object LOCK = new Object();
 	private static Configuration instance = null;

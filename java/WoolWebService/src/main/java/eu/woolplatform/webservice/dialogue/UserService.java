@@ -46,14 +46,16 @@ public class UserService {
 	// -------------------- Constructors
 	
 	/**
-	 * Instantiates an {@link UserService} for a given user, identified
+	 * Instantiates a {@link UserService} for a given user, identified
 	 * by the associated {@code accountId} and {@code userId}.
 	 * @param userId - A unique identifier of the current user this {@link UserService} is interacting with.
 	 * @param serviceManager the server's {@link ServiceManager} instance.
+	 * @param onVarChangeListener
 	 */
 	public UserService(String userId, ServiceManager serviceManager,
 			WoolVariableStore.OnChangeListener onVarChangeListener)
 			throws DatabaseException, IOException {
+
 		this.userId = userId;
 		this.serviceManager = serviceManager;
 		this.variableStore = new WoolVariableStore();
