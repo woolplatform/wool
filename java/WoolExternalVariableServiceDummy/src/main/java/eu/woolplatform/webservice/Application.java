@@ -1,9 +1,6 @@
 package eu.woolplatform.webservice;
 
 import eu.woolplatform.utils.AppComponents;
-import eu.woolplatform.webservice.dialogue.ServiceManager;
-import eu.woolplatform.webservice.dialogue.ServiceManagerConfig;
-import eu.woolplatform.wool.parser.WoolResourceFileLoader;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,17 +14,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import java.net.URL;
 
 /**
- * The main entry point for the WOOL Web Service as a Spring Boot Application.
+ * The main entry point for the External Variable Service Dummy as a Spring Boot Application.
  * 
- * @author Dennis Hofs (RRD)
+ * @author Harm op den Akker
  */
 @SpringBootApplication(
-		exclude={MongoAutoConfiguration.class}
+		exclude={MongoAutoConfiguration.class} // TODO: Check why this is excluded.
 )
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements
 ApplicationListener<ContextClosedEvent> {
-	private ServiceManager serviceManager;
 
 	/**
 	 * Constructs a new application. It reads service.properties and
@@ -64,29 +60,18 @@ ApplicationListener<ContextClosedEvent> {
 				logger.error("Uncaught exception: " + e.getMessage(), e)
 		);
 
-		ServiceManagerConfig serviceManagerConfig =
-				new DefaultServiceManagerConfig();
-		ServiceManagerConfig.setInstance(serviceManagerConfig);
-		serviceManager = new ServiceManager(new WoolResourceFileLoader(
-				"dialogues"));
-
-		logger.info("WOOL Web Service version: " + config.get(
-				Configuration.VERSION));
-	}
-
-	public ServiceManager getServiceManager() {
-		return serviceManager;
+		logger.info("WOOL External Variable Service Dummy version '"
+				+ config.get(Configuration.VERSION)+"' started.");
 	}
 
 	@Override
 	public void onApplicationEvent(ContextClosedEvent event) {
 		Logger logger = AppComponents.getLogger(getClass().getSimpleName());
-		logger.info("Shutdown web service");
+		logger.info("Shutdown WOOL External Variable Service Dummy.");
 	}
 	
 	@Override
-	protected SpringApplicationBuilder configure(
-			SpringApplicationBuilder builder) {
+	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
 		return builder.sources(Application.class);
 	}
 
