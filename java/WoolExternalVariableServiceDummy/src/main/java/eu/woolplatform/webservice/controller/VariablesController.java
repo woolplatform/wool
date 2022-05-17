@@ -16,7 +16,7 @@ import java.util.Random;
 
 @RestController
 @RequestMapping("/v{version}/variables")
-public class VariableController {
+public class VariablesController {
 
 	// ----- END-POINT: "retrieve-updates"
 
