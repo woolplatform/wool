@@ -1,8 +1,8 @@
 package eu.woolplatform.webservice.controller.model;
 
 /**
- * A {@code ServiceInfo} object may be used to consolidate certain meta
- * data about this WOOL Web Service instance.
+ * A {@code ServiceInfo} object may be used to consolidate certain metadata
+ * about this WOOL Web Service instance.
  *
  * @author Harm op den Akker
  */
