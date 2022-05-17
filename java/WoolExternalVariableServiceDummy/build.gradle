@@ -1,0 +1,179 @@
+import groovy.io.FileType
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+}
+
+plugins {
+	id 'war'
+	id 'eclipse-wtp'
+	id 'org.springframework.boot' version '2.1.4.RELEASE'
+	id 'com.bmuschko.cargo' version '2.3'
+	id 'org.hidetake.ssh' version '2.9.0'
+}
+
+group = 'eu.woolplatform'
+version = '0.1.0' // run updateVersion after changing this property
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+archivesBaseName = 'wool-externalvariableservice'
+
+configurations {
+	providedRuntime
+}
+
+dependencies {
+	implementation 'eu.woolplatform:wool-core:2.2.6'
+	implementation 'io.jsonwebtoken:jjwt:0.9.1'
+	implementation 'io.springfox:springfox-swagger2:2.9.2'
+	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+	implementation 'javax.xml.bind:jaxb-api:2.3.1'
+	implementation 'org.springframework:spring-context-support:5.2.10.RELEASE'
+	implementation('org.springframework.boot:spring-boot-starter-web:2.3.5.RELEASE') {
+		exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+	}
+	testImplementation 'junit:junit:4.13.1'
+	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat:2.3.5.RELEASE'
+	cargo 'org.codehaus.cargo:cargo-core:1.8.2'
+	cargo 'org.codehaus.cargo:cargo-ant:1.8.2'
+}
+
+def cargoTomcatDeployPath = project.hasProperty('tomcatDeployPath') ? tomcatDeployPath : ''
+def cargoRemoteTomcatHost = project.hasProperty('remoteTomcatHost') ? remoteTomcatHost : ''
+def cargoRemoteTomcatUser = project.hasProperty('remoteTomcatUser') ? remoteTomcatUser : ''
+def cargoRemoteTomcatPassword = project.hasProperty('remoteTomcatPassword') ? remoteTomcatPassword : ''
+def cargoRemoteTomcatPort = project.hasProperty('remoteTomcatPort') ? remoteTomcatPort : 0
+
+cargo {
+	containerId = 'tomcat8x'
+
+	deployable {
+		context = cargoTomcatDeployPath
+	}
+	
+	remote {
+		hostname = cargoRemoteTomcatHost
+		username = cargoRemoteTomcatUser
+		password = cargoRemoteTomcatPassword
+	}
+}
+
+tasks.matching({ it.name =~ /cargo.*Remote/ }).each() {
+	it.port = cargoRemoteTomcatPort.toInteger()
+}
+
+task updateConfig {
+	group = 'configuration'
+	description = 'Configures files with current values of woolconfig properties from gradle.properties.'
+	
+	doLast() {
+		Properties props = new Properties()
+		def propPrefix = 'woolconfig'
+		project.properties.each { key, value ->
+			if (!key.startsWith(propPrefix))
+				return
+			key = key.substring(propPrefix.length())
+			key = key[0].toLowerCase() + key.substring(1)
+			props[key] = value
+		}
+		def resDir = file('src/main/resources')
+		resDir.mkdirs()
+		def out = new File(resDir, 'service.properties')
+		out.withWriter('UTF-8') {
+			props.store(it, 'DO NOT EDIT, generated with gradlew updateConfig')
+		}
+	}
+}
+
+def listDirFiles(dir, writer) {
+	writer.write('[')
+	def first = true
+	dir.eachFile() { child ->
+		if (!first)
+			writer.write(',')
+		if (child.isDirectory()) {
+			writer.write('{"' + child.name + '":')
+			listDirFiles(child, writer)
+			writer.write('}')
+			first = false
+		} else if (child.name.endsWith('.json') || child.name.endsWith('.wool')) {
+			writer.write('"' + child.name + '"')
+			first = false
+		}
+	}
+	writer.write(']')
+}
+
+task listDialogueFiles {
+	group = 'configuration'
+	description = 'Lists dialogue files and writes them to dialogues.json'
+	
+	doLast() {
+		def dlgDir = file('src/main/resources/dialogues')
+		def dlgFile = file('src/main/resources/dialogues/dialogues.json')
+		dlgFile.withWriter('UTF-8') { writer ->
+			writer.write('{')
+			def first = true
+			dlgDir.eachDir() { dir ->
+				if (first)
+					first = false;
+				else
+					writer.write(',')
+				writer.write('"' + dir.name + '":');
+				listDirFiles(dir, writer)
+			}
+			writer.write('}')
+		}
+	}
+}
+
+task updateVersion {
+	group = 'versioning'
+	description = 'Writes the current version to files containing the version number.'
+
+	doLast() {
+		ant.replaceregexp(file: 'src/main/webapp/WEB-INF/web.xml',
+			match: "<display-name>WOOL External Variable Service Dummy .+</display-name>",
+			replace: "<display-name>WOOL External Variable Service Dummy ${version}</display-name>")
+		ant.replaceregexp(file: 'src/main/resources/deployment.properties',
+			match: "version=.+",
+			replace: "version=${version}")
+	}
+}
+
+task checkResources {
+	group = 'build'
+	description = 'Checks if required resource files exist and are up-to-date.'
+	
+	dependsOn updateConfig, listDialogueFiles
+}
+
+test {
+	testLogging.showStandardStreams = true
+}
+
+gradle.taskGraph.whenReady {
+	tasks.withType(Test) {
+		def props = new Properties()
+		def propsFile = file('gradle.test.properties')
+		if (propsFile.exists()) {
+			propsFile.withReader('UTF-8') {
+				props.load(it)
+			}
+			props.each { key, value ->
+				systemProperty key, value
+			}
+		}
+	}
+}
+
+javadoc {
+	options {
+		links 'https://docs.oracle.com/javase/10/docs/api/'
+		addStringOption('Xdoclint:all,-html', '-quiet')
+	}
+}
+
+processResources.dependsOn checkResources
