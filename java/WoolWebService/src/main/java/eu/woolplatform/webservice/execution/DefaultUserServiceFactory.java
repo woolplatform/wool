@@ -1,27 +1,24 @@
-package eu.woolplatform.webservice;
+package eu.woolplatform.webservice.execution;
 
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.webservice.dialogue.ServiceManager;
-import eu.woolplatform.webservice.dialogue.ServiceManagerConfig;
-import eu.woolplatform.webservice.dialogue.UserService;
 import eu.woolplatform.webservice.model.VariableStoreIO;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 
-public class DefaultServiceManagerConfig extends ServiceManagerConfig {
+public class DefaultUserServiceFactory extends UserServiceFactory {
 
-	public DefaultServiceManagerConfig() {
+	public DefaultUserServiceFactory() {
 	}
 
 	@Override
 	public UserService createUserService(String userId,
-			ServiceManager serviceManager)
+			UserServiceManager userServiceManager)
 			throws DatabaseException, IOException {
-		return new UserService(userId, serviceManager,
+		return new UserService(userId, userServiceManager,
 				(varStore, changes) -> onVariableStoreChanges(userId,
 						varStore));
 	}

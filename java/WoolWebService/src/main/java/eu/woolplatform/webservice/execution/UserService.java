@@ -1,4 +1,25 @@
-package eu.woolplatform.webservice.dialogue;
+/*
+ * Copyright 2019-2022 WOOL Foundation.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+package eu.woolplatform.webservice.execution;
 
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
@@ -21,44 +42,41 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * An {@link UserService} class models an instance for conversations with one or more virtual agents, belonging to a specific customer's account,
- * and talking to a specific user.
+ * A {@link UserService} is a service class that handles all communication with the WOOL
+ * Web Service for a specific User (identified by a {@code userId}).
  * 
  * @author Harm op den Akker
  * @author Tessa Beinema
  */
 public class UserService {
-	public static final Logger logger = ServiceManager.getLogger(UserService.class);
-	
+
+	public static final Logger logger = UserServiceManager.getLogger(UserService.class);
 	public String userId;
-	public ServiceManager serviceManager;
-	
+	public UserServiceManager userServiceManager;
 	public WoolVariableStore variableStore;
-
-	// dialogueLanguageMap: map from dialogue name -> language -> dialogue description
-	protected Map<String, Map<String,WoolDialogueDescription>> dialogueLanguageMap =
-			new LinkedHashMap<>();
-
-	private ConversationalAgent conversationalAgent;
-
+	private DialogueExecutor dialogueExecutor;
 	private WoolTranslationContext translationContext = null;
 
-	// -------------------- Constructors
+	// dialogueLanguageMap: map from dialogue name -> language -> dialogue description
+	protected Map<String, Map<String,WoolDialogueDescription>> dialogueLanguageMap = new LinkedHashMap<>();
+
+	// ----- Constructors
 	
 	/**
 	 * Instantiates a {@link UserService} for a given user, identified
 	 * by the associated {@code accountId} and {@code userId}.
 	 * @param userId - A unique identifier of the current user this {@link UserService} is interacting with.
-	 * @param serviceManager the server's {@link ServiceManager} instance.
+	 * @param userServiceManager the server's {@link UserServiceManager} instance.
 	 * @param onVarChangeListener
 	 */
-	public UserService(String userId, ServiceManager serviceManager,
+	public UserService(String userId, UserServiceManager userServiceManager,
 			WoolVariableStore.OnChangeListener onVarChangeListener)
 			throws DatabaseException, IOException {
 
 		this.userId = userId;
-		this.serviceManager = serviceManager;
+		this.userServiceManager = userServiceManager;
 		this.variableStore = new WoolVariableStore();
+
 		Map<String, ?> vars;
 		try {
 			vars = VariableStoreIO.readVariables(userId);
@@ -66,15 +84,16 @@ public class UserService {
 			throw new DatabaseException("Failed to read initial variables: " +
 					ex.getMessage(), ex);
 		}
+
 		Map<String,Object> varStoreMap = this.variableStore.getModifiableMap(
 				false, null);
 		varStoreMap.putAll(vars);
 		this.variableStore.addOnChangeListener(onVarChangeListener);
-		conversationalAgent = new ConversationalAgent(this, variableStore);
+		dialogueExecutor = new DialogueExecutor(this);
 
 		// create dialogueLanguageMap
 		List<WoolDialogueDescription> dialogues =
-				serviceManager.getDialogueDescriptions();
+				userServiceManager.getDialogueDescriptions();
 		for (WoolDialogueDescription dialogue : dialogues) {
 			String name = dialogue.getDialogueName();
 			Map<String,WoolDialogueDescription> langMap =
@@ -87,15 +106,7 @@ public class UserService {
 		}
 	}
 
-	public WoolTranslationContext getTranslationContext() {
-		return translationContext;
-	}
-
-	public void setTranslationContext(WoolTranslationContext translationContext) {
-		this.translationContext = translationContext;
-	}
-
-	// ---------- Getters:
+	// ----- Getters & Setters
 	
 	/**
 	 * Returns the user identifier which this {@link UserService} is serving.
@@ -104,14 +115,140 @@ public class UserService {
 	public String getUserId() {
 		return userId;
 	}
+
+	public WoolTranslationContext getTranslationContext() {
+		return translationContext;
+	}
+
+	public void setTranslationContext(WoolTranslationContext translationContext) {
+		this.translationContext = translationContext;
+	}
 	
 	/**
-	 * Returns the application's {@link ServiceManager} that is governing this {@link UserService}.
-	 * @return the application's {@link ServiceManager} that is governing this {@link UserService}.
+	 * Returns the application's {@link UserServiceManager} that is governing this {@link UserService}.
+	 * @return the application's {@link UserServiceManager} that is governing this {@link UserService}.
 	 */
-	public ServiceManager getServiceManager() {
-		return serviceManager;
+	public UserServiceManager getServiceManager() {
+		return userServiceManager;
 	}
+
+	public WoolVariableStore getVariableStore() {
+		return this.variableStore;
+	}
+
+	// ----- Methods (Dialogue Execution)
+
+	/**
+	 * Starts a dialogue with the given {@code dialogueId} and preferred
+	 * language, returning the first step of the dialogue. If you specify a
+	 * {@code nodeId}, it will start at that node. Otherwise, it starts at the
+	 * Start node.
+	 *
+	 * <p>You can specify an ISO language tag such as "en-US".</p>
+	 *
+	 * @param dialogueId the dialogue ID
+	 * @param nodeId a node ID or null
+	 * @param language an ISO language tag
+	 * @param time the time in the time zone of the user
+	 * @return the dialogue node result with the start node or specified node
+	 */
+	public ExecuteNodeResult startDialogue(String dialogueId, String nodeId,
+										   String language, DateTime time) throws DatabaseException,
+			IOException, WoolException {
+		logger.info("User '" + getUserId() + "' is starting dialogue '" +
+				dialogueId + "'");
+		WoolDialogueDescription dialogueDescription =
+				getDialogueDescriptionFromId(dialogueId, language);
+		if (dialogueDescription == null) {
+			throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
+					"Dialogue not found: " + dialogueId);
+		}
+		WoolDialogue dialogue = getDialogueDefinition(dialogueDescription);
+		return dialogueExecutor.startDialogue(dialogueDescription,
+				dialogue, nodeId, time);
+	}
+
+	/**
+	 * Continues the dialogue after the user selected the specified reply. This
+	 * method stores the reply as a user action in the database, and it performs
+	 * any "set" actions associated with the reply. Then it determines the next
+	 * node, if any.
+	 *
+	 * <p>If there is no next node, this method will complete the current
+	 * dialogue, and this method returns null.</p>
+	 *
+	 * <p>If the reply points to another dialogue, this method will complete the
+	 * current dialogue and start the other dialogue.</p>
+	 *
+	 * <p>For the returned node, this method executes the agent statement and
+	 * reply statements using the variable store. It executes ("if" and "set")
+	 * commands and resolves variables. The returned node contains any content
+	 * that should be sent to the client. This content can be text or client
+	 * commands, with all variables resolved.</p>
+	 *
+	 * @param state the state from which the dialogue should progress
+	 * @param replyId the reply ID
+	 * @param time the time in the time zone of the user
+	 * @return the next node or null
+	 * @throws DatabaseException if a database error occurs
+	 * @throws IOException if a communication error occurs
+	 * @throws WoolException if the request is invalid
+	 */
+	public ExecuteNodeResult progressDialogue(DialogueState state, int replyId,
+											  DateTime time) throws DatabaseException, IOException,
+			WoolException {
+		ActiveWoolDialogue dialogue = state.getActiveDialogue();
+		String dialogueName = dialogue.getDialogueName();
+		String nodeName = dialogue.getCurrentNode().getTitle();
+		logger.info(String.format(
+				"User %s progresses dialogue with reply %s.%s.%s",
+				userId, dialogueName, nodeName, replyId));
+		return dialogueExecutor.progressDialogue(state, replyId, time);
+	}
+
+	public ExecuteNodeResult backDialogue(DialogueState state, DateTime time)
+			throws DatabaseException, IOException, WoolException {
+		ActiveWoolDialogue dialogue = state.getActiveDialogue();
+		String dialogueName = dialogue.getDialogueName();
+		String nodeName = dialogue.getCurrentNode().getTitle();
+		logger.info(String.format(
+				"User %s goes back in dialogue from node %s.%s",
+				userId, dialogueName, nodeName));
+		return dialogueExecutor.backDialogue(state, time);
+	}
+
+	public ExecuteNodeResult executeCurrentNode(DialogueState state,
+												DateTime time) throws WoolException {
+		return dialogueExecutor.executeCurrentNode(state, time);
+	}
+
+	/**
+	 * Cancels the current dialogue.
+	 *
+	 * @throws DatabaseException if a database error occurs
+	 * @throws IOException if a communication error occurs
+	 */
+	public void cancelDialogue(String loggedDialogueId)
+			throws DatabaseException, IOException {
+		logger.info("User '" + this.getUserId() + "' cancels dialogue");
+		LoggedDialogue loggedDialogue =
+				LoggedDialogueStoreIO.findLoggedDialogue(userId,
+						loggedDialogueId);
+		LoggedDialogueStoreIO.setDialogueCancelled(loggedDialogue);
+	}
+
+	/**
+	 * Stores the specified variables in the variable store.
+	 *
+	 * @param variables the variables
+	 */
+	public void storeReplyInput(DialogueState state, Map<String,?> variables,
+								DateTime time) throws WoolException {
+		ActiveWoolDialogue dialogue = state.getActiveDialogue();
+		dialogue.storeReplyInput(variables, time);
+	}
+
+	// ----- Methods (Retrieval)
 
 	/**
 	 * Returns the available dialogues for all agents in the specified preferred
@@ -120,8 +257,7 @@ public class UserService {
 	 * @param language an ISO language tag
 	 * @return a list of dialogue names
 	 */
-	public List<WoolDialogueDescription> getAvailableDialogues(
-			String language) {
+	public List<WoolDialogueDescription> getAvailableDialogues(String language) {
 		List<WoolDialogueDescription> filteredAvailableDialogues =
 				new ArrayList<>();
 		Locale prefLocale;
@@ -170,111 +306,6 @@ public class UserService {
 		return null;
 	}
 
-	public WoolVariableStore getVariableStore() {
-		return this.variableStore;
-	}
-
-	// ---------- Functions:
-
-	/**
-	 * Starts a dialogue with the given {@code dialogueId} and preferred
-	 * language, returning the first step of the dialogue. If you specify a
-	 * {@code nodeId}, it will start at that node. Otherwise it starts at the
-	 * Start node.
-	 *
-	 * <p>You can specify an ISO language tag such as "en-US".</p>
-	 *
-	 * @param dialogueId the dialogue ID
-	 * @param nodeId a node ID or null
-	 * @param language an ISO language tag
-	 * @param time the time in the time zone of the user
-	 * @return the dialogue node result with the start node or specified node
-	 */
-	public ExecuteNodeResult startDialogue(String dialogueId, String nodeId,
-			String language, DateTime time) throws DatabaseException,
-			IOException, WoolException {
-		logger.info("User '" + getUserId() + "' is starting dialogue '" +
-				dialogueId + "'");
-		WoolDialogueDescription dialogueDescription =
-				getDialogueDescriptionFromId(dialogueId, language);
-		if (dialogueDescription == null) {
-			throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
-					"Dialogue not found: " + dialogueId);
-		}
-		WoolDialogue dialogue = getDialogueDefinition(dialogueDescription);
-		return conversationalAgent.startDialogue(dialogueDescription,
-				dialogue, nodeId, time);
-	}
-	
-	/**
-	 * Continues the dialogue after the user selected the specified reply. This
-	 * method stores the reply as a user action in the database, and it performs
-	 * any "set" actions associated with the reply. Then it determines the next
-	 * node, if any.
-	 * 
-	 * <p>If there is no next node, this method will complete the current
-	 * dialogue, and this method returns null.</p>
-	 * 
-	 * <p>If the reply points to another dialogue, this method will complete the
-	 * current dialogue and start the other dialogue.</p>
-	 * 
-	 * <p>For the returned node, this method executes the agent statement and
-	 * reply statements using the variable store. It executes ("if" and "set")
-	 * commands and resolves variables. The returned node contains any content
-	 * that should be sent to the client. This content can be text or client
-	 * commands, with all variables resolved.</p>
-	 *
-	 * @param state the state from which the dialogue should progress
-	 * @param replyId the reply ID
-	 * @param time the time in the time zone of the user
-	 * @return the next node or null
-	 * @throws DatabaseException if a database error occurs
-	 * @throws IOException if a communication error occurs
-	 * @throws WoolException if the request is invalid
-	 */
-	public ExecuteNodeResult progressDialogue(DialogueState state, int replyId,
-			DateTime time) throws DatabaseException, IOException,
-			WoolException {
-		ActiveWoolDialogue dialogue = state.getActiveDialogue();
-		String dialogueName = dialogue.getDialogueName();
-		String nodeName = dialogue.getCurrentNode().getTitle();
-		logger.info(String.format(
-				"User %s progresses dialogue with reply %s.%s.%s",
-				userId, dialogueName, nodeName, replyId));
-		return conversationalAgent.progressDialogue(state, replyId, time);
-	}
-
-	public ExecuteNodeResult backDialogue(DialogueState state, DateTime time)
-			throws DatabaseException, IOException, WoolException {
-		ActiveWoolDialogue dialogue = state.getActiveDialogue();
-		String dialogueName = dialogue.getDialogueName();
-		String nodeName = dialogue.getCurrentNode().getTitle();
-		logger.info(String.format(
-				"User %s goes back in dialogue from node %s.%s",
-				userId, dialogueName, nodeName));
-		return conversationalAgent.backDialogue(state, time);
-	}
-
-	public ExecuteNodeResult executeCurrentNode(DialogueState state,
-			DateTime time) throws WoolException {
-		return conversationalAgent.executeCurrentNode(state, time);
-	}
-
-	/**
-	 * Cancels the current dialogue.
-	 * 
-	 * @throws DatabaseException if a database error occurs
-	 * @throws IOException if a communication error occurs
-	 */
-	public void cancelDialogue(String loggedDialogueId)
-			throws DatabaseException, IOException {
-		logger.info("User '" + this.getUserId() + "' cancels dialogue");
-		LoggedDialogue loggedDialogue =
-				LoggedDialogueStoreIO.findLoggedDialogue(userId,
-				loggedDialogueId);
-		LoggedDialogueStoreIO.setDialogueCancelled(loggedDialogue);
-	}
-	
 	/**
 	 * Retrieves the dialogue definition for the specified description, or throws
 	 * a {@link WoolException WoolException} with {@link
@@ -287,19 +318,8 @@ public class UserService {
 	 */
 	public WoolDialogue getDialogueDefinition(
 			WoolDialogueDescription dialogueDescription) throws WoolException {
-		return this.serviceManager.getDialogueDefinition(dialogueDescription,
+		return this.userServiceManager.getDialogueDefinition(dialogueDescription,
 				translationContext);
-	}
-	
-	/**
-	 * Stores the specified variables in the variable store.
-	 *
-	 * @param variables the variables
-	 */
-	public void storeReplyInput(DialogueState state, Map<String,?> variables,
-			DateTime time) throws WoolException {
-		ActiveWoolDialogue dialogue = state.getActiveDialogue();
-		dialogue.storeReplyInput(variables, time);
 	}
 
 	public DialogueState getDialogueState(String loggedDialogueId,

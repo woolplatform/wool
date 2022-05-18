@@ -1,4 +1,25 @@
-package eu.woolplatform.webservice.dialogue;
+/*
+ * Copyright 2019-2022 WOOL Foundation.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+package eu.woolplatform.webservice.execution;
 
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.expressions.EvaluationException;
@@ -7,7 +28,6 @@ import eu.woolplatform.webservice.model.LoggedDialogueStoreIO;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.execution.ActiveWoolDialogue;
 import eu.woolplatform.wool.execution.ExecuteNodeResult;
-import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.model.*;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerExternal;
@@ -16,23 +36,20 @@ import org.joda.time.DateTime;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
- * An {@link ConversationalAgent} class models an abstract instance of a {@link ConversationalAgent}.
+ * A {@link DialogueExecutor} holds a set of functions for executing WOOL
+ * Dialogue for a given {@link UserService}.
  * 
  * @author Tessa Beinema
- *
+ * @author Harm op den Akker
  */
-public class ConversationalAgent {
+public class DialogueExecutor {
 	
 	protected UserService userService;
-	protected WoolVariableStore variableStore;
 
-	public ConversationalAgent(UserService userService,
-			WoolVariableStore variableStore) {
+	public DialogueExecutor(UserService userService) {
 		this.userService = userService;
-		this.variableStore = variableStore;
 	}
 
 	/**
@@ -57,7 +74,7 @@ public class ConversationalAgent {
 
 	/**
 	 * Starts the dialogue for the specified dialogue definition. If you specify
-	 * a node ID, it will start at that node. Otherwise it starts at the start
+	 * a node ID, it will start at that node. Otherwise, it starts at the start
 	 * node.
 	 *
 	 * @param dialogueDescription the dialogue description
@@ -75,7 +92,7 @@ public class ConversationalAgent {
 			throws DatabaseException, IOException, WoolException {
 		ActiveWoolDialogue dialogue = new ActiveWoolDialogue(
 				dialogueDescription, dialogueDefinition);
-		dialogue.setWoolVariableStore(this.variableStore);
+		dialogue.setWoolVariableStore(userService.getVariableStore());
 		WoolNode startNode;
 		try {
 			startNode = dialogue.startDialogue(nodeId, time);
@@ -168,7 +185,7 @@ public class ConversationalAgent {
 	}
 
 	public ExecuteNodeResult backDialogue(DialogueState state, DateTime time)
-			throws DatabaseException, IOException, WoolException {
+			throws WoolException {
 		LoggedDialogue loggedDialogue =
 				(LoggedDialogue)state.getLoggedDialogue();
 		List<WoolLoggedInteraction> interactions =
@@ -197,7 +214,7 @@ public class ConversationalAgent {
 		LoggedDialogue loggedDialogue =
 				(LoggedDialogue)state.getLoggedDialogue();
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
-		dialogue.setWoolVariableStore(this.variableStore);
+		dialogue.setWoolVariableStore(userService.getVariableStore());
 		WoolNode node = dialogue.getCurrentNode();
 		try {
 			node = dialogue.executeWoolNode(node, time);

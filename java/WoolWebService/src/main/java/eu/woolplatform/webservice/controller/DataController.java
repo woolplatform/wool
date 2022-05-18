@@ -9,7 +9,7 @@ import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
 import eu.woolplatform.webservice.Application;
 import eu.woolplatform.webservice.QueryRunner;
-import eu.woolplatform.webservice.dialogue.UserService;
+import eu.woolplatform.webservice.execution.UserService;
 import eu.woolplatform.webservice.exception.*;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
