@@ -21,6 +21,7 @@
  */
 package eu.woolplatform.webservice.execution;
 
+import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.webservice.exception.HttpFieldError;
@@ -54,10 +55,9 @@ import java.util.List;
  * @author Tessa Beinema
  */
 public class UserServiceManager {
-	private final Logger logger = getLogger(UserServiceManager.class);
 
+	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 	private WoolProject woolProject;
-		
 	private List<UserService> activeUserServices = new ArrayList<>();
 
 	// ----- Constructors
@@ -99,27 +99,6 @@ public class UserServiceManager {
 		long endMS = System.currentTimeMillis();
 		long procTime = endMS - startMS;
 		logger.info("UserServiceManager initialized in "+procTime+"ms.");
-	}
-
-	// ---------- Logging
-
-	private static ILoggerFactory loggerFactory =
-			LoggerFactory.getILoggerFactory();
-
-	public static Logger getLogger(Class<?> clazz) {
-		return loggerFactory.getLogger(clazz.getName());
-	}
-
-	public static Logger getLogger(String name) {
-		return loggerFactory.getLogger(name);
-	}
-
-	public static ILoggerFactory getLoggerFactory() {
-		return loggerFactory;
-	}
-
-	public static void setLoggerFactory(ILoggerFactory loggerFactory) {
-		UserServiceManager.loggerFactory = loggerFactory;
 	}
 	
 	// ---------- Getters:

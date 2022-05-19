@@ -21,6 +21,7 @@
  */
 package eu.woolplatform.webservice.execution;
 
+import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.expressions.EvaluationException;
 import eu.woolplatform.webservice.model.LoggedDialogue;
@@ -33,9 +34,13 @@ import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerExternal;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerInternal;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A {@link DialogueExecutor} holds a set of functions for executing WOOL
@@ -45,11 +50,13 @@ import java.util.List;
  * @author Harm op den Akker
  */
 public class DialogueExecutor {
-	
+
+	private Logger logger;
 	protected UserService userService;
 
 	public DialogueExecutor(UserService userService) {
 		this.userService = userService;
+		this.logger = AppComponents.getLogger(getClass().getSimpleName());
 	}
 
 	/**
@@ -93,6 +100,14 @@ public class DialogueExecutor {
 		ActiveWoolDialogue dialogue = new ActiveWoolDialogue(
 				dialogueDescription, dialogueDefinition);
 		dialogue.setWoolVariableStore(userService.getVariableStore());
+
+		// Try if we can get all needed variables
+		Set<String> variablesNeeded = dialogueDefinition.getVariablesNeeded();
+		Iterator<String> variablesIterator = variablesNeeded.iterator();
+		while(variablesIterator.hasNext()) {
+			this.logger.info("Needed variable: "+variablesIterator.next());
+		}
+
 		WoolNode startNode;
 		try {
 			startNode = dialogue.startDialogue(nodeId, time);

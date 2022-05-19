@@ -35,6 +35,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.util.ClassUtils;
 
 import java.net.URL;
 
@@ -50,6 +51,8 @@ import java.net.URL;
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements
 ApplicationListener<ContextClosedEvent> {
+
+	private Logger logger = AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
 	private UserServiceManager userServiceManager;
 
 	/**
@@ -77,10 +80,6 @@ ApplicationListener<ContextClosedEvent> {
 		propertiesUrl = getClass().getClassLoader().getResource(
 				"deployment.properties");
 		config.loadProperties(propertiesUrl);
-
-		// Initialize the Logger
-		final Logger logger = AppComponents.getLogger(
-				getClass().getSimpleName());
 
 		// By default, log uncaught exceptions to this logger
 		Thread.setDefaultUncaughtExceptionHandler((t, e) ->

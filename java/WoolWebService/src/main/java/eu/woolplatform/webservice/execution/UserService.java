@@ -50,7 +50,7 @@ import java.util.*;
  */
 public class UserService {
 
-	public static final Logger logger = UserServiceManager.getLogger(UserService.class);
+	private Logger logger;
 	public String userId;
 	public UserServiceManager userServiceManager;
 	public WoolVariableStore variableStore;
@@ -73,6 +73,7 @@ public class UserService {
 			WoolVariableStore.OnChangeListener onVarChangeListener)
 			throws DatabaseException, IOException {
 
+		this.logger = AppComponents.getLogger(getClass().getSimpleName());
 		this.userId = userId;
 		this.userServiceManager = userServiceManager;
 		this.variableStore = new WoolVariableStore();
@@ -264,7 +265,6 @@ public class UserService {
 		try {
 			prefLocale = I18nUtils.languageTagToLocale(language);
 		} catch (ParseException ex) {
-			Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 			logger.error(String.format(
 					"Invalid language tag \"%s\", falling back to system locale",
 					language) + ": " + ex.getMessage());
