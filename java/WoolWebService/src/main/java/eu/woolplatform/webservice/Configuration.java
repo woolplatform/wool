@@ -74,4 +74,32 @@ public class Configuration extends LinkedHashMap<String,String> {
 			put(name, props.getProperty(name));
 		}
 	}
+
+	// ----- Getters:
+	// -----
+	// ----- Note that this Configuration is a LinkedHashMap, so all
+	// ----- parameters can simply be retrieved by using this.get("parameterName")
+	// ----- however, using the getters below we can add some robustness (e.g. null
+	// ----- checking).
+
+	/**
+	 * Returns whether an "External WOOL Variable Service" has been configured to be used.
+	 * @return whether an "External WOOL Variable Service" has been configured to be used.
+	 */
+	public boolean getExternalVariableServiceEnabled() {
+		if(get(EXTERNAL_VARIABLE_SERVICE_ENABLED) == null) return false;
+		else return Boolean.parseBoolean(get(EXTERNAL_VARIABLE_SERVICE_ENABLED));
+	}
+
+	/**
+	 * Returns the URL of the External Variable Service, or an empty string if incorrectly configured.
+	 * @return the URL of the External Variable Service, or an empty string if incorrectly configured.
+	 */
+	public String getExternalVariableServiceURL() {
+		if(containsKey(EXTERNAL_VARIABLE_SERVICE_URL)) {
+			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_URL);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
 }

@@ -37,8 +37,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -51,12 +49,11 @@ import java.util.Set;
  */
 public class DialogueExecutor {
 
-	private Logger logger;
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 	protected UserService userService;
 
 	public DialogueExecutor(UserService userService) {
 		this.userService = userService;
-		this.logger = AppComponents.getLogger(getClass().getSimpleName());
 	}
 
 	/**
@@ -101,12 +98,10 @@ public class DialogueExecutor {
 				dialogueDescription, dialogueDefinition);
 		dialogue.setWoolVariableStore(userService.getVariableStore());
 
-		// Try if we can get all needed variables
+		// Collects all the WOOL Variables needed to execute this file
 		Set<String> variablesNeeded = dialogueDefinition.getVariablesNeeded();
-		Iterator<String> variablesIterator = variablesNeeded.iterator();
-		while(variablesIterator.hasNext()) {
-			this.logger.info("Needed variable: "+variablesIterator.next());
-		}
+		logger.info("Dialogue '"+dialogue.getDialogueName()+"' uses the following set of WOOL Variables: "+variablesNeeded);
+		userService.updateVariables(variablesNeeded);
 
 		WoolNode startNode;
 		try {

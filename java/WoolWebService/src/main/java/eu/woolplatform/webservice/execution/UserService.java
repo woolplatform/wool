@@ -26,6 +26,7 @@ import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.i18n.I18nLanguageFinder;
 import eu.woolplatform.utils.i18n.I18nUtils;
+import eu.woolplatform.webservice.Configuration;
 import eu.woolplatform.webservice.model.LoggedDialogue;
 import eu.woolplatform.webservice.model.LoggedDialogueStoreIO;
 import eu.woolplatform.webservice.model.VariableStoreIO;
@@ -238,15 +239,33 @@ public class UserService {
 		LoggedDialogueStoreIO.setDialogueCancelled(loggedDialogue);
 	}
 
+	// ----- Methods (Variables):
+
 	/**
 	 * Stores the specified variables in the variable store.
-	 *
+	 * @param state
 	 * @param variables the variables
+	 * @param time
 	 */
 	public void storeReplyInput(DialogueState state, Map<String,?> variables,
 								DateTime time) throws WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		dialogue.storeReplyInput(variables, time);
+	}
+
+	/**
+	 * This function ensures that for all WOOL Variables in the given {@link Set}, of
+	 * {@code variableNames} an up-to-date value is loaded into the {@link WoolVariableStore}
+	 * for this user represented by this {@link UserService}.
+	 * @param variableNames the set of WOOL Variables that need to have their values updated.
+	 */
+	public void updateVariables(Set<String> variableNames) {
+		logger.info("Loading latest values for WOOL Variables: "+variableNames);
+		Configuration config = AppComponents.get(Configuration.class);
+		if(config.getExternalVariableServiceEnabled()) {
+			logger.info("External WOOL Variable Service is enabled, with parameters:");
+			logger.info("URL: "+config.getExternalVariableServiceURL());
+		}
 	}
 
 	// ----- Methods (Retrieval)

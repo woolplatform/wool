@@ -52,8 +52,8 @@ import java.net.URL;
 public class Application extends SpringBootServletInitializer implements
 ApplicationListener<ContextClosedEvent> {
 
-	private Logger logger = AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
-	private UserServiceManager userServiceManager;
+	private final Logger logger = AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
+	private final UserServiceManager userServiceManager;
 
 	/**
 	 * Constructs a new application. It reads service.properties and
@@ -79,7 +79,8 @@ ApplicationListener<ContextClosedEvent> {
 		// Load the values from deployment.properties into the Configuration (app version number)
 		propertiesUrl = getClass().getClassLoader().getResource(
 				"deployment.properties");
-		config.loadProperties(propertiesUrl);
+		if(propertiesUrl != null)
+			config.loadProperties(propertiesUrl);
 
 		// By default, log uncaught exceptions to this logger
 		Thread.setDefaultUncaughtExceptionHandler((t, e) ->
@@ -95,9 +96,9 @@ ApplicationListener<ContextClosedEvent> {
 		logger.info("Successfully started WOOL Web Service.");
 		logger.info("Service Version: " + config.get(Configuration.VERSION));
 		logger.info("Build: " + "(in development)"); // TODO: Automatically populate "Build" config parameter
-		logger.info("External Variable Service Enabled: "+config.get(Configuration.EXTERNAL_VARIABLE_SERVICE_ENABLED));
-		if(Boolean.parseBoolean(config.get(Configuration.EXTERNAL_VARIABLE_SERVICE_ENABLED))) {
-			logger.info("External Variable Service URL: "+config.get(Configuration.EXTERNAL_VARIABLE_SERVICE_URL));
+		logger.info("External Variable Service Enabled: "+config.getExternalVariableServiceEnabled());
+		if(config.getExternalVariableServiceEnabled()) {
+			logger.info("External Variable Service URL: "+config.getExternalVariableServiceURL());
 		}
 
 	}
