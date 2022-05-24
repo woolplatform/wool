@@ -19,6 +19,7 @@ repositories {
 
 dependencies {
 	api "eu.woolplatform:wool-utils:2.2.6"
+//	api project(':WoolUtils')
 	api 'org.slf4j:slf4j-api:1.7.30'
 	api 'com.fasterxml.jackson.core:jackson-core:2.12.3'
 	api 'com.fasterxml.jackson.core:jackson-annotations:2.12.3'
@@ -54,7 +55,7 @@ distributions {
 javadoc {
 	options {
 		links 'https://docs.oracle.com/javase/10/docs/api/'
-		addStringOption('Xdoclint:all,-html', '-quiet')
+		addStringOption('Xdoclint:none', '-quiet')
 	}
 }
 
