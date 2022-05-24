@@ -56,7 +56,7 @@ distributions {
 javadoc {
 	options {
 		links 'https://docs.oracle.com/javase/10/docs/api/'
-		addStringOption('Xdoclint:all,-html', '-quiet')
+		addStringOption('Xdoclint:none', '-quiet')
 	}
 }
 
