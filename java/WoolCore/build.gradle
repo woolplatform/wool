@@ -18,8 +18,8 @@ repositories {
 }
 
 dependencies {
-	api "eu.woolplatform:wool-utils:2.2.6"
-//	api project(':WoolUtils')
+	api "eu.woolplatform:wool-utils:2.2.6" // Use the library as published through Maven Central
+//	api project(':WoolUtils')              // Use the local source project
 	api 'org.slf4j:slf4j-api:1.7.30'
 	api 'com.fasterxml.jackson.core:jackson-core:2.12.3'
 	api 'com.fasterxml.jackson.core:jackson-annotations:2.12.3'
