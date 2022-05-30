@@ -1,5 +1,3 @@
-import groovy.io.FileType
-
 buildscript {
 	repositories {
 		mavenCentral()
@@ -87,48 +85,6 @@ task updateConfig {
 	}
 }
 
-def listDirFiles(dir, writer) {
-	writer.write('[')
-	def first = true
-	dir.eachFile() { child ->
-		if (!first)
-			writer.write(',')
-		if (child.isDirectory()) {
-			writer.write('{"' + child.name + '":')
-			listDirFiles(child, writer)
-			writer.write('}')
-			first = false
-		} else if (child.name.endsWith('.json') || child.name.endsWith('.wool')) {
-			writer.write('"' + child.name + '"')
-			first = false
-		}
-	}
-	writer.write(']')
-}
-
-task listDialogueFiles {
-	group = 'configuration'
-	description = 'Lists dialogue files and writes them to dialogues.json'
-	
-	doLast() {
-		def dlgDir = file('src/main/resources/dialogues')
-		def dlgFile = file('src/main/resources/dialogues/dialogues.json')
-		dlgFile.withWriter('UTF-8') { writer ->
-			writer.write('{')
-			def first = true
-			dlgDir.eachDir() { dir ->
-				if (first)
-					first = false;
-				else
-					writer.write(',')
-				writer.write('"' + dir.name + '":');
-				listDirFiles(dir, writer)
-			}
-			writer.write('}')
-		}
-	}
-}
-
 task updateVersion {
 	group = 'versioning'
 	description = 'Writes the current version to files containing the version number.'
@@ -147,7 +103,7 @@ task checkResources {
 	group = 'build'
 	description = 'Checks if required resource files exist and are up-to-date.'
 	
-	dependsOn updateConfig, listDialogueFiles
+	dependsOn updateConfig
 }
 
 test {
