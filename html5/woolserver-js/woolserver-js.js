@@ -1,7 +1,6 @@
-/* JS version of dialogue manager.
+/* JS version of Wool parsing and execution
 
--------------------------------------------------------------------
-DOCS: yarrdn format (YarnParser.java)
+DOCS: Wool format
 
 NOTE: encoding is UTF8. Generally, empty lines are skipped.
 
@@ -30,10 +29,15 @@ Each line in the body has one of the following formats:
     <text>
     <agentname> ":" <text>
 
-    '<<if' <variable> 'is' <value> '>>'
+    '<<if' <expression> '>>'
+    '<<elseif' <expression> '>>'
+	'<<else>>'
 	'<<endif>>'
-	'<<set' <variable> 'to' <value> '>>'
+	'<<set' <variable> '=' <value> '>>'
 	'<<multimedia' 'type=image' 'name='<name> '>>'
+	'<<random' 'weight='<value> '>>'
+	'<<or' 'weight='<value> '>>'
+	'<<endrandom>>'
 	'<<multimedia' 'type=video' 'name='<name> '>>'
 	'<<multimedia' 'type=timer' 'duration='<duration> '>>'
 
@@ -60,8 +64,16 @@ The body can contain conditional statements.  These are parsed before
 Before the body is parsed, conditional statements
 
 
+Escape character semantics.
+
+Escape characters are used to escape special Wool characters.
+
+An escaped character is passed as a literal character to the underlying
+representation language (like HTML or Markdown).
+
+
 -------------------------------------------------------------------
-DOCS: API with client
+DOCS: API with client [THIS PART IS OUTDATED]
 
 dialogue-handler:
 
@@ -131,18 +143,6 @@ signup-handler.js: (not used in frail)
 _signupURL = _baseURL +  "auth/signup?user=" + _userName + "&password=" + _password;
 
 
-Escape character semantics.
-
-Escape characters are used to escape special Wool characters.
-
-An escaped character is passed as a literal character to the underlying
-representation language (like HTML or Markdown).
-
-Should the translation phrase be the string without escape characters removed?
-This makes sense if the translation phrase can contain Wool code.
-If so, all strings need to be unescaped after translation.
-Define a test case.
-
 */
 
 
@@ -207,7 +207,7 @@ function WoolNodeContext(vars,actions) {
 		});
 	}
 	this.doAction = function(params) {
-		console.log("Action called: "+JSON.stringify(params));
+		dbg.debug("Action called: "+JSON.stringify(params));
         this.pendingActions.push(params)
 	}
 	this.setRandom = function(id,min,max) {
@@ -227,14 +227,14 @@ function WoolNodeContext(vars,actions) {
 // usertexts - subset of texts spoken by agent (note: can have overlap with
 //             agenttexts)
 function WoolNode(dialogue,lines) {
-	//console.log("Created node! Lines:"+lines.length);
+	//dbg.debug("Created node! Lines:"+lines.length);
 	var self=this;
 	// compile time errors
 	// level - notice, warning, error, fatal
 	// line = line in body, or null if N/A
 	function logError(level,line,msg) {
 		self.errors.push({level:level,line:line,msg:msg});
-		console.log("Logged error: "+level+" "+line+" "+msg);
+		dbg.error("Logged error: "+level+" "+line+" "+msg);
 	}
 
 	// info for random variables: [ randID -> randweightrunningtotal ]
@@ -270,12 +270,16 @@ function WoolNode(dialogue,lines) {
 		}
 	}
 	function removeLiteralStrings(expr) {
-		expr = expr.replace('/["(?:[^"\\]|\\.)*"/', "");
-		expr = expr.replace("/['(?:[^'\\]|\\.)*'/", "");
+		expr = expr.replace(/["](?:[^"\\]|\\.)*["]/g, "");
+		expr = expr.replace(/['](?:[^'\\]|\\.)*[']/g, "");
 		//expr = expr.replace(/["][^"]*["]/g,"");
 		//expr = expr.replace(/['][^']*[']/g,"");
 		return expr;
 	}
+	dbg.assert(removeLiteralStrings('"Literal string"') == "",
+		"removeLiteralStrings assertion 1");
+	dbg.assert(removeLiteralStrings('" string 1" "string2 "') == " ",
+		"removeLiteralStrings assertion 2");
 	// check for existence of bare identifiers (e.g. myVar instead of $myVar)
 	// If found, add error to this.errors
 	function checkExpressionForBareIds(expr,line) {
@@ -416,7 +420,7 @@ function WoolNode(dialogue,lines) {
 		}
 	}
 	if (this.param.speaker) dialogue.speakers[speaker] = this.param.speaker;
-	//console.log(this.param);
+	//dbg.debug(this.param);
 	// parse body. Format for each line:
 	// <text>
 	// <agentname> ":" <text>
@@ -549,7 +553,7 @@ function WoolNode(dialogue,lines) {
 			}
 			checkExpressionForSingleEquals(matches[2], i);
 			checkExpressionForBareIds(matches[2], i);
-			//console.log("REWROTE EXPR: "+matches[2] + " => " + rewriteExpression(matches[2]));
+			//dbg.debug("REWROTE EXPR: "+matches[2] + " => " + rewriteExpression(matches[2]));
 			this.body[i] = (matches[1] ? "} else if (" : "if (")
 				+ rewriteExpression(matches[2])
 				+ ") {";
@@ -768,8 +772,8 @@ function WoolNode(dialogue,lines) {
 		this.texts[alllines.trim()] = true;
 		this.agenttexts[alllines.trim()] = true;
 	}
-	//console.log("Parsing function:");
-	//console.log(this.body.join("\n"));
+	//dbg.debug("Parsing function:");
+	//dbg.debug(this.body.join("\n"));
 	// turn code into function
 	var funcprefix = "";
 	for (var randvar in this.randvars) {
@@ -782,8 +786,8 @@ function WoolNode(dialogue,lines) {
 	} catch (e) {
 		logError("fatal",null,
 			"Script error: "+e);
-		console.log(e);
-		console.log(funcprefix+this.body.join("\n"));
+		dbg.debug(e);
+		dbg.debug(funcprefix+this.body.join("\n"));
 	}
 	dialogue.nodeMap[this.param.title.trim().toLowerCase()] = this;
 }
@@ -805,7 +809,7 @@ function WoolDialogue(woolsource) {
 			nodelines.push(line);
 		}
 	}
-	//console.log(this.nodes);
+	//dbg.debug(this.nodes);
 };
 
 
@@ -823,6 +827,9 @@ function directServerLoadNodeDialogue(dialogueID,filepath,overwrite) {
     //if (typeof NodeFileSystem == "undefined") return;
 	var fs = getPlatformFileSystem();
 	var data = fs.readFileSync(filepath);
+	if (!data) {
+		dbg.error("Cannot load dialogue "+filepath);
+	}
 	if (overwrite || !directServer.dialogues[dialogueID]) {
 		directServer.dialogues[dialogueID] = new WoolDialogue(data);
 	}
@@ -831,7 +838,7 @@ function directServerLoadNodeDialogue(dialogueID,filepath,overwrite) {
 }
 
 function directServerLoadNodeTranslation(filepath) {
-	console.log("Loading translation: "+filepath);
+	dbg.debug("Loading translation: "+filepath);
     //if (typeof NodeFileSystem == "undefined") return;
 	var fs = getPlatformFileSystem();
 	var langDefs = fs.readFileSync(filepath);
@@ -875,9 +882,9 @@ function directServerLoadFile(i,filename,callback) {
 	var basename = filename.split(/[\/.]/);
 	basename = basename[basename.length-3];
 	function handleDataLoaded() {
-		console.log("Wool-JS: all data loaded.");
+		dbg.debug("Wool-JS: all data loaded.");
 		directServer.allDataLoaded = true;
-		console.log(directServer);
+		dbg.debug(directServer);
 		if (callback) callback();
 	}
 	$.ajax({
