@@ -31,9 +31,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.system.JavaVersion;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.core.SpringVersion;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.ClassUtils;
 
@@ -96,6 +98,9 @@ ApplicationListener<ContextClosedEvent> {
 		logger.info("Successfully started WOOL Web Service.");
 		logger.info("Service Version: " + config.get(Configuration.VERSION));
 		logger.info("Build: " + "(in development)"); // TODO: Automatically populate "Build" config parameter
+		logger.info("Spring Version: "+ SpringVersion.getVersion());
+		logger.info("JDK Version: "+System.getProperty("java.version"));
+		logger.info("Java Version: "+ JavaVersion.getJavaVersion().toString());
 		logger.info("External Variable Service Enabled: "+config.getExternalVariableServiceEnabled());
 		if(config.getExternalVariableServiceEnabled()) {
 			logger.info("External Variable Service URL: "+config.getExternalVariableServiceURL());

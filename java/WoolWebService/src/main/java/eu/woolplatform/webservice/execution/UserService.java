@@ -30,6 +30,7 @@ import eu.woolplatform.webservice.Configuration;
 import eu.woolplatform.webservice.model.LoggedDialogue;
 import eu.woolplatform.webservice.model.LoggedDialogueStoreIO;
 import eu.woolplatform.webservice.model.VariableStoreIO;
+import eu.woolplatform.webservice.model.WoolVariableResponse;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.execution.ActiveWoolDialogue;
 import eu.woolplatform.wool.execution.ExecuteNodeResult;
@@ -265,6 +266,12 @@ public class UserService {
 		if(config.getExternalVariableServiceEnabled()) {
 			logger.info("External WOOL Variable Service is enabled, with parameters:");
 			logger.info("URL: "+config.getExternalVariableServiceURL());
+
+			//WebClient client = WebClient.create("http://localhost:8080");
+
+			//List<WoolVariableResponse> responseVariables = restTemplate.getForObject(
+			//		config.getExternalVariableServiceURL(), WoolVariableResponse.class);
+			//logger.info("asdf");
 		}
 	}
 
