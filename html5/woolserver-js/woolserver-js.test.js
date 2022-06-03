@@ -5,26 +5,44 @@ var nodefs = require('fs');
 // we need to do this to load browser style js files into node. We should
 // rewrite library files to be useable for both node and browser.
 
-var filedata = nodefs.readFileSync("lib/debug.js",'utf8');
-eval(filedata);
+var mod = require("../lib/utils.js");
+var Utils = mod.Utils;
 
-var filedata = nodefs.readFileSync("lib/utils.js",'utf8');
-eval(filedata);
+var mod = require("../lib/debug.js");
+var dbg = mod.dbg;
+
+
+//var filedata = nodefs.readFileSync("lib/debug.js",'utf8');
+//eval(filedata);
+
+//var filedata = nodefs.readFileSync("lib/utils.js",'utf8');
+//eval(filedata);
 
 var gettext = require("../lib/i18n/gettext.js");
 i18n = gettext.i18n;
 
-filedata = nodefs.readFileSync("lib/i18n/i18n.js",'utf8');
-eval(filedata);
+//var i18n_includes = require("../lib/i18n/i18n.js");
+//Utils.globalizeExportFields("i18n_includes");
+Utils.requireGlobal("../lib/i18n/i18n.js");
 
-filedata = nodefs.readFileSync("lib/filesystem.js",'utf8');
-eval(filedata);
+//for (var key in i18n_includes) {
+//	eval("var "+key+" = i18n_includes."+key);
+//}
 
-filedata = nodefs.readFileSync("woolserver-js/woolserver-js.js",'utf8');
-eval(filedata);
+//filedata = nodefs.readFileSync("lib/i18n/i18n.js",'utf8');
+//eval(filedata);
 
-filedata = nodefs.readFileSync("woolserver-js/woolserver-js-api.js",'utf8');
-eval(filedata);
+Utils.requireGlobal("../lib/filesystem.js");
+//filedata = nodefs.readFileSync("lib/filesystem.js",'utf8');
+//eval(filedata);
+
+Utils.requireGlobal("../woolserver-js/woolserver-js.js");
+//filedata = nodefs.readFileSync("woolserver-js/woolserver-js.js",'utf8');
+//eval(filedata);
+
+Utils.requireGlobal("../woolserver-js/woolserver-js-api.js");
+//filedata = nodefs.readFileSync("woolserver-js/woolserver-js-api.js",'utf8');
+//eval(filedata);
 
 
 dbg.setLevel("notice");
@@ -101,11 +119,7 @@ test("Example dialogues", done => {
 		if (errorsFound) {
 			done("Errors found");
 		} else {
-			if (dbg.getAssertFails().length > 0) {
-				done(dbg.getAssertFails());
-			} else {
-				done();
-			}
+			done(dbg.getAssertFails());
 		}
 	});
 })

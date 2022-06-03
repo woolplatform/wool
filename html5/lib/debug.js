@@ -70,7 +70,9 @@ dbg.assert = function(result,msg) {
 	}
 }
 
+// false when there are no fails, otherwise array of fails
 dbg.getAssertFails = function() {
+	if (dbg.assertFails.length == 0) return false;
 	return dbg.assertFails;
 }
 
@@ -79,4 +81,8 @@ dbg.clearAssertFails = function() {
 }
 
 
+if (typeof exports !== 'undefined') {
+	// node.js require()
+	exports.dbg = dbg;
+}
 

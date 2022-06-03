@@ -356,3 +356,13 @@ BrowserFileSystem.cacheFile = function(url,path,success,failure) {
     request.send(null);
 }
 
+
+if (typeof exports !== 'undefined') {
+	// node.js require()
+	exports.detectNodeJS = detectNodeJS;
+	exports.getPlatformFileSystem = getPlatformFileSystem;
+	exports.FileSystem = FileSystem;
+	exports.NodeFileSystem = NodeFileSystem;
+	exports.BrowserFileSystem = BrowserFileSystem;
+}
+

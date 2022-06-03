@@ -145,6 +145,14 @@ _signupURL = _baseURL +  "auth/signup?user=" + _userName + "&password=" + _passw
 
 */
 
+if (require) {
+	// we are node.js module, include dependencies
+	var mod = require("../lib/utils.js");
+	Utils = mod.Utils;
+	Utils.requireGlobal("../lib/debug.js");
+	Utils.requireGlobal("../woolserver-js/woolserver-js.js");
+}
+
 
 // is passed to eval'ed code as C
 // vars: associative array
@@ -930,4 +938,17 @@ function directServerLoadDialogues(callback) {
 	});
 }
 
+
+if (typeof exports !== 'undefined') {
+	// node.js require()
+	exports.WoolNodeContext = WoolNodeContext;
+	exports.WoolNode = WoolNode;
+	exports.WoolDialogue = WoolDialogue;
+	exports.directServerLoadDialogue = directServerLoadDialogue;
+	exports.directServerLoadNodeDialogue = directServerLoadNodeDialogue;
+	exports.directServerLoadNodeTranslation = directServerLoadNodeTranslation;
+	exports.directServerGetPath = directServerGetPath;
+	exports.directServerLoadFile = directServerLoadFile;
+	exports.directServerLoadDialogues = directServerLoadDialogues;
+}
 

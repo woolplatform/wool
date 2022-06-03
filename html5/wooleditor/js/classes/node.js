@@ -62,7 +62,7 @@ var Node = function() {
 	this.canDoubleClick = true;
 
 	this.create = function() {
-		Utils.pushToTop($(self.element));
+		EditorUtils.pushToTop($(self.element));
 		self.style = window.getComputedStyle($(self.element).get(0));
 
 		var parent = $(self.element).parent();
@@ -574,7 +574,7 @@ ko.bindingHandlers.nodeBind = {
 
 	update: function(element, valueAccessor, allBindings, viewModel, bindingContext) 
 	{
-		$(element).on("mousedown", function() { Utils.pushToTop($(element)); });
+		$(element).on("mousedown", function() { EditorUtils.pushToTop($(element)); });
 	}
 };
 

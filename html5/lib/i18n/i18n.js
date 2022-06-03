@@ -329,4 +329,14 @@ function n__2(context,strings,stringp,n,arg1,arg2) {
  	return _i18n.dcnpgettext(null, context, strings, stringp, n, arg1, arg2);
 }
 
+if (typeof exports !== 'undefined') {
+	// node.js require()
+	exports._i18n = _i18n;
+	exports.__ = __;
+	exports.__1 = __1;
+	exports.__2 = __2;
+	exports.n__ = n__;
+	exports.n__1 = n__1;
+	exports.n__2 = n__2;
+}
 

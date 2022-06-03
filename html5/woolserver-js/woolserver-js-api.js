@@ -1,4 +1,10 @@
 
+if (require) {
+	// we are node.js module, include dependencies
+	var mod = require("../lib/debug.js");
+	dbg = mod.dbg;
+}
+
 var directServer = {};
 
 function initDirectServer() {
@@ -452,5 +458,13 @@ function _directServer_go_back(par) {
 	if (directServer.nodeHistory.length == 0) return directServer.currentnode;
 	return directServer.gotoNode(directServer.nodeHistory.pop());
 
+}
+
+if (typeof exports !== 'undefined') {
+	// node.js require()
+	exports.handleDirectServerCall = handleDirectServerCall;
+	exports.directServer = directServer;
+	exports.initDirectServer = initDirectServer;
+	// _directServer_ functions do not need to be exported
 }
 
