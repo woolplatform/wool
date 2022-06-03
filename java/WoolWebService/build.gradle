@@ -16,8 +16,8 @@ plugins {
 
 group = 'eu.woolplatform'
 version = '1.1.1' // run updateVersion after changing this property
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 archivesBaseName = 'wool-webservice'
 
 configurations {
@@ -116,10 +116,10 @@ task listDialogueFiles {
 			def first = true
 			dlgDir.eachDir() { dir ->
 				if (first)
-					first = false;
+					first = false
 				else
 					writer.write(',')
-				writer.write('"' + dir.name + '":');
+				writer.write('"' + dir.name + '":')
 				listDirFiles(dir, writer)
 			}
 			writer.write('}')
