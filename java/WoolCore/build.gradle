@@ -8,9 +8,9 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '2.2.6'
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+version = '2.3.0'
+sourceCompatibility = 11
+targetCompatibility = 11
 archivesBaseName = 'wool-core'
 
 repositories {
@@ -18,13 +18,13 @@ repositories {
 }
 
 dependencies {
-	api "eu.woolplatform:wool-utils:2.2.6"
-//	api project(':WoolUtils')
-	api 'org.slf4j:slf4j-api:1.7.30'
-	api 'com.fasterxml.jackson.core:jackson-core:2.12.3'
-	api 'com.fasterxml.jackson.core:jackson-annotations:2.12.3'
-	api 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
-	api 'joda-time:joda-time:2.10.10'
+	implementation "eu.woolplatform:wool-utils:2.2.6" // Use the maven central distribution of WOOL Utils.
+	// implementation project(':WoolUtils')           // Use the local WOOL Utils project source.
+	implementation 'org.slf4j:slf4j-api:1.7.36'
+	implementation 'com.fasterxml.jackson.core:jackson-core:2.13.3'
+	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.3'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+	implementation 'joda-time:joda-time:2.10.14'
 	testImplementation 'junit:junit:4.13.2'
 }
 
@@ -66,8 +66,8 @@ publishing {
 			from components.java
 			
 			pom {
-				name = 'WOOL Dialogue Framework'
-				description = 'WOOL is a simple, powerful dialogue framework for creating virtual agent conversations.'
+				name = 'WOOL Dialogue Platform'
+				description = 'WOOL is a simple, powerful dialogue platform for creating virtual agent conversations.'
 				url = 'https://www.woolplatform.eu/'
 				
 				licenses {
@@ -110,18 +110,18 @@ publishing {
 	}
 	repositories {
 		maven {
-			def ossrhUsername = project.properties.ossrhUsername
-			if (!ossrhUsername)
-				ossrhUsername = ''
-			def ossrhPassword = project.properties.ossrhPassword
-			if (!ossrhPassword)
-				ossrhPassword = ''
+			def sonatypeUsername = project.properties.ossrhUsername
+			if (!sonatypeUsername)
+				sonatypeUsername = ''
+			def sonatypePassword = project.properties.ossrhPassword
+			if (!sonatypePassword)
+				sonatypePassword = ''
 			def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 			def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
 			url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 			credentials {
-				username ossrhUsername
-				password ossrhPassword
+				username sonatypeUsername
+				password sonatypePassword
 			}
 		}
 	}

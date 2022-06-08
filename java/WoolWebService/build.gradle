@@ -15,7 +15,7 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '1.1.1' // run updateVersion after changing this property
+version = '1.2.0' // run updateVersion after changing this property
 sourceCompatibility = 11
 targetCompatibility = 11
 archivesBaseName = 'wool-webservice'
@@ -25,14 +25,16 @@ configurations {
 }
 
 dependencies {
-	implementation 'eu.woolplatform:wool-core:2.2.6'
+	implementation 'eu.woolplatform:wool-core:2.2.6' // Use the maven central distribution of WOOL Core.
+	// implementation project(':WoolCore')           // Use the local WOOL Core project source.
+	// implementation project(':WoolUtils')          // Also include WOOL Utils from project source.
 	implementation 'io.jsonwebtoken:jjwt:0.9.1'
 	implementation 'io.springfox:springfox-swagger2:2.9.2'
 	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
 	implementation 'javax.xml.bind:jaxb-api:2.3.1'
 	implementation 'org.springframework:spring-context-support:5.2.10.RELEASE'
 	implementation 'org.springframework.boot:spring-boot-starter-web:2.3.5.RELEASE'
-	testImplementation 'junit:junit:4.13.1'
+	testImplementation 'junit:junit:4.13.2'
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat:2.3.5.RELEASE'
 	cargo 'org.codehaus.cargo:cargo-core:1.9.11'
 	cargo 'org.codehaus.cargo:cargo-ant:1.9.11'
