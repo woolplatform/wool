@@ -1005,7 +1005,7 @@ var App = function(name, version, filename) {
 		}
 	}
 
-	this.updateArrowsThrottled = Utils.throttle(this.updateArrows, this.UPDATE_ARROWS_THROTTLE_MS);
+	this.updateArrowsThrottled = EditorUtils.throttle(this.updateArrows, this.UPDATE_ARROWS_THROTTLE_MS);
 
 	this.getHighlightedText = function(text)
 	{

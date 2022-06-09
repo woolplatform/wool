@@ -1,4 +1,10 @@
 
+if (require) {
+	// we are node.js module, include dependencies
+	var mod = require("../lib/debug.js");
+	dbg = mod.dbg;
+}
+
 var directServer = {};
 
 function initDirectServer() {
@@ -114,11 +120,11 @@ directServer.clearPendingActions = function() {
 
 // XXX Pending actions not used, should this be added?
 directServer.setState = function(json) {
-    console.log("CTX:"+json);
+    dbg.debug("CTX:"+json);
 	var state = JSON.parse(json);
 	directServer.currentdialogueId = state.currentdialogueId;
 	directServer.currentnodectx = new WoolNodeContext(state.currentnodectxvars);
-    console.log(directServer.currentnodectx);
+    dbg.debug(directServer.currentnodectx);
     if (state.currentdialogueId) {
         // if current dialogue is defined, currentnodeid is assumed to be defined also
         directServer.currentdialogue = directServer.dialogues[directServer.currentdialogueId];
@@ -168,9 +174,9 @@ directServer.getNode = function() {
 	var dia = directServer.currentdialogue;
 	var node = directServer.currentnode;
 	var ctx = directServer.currentnodectx;
-	//console.log(dia);
-	//console.log(node);
-	//console.log(ctx);
+	//dbg.debug(dia);
+	//dbg.debug(node);
+	//dbg.debug(ctx);
 	var speaker = "UNKNOWN";
 	if (ctx.speakers.length > 0) {
 		speaker = ctx.speakers[0];
@@ -280,7 +286,7 @@ directServer.gotoNode = function(node) {
 
 directServer.setVar = function(name,value) {
 	if (!directServer.currentnodectx) {
-		console.log("Warning: cannot set variable: no current node context.");
+		dbg.warn("Warning: cannot set variable: no current node context.");
 	} else {
 		directServer.currentnodectx.vars[name] = value;
 	}
@@ -294,7 +300,7 @@ directServer.getVars = function() {
 function handleDirectServerCall(type,dataType,headers,callbackURL,
 functionOnSuccess) {
 	var urldir = callbackURL.split(/[\/]/);
-	//console.log("Call received:");
+	//dbg.debug("Call received:");
 	var paramraw = urldir[urldir.length-1].split(/[&?]/);
 	urldir[urldir.length-1] = paramraw.shift();
 	var param = {};
@@ -307,33 +313,37 @@ functionOnSuccess) {
 		param["_"+i] = decodeURIComponent(urldir[i]);
 	}
 	func = "_directServer_" + urldir[0].split("-").join("_");
-	var fn = window[func];
+	if (typeof window != "undefined") {
+		var fn = window[func];
+	} else { //node.js, may also work in browser
+		var fn = eval(func);
+	}
 	if(typeof fn === 'function') {
-		console.log("Calling DirectServer function:");
-		console.log(func);
-		console.log(param);
+		dbg.debug("Calling DirectServer function:");
+		dbg.debug(func);
+		dbg.debug(param);
 		var ret = fn(param);
 		if (functionOnSuccess) functionOnSuccess(ret);
 	} else {
-		console.log("ERROR: Undefined DirectServer function:");
-		console.log(func);
-		console.log(param);
+		dbg.error("ERROR: Undefined DirectServer function:");
+		dbg.error(func);
+		dbg.error(param);
 	}
 	return;
 }
 
 function _directServer_auth(par) {
 	if (par._1 == "login") {
-		console.log("Login: "+par.email+" "+par.password);
+		dbg.debug("Login: "+par.email+" "+par.password);
 		return "dummytoken";
 	} else {
-		console.log("DirectServer auth: unknown function "+par._1);
+		dbg.error("DirectServer auth: unknown function "+par._1);
 	}
 }
 
 function _directServer_get_available_dialogues(par) {
 	var user = par._1;
-	console.log("DirectServer getAvailableDialogues "+par._1);
+	dbg.debug("DirectServer getAvailableDialogues "+par._1);
 	return directServer.availableDialogues;
 }
 
@@ -359,13 +369,13 @@ function _directServer_start_dialogue(par) {
 	directServer.currentdialogueId = par.dialogueId;
 	if (!par.startNodeId) par.startNodeId = "Start";
 	directServer.currentdialogue = directServer.dialogues[par.dialogueId];
-    console.log("Starting dialogue: "+par.dialogueId)
+    dbg.debug("Starting dialogue: "+par.dialogueId)
 	// start node is node named "Start", otherwise first node
 	var node = directServer.currentdialogue.nodes[0];
 	var idx = directServer.findNodeIdx(par.startNodeId);
 	if (idx!==null) node = directServer.currentdialogue.nodes[idx];
 	directServer.currentnode = node;
-    console.log("Start node: "+idx)
+    dbg.debug("Start node: "+idx)
 	directServer.nodeHistory = [];
 	// pass kb variables here
 	var vars = {};
@@ -418,7 +428,7 @@ function _directServer_progress_dialogue(par) {
     //if (directServer.currentnodectx.pendingActions) {
     //    directServer.pendingActions = directServer.pendingActions.concat(
     //            directServer.currentnodectx.pendingActions)
-    //    //console.log("Added to pendingActions; " + JSON.stringify(directServer.pendingActions))
+    //    //dbg.debug("Added to pendingActions; " + JSON.stringify(directServer.pendingActions))
     //	directServer.currentnodectx.pendingActions = [];
     //}
 	// jump to new node
@@ -448,5 +458,13 @@ function _directServer_go_back(par) {
 	if (directServer.nodeHistory.length == 0) return directServer.currentnode;
 	return directServer.gotoNode(directServer.nodeHistory.pop());
 
+}
+
+if (typeof exports !== 'undefined') {
+	// node.js require()
+	exports.handleDirectServerCall = handleDirectServerCall;
+	exports.directServer = directServer;
+	exports.initDirectServer = initDirectServer;
+	// _directServer_ functions do not need to be exported
 }
 

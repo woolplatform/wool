@@ -313,7 +313,7 @@ var data =
 		{
 			var oParser = new DOMParser();
 			var xml = oParser.parseFromString(content, "text/xml");
-			content = Utils.xmlToObject(xml);
+			content = EditorUtils.xmlToObject(xml);
 
 			if (content != undefined)
 				for (i = 0; i < content.length; i ++)

@@ -26,7 +26,7 @@ function saveConfig() {
 	config.background = backgroundRes.serialize();
 	config.statementFormat = statementFormat;
 	config.hasBackButton = hasBackButton;
-	console.log(config);
+	dbg.debug(config);
 	localStorage.setItem("simplewoolclient_config",JSON.stringify(config));
 }
 
@@ -142,7 +142,7 @@ try {
 	if (!sourceCode) sourceCode = windowparams.sourceCode;
 	if (!langDefs) langDefs = windowparams.langDefs;
 } catch (e) {
-	console.log(e);
+	dbg.error(e);
 }
 
 _i18n.enableNormalization(true);
@@ -208,7 +208,7 @@ function updateAvatar() {
 	var agentid = avatarRes.getCurrentEntity();
 	var dialogueid = directServer.stripDialoguePath(directServer.currentdialogueId);
 	var nodeid = directServer.currentnode.param.title;
-	//console.log("AV "+agentid+"/"+dialogueid+"/"+nodeid);
+	//dbg.debug("AV "+agentid+"/"+dialogueid+"/"+nodeid);
 	if (isNarrator) {
 		elem.innerHTML="";
 	} else if (config.avatarmapping
@@ -561,7 +561,7 @@ function updateNodeUI(node) {
 		document.getElementById("agent-statement").innerHTML =
 			statementFormat == "html" 
 				? node.statement
-				: marked(node.statement);
+				: marked.parse(node.statement);
 	}
 	// Non-redirect case of dialogue end
 	if (node.id=="End" || node.replies.length==0) {
@@ -604,7 +604,7 @@ function updateNodeUI(node) {
 					+ "%1" + reply.afterStatement, "%1");
 				var seg = statement.split("%1");
 				if (seg.length!=2) {
-					console.log("Translation error: mismatched %1 in "
+					dbg.warn("Translation error: mismatched %1 in "
 						+"translation '"+statement+"'.");
 				} else {
 					reply.beforeStatement = seg[0];
@@ -691,14 +691,14 @@ if (urlParams.resources) {
 				resname,
 				function() {
 					nrResourcesLoaded++;
-					console.log("Loaded resource " + nrResourcesLoaded +
+					dbg.debug("Loaded resource " + nrResourcesLoaded +
 						"/" + res.length);
 					if (nrResourcesLoaded == res.length) {
 						startOrResumeDialogue();
 					}
 				},
 				function(errormsg) {
-					console.log("Error reading resource: '"+errormsg+"'");
+					dbg.debug("Error reading resource: '"+errormsg+"'");
 				}
 			);
 		}
@@ -720,12 +720,12 @@ function startOrResumeDialogue() {
 			var fields = lines[i].split(/,/);
 			if (fields.length == 0) continue;
 			if (fields.length != 2) {
-				console.log("avatarmapping.csv: unexpected line '"+lines[i]+"'");
+				dbg.debug("avatarmapping.csv: unexpected line '"+lines[i]+"'");
 				continue;
 			}
 			var comp = fields[0].split(/[.]/);
 			if (comp.length != 3) {
-				console.log("avatarmapping.csv: unexpected directive '"+fields[0]+"'");
+				dbg.debug("avatarmapping.csv: unexpected directive '"+fields[0]+"'");
 				continue;
 			}
 			if (!config.avatarmapping[comp[0]]) 
@@ -737,10 +737,10 @@ function startOrResumeDialogue() {
 			img.src = "images/"+fields[1];
 			document.getElementById("hidden").appendChild(img);
 			preloadedImages.push(img);
-			//console.log("AVATAR "+comp[0]+" DIALOGUE "+comp[1]+" NODE "+comp[2]
+			//dbg.debug("AVATAR "+comp[0]+" DIALOGUE "+comp[1]+" NODE "+comp[2]
 			//	+" IMAGE "+fields[1]);
 		}
-		console.log(config.avatarmapping);
+		dbg.debug(config.avatarmapping);
 	}
 	if (urlParams.dialoguepath) {
 		sourceCode=getPlatformFileSystem().readFileSync(urlParams.dialoguepath);

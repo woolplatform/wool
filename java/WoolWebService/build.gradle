@@ -11,15 +11,15 @@ plugins {
 	id 'java-library'
 	id 'war'
 	id 'eclipse-wtp'
-	id 'org.springframework.boot' version '2.1.4.RELEASE'
-	id 'com.bmuschko.cargo' version '2.3'
+	id 'org.springframework.boot' version '2.7.0'
+	id 'com.bmuschko.cargo' version '2.9.0'
 	id 'org.hidetake.ssh' version '2.9.0'
 }
 
 group = 'eu.woolplatform'
-version = '1.1.1' // run updateVersion after changing this property
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+version = '1.2.0' // run updateVersion after changing this property
+sourceCompatibility = 11
+targetCompatibility = 11
 archivesBaseName = 'wool-webservice'
 
 configurations {
@@ -27,20 +27,19 @@ configurations {
 }
 
 dependencies {
-	implementation 'eu.woolplatform:wool-core:2.2.6' // Use the library as published through Maven Central
-//	api project(':WoolCore')                         // Use the local source project
+	implementation 'eu.woolplatform:wool-core:2.2.6' // Use the maven central distribution of WOOL Core.
+	// implementation project(':WoolCore')           // Use the local WOOL Core project source.
+	// implementation project(':WoolUtils')          // Also include WOOL Utils from project source.
 	implementation 'io.jsonwebtoken:jjwt:0.9.1'
 	implementation 'io.springfox:springfox-swagger2:2.9.2'
 	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
 	implementation 'javax.xml.bind:jaxb-api:2.3.1'
 	implementation 'org.springframework:spring-context-support:5.2.10.RELEASE'
-	implementation('org.springframework.boot:spring-boot-starter-web:2.3.5.RELEASE') {
-		exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
-	}
-	testImplementation 'junit:junit:4.13.1'
+	implementation 'org.springframework.boot:spring-boot-starter-web:2.3.5.RELEASE'
+	testImplementation 'junit:junit:4.13.2'
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat:2.3.5.RELEASE'
-	cargo 'org.codehaus.cargo:cargo-core:1.8.2'
-	cargo 'org.codehaus.cargo:cargo-ant:1.8.2'
+	cargo 'org.codehaus.cargo:cargo-core:1.9.11'
+	cargo 'org.codehaus.cargo:cargo-ant:1.9.11'
 }
 
 def cargoTomcatDeployPath = project.hasProperty('tomcatDeployPath') ? tomcatDeployPath : ''
@@ -55,7 +54,7 @@ cargo {
 	deployable {
 		context = cargoTomcatDeployPath
 	}
-	
+
 	remote {
 		hostname = cargoRemoteTomcatHost
 		username = cargoRemoteTomcatUser
@@ -70,7 +69,7 @@ tasks.matching({ it.name =~ /cargo.*Remote/ }).each() {
 task updateConfig {
 	group = 'configuration'
 	description = 'Configures files with current values of woolconfig properties from gradle.properties.'
-	
+
 	doLast() {
 		Properties props = new Properties()
 		def propPrefix = 'woolconfig'
@@ -112,7 +111,7 @@ def listDirFiles(dir, writer) {
 task listDialogueFiles {
 	group = 'configuration'
 	description = 'Lists dialogue files and writes them to dialogues.json'
-	
+
 	doLast() {
 		def dlgDir = file('src/main/resources/dialogues')
 		def dlgFile = file('src/main/resources/dialogues/dialogues.json')
@@ -121,10 +120,10 @@ task listDialogueFiles {
 			def first = true
 			dlgDir.eachDir() { dir ->
 				if (first)
-					first = false;
+					first = false
 				else
 					writer.write(',')
-				writer.write('"' + dir.name + '":');
+				writer.write('"' + dir.name + '":')
 				listDirFiles(dir, writer)
 			}
 			writer.write('}')
@@ -149,7 +148,7 @@ task updateVersion {
 task checkResources {
 	group = 'build'
 	description = 'Checks if required resource files exist and are up-to-date.'
-	
+
 	dependsOn updateConfig, listDialogueFiles
 }
 

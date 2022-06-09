@@ -218,8 +218,9 @@
 
   // Handle node, commonjs
   if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports)
-      exports = module.exports = i18n;
+    // this somehow creates a circular reference in the latest node.js
+    //if (typeof module !== 'undefined' && module.exports)
+    //  exports = module.exports = i18n;
     exports.i18n = i18n;
 
   // Handle AMD

@@ -83,3 +83,25 @@ Utils.parseJWT = function(token) {
 
     return JSON.parse(base64);
 };
+
+// copy all fields in a require() return value to global scope
+//Utils.globalizeExportFields = function(exportName) {
+//	for (var key in eval(exportName)) {
+//		(1,eval)("var "+key+" = "+exportName+"."+key+";");
+//	}
+//}
+
+// import module with require, copy all fields in the return value to
+// global scope
+Utils.requireGlobal = function(path) {
+	global["mod_export"] = require(path);
+	for (var key in mod_export) {
+		(1,eval)("global['"+key+"'] = global['mod_export']."+key+";");
+	}
+}
+
+if (typeof exports !== 'undefined') {
+	// node.js require()
+	exports.Utils = Utils;
+}
+

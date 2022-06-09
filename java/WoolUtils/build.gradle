@@ -8,9 +8,9 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '2.2.6'
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+version = '2.3.0'
+sourceCompatibility = 11
+targetCompatibility = 11
 archivesBaseName = 'wool-utils'
 
 repositories {
@@ -18,11 +18,11 @@ repositories {
 }
 
 dependencies {
-	api 'com.fasterxml.jackson.core:jackson-core:2.12.3'
-	api 'com.fasterxml.jackson.core:jackson-annotations:2.12.3'
-	api 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
-	api 'joda-time:joda-time:2.10.10'
-	api 'org.slf4j:slf4j-api:1.7.30'
+	api 'com.fasterxml.jackson.core:jackson-core:2.13.3'
+	api 'com.fasterxml.jackson.core:jackson-annotations:2.13.3'
+	api 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+	api 'joda-time:joda-time:2.10.14'
+	api 'org.slf4j:slf4j-api:1.7.36'
 	api 'commons-codec:commons-codec:1.3' // newer versions not supported in Android
     api fileTree(dir: 'libs', include: '*.jar')
 	testImplementation 'junit:junit:4.13.2'
@@ -111,18 +111,18 @@ publishing {
 	}
 	repositories {
 		maven {
-			def ossrhUsername = project.properties.ossrhUsername
-			if (!ossrhUsername)
-				ossrhUsername = ''
-			def ossrhPassword = project.properties.ossrhPassword
-			if (!ossrhPassword)
-				ossrhPassword = ''
+			def sonatypeUsername = project.properties.ossrhUsername
+			if (!sonatypeUsername)
+				sonatypeUsername = ''
+			def sonatypePassword = project.properties.ossrhPassword
+			if (!sonatypePassword)
+				sonatypePassword = ''
 			def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 			def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
 			url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 			credentials {
-				username ossrhUsername
-				password ossrhPassword
+				username sonatypeUsername
+				password sonatypePassword
 			}
 		}
 	}

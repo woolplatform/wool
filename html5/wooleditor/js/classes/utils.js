@@ -1,7 +1,5 @@
-var Utils = 
-{
-	pushToTop: function(element)
-	{
+var EditorUtils = {
+	pushToTop: function(element) {
 		var current = element.css("z-index");
 		if (current == "auto") current = 0;
 
@@ -26,18 +24,7 @@ var Utils =
 			element.css("z-index", highZ + 1);
 	},
 
-	// Merge with html5/lib/utils.js
-	getUrlParameters: function() {
-		return window.location.search.substring(1).split("&")
-		.reduce(function(res, i) {
-			if (i.split("=")[0]) {
-				res[i.split("=")[0]] = decodeURIComponent(i.split("=")[1]);
-			}
-			return res;
-		}, {});
-	},
-
-	// Merge with html5/lib/utils.js?
+	// Currently unused
 	stripHtml: function(html)
 	{
 		while (html.indexOf("<") >= 0)
