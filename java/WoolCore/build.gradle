@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-	implementation "eu.woolplatform:wool-utils:2.2.6" // Use the maven central distribution of WOOL Utils.
+	implementation "eu.woolplatform:wool-utils:2.3.0" // Use the maven central distribution of WOOL Utils.
 	// implementation project(':WoolUtils')           // Use the local WOOL Utils project source.
 	implementation 'org.slf4j:slf4j-api:1.7.36'
 	implementation 'com.fasterxml.jackson.core:jackson-core:2.13.3'
