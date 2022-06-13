@@ -101,7 +101,8 @@ public class DialogueExecutor {
 		// Collects all the WOOL Variables needed to execute this file
 		Set<String> variablesNeeded = dialogueDefinition.getVariablesNeeded();
 		logger.info("Dialogue '"+dialogue.getDialogueName()+"' uses the following set of WOOL Variables: "+variablesNeeded);
-		userService.updateVariables(variablesNeeded);
+		if(!variablesNeeded.isEmpty())
+			userService.updateVariables(variablesNeeded);
 
 		WoolNode startNode;
 		try {

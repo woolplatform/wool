@@ -32,6 +32,8 @@ public class WoolVariableResponse {
 
 	// ----- Constructors
 
+	public WoolVariableResponse() { }
+
 	public WoolVariableResponse(String name, String value, Long lastUpdated) {
 		this.name = name;
 		this.value = value;
@@ -62,6 +64,13 @@ public class WoolVariableResponse {
 
 	public void setLastUpdated(Long lastUpdated) {
 		this.lastUpdated = lastUpdated;
+	}
+
+	public String toString() {
+		return "WoolVariableResponse[" +
+				"name:'"+getName()+"',"+
+				"value:'"+getValue()+"',"+
+				"lastUpdated:'"+getLastUpdated()+"']";
 	}
 
 }

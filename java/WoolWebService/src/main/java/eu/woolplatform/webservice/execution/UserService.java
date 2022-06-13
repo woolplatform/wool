@@ -27,10 +27,7 @@ import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.i18n.I18nLanguageFinder;
 import eu.woolplatform.utils.i18n.I18nUtils;
 import eu.woolplatform.webservice.Configuration;
-import eu.woolplatform.webservice.model.LoggedDialogue;
-import eu.woolplatform.webservice.model.LoggedDialogueStoreIO;
-import eu.woolplatform.webservice.model.VariableStoreIO;
-import eu.woolplatform.webservice.model.WoolVariableResponse;
+import eu.woolplatform.webservice.model.*;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.execution.ActiveWoolDialogue;
 import eu.woolplatform.wool.execution.ExecuteNodeResult;
@@ -39,6 +36,13 @@ import eu.woolplatform.wool.i18n.WoolTranslationContext;
 import eu.woolplatform.wool.model.*;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.*;
@@ -52,11 +56,12 @@ import java.util.*;
  */
 public class UserService {
 
-	private Logger logger;
 	public String userId;
 	public UserServiceManager userServiceManager;
 	public WoolVariableStore variableStore;
-	private DialogueExecutor dialogueExecutor;
+
+	private final Logger logger;
+	private final DialogueExecutor dialogueExecutor;
 	private WoolTranslationContext translationContext = null;
 
 	// dialogueLanguageMap: map from dialogue name -> language -> dialogue description
@@ -66,10 +71,12 @@ public class UserService {
 	
 	/**
 	 * Instantiates a {@link UserService} for a given user, identified
-	 * by the associated {@code accountId} and {@code userId}.
+	 * by the associated {@code accountId} and {@code userId}. The UserService creates a {@link WoolVariableStore} instance
+	 * and loads in all known variables for the user.
 	 * @param userId - A unique identifier of the current user this {@link UserService} is interacting with.
 	 * @param userServiceManager the server's {@link UserServiceManager} instance.
-	 * @param onVarChangeListener
+	 * @param onVarChangeListener the {@link WoolVariableStore.OnChangeListener} to be added to the {@link WoolVariableStore}
+	 *                            instance that this {@link UserService} creates.
 	 */
 	public UserService(String userId, UserServiceManager userServiceManager,
 			WoolVariableStore.OnChangeListener onVarChangeListener)
@@ -99,12 +106,8 @@ public class UserService {
 				userServiceManager.getDialogueDescriptions();
 		for (WoolDialogueDescription dialogue : dialogues) {
 			String name = dialogue.getDialogueName();
-			Map<String,WoolDialogueDescription> langMap =
-					dialogueLanguageMap.get(name);
-			if (langMap == null) {
-				langMap = new LinkedHashMap<>();
-				dialogueLanguageMap.put(name, langMap);
-			}
+			Map<String, WoolDialogueDescription> langMap =
+					dialogueLanguageMap.computeIfAbsent(name, k -> new LinkedHashMap<>());
 			langMap.put(dialogue.getLanguage(), dialogue);
 		}
 	}
@@ -210,7 +213,7 @@ public class UserService {
 	}
 
 	public ExecuteNodeResult backDialogue(DialogueState state, DateTime time)
-			throws DatabaseException, IOException, WoolException {
+			throws WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		String dialogueName = dialogue.getDialogueName();
 		String nodeName = dialogue.getCurrentNode().getTitle();
@@ -233,11 +236,14 @@ public class UserService {
 	 */
 	public void cancelDialogue(String loggedDialogueId)
 			throws DatabaseException, IOException {
-		logger.info("User '" + this.getUserId() + "' cancels dialogue");
+		logger.info("User '" + this.getUserId() + "' cancels dialogue with Id '"+loggedDialogueId+"'.");
 		LoggedDialogue loggedDialogue =
 				LoggedDialogueStoreIO.findLoggedDialogue(userId,
 						loggedDialogueId);
-		LoggedDialogueStoreIO.setDialogueCancelled(loggedDialogue);
+		if(loggedDialogue != null)
+			LoggedDialogueStoreIO.setDialogueCancelled(loggedDialogue);
+		else
+			logger.warn("User '" + this.getUserId() + "' attempted to cancel dialogue with Id '"+loggedDialogueId+"', but the dialogue could not be found.");
 	}
 
 	// ----- Methods (Variables):
@@ -264,15 +270,50 @@ public class UserService {
 		logger.info("Loading latest values for WOOL Variables: "+variableNames);
 		Configuration config = AppComponents.get(Configuration.class);
 		if(config.getExternalVariableServiceEnabled()) {
-			logger.info("External WOOL Variable Service is enabled, with parameters:");
+			logger.info("An external WOOL Variable Service is configured to be enabled, with parameters:");
 			logger.info("URL: "+config.getExternalVariableServiceURL());
 
-			//WebClient client = WebClient.create("http://localhost:8080");
+			List<WoolVariableResponse> varsToUpdate = new ArrayList<>();
+			for(String variableName : variableNames) {
+				varsToUpdate.add(new WoolVariableResponse(variableName,"",0l));
+			}
 
-			//List<WoolVariableResponse> responseVariables = restTemplate.getForObject(
-			//		config.getExternalVariableServiceURL(), WoolVariableResponse.class);
-			//logger.info("asdf");
+			String retrieveUpdatesUrl = config.getExternalVariableServiceURL() + "/v0.1.0/variables/retrieve-updates/"+getUserId();
+			logger.info("Retrieve updates URL: "+retrieveUpdatesUrl);
+			WoolVariableResponseList woolVariablesToUpdate = new WoolVariableResponseList(varsToUpdate);
+
+			logger.info(woolVariablesToUpdate.toString());
+
+			RestTemplate restTemplate = new RestTemplate();
+
+			ResponseEntity<WoolVariableResponse[]> response = restTemplate.postForEntity(
+					retrieveUpdatesUrl,
+					varsToUpdate,
+					WoolVariableResponse[].class);
+
+			WoolVariableResponse[] woolVariableResponses = response.getBody();
+
+			if(woolVariableResponses != null) {
+				if(woolVariableResponses.length == 0) {
+					logger.info("Received response from WOOL Variable Service: no variable updates needed.");
+				} else {
+					logger.info("Received response from WOOL Variable Service: the following variables have updated values:");
+					for(WoolVariableResponse wvr : woolVariableResponses) {
+						logger.info(wvr.toString());
+					}
+				}
+			}
+
+			//else
+			//	logger.info("Received null as response.");
+		} else {
+			logger.info("No external WOOL Variable Service has been configured, no variables updated.");
 		}
+	}
+
+	@Bean
+	public RestTemplate restTemplate(RestTemplateBuilder builder) {
+		return builder.build();
 	}
 
 	// ----- Methods (Retrieval)
