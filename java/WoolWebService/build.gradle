@@ -27,17 +27,25 @@ configurations {
 }
 
 dependencies {
-	implementation 'eu.woolplatform:wool-core:2.2.6' // Use the maven central distribution of WOOL Core.
-	// implementation project(':WoolCore')           // Use the local WOOL Core project source.
-	// implementation project(':WoolUtils')          // Also include WOOL Utils from project source.
-	implementation 'io.jsonwebtoken:jjwt:0.9.1'
-	implementation 'io.springfox:springfox-swagger2:2.9.2'
-	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
-	implementation 'javax.xml.bind:jaxb-api:2.3.1'
-	implementation 'org.springframework:spring-context-support:5.2.10.RELEASE'
-	implementation 'org.springframework.boot:spring-boot-starter-web:2.3.5.RELEASE'
+	// implementation project(':WoolCore')           								// Use the local WOOL Core project source, AND:
+	// implementation project(':WoolUtils')          								// Also include WOOL Utils from project source, OR:
+	implementation group: 'eu.woolplatform', name: 'wool-core', version: '2.2.6'	// Use the maven central distribution of WOOL Core.
+	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+	implementation group: 'io.springfox', name: 'springfox-swagger2', version: '2.9.2'
+	implementation group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'
+	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.4.0-b180830.0359'
+
+
+	implementation group: 'org.springframework', name: 'spring-context-support', version: '5.2.10.RELEASE'
+
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.4.13'
+
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-tomcat
+	providedRuntime group: 'org.springframework.boot', name: 'spring-boot-starter-tomcat', version: '2.4.13'
+
 	testImplementation 'junit:junit:4.13.2'
-	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat:2.3.5.RELEASE'
+
 	cargo 'org.codehaus.cargo:cargo-core:1.9.11'
 	cargo 'org.codehaus.cargo:cargo-ant:1.9.11'
 }
