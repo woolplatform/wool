@@ -5,12 +5,28 @@ import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 public class CsvUtils {
+	public static Writer createWriter(File file) throws IOException {
+		OutputStream out = new FileOutputStream(file);
+		boolean created = false;
+		try {
+			byte[] bom = new byte[] { (byte)0xef, (byte)0xbb, (byte)0xbf };
+			out.write(bom);
+			out.flush();
+			Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+			created = true;
+			return writer;
+		} finally {
+			if (!created)
+				out.close();
+		}
+	}
+
 	public static void writeCsvHeader(Writer writer) throws IOException {
 		String newline = System.getProperty("line.separator");
 		writer.write("sep=;" + newline);
