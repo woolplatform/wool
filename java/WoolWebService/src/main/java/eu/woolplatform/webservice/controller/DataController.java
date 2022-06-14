@@ -67,12 +67,12 @@ public class DataController {
 			logger.info("Get /variables?names=" + names);
 			return QueryRunner.runQuery(
 				(version, user) -> doGetVariables(user, names),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("Get /variables?names=" + names+"&woolUserId="+woolUserId);
 			return QueryRunner.runQuery(
 				(version, user) -> doGetVariables(woolUserId, names),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		}
 	}
 
@@ -126,12 +126,12 @@ public class DataController {
 			logger.info("Post /variable?name=" + name + "&value=" + value);
 			QueryRunner.runQuery((version, user) ->
 				doSetVariable(request, user, name, value),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("Post /variable?name=" + name + "&value=" + value + "&woolUserId=" + woolUserId);
 			QueryRunner.runQuery((version, user) ->
 				doSetVariable(request, woolUserId, name, value),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		}
 	}
 
@@ -184,11 +184,11 @@ public class DataController {
 		if(woolUserId.equals("")) {
 			logger.info("Post /variables");
 			QueryRunner.runQuery((version, user) -> doSetVariables(request, user),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("Post /variables?woolUserId="+woolUserId);
 			QueryRunner.runQuery((version, user) -> doSetVariables(request, woolUserId),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		}
 	}
 

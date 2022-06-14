@@ -97,14 +97,14 @@ public class DialogueController {
 			return QueryRunner.runQuery(
 					(version, user) -> doStartDialogue(user, dialogueName,
 							language, time, timezone),
-					versionName, request, response, woolUserId);
+					versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("Post /start-dialogue?dialogueName=" + dialogueName +
 					"&language=" + language+"&userId="+woolUserId);
 			return QueryRunner.runQuery(
 					(version, user) -> doStartDialogue(woolUserId, dialogueName,
 							language, time, timezone),
-					versionName, request, response, woolUserId);
+					versionName, request, response, woolUserId, application);
 		}
 	}
 
@@ -170,14 +170,14 @@ public class DialogueController {
 				(version, user) -> doProgressDialogue(user, request,
 						loggedDialogueId, loggedInteractionIndex, replyId,
 						time, timezone),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("POST /progress-dialogue?replyId=" + replyId+"&woolUserId="+woolUserId);
 			return QueryRunner.runQuery(
 				(version, user) -> doProgressDialogue(woolUserId, request,
 					loggedDialogueId, loggedInteractionIndex, replyId,
 					time, timezone),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		}
 	}
 
@@ -243,13 +243,13 @@ public class DialogueController {
 			return QueryRunner.runQuery(
 				(version, user) -> doBackDialogue(user, loggedDialogueId,
 						loggedInteractionIndex, time, timezone),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("POST /back-dialogue?woolUserId="+woolUserId);
 			return QueryRunner.runQuery(
 				(version, user) -> doBackDialogue(woolUserId, loggedDialogueId,
 						loggedInteractionIndex, time, timezone),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		}
 	}
 
@@ -290,13 +290,13 @@ public class DialogueController {
 			return QueryRunner.runQuery(
 				(version, user) -> doGetCurrentDialogue(user, dialogueName,
 						time, timezone),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("Get /current-dialogue?dialogueName=" + dialogueName+"&woolUserId="+woolUserId);
 			return QueryRunner.runQuery(
 				(version, user) -> doGetCurrentDialogue(woolUserId, dialogueName,
 						time, timezone),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		}
 	}
 
@@ -346,11 +346,11 @@ public class DialogueController {
 		if(woolUserId.equals("")) {
 			logger.info("POST /cancel-dialogue");
 			QueryRunner.runQuery((version, user) -> doCancelDialogue(user, loggedDialogueId),
-				versionName, request, response, woolUserId);
+				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("POST /cancel-dialogue?woolUserId="+woolUserId);
 			QueryRunner.runQuery((version, user) -> doCancelDialogue(woolUserId, loggedDialogueId),
-					versionName, request, response, woolUserId);
+					versionName, request, response, woolUserId, application);
 		}
 	}
 

@@ -51,7 +51,7 @@ public class UserFile {
 		return null;
 	}
 
-	private static List<UserCredentials> read() throws ParseException,
+	public static List<UserCredentials> read() throws ParseException,
 			IOException {
 		Configuration config = Configuration.getInstance();
 		File dataDir = new File(config.get(Configuration.DATA_DIR));

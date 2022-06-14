@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author Dennis Hofs (RRD)
  */
 public class QueryRunner {
+
 	/**
 	 * Runs a query on the authentication database. If the HTTP request is
 	 * specified, it will validate the authentication token. If there is no
@@ -58,7 +59,7 @@ public class QueryRunner {
 	 */
 	public static <T> T runQuery(AuthQuery<T> query,
 			String versionName, HttpServletRequest request,
-			HttpServletResponse response, String woolUserId) throws HttpException, Exception {
+			HttpServletResponse response, String woolUserId, Application application) throws HttpException, Exception {
 		ProtocolVersion version;
 		try {
 			version = ProtocolVersion.forVersionName(versionName);
@@ -67,13 +68,13 @@ public class QueryRunner {
 					versionName);
 		}
 		try {
-			String user = null;
+			UserCredentials user = null;
 			if (request != null)
-				user = validateToken(request);
+				user = validateToken(request, application);
 			if(woolUserId.equals("") // If the request was made for "this" (authenticated) user
-				|| (woolUserId.equals(user)) // If the request was made for a specific woolUserId that happens to be "this" (authenticated) user
-				|| UserFile.findUser(user).getRole().equals(UserCredentials.USER_ROLE_ADMIN)) { // If "this" user is an admin
-				return query.runQuery(version, user);
+				|| (woolUserId.equals(user.getUsername())) // If the request was made for a specific woolUserId that happens to be "this" (authenticated) user
+				|| user.getRole().equals(UserCredentials.USER_ROLE_ADMIN)) { // If "this" user is an admin
+				return query.runQuery(version, user.getUsername());
 			} else {
 				throw new UnauthorizedException("Attempting to run query for woolUserId '"+woolUserId+"', but currently logged in user '"+user+"' is not an admin.");
 			}
@@ -95,18 +96,19 @@ public class QueryRunner {
 	 * token is specified, or the token is empty or invalid, it will throw an
 	 * HttpException with 401 Unauthorized. Otherwise, it will return the username
 	 * for the authenticated user.
-	 * 
-	 * @param request the HTTP request
+	 *
+	 * @param request     the HTTP request
+	 * @param application
 	 * @return the authenticated user
 	 * @throws UnauthorizedException if no token is specified, or the token is
-	 * empty or invalid
-	 * @throws DatabaseException if a database error occurs
+	 *                               empty or invalid
+	 * @throws DatabaseException     if a database error occurs
 	 */
-	private static String validateToken(HttpServletRequest request)
+	private static UserCredentials validateToken(HttpServletRequest request, Application application)
 			throws UnauthorizedException, DatabaseException {
 		String token = request.getHeader("X-Auth-Token");
 		if (token != null)
-			return validateDefaultToken(token);
+			return validateDefaultToken(token, application);
 		throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_NOT_FOUND,
 				"Authentication token not found");
 	}
@@ -115,13 +117,14 @@ public class QueryRunner {
 	 * Validates a token from request header X-Auth-Token. If it's empty or
 	 * invalid, it will throw an HttpException with 401 Unauthorized. Otherwise
 	 * it will return the user object for the authenticated user.
-	 * 
-	 * @param token the authentication token (not null)
+	 *
+	 * @param token       the authentication token (not null)
+	 * @param application
 	 * @return the authenticated user
 	 * @throws UnauthorizedException if the token is empty or invalid
-	 * @throws DatabaseException if a database error occurs
+	 * @throws DatabaseException     if a database error occurs
 	 */
-	private static String validateDefaultToken(String token)
+	private static UserCredentials validateDefaultToken(String token, Application application)
 			throws UnauthorizedException, DatabaseException {
 		Logger logger = AppComponents.getLogger(
 				QueryRunner.class.getSimpleName());
@@ -142,7 +145,8 @@ public class QueryRunner {
 			throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_INVALID,
 					"Authentication token invalid");
 		}
-		UserCredentials user = UserFile.findUser(details.getSubject());
+
+		UserCredentials user = application.getServiceManager().getUserCredentialsForUsername(details.getSubject());
 		long now = System.currentTimeMillis();
 		if (user == null) {
 			logger.info("Invalid authentication token: user not found: " +
@@ -155,6 +159,6 @@ public class QueryRunner {
 			throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_EXPIRED,
 					"Authentication token expired");
 		}
-		return user.getUsername();
+		return user;
 	}
 }
