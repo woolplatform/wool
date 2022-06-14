@@ -25,7 +25,7 @@ configurations {
 }
 
 dependencies {
-	implementation 'eu.woolplatform:wool-core:2.2.6' // Use the maven central distribution of WOOL Core.
+	implementation 'eu.woolplatform:wool-core:2.3.1' // Use the maven central distribution of WOOL Core.
 	// implementation project(':WoolCore')           // Use the local WOOL Core project source.
 	// implementation project(':WoolUtils')          // Also include WOOL Utils from project source.
 	implementation 'io.jsonwebtoken:jjwt:0.9.1'
