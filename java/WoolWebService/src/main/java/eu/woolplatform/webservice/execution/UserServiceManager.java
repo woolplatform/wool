@@ -24,6 +24,8 @@ package eu.woolplatform.webservice.execution;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.webservice.UserCredentials;
+import eu.woolplatform.webservice.UserFile;
 import eu.woolplatform.webservice.exception.HttpFieldError;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
@@ -59,6 +61,7 @@ public class UserServiceManager {
 	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 	private WoolProject woolProject;
 	private List<UserService> activeUserServices = new ArrayList<>();
+	private List<UserCredentials> userCredentials;
 
 	// ----- Constructors
 	
@@ -96,6 +99,17 @@ public class UserServiceManager {
 			throw new RuntimeException("Failed to load all dialogues.");
 		woolProject = readResult.getProject();
 		appConfig.setWoolProject(woolProject);
+
+		// Read all UserCredentials from users.xml
+		try {
+			userCredentials = UserFile.read();
+		} catch (
+				ParseException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
 		long endMS = System.currentTimeMillis();
 		long procTime = endMS - startMS;
 		logger.info("UserServiceManager initialized in "+procTime+"ms.");
@@ -105,6 +119,27 @@ public class UserServiceManager {
 	
 	public List<WoolDialogueDescription> getDialogueDescriptions() {
 		return new ArrayList<>(woolProject.getDialogues().keySet());
+	}
+
+	/**
+	 * Returns the list of {@link UserCredentials} available for this {@link UserServiceManager}.
+	 * @return the list of {@link UserCredentials} available for this {@link UserServiceManager}.
+	 */
+	public List<UserCredentials> getUserCredentials() {
+		return userCredentials;
+	}
+
+	/**
+	 * Returns the {@link UserCredentials} object associated with the given {@code username}, or {@code null}
+	 * if no such user is known.
+	 * @param username the username of the user to look for.
+	 * @return the {@link UserCredentials} object or {@code null}.
+	 */
+	public UserCredentials getUserCredentialsForUsername(String username) {
+		for(UserCredentials uc : userCredentials) {
+			if(uc.getUsername().equals(username)) return uc;
+		}
+		return null;
 	}
 	
 	// ---------- Service Management:

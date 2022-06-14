@@ -31,6 +31,7 @@ import eu.woolplatform.webservice.exception.*;
 import io.swagger.annotations.Api;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
@@ -45,6 +46,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/v{version}/auth")
 public class AuthController {
+	@Autowired
+	Application application;
+
 	private static final Object AUTH_LOCK = new Object();
 
 	@RequestMapping(value="/login", method= RequestMethod.POST, consumes={
@@ -60,7 +64,7 @@ public class AuthController {
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(
 					(version, user) -> doLogin(request, loginParams),
-					versionName, null, response, "");
+					versionName, null, response, "", application);
 		}
 	}
 
