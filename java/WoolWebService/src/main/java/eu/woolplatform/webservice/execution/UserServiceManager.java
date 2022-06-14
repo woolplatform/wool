@@ -1,5 +1,27 @@
-package eu.woolplatform.webservice.dialogue;
+/*
+ * Copyright 2019-2022 WOOL Foundation.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+package eu.woolplatform.webservice.execution;
 
+import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.webservice.exception.HttpFieldError;
@@ -25,30 +47,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A {@link ServiceManager} manages one or more services, each corresponding to a specific userId-password combination.
- * 
+ * The WOOL Web Service maintains one instance of a {@link UserServiceManager}. This
+ * class keeps track of the different active {@link UserService} instances that are
+ * needed to serve individual user's of the WOOL Web Service.
+ *
  * @author Harm op den Akker
  * @author Tessa Beinema
- *
  */
-public class ServiceManager {
-	private final Logger logger = getLogger(ServiceManager.class);
+public class UserServiceManager {
 
+	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 	private WoolProject woolProject;
-		
 	private List<UserService> activeUserServices = new ArrayList<>();
 
-	// ---------- Constructors:
+	// ----- Constructors
 	
 	/**
-	 * Creates an instance of an {@link ServiceManager}, that loads in a
+	 * Creates an instance of a {@link UserServiceManager}, that loads in a
 	 * predefined list of Wool dialogues.
 	 */
-	public ServiceManager(WoolFileLoader woolFileLoader) {
-		logger.info("Initializing ServiceManager.");
+	public UserServiceManager(WoolFileLoader woolFileLoader) {
+		logger.info("Initializing UserServiceManager.");
 		long startMS = System.currentTimeMillis();
 		
-		ServiceManagerConfig appConfig = ServiceManagerConfig.getInstance();
+		UserServiceFactory appConfig = UserServiceFactory.getInstance();
 		WoolProjectParser woolProjectParser = new WoolProjectParser(
 				woolFileLoader);
 		WoolProjectParserResult readResult;
@@ -71,33 +93,12 @@ public class ServiceManager {
 			}
 		}
 		if (!readResult.getParseErrors().isEmpty())
-			throw new RuntimeException("Failed to load all dialogues");
+			throw new RuntimeException("Failed to load all dialogues.");
 		woolProject = readResult.getProject();
 		appConfig.setWoolProject(woolProject);
 		long endMS = System.currentTimeMillis();
 		long procTime = endMS - startMS;
-		logger.info("ServiceManager initialized in "+procTime+"ms.");
-	}
-
-	// ---------- Logging
-
-	private static ILoggerFactory loggerFactory =
-			LoggerFactory.getILoggerFactory();
-
-	public static Logger getLogger(Class<?> clazz) {
-		return loggerFactory.getLogger(clazz.getName());
-	}
-
-	public static Logger getLogger(String name) {
-		return loggerFactory.getLogger(name);
-	}
-
-	public static ILoggerFactory getLoggerFactory() {
-		return loggerFactory;
-	}
-
-	public static void setLoggerFactory(ILoggerFactory loggerFactory) {
-		ServiceManager.loggerFactory = loggerFactory;
+		logger.info("UserServiceManager initialized in "+procTime+"ms.");
 	}
 	
 	// ---------- Getters:
@@ -126,7 +127,7 @@ public class ServiceManager {
 		logger.info("No active UserService for userId '"+userId+"' creating UserService instance.");
 		
 		// Initialize new userService
-		ServiceManagerConfig appConfig = ServiceManagerConfig.getInstance();
+		UserServiceFactory appConfig = UserServiceFactory.getInstance();
 		UserService newUserService;
 		try {
 			newUserService = appConfig.createUserService(userId, this);
@@ -143,7 +144,7 @@ public class ServiceManager {
 	
 	/**
 	 * Removes the given {@link UserService} from the set of active {@link UserService}s in
-	 * this {@link ServiceManager}.
+	 * this {@link UserServiceManager}.
 	 * @param userService the {@link UserService} to remove.
 	 * @return {@code true} if the given was successfully removed, {@code false} if
 	 * it was not present on the list of active {@link UserService}s in the first place.

@@ -1,3 +1,24 @@
+/*
+ * Copyright 2019-2022 WOOL Foundation.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
 package eu.woolplatform.webservice.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -8,8 +29,8 @@ import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
 import eu.woolplatform.webservice.Application;
 import eu.woolplatform.webservice.QueryRunner;
-import eu.woolplatform.webservice.dialogue.ServiceManager;
-import eu.woolplatform.webservice.dialogue.UserService;
+import eu.woolplatform.webservice.execution.UserServiceManager;
+import eu.woolplatform.webservice.execution.UserService;
 import eu.woolplatform.webservice.exception.BadRequestException;
 import eu.woolplatform.webservice.exception.HttpException;
 import eu.woolplatform.webservice.exception.HttpFieldError;
@@ -39,6 +60,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for the /dialogue/... end-points of the WOOL Web Service
+ *
+ * @author Dennis Hofs (RRD)
+ * @author Harm op den Akker
+ */
 @RestController
 @RequestMapping("/v{version}/dialogue")
 public class DialogueController {
@@ -81,17 +108,27 @@ public class DialogueController {
 		}
 	}
 
+	/**
+	 * Executes a call to the /start-dialogue/ end-point.
+	 * @param woolUserId
+	 * @param dialogueName
+	 * @param language
+	 * @param timeStr
+	 * @param timezone
+	 * @return
+	 * @throws HttpException
+	 * @throws DatabaseException
+	 * @throws IOException
+	 */
 	private DialogueMessage doStartDialogue(
 			String woolUserId, String dialogueName, String language, String timeStr,
-			String timezone) throws HttpException, DatabaseException,
-			IOException {
+			String timezone) throws HttpException, DatabaseException, IOException {
 		DateTime time = parseTime(timeStr, timezone);
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
 		ExecuteNodeResult node;
 		try {
-			node = userService.startDialogue(dialogueName, null, language,
-					time);
+			node = userService.startDialogue(dialogueName, null, language, time);
 			return DialogueMessageFactory.generateDialogueMessage(node);
 		} catch (WoolException e) {
 			throw createHttpException(e);
@@ -327,7 +364,7 @@ public class DialogueController {
 	public static DateTime parseTime(String timeStr, String timezone)
 			throws BadRequestException {
 		List<HttpFieldError> errors = new ArrayList<>();
-		DateTime time = ServiceManager.parseTimeParameters(timeStr, timezone,
+		DateTime time = UserServiceManager.parseTimeParameters(timeStr, timezone,
 				errors);
 		if (!errors.isEmpty())
 			throw BadRequestException.withInvalidInput(errors);

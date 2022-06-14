@@ -5,7 +5,7 @@
 	xmlns="http://java.sun.com/xml/ns/j2ee"
 	version="2.5"
 >
-	<display-name>WOOL External Variable Service Dummy 0.1.0</display-name>
+	<display-name>WOOL External Variable Service Dummy 1.0.0</display-name>
 	<description>
 		This web application provides a dummy implementation of an External Variable Service.
 	</description>

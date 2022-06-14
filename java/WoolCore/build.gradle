@@ -64,19 +64,19 @@ publishing {
 		mavenJava(MavenPublication) {
 			artifactId = archivesBaseName
 			from components.java
-			
+
 			pom {
 				name = 'WOOL Dialogue Platform'
 				description = 'WOOL is a simple, powerful dialogue platform for creating virtual agent conversations.'
 				url = 'https://www.woolplatform.eu/'
-				
+
 				licenses {
 					license {
 						name = 'MIT License'
 						url = 'https://opensource.org/licenses/MIT'
 					}
 				}
-				
+
 				developers {
 					developer {
 						id = 'bvanschooten'
@@ -97,9 +97,9 @@ publishing {
 						id = 'tbeinema'
 						name = 'Tessa Beinema'
 						email = 't.c.beinema@utwente.nl'
-					}					
+					}
 				}
-				
+
 				scm {
 					connection = 'scm:git:git://github.com/woolplatform/wool.git'
 					developerConnection = 'scm:git:ssh://github.com:woolplatform/wool.git'

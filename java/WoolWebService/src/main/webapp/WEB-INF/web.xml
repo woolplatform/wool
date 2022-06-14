@@ -5,7 +5,7 @@
 	xmlns="http://java.sun.com/xml/ns/j2ee"
 	version="2.5"
 >
-	<display-name>WOOL Web Service 1.1.1</display-name>
+	<display-name>WOOL Web Service 1.2.0</display-name>
 	<description>
 		This web application provides the WOOL Web Service.
 	</description>
