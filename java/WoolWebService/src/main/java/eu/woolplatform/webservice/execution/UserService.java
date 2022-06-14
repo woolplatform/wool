@@ -278,7 +278,7 @@ public class UserService {
 				varsToUpdate.add(new WoolVariableResponse(variableName,"",0l));
 			}
 
-			String retrieveUpdatesUrl = config.getExternalVariableServiceURL() + "/v0.1.0/variables/retrieve-updates/"+getUserId();
+			String retrieveUpdatesUrl = config.getExternalVariableServiceURL() + "/v0.1.0/variables/retrieve-updates/"+getUserId(); //TODO: Make API Version configurable.
 			logger.info("Retrieve updates URL: "+retrieveUpdatesUrl);
 			WoolVariableResponseList woolVariablesToUpdate = new WoolVariableResponseList(varsToUpdate);
 
