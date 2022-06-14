@@ -13,7 +13,7 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '0.2.0' // run updateVersion after changing this property
+version = '1.0.0' // run updateVersion after changing this property
 sourceCompatibility = 11
 targetCompatibility = 11
 archivesBaseName = 'wool-externalvariableservice'

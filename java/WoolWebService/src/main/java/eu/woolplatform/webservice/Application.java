@@ -104,6 +104,7 @@ ApplicationListener<ContextClosedEvent> {
 		logger.info("External Variable Service Enabled: "+config.getExternalVariableServiceEnabled());
 		if(config.getExternalVariableServiceEnabled()) {
 			logger.info("External Variable Service URL: "+config.getExternalVariableServiceURL());
+			logger.info("External Variable Service API Version: "+config.getExternalVariableServiceAPIVersion());
 		}
 
 	}

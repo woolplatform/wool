@@ -38,9 +38,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -263,22 +260,34 @@ public class UserService {
 	/**
 	 * This function ensures that for all WOOL Variables in the given {@link Set}, of
 	 * {@code variableNames} an up-to-date value is loaded into the {@link WoolVariableStore}
-	 * for this user represented by this {@link UserService}.
+	 * for this user represented by this {@link UserService} through an external WOOL Variable Service
+	 * if, and only if one has been configured. If {@code config.getExternalVariableServiceEnabled() == false}
+	 * this method will cause no changes to occur.
 	 * @param variableNames the set of WOOL Variables that need to have their values updated.
 	 */
-	public void updateVariables(Set<String> variableNames) {
-		logger.info("Loading latest values for WOOL Variables: "+variableNames);
+	public void updateVariablesFromExternalService(Set<String> variableNames) {
+		logger.info("Attempting to update values from external service for the following set of variables: "+variableNames);
+
 		Configuration config = AppComponents.get(Configuration.class);
-		if(config.getExternalVariableServiceEnabled()) {
+
+		if(!config.getExternalVariableServiceEnabled()) {
+			logger.info("No external WOOL Variable Service has been configured, no variables have been updated.");
+		} else {
 			logger.info("An external WOOL Variable Service is configured to be enabled, with parameters:");
 			logger.info("URL: "+config.getExternalVariableServiceURL());
+			logger.info("API Version: "+config.getExternalVariableServiceAPIVersion());
 
 			List<WoolVariableResponse> varsToUpdate = new ArrayList<>();
 			for(String variableName : variableNames) {
 				varsToUpdate.add(new WoolVariableResponse(variableName,"",0l));
 			}
 
-			String retrieveUpdatesUrl = config.getExternalVariableServiceURL() + "/v0.1.0/variables/retrieve-updates/"+getUserId(); //TODO: Make API Version configurable.
+			// Construct the api end-point to call for retrieving variable updates
+			String retrieveUpdatesUrl = config.getExternalVariableServiceURL()
+					+ "/v"+config.getExternalVariableServiceAPIVersion()
+					+ "/variables/retrieve-updates/"
+					+ getUserId();
+
 			logger.info("Retrieve updates URL: "+retrieveUpdatesUrl);
 			WoolVariableResponseList woolVariablesToUpdate = new WoolVariableResponseList(varsToUpdate);
 
@@ -306,8 +315,6 @@ public class UserService {
 
 			//else
 			//	logger.info("Received null as response.");
-		} else {
-			logger.info("No external WOOL Variable Service has been configured, no variables updated.");
 		}
 	}
 

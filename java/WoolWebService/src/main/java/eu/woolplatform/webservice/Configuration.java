@@ -30,6 +30,7 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public static final String DATA_DIR = "dataDir";
 	public static final String EXTERNAL_VARIABLE_SERVICE_ENABLED = "externalVariableServiceEnabled";
 	public static final String EXTERNAL_VARIABLE_SERVICE_URL = "externalVariableServiceUrl";
+	public static final String EXTERNAL_VARIABLE_SERVICE_API_VERSION = "externalVariableServiceAPIVersion";
 	public static final String EXTERNAL_VARIABLE_SERVICE_API_TOKEN = "externalVariableServiceApiToken";
 
 	private static final Object LOCK = new Object();
@@ -98,6 +99,18 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public String getExternalVariableServiceURL() {
 		if(containsKey(EXTERNAL_VARIABLE_SERVICE_URL)) {
 			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_URL);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	/**
+	 * Returns the API Version of the External Variable Service as a String, or an empty string if incorrectly configured.
+	 * @return the API Version of the External Variable Service as a String, or an empty string if incorrectly configured.
+	 */
+	public String getExternalVariableServiceAPIVersion() {
+		if(containsKey(EXTERNAL_VARIABLE_SERVICE_API_VERSION)) {
+			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_API_VERSION);
 			if(returnValue != null) return returnValue;
 		}
 		return "";
