@@ -279,7 +279,15 @@ public class UserService {
 
 			List<WoolVariableResponse> varsToUpdate = new ArrayList<>();
 			for(String variableName : variableNames) {
-				varsToUpdate.add(new WoolVariableResponse(variableName,"",0l));
+				Object variableValue = variableStore.getValue(variableName);
+				String variableValueString;
+				if(variableValue != null) {
+					logger.info("An existing value is known for variable '"+variableName+"' for User '"+userId+"': "+variableValue);
+					variableValueString = variableValue.toString();
+				} else {
+					variableValueString = "";
+				}
+				varsToUpdate.add(new WoolVariableResponse(variableName,variableValueString,0l));
 			}
 
 			// Construct the api end-point to call for retrieving variable updates
@@ -289,9 +297,6 @@ public class UserService {
 					+ getUserId();
 
 			logger.info("Retrieve updates URL: "+retrieveUpdatesUrl);
-			WoolVariableResponseList woolVariablesToUpdate = new WoolVariableResponseList(varsToUpdate);
-
-			logger.info(woolVariablesToUpdate.toString());
 
 			RestTemplate restTemplate = new RestTemplate();
 
@@ -309,12 +314,14 @@ public class UserService {
 					logger.info("Received response from WOOL Variable Service: the following variables have updated values:");
 					for(WoolVariableResponse wvr : woolVariableResponses) {
 						logger.info(wvr.toString());
+						String varName = wvr.getName();
+						String varValue = wvr.getValue();
+						Long varUpdated = wvr.getLastUpdated();
+
+						variableStore.setValue(varName,varValue,true,new DateTime(varUpdated));
 					}
 				}
 			}
-
-			//else
-			//	logger.info("Received null as response.");
 		}
 	}
 

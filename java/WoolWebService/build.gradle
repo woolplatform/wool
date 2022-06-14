@@ -29,7 +29,7 @@ dependencies {
 	// implementation project(':WoolUtils') // Also include WOOL Utils from project source, OR:
 
 	// https://mvnrepository.com/artifact/eu.woolplatform/wool-core
-	implementation group: 'eu.woolplatform', name: 'wool-core', version: '2.2.6'	// Use the maven central distribution of WOOL Core.
+	implementation group: 'eu.woolplatform', name: 'wool-core', version: '2.3.1'	// Use the maven central distribution of WOOL Core.
 
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
 	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'

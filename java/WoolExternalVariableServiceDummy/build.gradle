@@ -23,8 +23,10 @@ configurations {
 }
 
 dependencies {
+	// implementation project(':WoolUtils') // Include WOOL Utils from project source
+
 	// https://mvnrepository.com/artifact/eu.woolplatform/wool-utils
-	implementation group: 'eu.woolplatform', name: 'wool-utils', version: '2.2.6'
+	implementation group: 'eu.woolplatform', name: 'wool-utils', version: '2.3.1' // Use the maven central distribution of WOOL Utils.
 
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
 	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
