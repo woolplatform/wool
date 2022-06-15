@@ -71,9 +71,13 @@ public class QueryRunner {
 			UserCredentials user = null;
 			if (request != null)
 				user = validateToken(request, application);
-			if(woolUserId.equals("") // If the request was made for "this" (authenticated) user
-				|| (woolUserId.equals(user.getUsername())) // If the request was made for a specific woolUserId that happens to be "this" (authenticated) user
-				|| user.getRole().equals(UserCredentials.USER_ROLE_ADMIN)) { // If "this" user is an admin
+			if(woolUserId.equals("")) { // If the request was made for "this" (authenticated) user
+				String queryUserName = "";
+				if(user != null) queryUserName = user.getUsername();
+				return query.runQuery(version, queryUserName);
+			} else if((user != null) && woolUserId.equals(user.getUsername())) { // If the request was made for a specific woolUserId that happens to be "this" (authenticated) user
+				return query.runQuery(version, user.getUsername());
+			} else if((user != null) && (user.getRole().equals(UserCredentials.USER_ROLE_ADMIN))) { // If "this" user is an admin
 				return query.runQuery(version, user.getUsername());
 			} else {
 				throw new UnauthorizedException("Attempting to run query for woolUserId '"+woolUserId+"', but currently logged in user '"+user+"' is not an admin.");
