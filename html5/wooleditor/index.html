@@ -34,6 +34,7 @@
 	<link rel="stylesheet" href="../node_modules/jstree/dist/themes/default/style.min.css" />
 
 	<!-- various models / classes -->
+	<script type="text/javascript" src="../lib/jstree/conditionalselect.js"></script>
 	<script type="text/javascript" src="../lib/debug.js"></script>
 	<script type="text/javascript" src="../lib/utils.js"></script>
 	<script type="text/javascript" src="../lib/filesystem.js"></script>
@@ -651,6 +652,7 @@
 				<div style='clear:both;'>
 					<span class="app-filename" data-bind="text:app.filename"></span>
 					<span class="app-nrofnodes" data-bind="text:app.numberOfNodes()"></span>
+					<span class="app-crlfformat" data-bind="text:app.crlfFormat()"></span>
 				</div>
 			</div>
 
@@ -681,7 +683,7 @@
 		<script type="text/javascript">
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
-			var app = new App("Wool Editor", "1.10.7",
+			var app = new App("Wool Editor", "1.10.8",
 				filePath ? filePath : "unnamed");
 			app.run();
 			if (app.isNwjs) {

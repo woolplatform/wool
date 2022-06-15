@@ -146,9 +146,17 @@ a:hover { color: #000;}
 	content: ".wool";
 }
 
+.app-crlfformat{
+	font-weight: bold;
+	font-size: 1.2em;
+	margin-top: 8px;
+	margin-left: 15px;
+	float:left;
+}
+
 .app-nrofnodes{
 	font-weight: bold;
-	font-size: 1.5em;
+	font-size: 1.2em;
 	margin-top: 8px;
 	margin-left: 15px;
 	float:left;

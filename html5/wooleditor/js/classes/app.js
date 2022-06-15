@@ -27,6 +27,7 @@ var App = function(name, version, filename) {
 	//this.appleCmdKey = false;
 	this.editingSaveHistoryTimeout = null;
 	this.dirty = false;
+	this.woolFileHasCR = ko.observable(false); // true -> crlf [dos], false -> cr [unix]
 	this.focusedNodeIdx = -1;
 	this.zoomSpeed = .005;
 	this.zoomLimitMin = .05;
@@ -62,6 +63,10 @@ var App = function(name, version, filename) {
 	this.numberOfNodes = function() {
 		var nr = self.nodes().length;
 		return "("+nr+" node"+(nr==1 ? "" : "s")+")";
+	}
+
+	this.crlfFormat = function() {
+		return self.woolFileHasCR() ? "[dos]" : "[unix]";
 	}
 
 	this.closeEditors = function() {

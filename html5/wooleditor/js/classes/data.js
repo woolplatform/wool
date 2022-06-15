@@ -140,24 +140,39 @@ var data =
 		*/
 	},
 
+
+	checkHasCR: function(content) {
+		var content_nolf = content.replaceAll("\n","");
+		var content_nocr = content.replaceAll("\r","");
+		var nr_lf = content.length - content_nocr.length;
+		var nr_cr = content.length - content_nolf.length;
+		if (nr_lf == 0) return false;
+		// file has CR when at least half the eols have \r
+		//console.log("##########"+nr_lf+"/"+nr_cr);
+		return nr_cr > nr_lf*0.5;
+	},
+
+	// load data into app, given source and file type
 	loadData: function(content, type, clearNodes, doNotCenter) {
 		// clear all content
 		if (clearNodes)
 			app.nodes.removeAll();
 
+		// data is represented as an array of objects. Content of objects
+		// depends on file type
 		var objects = [];
 		var i = 0;
 		var warnings=[];
-		if (type == FILETYPE.JSON)
-		{
+		if (type == FILETYPE.JSON) {
 			content = JSON.parse(content);
 			for (i = 0; i < content.length; i ++)
 				objects.push(content[i]);
-		}
+		} 
 		else if (type == FILETYPE.YARNTEXT
 		||       type == FILETYPE.WOOL) {
+			app.woolFileHasCR(data.checkHasCR(content));
+			console.log("woolFIlehasCR =  "+app.woolFileHasCR());
 			var convertSpeaker = type == FILETYPE.YARNTEXT;
-			console.log("YARN: "+convertSpeaker);
 			var lines = content.split("\n");
 			var obj = null;
 			var index  = 0;
@@ -192,51 +207,42 @@ var data =
 					// XXX do proper key:value parsing. Currently, there can
 					// be a string before the key, and the value offset does
 					// not match the ending position of the key
-					if (lines[i].indexOf("title:") > -1)
-					{
+					if (lines[i].indexOf("title:") > -1) {
 						if (obj == null)
 							obj = {};
 						obj.title = lines[i].substr(7, lines[i].length-7);
 					}
-					else if (lines[i].indexOf("position:") > -1)
-					{
+					else if (lines[i].indexOf("position:") > -1) {
 						if (obj == null)
 							obj = {}
 						var xy = lines[i].substr(9, lines[i].length-9).split(',');
 						obj.position = { x: Number(xy[0].trim()), y: Number(xy[1].trim()) }
 					}
-					else if (lines[i].indexOf("colorID:") > -1)
-					{
+					else if (lines[i].indexOf("colorID:") > -1) {
 						if (obj == null)
 							obj = {}
 						obj.colorID = Number(lines[i].substr(9, lines[i].length-9).trim());
 					}
-					else if (lines[i].indexOf("tags:") > -1)
-					{
+					else if (lines[i].indexOf("tags:") > -1) {
 						if (obj == null)
 							obj = {}
 						obj.tags = lines[i].substr(6, lines[i].length-6);
 					}
-					else if (lines[i].indexOf("speaker:") > -1)
-					{
+					else if (lines[i].indexOf("speaker:") > -1) {
 						if (obj == null)
 							obj = {}
 						obj.speaker = lines[i].substr(9, lines[i].length-9);
-					}
-					else if (lines[i].trim() == "---")
-					{
+					} else if (lines[i].trim() == "---") {
 						readingBody = true;
 						obj.body = "";
 					}
 				}
 			}
-			if (obj != null)
-			{
+			if (obj != null) {
 				objects.push(obj);
 			}
 		}
-		else if (type == FILETYPE.TWEE || type == FILETYPE.TWEE2)
-		{
+		else if (type == FILETYPE.TWEE || type == FILETYPE.TWEE2) {
 			// XXX not updated, remove support?
 			var lines = content.split("\n");
 			var obj = null;
@@ -309,8 +315,7 @@ var data =
 			if (obj != null)
 				objects.push(obj);
 		}
-		else if (type == FILETYPE.XML)
-		{
+		else if (type == FILETYPE.XML) {
 			var oParser = new DOMParser();
 			var xml = oParser.parseFromString(content, "text/xml");
 			content = EditorUtils.xmlToObject(xml);
@@ -319,11 +324,10 @@ var data =
 				for (i = 0; i < content.length; i ++)
 					objects.push(content[i]);
 		}
-
+		// Now, store objects into app
 		var avgX = 0, avgY = 0;
 		var numAvg = 0;
-		for (var i = 0; i < objects.length; i ++)
-		{
+		for (var i = 0; i < objects.length; i ++) {
 			var node = new Node();
 			app.nodes.push(node);
 			
@@ -378,17 +382,19 @@ var data =
 		if (!source) return "";
 		// fix problems with removal of trailing white spaces at commits
 		source = source.replace(/\s*$/gm, "");
+		// remove cr
+		var source = source.replaceAll("\r","");
 		//source = source.replace(/^title:\s*$/gm, "title:");
 		//source = source.replace(/^speaker:\s*$/gm, "speaker:");
 		//source = source.replace(/^tags:\s*$/gm, "tags:");
 		return source;
 	},
 
+	// reconstruct content of file from app data given file type
 	getSaveData: function(type,node) {
 		var output = "";
 		var content = [];
 		var nodes = node ? [ node ] : app.nodes();
-
 		for (var i = 0; i < nodes.length; i ++) {
 			content.push({
 				"title": nodes[i].title(), 
@@ -446,8 +452,7 @@ var data =
 			//output.push({ term: "Finish", /*context: "UIText",*/ });
 			output = JSON.stringify(output,null,4);
 		} else if (type == FILETYPE.WOOL) {
-			for (i = 0; i < content.length; i++)
-			{
+			for (i = 0; i < content.length; i++) {
 				output += "title: " + content[i].title + "\n";
 				output += "tags: " + content[i].tags + "\n";
 				output += "speaker: " + content[i].speaker + "\n";
@@ -461,6 +466,12 @@ var data =
 					output += "\n";
 				}
 				output += "===\n";
+			}
+			if (app.woolFileHasCR()) {
+				//console.log("Saving Wool file as CRLF");
+				// remove any remaining \r's
+				output = output.replaceAll("\r","");
+				output = output.replaceAll("\n","\r\n");
 			}
 		}
 		else if (type == FILETYPE.TWEE)

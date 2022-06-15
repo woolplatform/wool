@@ -7,6 +7,7 @@ function FileManager(dirtreeUpdatedCallback) {
 	// { <path>: { type: "FILE"/"DIR", name: <string>, content: [] }
 	this.dirtree = { };
 	this.dirtreeUpdatedCallback = dirtreeUpdatedCallback;
+	this.lastDeselected = null;
 }
 
 FileManager.prototype.getRoot = function() {
@@ -99,6 +100,7 @@ FileManager.prototype.updateDirTree  = function() {
 			$("#filetree").jstree({
 				//"core": { "data": jstdata },
 				"core": {
+					"multiple": false,
 			        //'check_callback' : true,
 			        'check_callback' : function (operation, node, node_parent, node_position, more) {
 						// operation can be 'create_node', 'rename_node', 'delete_node', 'move_node' or 'copy_node'
@@ -124,22 +126,63 @@ FileManager.prototype.updateDirTree  = function() {
 					"select_node": false,
 					"items": self.createContextMenu
 				},
-				"plugins" : [ "types", "contextmenu", "state", "unique",
-				"sort", "dnd" ]
+				// conditionalselect is called by select_node, if it returns
+				// false then select_node operation is aborted.
+				// Before select_node is called, deselect_all is called.
+				// What we do, we store the deselected node to be re-selected
+				// when we want to undo the deselection.
+				"conditionalselect": function(node,isUserCall) {
+					if (node.icon == "jstreefile") {
+						// check if this is called by us rather than jstree
+						if (isUserCall === true) return true;
+						var filename = node.id;
+						if (filename.toLowerCase().indexOf(".wool") > -1) {
+							// file is wool file
+							if (filename.replace(/[.]wool/i,"")
+							!= app.filename()) {
+								// file is different from loaded file
+								var loaded = self.loadWoolFile(filename);
+								if (loaded) return true; // else load canceled
+							} // else file already loaded
+						} // else not a wool file
+						// If we end up here, we cancel the selection.
+						// Undo deselection
+						if (self.lastDeselected
+						&& self.lastDeselected.length == 1) {
+							$('#filetree').jstree(true).select_node(
+								self.lastDeselected[0],true,false,null,true);
+						}
+						// Cancel selection
+						return false;
+					}
+				},
+				"plugins" : [
+					"types", "contextmenu", "state", "unique", "sort", "dnd",
+					// homemade plugins
+					"conditionalselect"
+				]
 			}).on("ready.jstree", function(e,nodedata) {
-			//$("#filetree").jstree(true).set_type("/file1","demo");
-			//alert($("#filetree").jstree(true).get_type("/file1"));
-				$("#filetree").on("select_node.jstree",
+				/*$("#filetree").on("select_node.jstree",
 				function(e,nodedata) {
+					console.log("CONDFITIONALSELECT#$$$$$$$$$$$$$$$$$$$");
 					var item = nodedata.node;
 					if (nodedata.node.icon == "jstreefile") {
 						var filename = nodedata.node.id;
 						if (filename.toLowerCase().indexOf(".wool")
 						> -1) {
-							self.loadWoolFile(filename);
+							return self.loadWoolFile(filename);
 						}
 					}
+				});*/
+				$("#filetree").on("deselect_all.jstree",
+				function(e,nodedata) {
+					self.lastDeselected = nodedata.node;
+					console.log("JSTree deselect node "+self.lastDeselected);
 				});
+				// select the currently loaded file
+				// XXX we also need to do this when we load a project
+				$('#filetree').jstree(true).select_node(
+					app.filename()+".wool",true,false,null,true);
 			}).on("rename_node.jstree", function(e,nodedata) {
 				var id = nodedata.node.id;
 				var oldname = nodedata.old;
@@ -516,9 +559,10 @@ FileManager.prototype.loadWoolFile = function(filename) {
 	if (app.waitSpinnerShowing) return; // do nothing until file loaded
 	if (!app.areChangesSaved()) {
 		var confirm = window.confirm("Changes may not have been saved, proceed?");
-		if (!confirm) return;
+		if (!confirm) return false;
 	}
 	data.openFile(null, filename, null); //[ {files: [filename]} ]);
+	return true;
 }
 
 FileManager.prototype.sendSelectBaseDir = function(elem) {
