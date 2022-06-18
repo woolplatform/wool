@@ -28,7 +28,6 @@ import eu.woolplatform.webservice.*;
 import eu.woolplatform.webservice.controller.model.LoginParams;
 import eu.woolplatform.webservice.controller.model.LoginResult;
 import eu.woolplatform.webservice.exception.*;
-import io.swagger.annotations.Api;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +59,7 @@ public class AuthController {
 			@ApiIgnore
 			String versionName,
 			@RequestBody
-			LoginParams loginParams) throws HttpException, Exception {
+			LoginParams loginParams) throws Exception {
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(
 					(version, user) -> doLogin(request, loginParams),
@@ -69,7 +68,7 @@ public class AuthController {
 	}
 
 	private LoginResult doLogin(HttpServletRequest request,
-			LoginParams loginParams) throws HttpException, Exception {
+			LoginParams loginParams) throws Exception {
 		Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 		validateForbiddenQueryParams(request, "user", "password");
 		String user = loginParams.getUser();
@@ -92,21 +91,21 @@ public class AuthController {
 			logger.info("Failed login attempt: " + fieldErrors);
 			throw BadRequestException.withInvalidInput(fieldErrors);
 		}
-		UserCredentials creds = UserFile.findUser(user);
+		UserCredentials userCredentials = UserFile.findUser(user);
 		String invalidError = "Username or password is invalid";
-		if (creds == null) {
+		if (userCredentials == null) {
 			logger.info("Failed login attempt for user {}: user unknown",
 					user);
 			throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS,
 					invalidError);
 		}
-		if (!creds.getPassword().equals(password)) {
+		if (!userCredentials.getPassword().equals(password)) {
 			logger.info("Failed login attempt for user {}: invalid credentials",
 					user);
 			throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS,
 					invalidError);
 		}
-		logger.info("User {} logged in", creds.getUsername());
+		logger.info("User {} logged in", userCredentials.getUsername());
 		Date expiration = null;
 		DateTime now = new DateTime();
 		if (loginParams.getTokenExpiration() != null) {
@@ -115,7 +114,7 @@ public class AuthController {
 		}
 		AuthDetails details = new AuthDetails(user, now.toDate(), expiration);
 		String token = AuthToken.createToken(details);
-		return new LoginResult(creds.getUsername(), token);
+		return new LoginResult(userCredentials.getUsername(), token);
 	}
 
 	private void validateForbiddenQueryParams(HttpServletRequest request,
@@ -124,8 +123,7 @@ public class AuthController {
 			return;
 		Map<String,String> params;
 		try {
-			params = URLParameters.parseParameterString(
-					request.getQueryString());
+			params = URLParameters.parseParameterString(request.getQueryString());
 		} catch (ParseException ex) {
 			throw new BadRequestException(ex.getMessage());
 		}

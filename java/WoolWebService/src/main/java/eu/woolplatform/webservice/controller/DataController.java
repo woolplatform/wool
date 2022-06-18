@@ -77,7 +77,7 @@ public class DataController {
 	}
 
 	private Map<String,Object> doGetVariables(String woolUserId, String names)
-			throws HttpException, Exception {
+			throws Exception {
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
 		Map<String,?> varStore = userService.variableStore.getModifiableMap(
@@ -136,7 +136,7 @@ public class DataController {
 	}
 
 	private Object doSetVariable(HttpServletRequest request, String woolUserId,
-			String name, String value) throws HttpException, Exception {
+			String name, String value) throws Exception {
 		List<HttpFieldError> errors = new ArrayList<>();
 		if (!name.matches("[A-Za-z][A-Za-z0-9_]*")) {
 			errors.add(new HttpFieldError("name",
@@ -193,7 +193,7 @@ public class DataController {
 	}
 
 	private Object doSetVariables(HttpServletRequest request, String woolUserId)
-			throws HttpException, Exception {
+			throws Exception {
 		InputStream input = request.getInputStream();
 		Map<String, ?> varMap;
 		try {

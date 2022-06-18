@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
  * This class can run queries. It can validate an authentication token.
  * 
  * @author Dennis Hofs (RRD)
+ * @author Harm op den Akker
  */
 public class QueryRunner {
 
@@ -52,6 +53,8 @@ public class QueryRunner {
 	 *                 case of 401 Unauthorized)
 	 * @param woolUserId the "wool user" for which this query should be run, or ""
 	 *                   if this should be for the currently authenticated user
+	 * @param application the {@link Application} context used to access {@link UserCredentials}
+	 *                    in a non-static way.
 	 * @return the query result
 	 * @throws HttpException if the query should return an HTTP error status
 	 * @throws Exception if an unexpected error occurs. This results in HTTP
@@ -98,18 +101,18 @@ public class QueryRunner {
 	/**
 	 * Validates the authentication token in the specified HTTP request. If no
 	 * token is specified, or the token is empty or invalid, it will throw an
-	 * HttpException with 401 Unauthorized. Otherwise, it will return the username
+	 * HttpException with 401 Unauthorized. Otherwise, it will return the {@link UserCredentials}
 	 * for the authenticated user.
 	 *
 	 * @param request     the HTTP request
-	 * @param application
-	 * @return the authenticated user
+	 * @param application the {@link Application} context used to access {@link UserCredentials}
+	 *                     in a non-static way.
+	 * @return the {@link UserCredentials} for the authenticated user
 	 * @throws UnauthorizedException if no token is specified, or the token is
 	 *                               empty or invalid
-	 * @throws DatabaseException     if a database error occurs
 	 */
 	private static UserCredentials validateToken(HttpServletRequest request, Application application)
-			throws UnauthorizedException, DatabaseException {
+			throws UnauthorizedException {
 		String token = request.getHeader("X-Auth-Token");
 		if (token != null)
 			return validateDefaultToken(token, application);
@@ -119,17 +122,17 @@ public class QueryRunner {
 	
 	/**
 	 * Validates a token from request header X-Auth-Token. If it's empty or
-	 * invalid, it will throw an HttpException with 401 Unauthorized. Otherwise
+	 * invalid, it will throw an HttpException with 401 Unauthorized. Otherwise,
 	 * it will return the user object for the authenticated user.
 	 *
 	 * @param token       the authentication token (not null)
-	 * @param application
+	 * @param application the {@link Application} context used to access {@link UserCredentials}
+	 *                    in a non-static way.
 	 * @return the authenticated user
 	 * @throws UnauthorizedException if the token is empty or invalid
-	 * @throws DatabaseException     if a database error occurs
 	 */
 	private static UserCredentials validateDefaultToken(String token, Application application)
-			throws UnauthorizedException, DatabaseException {
+			throws UnauthorizedException {
 		Logger logger = AppComponents.getLogger(
 				QueryRunner.class.getSimpleName());
 		if (token.trim().length() == 0) {
