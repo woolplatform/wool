@@ -27,7 +27,7 @@ package eu.woolplatform.webservice;
  */
 public enum ProtocolVersion {
 	V1("1.0.0"),
-	V11("1.1.0");
+	V2("1.1.0");
 	
 	private final String versionName;
 	
@@ -47,5 +47,9 @@ public enum ProtocolVersion {
 		}
 		throw new IllegalArgumentException("Version not found: " +
 				versionName);
+	}
+
+	public static ProtocolVersion getLatestVersion() {
+		return ProtocolVersion.values()[ProtocolVersion.values().length-1];
 	}
 }

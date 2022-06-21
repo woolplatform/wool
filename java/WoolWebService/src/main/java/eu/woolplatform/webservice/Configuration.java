@@ -45,7 +45,7 @@ public class Configuration extends LinkedHashMap<String,String> {
 	private static final long serialVersionUID = 1L;
 
 	public static final String VERSION = "version";
-	public static final String BUILD = "build";
+	public static final String BUILD_TIME = "buildTime";
 	public static final String BASE_URL = "baseUrl";
 	public static final String JWT_SECRET_KEY = "jwtSecretKey";
 	public static final String DATA_DIR = "dataDir";
@@ -132,6 +132,14 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public String getExternalVariableServiceAPIVersion() {
 		if(containsKey(EXTERNAL_VARIABLE_SERVICE_API_VERSION)) {
 			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_API_VERSION);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	public String getBuildTime() {
+		if(containsKey(BUILD_TIME)) {
+			String returnValue = get(BUILD_TIME);
 			if(returnValue != null) return returnValue;
 		}
 		return "";

@@ -37,7 +37,7 @@ public class InfoController {
 
 	@GetMapping("/all")
 	public ServiceInfo all() {
-		return new ServiceInfo(Configuration.getInstance().get(Configuration.BUILD),
+		return new ServiceInfo(Configuration.getInstance().get(Configuration.BUILD_TIME),
 				ServiceContext.getCurrentVersion(),
 				Configuration.getInstance().get(Configuration.VERSION));
 	}

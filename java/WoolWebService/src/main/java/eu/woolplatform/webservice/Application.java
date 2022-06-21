@@ -65,6 +65,8 @@ ApplicationListener<ContextClosedEvent> {
 	 * @throws Exception if the application can't be initialised
 	 */
 	public Application() throws Exception {
+		// To time the Application startup time
+		long startMS = System.currentTimeMillis();
 
 		// Initialize a Configuration object
 		Configuration config = AppComponents.get(Configuration.class);
@@ -95,18 +97,21 @@ ApplicationListener<ContextClosedEvent> {
 				new WoolResourceFileLoader("dialogues"));
 
 		// Print out some logging info
-		logger.info("Successfully started WOOL Web Service.");
-		logger.info("Service Version: " + config.get(Configuration.VERSION));
-		logger.info("Build: " + "(in development)"); // TODO: Automatically populate "Build" config parameter
-		logger.info("Spring Version: "+ SpringVersion.getVersion());
-		logger.info("JDK Version: "+System.getProperty("java.version"));
-		logger.info("Java Version: "+ JavaVersion.getJavaVersion().toString());
-		logger.info("External Variable Service Enabled: "+config.getExternalVariableServiceEnabled());
+		logger.info("========== WOOL Web Service Startup Info ==========");
+		logger.info("=== Version: " + config.get(Configuration.VERSION));
+		logger.info("=== API Version: " + ProtocolVersion.getLatestVersion().versionName());
+		logger.info("=== Build: " + config.getBuildTime()); // TODO: Automatically populate "Build" config parameter
+		logger.info("=== Spring Version: "+ SpringVersion.getVersion());
+		logger.info("=== JDK Version: "+System.getProperty("java.version"));
+		logger.info("=== Java Version: "+ JavaVersion.getJavaVersion().toString());
+		logger.info("=== External Variable Service Enabled: "+config.getExternalVariableServiceEnabled());
 		if(config.getExternalVariableServiceEnabled()) {
-			logger.info("External Variable Service URL: "+config.getExternalVariableServiceURL());
-			logger.info("External Variable Service API Version: "+config.getExternalVariableServiceAPIVersion());
+			logger.info("=== External Variable Service URL: "+config.getExternalVariableServiceURL());
+			logger.info("=== External Variable Service API Version: "+config.getExternalVariableServiceAPIVersion());
 		}
-
+		long endMS = System.currentTimeMillis();
+		logger.info("=== Successfully started WOOL Web Service in "+(endMS - startMS)+"ms.");
+		logger.info("===================================================");
 	}
 
 	public UserServiceManager getServiceManager() {

@@ -97,6 +97,10 @@ task updateConfig {
 			key = key[0].toLowerCase() + key.substring(1)
 			props[key] = value
 		}
+
+		// Add the current time as buildTime property
+		props['buildTime'] = new Date().format("MM/dd/yyyy HH:mm:ss")
+
 		def resDir = file('src/main/resources')
 		resDir.mkdirs()
 		def out = new File(resDir, 'service.properties')

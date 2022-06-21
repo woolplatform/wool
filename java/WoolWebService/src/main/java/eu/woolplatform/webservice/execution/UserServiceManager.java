@@ -70,9 +70,6 @@ public class UserServiceManager {
 	 * predefined list of Wool dialogues.
 	 */
 	public UserServiceManager(WoolFileLoader woolFileLoader) {
-		logger.info("Initializing UserServiceManager.");
-		long startMS = System.currentTimeMillis();
-		
 		UserServiceFactory appConfig = UserServiceFactory.getInstance();
 		WoolProjectParser woolProjectParser = new WoolProjectParser(
 				woolFileLoader);
@@ -109,10 +106,6 @@ public class UserServiceManager {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
-		long endMS = System.currentTimeMillis();
-		long procTime = endMS - startMS;
-		logger.info("UserServiceManager initialized in "+procTime+"ms.");
 	}
 	
 	// ---------- Getters:
