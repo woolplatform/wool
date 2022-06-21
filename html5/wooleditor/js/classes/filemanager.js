@@ -1,3 +1,5 @@
+// this class handles the project file tree using JSTree.
+
 // dirtreeUpdatedCallback: function(dirtree)
 function FileManager(dirtreeUpdatedCallback) {
 	this.jsTreeInited=false;
@@ -32,6 +34,18 @@ FileManager.prototype.init = function() {
 		}
 	})
 	this.updateDirTree();
+}
+
+// visually select the currently loaded file
+FileManager.selectLoadedFile = function() {
+	$('#filetree').jstree(true).select_node(
+		app.filename()+".wool",true,false,null,true);
+}
+
+FileManager.prototype.getFileIcon  = function(filename) {
+	if (filename.match(/[.]wool$/i)) return "jstreewoolfile";
+	if (filename.match(/[.]json$/i)) return "jstreejsonfile";
+	return "jstreefile";
 }
 
 FileManager.prototype.updateDirTree  = function() {
@@ -73,11 +87,13 @@ FileManager.prototype.updateDirTree  = function() {
 			} else {
 				self.dirtree[item[2]].name = item[1];
 			}
+			// NOTE icon is used to distinguish between dir and file, by
+			// checking icon == "jstreedir". 
 			jstdata.push({
 				id: item[2],
 				text: item[1],
 				parent: basedir,
-				icon: item[0]=="DIR" ? "jstreedir":"jstreefile",
+				icon: item[0]=="DIR" ? "jstreedir":self.getFileIcon(item[1]),
 			});
 		}
 
@@ -108,7 +124,7 @@ FileManager.prototype.updateDirTree  = function() {
 						//return operation === 'rename_node' ? true : false;
 						// prevent dnd from moving a node inside a file node
 						if (operation == "move_node") {
-							if (node_parent.icon == "jstreefile") return false;
+							if (node_parent.icon != "jstreedir") return false;
 							//self.revertingMove = false;
 						}
 						return true;
@@ -132,7 +148,7 @@ FileManager.prototype.updateDirTree  = function() {
 				// What we do, we store the deselected node to be re-selected
 				// when we want to undo the deselection.
 				"conditionalselect": function(node,isUserCall) {
-					if (node.icon == "jstreefile") {
+					if (node.icon != "jstreedir") {
 						// check if this is called by us rather than jstree
 						if (isUserCall === true) return true;
 						var filename = node.id;
@@ -166,7 +182,7 @@ FileManager.prototype.updateDirTree  = function() {
 				function(e,nodedata) {
 					console.log("CONDFITIONALSELECT#$$$$$$$$$$$$$$$$$$$");
 					var item = nodedata.node;
-					if (nodedata.node.icon == "jstreefile") {
+					if (nodedata.node.icon != "jstreedir") {
 						var filename = nodedata.node.id;
 						if (filename.toLowerCase().indexOf(".wool")
 						> -1) {
@@ -179,10 +195,7 @@ FileManager.prototype.updateDirTree  = function() {
 					self.lastDeselected = nodedata.node;
 					console.log("JSTree deselect node "+self.lastDeselected);
 				});
-				// select the currently loaded file
-				// XXX we also need to do this when we load a project
-				$('#filetree').jstree(true).select_node(
-					app.filename()+".wool",true,false,null,true);
+				FileManager.selectLoadedFile();
 			}).on("rename_node.jstree", function(e,nodedata) {
 				var id = nodedata.node.id;
 				var oldname = nodedata.old;
@@ -373,7 +386,7 @@ FileManager.prototype.doRenameFile = function(err,node,oldtext,oldpath,newpath){
 		} else {
 			if (oldpath != newpath) {
 				this.dirtree[newpath] = {
-					type: node.icon=="jstreefile" ? "FILE" : "DIR",
+					type: node.icon!="jstreedir" ? "FILE" : "DIR",
 					name: node.text,
 					content: this.dirtree[oldpath].content,
 				}
@@ -396,7 +409,7 @@ FileManager.prototype.doCreateFile = function(err,node){
 	} else {
 		// success -> nothing needs to be done in jstree
 		this.dirtree[node.id] = {
-			type: node.icon=="jstreefile" ? "FILE" : "DIR",
+			type: node.icon!="jstreedir" ? "FILE" : "DIR",
 			name: node.text,
 			content: [],
 		};
@@ -424,7 +437,7 @@ FileManager.prototype.createContextMenu = function(node) {
 					tree.create_node(dir, {
 						id: dir + app.fs.getPathAPI().sep + filename,
 						text: filename,
-						icon: "jstreefile",
+						icon: self.getFileIcon(filename),
 					});
 				},
 				// All below are optional
@@ -481,7 +494,7 @@ FileManager.prototype.createContextMenu = function(node) {
 				"icon"              : false,
 			},
 		}
-	} else { // jstreefile
+	} else { // jstree*file
 		return {
 			"renameFile" : {
 				// The item label
@@ -521,7 +534,7 @@ FileManager.prototype.createContextMenu = function(node) {
 					tree.create_node(dir, {
 						id: dirwithsep + filename,
 						text: filename,
-						icon: "jstreefile",
+						icon: self.getFileIcon(filename),
 						_sourceid: id,
 					});
 				},
