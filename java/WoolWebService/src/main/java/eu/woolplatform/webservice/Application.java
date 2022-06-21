@@ -100,7 +100,7 @@ ApplicationListener<ContextClosedEvent> {
 		logger.info("========== WOOL Web Service Startup Info ==========");
 		logger.info("=== Version: " + config.get(Configuration.VERSION));
 		logger.info("=== API Version: " + ProtocolVersion.getLatestVersion().versionName());
-		logger.info("=== Build: " + config.getBuildTime()); // TODO: Automatically populate "Build" config parameter
+		logger.info("=== Build: " + config.getBuildTime());
 		logger.info("=== Spring Version: "+ SpringVersion.getVersion());
 		logger.info("=== JDK Version: "+System.getProperty("java.version"));
 		logger.info("=== Java Version: "+ JavaVersion.getJavaVersion().toString());

@@ -137,6 +137,11 @@ public class Configuration extends LinkedHashMap<String,String> {
 		return "";
 	}
 
+	/**
+	 * Returns a date-time {@link String} representing the date and time that this version
+	 * of the deployed web service was built.
+	 * @return the build-time as a date-time {@link String}.
+	 */
 	public String getBuildTime() {
 		if(containsKey(BUILD_TIME)) {
 			String returnValue = get(BUILD_TIME);

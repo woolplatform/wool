@@ -81,9 +81,9 @@ tasks.matching({ it.name =~ /cargo.*Remote/ }).each() {
 }
 
 task updateConfig {
-	group = 'configuration'
-	description = 'Configures files with current values of woolconfig properties from gradle.properties.'
-	
+	group = "configuration"
+	description = "Generates an updated version of service.properties that includes values from 'gradle.properties' starting with 'woolconfig'."
+
 	doLast() {
 		Properties props = new Properties()
 		def propPrefix = 'woolconfig'
@@ -94,6 +94,10 @@ task updateConfig {
 			key = key[0].toLowerCase() + key.substring(1)
 			props[key] = value
 		}
+
+		// Add the current time as buildTime property
+		props['buildTime'] = new Date().format("MM/dd/yyyy HH:mm:ss")
+
 		def resDir = file('src/main/resources')
 		resDir.mkdirs()
 		def out = new File(resDir, 'service.properties')
