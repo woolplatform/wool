@@ -33,8 +33,10 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.system.JavaVersion;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.SpringVersion;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.ClassUtils;
@@ -52,9 +54,10 @@ import java.net.URL;
 )
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements
-ApplicationListener<ContextClosedEvent> {
+ApplicationListener<ApplicationEvent> {
 
 	private final Logger logger = AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
+	private final Configuration config;
 	private final UserServiceManager userServiceManager;
 
 	/**
@@ -65,26 +68,23 @@ ApplicationListener<ContextClosedEvent> {
 	 * @throws Exception if the application can't be initialised
 	 */
 	public Application() throws Exception {
-		// To time the Application startup time
-		long startMS = System.currentTimeMillis();
-
 		// Initialize a Configuration object
-		Configuration config = AppComponents.get(Configuration.class);
+		config = AppComponents.get(Configuration.class);
 
 		// Load the values from service.properties into the Configuration
-		URL propertiesUrl = getClass().getClassLoader().getResource(
+		URL resourcePropertiesUrl = getClass().getClassLoader().getResource(
 				"service.properties");
-		if (propertiesUrl == null) {
+		if (resourcePropertiesUrl == null) {
 			throw new Exception("Can't find resource service.properties. " +
 					"Did you run gradlew updateConfig?");
 		}
-		config.loadProperties(propertiesUrl);
+		config.loadProperties(resourcePropertiesUrl);
 
 		// Load the values from deployment.properties into the Configuration (app version number)
-		propertiesUrl = getClass().getClassLoader().getResource(
+		URL deploymentPropertiesUrl = getClass().getClassLoader().getResource(
 				"deployment.properties");
-		if(propertiesUrl != null)
-			config.loadProperties(propertiesUrl);
+		if(deploymentPropertiesUrl != null)
+			config.loadProperties(deploymentPropertiesUrl);
 
 		// By default, log uncaught exceptions to this logger
 		Thread.setDefaultUncaughtExceptionHandler((t, e) ->
@@ -95,23 +95,6 @@ ApplicationListener<ContextClosedEvent> {
 		UserServiceFactory.setInstance(userServiceFactory);
 		userServiceManager = new UserServiceManager(
 				new WoolResourceFileLoader("dialogues"));
-
-		// Print out some logging info
-		logger.info("========== WOOL Web Service Startup Info ==========");
-		logger.info("=== Version: " + config.get(Configuration.VERSION));
-		logger.info("=== API Version: " + ProtocolVersion.getLatestVersion().versionName());
-		logger.info("=== Build: " + config.getBuildTime());
-		logger.info("=== Spring Version: "+ SpringVersion.getVersion());
-		logger.info("=== JDK Version: "+System.getProperty("java.version"));
-		logger.info("=== Java Version: "+ JavaVersion.getJavaVersion().toString());
-		logger.info("=== External Variable Service Enabled: "+config.getExternalVariableServiceEnabled());
-		if(config.getExternalVariableServiceEnabled()) {
-			logger.info("=== External Variable Service URL: "+config.getExternalVariableServiceURL());
-			logger.info("=== External Variable Service API Version: "+config.getExternalVariableServiceAPIVersion());
-		}
-		long endMS = System.currentTimeMillis();
-		logger.info("=== Successfully started WOOL Web Service in "+(endMS - startMS)+"ms.");
-		logger.info("===================================================");
 	}
 
 	public UserServiceManager getServiceManager() {
@@ -119,9 +102,26 @@ ApplicationListener<ContextClosedEvent> {
 	}
 
 	@Override
-	public void onApplicationEvent(ContextClosedEvent event) {
-		Logger logger = AppComponents.getLogger(getClass().getSimpleName());
-		logger.info("Shutdown web service");
+	public void onApplicationEvent(ApplicationEvent event) {
+		if(event instanceof ContextClosedEvent) {
+			logger.info("Shutdown WOOL Web Service.");
+		}
+
+		if(event instanceof ContextRefreshedEvent) {
+			logger.info("========== WOOL Web Service Startup Info ==========");
+			logger.info("=== Version: " + config.get(Configuration.VERSION));
+			logger.info("=== API Version: " + ProtocolVersion.getLatestVersion().versionName());
+			logger.info("=== Build: " + config.getBuildTime());
+			logger.info("=== Spring Version: "+ SpringVersion.getVersion());
+			logger.info("=== JDK Version: "+System.getProperty("java.version"));
+			logger.info("=== Java Version: "+ JavaVersion.getJavaVersion().toString());
+			logger.info("=== External Variable Service Enabled: "+config.getExternalVariableServiceEnabled());
+			if(config.getExternalVariableServiceEnabled()) {
+				logger.info("=== External Variable Service URL: "+config.getExternalVariableServiceURL());
+				logger.info("=== External Variable Service API Version: "+config.getExternalVariableServiceAPIVersion());
+			}
+			logger.info("===================================================");
+		}
 	}
 	
 	@Override
