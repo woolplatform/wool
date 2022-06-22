@@ -29,8 +29,10 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.system.JavaVersion;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.SpringVersion;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.ClassUtils;
@@ -47,9 +49,10 @@ import java.net.URL;
 )
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements
-ApplicationListener<ContextClosedEvent> {
+ApplicationListener<ApplicationEvent> {
 
 	private final Logger logger = AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
+	private final Configuration config;
 
 	/**
 	 * Constructs a new application. It reads service.properties and
@@ -59,11 +62,8 @@ ApplicationListener<ContextClosedEvent> {
 	 * @throws Exception if the application can't be initialised
 	 */
 	public Application() throws Exception {
-		// To time the Application startup time
-		long startMS = System.currentTimeMillis();
-
 		// Initialize a Configuration object
-		Configuration config = AppComponents.get(Configuration.class);
+		config = AppComponents.get(Configuration.class);
 
 		// Load the values from service.properties into the Configuration
 		URL propertiesUrl = getClass().getClassLoader().getResource(
@@ -83,22 +83,6 @@ ApplicationListener<ContextClosedEvent> {
 		Thread.setDefaultUncaughtExceptionHandler((t, e) ->
 				logger.error("Uncaught exception: " + e.getMessage(), e)
 		);
-
-		// Print out some logging info
-		logger.info("========== WOOL External Variable Service Dummy Startup Info ==========");
-		logger.info("=== Version: " + config.get(Configuration.VERSION));
-		logger.info("=== API Version: " + ProtocolVersion.getLatestVersion().versionName());
-		logger.info("=== Build: " + config.getBuildTime());
-		logger.info("=== Spring Version: "+ SpringVersion.getVersion());
-		logger.info("=== JDK Version: "+System.getProperty("java.version"));
-		logger.info("=== Java Version: "+ JavaVersion.getJavaVersion().toString());
-		logger.info("=== Successfully started WOOL Web Service in "+(System.currentTimeMillis() - startMS)+"ms.");
-		logger.info("=======================================================================");
-	}
-
-	@Override
-	public void onApplicationEvent(ContextClosedEvent event) {
-		logger.info("Shutdown WOOL External Variable Service Dummy.");
 	}
 	
 	@Override
@@ -108,5 +92,23 @@ ApplicationListener<ContextClosedEvent> {
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
+	}
+
+	@Override
+	public void onApplicationEvent(ApplicationEvent event) {
+		if(event instanceof ContextClosedEvent) {
+			logger.info("Shutdown WOOL External Variable Service Dummy.");
+		}
+
+		if(event instanceof ContextRefreshedEvent) {
+			logger.info("========== WOOL External Variable Service Dummy Startup Info ==========");
+			logger.info("=== Version: " + config.get(Configuration.VERSION));
+			logger.info("=== API Version: " + ProtocolVersion.getLatestVersion().versionName());
+			logger.info("=== Build: " + config.getBuildTime());
+			logger.info("=== Spring Version: "+ SpringVersion.getVersion());
+			logger.info("=== JDK Version: "+System.getProperty("java.version"));
+			logger.info("=== Java Version: "+ JavaVersion.getJavaVersion().toString());
+			logger.info("=======================================================================");
+		}
 	}
 }
