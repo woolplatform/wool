@@ -117,7 +117,7 @@ var Node = function() {
 		if(self.selected) 
 			$(self.element).css({border: "3px solid #49eff1"});
 		else 
-			$(self.element).css({border: "none"});
+			$(self.element).css({border: ""});
 		
 	}
 

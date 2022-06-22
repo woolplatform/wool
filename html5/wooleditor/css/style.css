@@ -221,6 +221,10 @@ a:hover { color: #000;}
 	margin-left: 0;
 }
 
+.app-menu .menu.small {
+	width: 70px;
+}
+
 .app-menu .title
 {
 	box-sizing: border-box;
@@ -232,6 +236,12 @@ a:hover { color: #000;}
 	float: left;
 	transition: background 0.25s;
 }
+
+.app-menu .menu.small .title {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
 
 .app-menu .dropdown
 {
@@ -328,7 +338,7 @@ a:hover { color: #000;}
 
 .app-search #searchToggleLabel {
 	float: left;
-	padding-right: 10px;
+	padding-right: 0px;
 	padding-top: 6px;
 	padding-bottom: 6px;
 }
@@ -339,11 +349,11 @@ a:hover { color: #000;}
 }
 
 .app-search #searchBoxInner {
-	width: 600px;
+	width: 550px;
 }
 
 .app-search input#searchToggle:checked ~ #searchBox {
-	width: 600px;
+	width: 550px;
 	/*display:block;*/
 }
 .app-search input#searchToggle:checked ~ #searchToggleLabel::before {
@@ -413,7 +423,7 @@ a:hover { color: #000;}
 {
 	width: 32px;
 	height: 32px;
-	margin: 8px;
+	margin: 0px;
 	background: #fff url("../images/sort.png") no-repeat;
 	float: left;
 	display: inline;
@@ -954,12 +964,21 @@ a:hover { color: #000;}
 
 
 #filepanel .button {
-	width: 97%;
-	border-radius: 2px;
+	width: 94%;
 	box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.5);
-	padding: 2px 2px 2px 2px;
-	margin: 2px 2px 2px 2px;
+	padding: 4px 4px 4px 4px;
+	margin: 4px 4px 2px 4px;
 	background-color: #fff;
+	border-style: none;
+}
+
+#filepanel .button:hover {
+	background: #f4f4f4;
+}
+
+#filepanel .button:active {
+    background: #ddd;
+    color: #555;
 }
 
 
@@ -1189,6 +1208,8 @@ a:hover { color: #000;}
 
 /* remove icon space left of filename to save space */
 .jstree-default .jstree-icon.jstreefile,
+.jstree-default .jstree-icon.jstreewoolfile,
+.jstree-default .jstree-icon.jstreejsonfile,
 .jstree-default .jstree-icon.jstreedir {
 	width: 14px;
 }
@@ -1199,6 +1220,14 @@ a:hover { color: #000;}
 
 .jstree-default .jstree-icon.jstreefile {
 	background: url('../images/file14x16.png') no-repeat;
+}
+
+.jstree-default .jstree-icon.jstreewoolfile {
+	background: url('../images/woolfile14x16.png') no-repeat;
+}
+
+.jstree-default .jstree-icon.jstreejsonfile {
+	background: url('../images/jsonfile14x16.png') no-repeat;
 }
 
 /*.jstree-default .jstree-icon.jstreedir:before {

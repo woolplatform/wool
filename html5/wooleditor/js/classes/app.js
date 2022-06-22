@@ -213,6 +213,7 @@ var App = function(name, version, filename) {
 			var MarqueeOffset = [0, 0];
 
 			$(".nodes").on("mousedown", function(e) {
+				if (e.buttons&2) return; // right button is create node
 				$("#marquee").css({x:0, y:0, width:0, height:0});
 				dragging = true;
 				var rootofs = self.domroot.offset();
@@ -235,40 +236,43 @@ var App = function(name, version, filename) {
 				var erootX = e.pageX - rootofs.left;
 				var erootY = e.pageY - rootofs.top;
 				if (dragging) {
+					// middle button or shift/alt: drag the view
 					// We added shiftKey because altKey interferes with
 					// xfce metakey
 					if (e.shiftKey || e.altKey || e.buttons & 4) {
 						//prevents jumping straight back to standard dragging
 						if (MarqueeOn) {
+							// turn off marquee
 							MarqueeSelection = [];
 							MarqRect = {x1:0,y1:0,x2:0,y2:0};
 							$("#marquee").css({x:0, y:0, width:0, height:0});
-						} else {
-							/*
-							self.transformOrigin[0] += erootX - offset.x;
-							self.transformOrigin[1] += erootY - offset.y;
-
-							self.translate();
-
-							offset.x = erootX;
-							offset.y = erootY;
-							*/
-
-							self.transformOrigin[0] += (erootX - offset.x);
-							self.transformOrigin[1] += (erootY - offset.y);
-
-							/*var nodes = self.nodes();
-							for (var i in nodes)
-							{
-								nodes[i].x(nodes[i].x() + (erootX - offset.x) / self.cachedScale);
-								nodes[i].y(nodes[i].y() + (erootY - offset.y) / self.cachedScale);
-							}*/
-
-							offset.x = erootX;
-							offset.y = erootY;
 						}
+						// drag the view
+						/*
+						self.transformOrigin[0] += erootX - offset.x;
+						self.transformOrigin[1] += erootY - offset.y;
+
 						self.translate();
-					} else {	
+
+						offset.x = erootX;
+						offset.y = erootY;
+						*/
+
+						self.transformOrigin[0] += (erootX - offset.x);
+						self.transformOrigin[1] += (erootY - offset.y);
+
+						/*var nodes = self.nodes();
+						for (var i in nodes)
+						{
+							nodes[i].x(nodes[i].x() + (erootX - offset.x) / self.cachedScale);
+							nodes[i].y(nodes[i].y() + (erootY - offset.y) / self.cachedScale);
+						}*/
+
+						offset.x = erootX;
+						offset.y = erootY;
+						self.translate();
+					} else {
+						// drag marquee
 						MarqueeOn = true;
 
 						var scale = self.cachedScale;
@@ -1477,6 +1481,13 @@ var App = function(name, version, filename) {
 
 	this.updateEditorStats = function() {
 		self.editor = ace.edit('editor');
+		// the folllowing line is supposed to prevent this issue:
+		// Automatically scrolling cursor into view after selection change
+		// this will be disabled in the next version 
+		// set editor.$blockScrolling = Infinity to disable this message
+		// However it doesn't suppress the warning ebven though this way of
+		// setting it is recommended.
+		self.editor.$blockScrolling = Infinity;
 		var text = self.editor.getSession().getValue();
 		var cursor = self.editor.getCursorPosition();
 
@@ -1661,6 +1672,8 @@ var App = function(name, version, filename) {
 	// Updates languages, defaultLanguage, selectedLanguage
 	this.dirtreeUpdated = function(dirtree) {
 		console.log("Dirtree updated. Getting languages.");
+		// need delay before file can be visually selected
+		setTimeout(function() { FileManager.selectLoadedFile(); }, 200);
 		var rootcontents = dirtree["#"].content;
 		var languages = [];
 		var foundSelected = false;
