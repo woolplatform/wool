@@ -44,9 +44,7 @@ import java.net.URL;
  * 
  * @author Harm op den Akker
  */
-@SpringBootApplication(
-		exclude={MongoAutoConfiguration.class} // TODO: Check why this is excluded.
-)
+@SpringBootApplication
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements
 ApplicationListener<ApplicationEvent> {

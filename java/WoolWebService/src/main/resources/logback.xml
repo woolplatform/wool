@@ -12,7 +12,7 @@
 
 	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${dataDir}/log/wool.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<fileNamePattern>${dataDir}/log/eu.woolplatform.web.service.%d{yyyy-MM-dd}.log</fileNamePattern>
 		</rollingPolicy>
 
 		<encoder>
