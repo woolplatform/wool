@@ -45,11 +45,11 @@ import eu.woolplatform.wool.model.WoolMessageSource;
 import eu.woolplatform.wool.model.protocol.DialogueMessage;
 import eu.woolplatform.wool.model.protocol.DialogueMessageFactory;
 import eu.woolplatform.wool.model.protocol.NullableResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -67,6 +67,7 @@ import java.util.Map;
  * @author Harm op den Akker
  */
 @RestController
+@SecurityRequirement(name = "X-Auth-Token")
 @RequestMapping("/v{version}/dialogue")
 public class DialogueController {
 	@Autowired
@@ -79,7 +80,6 @@ public class DialogueController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 			String versionName,
 			@RequestParam(value="dialogueName")
 			String dialogueName,
@@ -118,7 +118,7 @@ public class DialogueController {
 	 * @param dialogueName the name of the dialogue to start executing
 	 * @param language the language in which to start the dialogue
 	 * @param localTime
-	 * @param timezone
+	 * @param timeZone
 	 * @return
 	 * @throws HttpException
 	 * @throws DatabaseException
@@ -154,7 +154,6 @@ public class DialogueController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 			String versionName,
 			@RequestParam(value="loggedDialogueId")
 			String loggedDialogueId,
@@ -230,7 +229,6 @@ public class DialogueController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 			String versionName,
 			@RequestParam(value="loggedDialogueId")
 			String loggedDialogueId,
@@ -279,7 +277,6 @@ public class DialogueController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 			String versionName,
 			@RequestParam(value="dialogueName")
 			String dialogueName,
@@ -341,7 +338,6 @@ public class DialogueController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 			String versionName,
 			@RequestParam(value="loggedDialogueId")
 			String loggedDialogueId,
