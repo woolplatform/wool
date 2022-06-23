@@ -22,12 +22,10 @@
 package eu.woolplatform.web.varservice.controller;
 
 import eu.woolplatform.web.varservice.controller.model.WoolVariableParam;
-import eu.woolplatform.web.varservice.exception.HttpException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,6 +33,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+
+/**
+ * Controller for the /variables/ -end-points of the WOOL External Variable Service
+ * Dummy.
+ *
+ * @author Harm op den Akker
+ */
 @RestController
 @RequestMapping("/v{version}/variables")
 public class VariablesController {
@@ -47,17 +52,16 @@ public class VariablesController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 					String versionName,
 			@PathVariable String userId,
 			@RequestBody
-					List<WoolVariableParam> woolVariables) throws HttpException, Exception {
+					List<WoolVariableParam> woolVariables) {
 		return executeRetrieveUpdates(userId, woolVariables);
 	}
 
 	/**
 	 * This method performs the "dummy" updating of the requested list of WOOL Variables. For a real-world
-	 * implementation you should replace this method and have it do something useful.
+	 * implementation you should replace this method and make sure it does something useful.
 	 *
 	 * In this dummy implementation, the method does the following. There is a 50% chance that this
 	 * method will return an empty list (i.e. no variables need to be updated). The other 50% of the
@@ -98,11 +102,10 @@ public class VariablesController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 					String versionName,
 			@PathVariable String userId,
 			@RequestBody
-					List<WoolVariableParam> woolVariables) throws HttpException, Exception {
+					List<WoolVariableParam> woolVariables) {
 		return executeNotifyUpdated(userId, woolVariables);
 	}
 
@@ -116,9 +119,8 @@ public class VariablesController {
 	 * @param params the {@code List} of {@link WoolVariableParam}s that were updated and may need to be
 	 *               processed in the external service.
 	 * @return a {@link ResponseEntity} to indicate whether the update was executed successfully.
-	 * TODO: Maybe this method could (randomly) return different responses? Not sure if that's useful.
 	 */
 	private ResponseEntity<?> executeNotifyUpdated(String userId, List<WoolVariableParam> params) {
-		return new ResponseEntity(HttpStatus.OK);
+		return new ResponseEntity<ResponseEntity<?>>(HttpStatus.OK);
 	}
 }

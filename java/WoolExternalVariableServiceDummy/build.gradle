@@ -31,12 +31,6 @@ dependencies {
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
 	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
 
-	// https://mvnrepository.com/artifact/io.springfox/springfox-swagger2
-	implementation group: 'io.springfox', name: 'springfox-swagger2', version: '2.9.2'
-
-	// https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui
-	implementation group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'
-
 	// https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
 	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.4.0-b180830.0359'
 
@@ -45,6 +39,9 @@ dependencies {
 
 	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.4.13'
+
+	// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.9'
 
 	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-tomcat
 	providedRuntime group: 'org.springframework.boot', name: 'spring-boot-starter-tomcat', version: '2.4.13'
