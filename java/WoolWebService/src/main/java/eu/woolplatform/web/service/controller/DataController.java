@@ -35,12 +35,10 @@ import eu.woolplatform.web.service.exception.ErrorCode;
 import eu.woolplatform.web.service.exception.HttpError;
 import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.execution.UserService;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -48,6 +46,7 @@ import java.io.InputStream;
 import java.util.*;
 
 @RestController
+@SecurityRequirement(name = "X-Auth-Token")
 @RequestMapping("/v{version}")
 public class DataController {
 	@Autowired
@@ -60,7 +59,6 @@ public class DataController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 			String versionName,
 			@RequestParam(value="names", required=false, defaultValue="")
 			String names,
@@ -117,7 +115,6 @@ public class DataController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 			String versionName,
 			@RequestParam(value="name")
 			String name,
@@ -173,14 +170,10 @@ public class DataController {
 	}
 
 	@RequestMapping(value="/variables", method=RequestMethod.POST)
-	@ApiImplicitParams({
-			@ApiImplicitParam(name="body", value="values", dataType="string", paramType="body")
-	})
 	public void setVariables(
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 			String versionName,
 			@RequestParam(value="woolUserId",required=false,defaultValue="")
 			String woolUserId) throws Exception {

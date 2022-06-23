@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -59,7 +58,6 @@ public class AuthController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable("version")
-			@ApiIgnore
 			String versionName,
 			@RequestBody
 			LoginParams loginParams) throws Exception {

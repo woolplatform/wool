@@ -26,6 +26,13 @@ import eu.woolplatform.web.service.execution.DefaultUserServiceFactory;
 import eu.woolplatform.web.service.execution.UserServiceManager;
 import eu.woolplatform.web.service.execution.UserServiceFactory;
 import eu.woolplatform.wool.parser.WoolResourceFileLoader;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -48,6 +55,23 @@ import java.net.URL;
  * @author Dennis Hofs (RRD)
  * @author Harm op den Akker
  */
+@OpenAPIDefinition(
+		info = @Info(
+				title = "WOOL Web Service API",
+				version = "1.1.0",
+				description = "The WOOL Web Service API gives authorized clients the ability to start-, and sequentially " +
+						"execute WOOL dialogues as well to access WOOL Variable data.",
+				contact = @Contact(
+						name = "WOOL Platform Support",
+						email = "info@woolplatform.eu"
+				),
+				license = @License(
+						url = "https://opensource.org/licenses/MIT",
+						name = "MIT License"
+				)
+		)
+)
+@SecurityScheme(name = "X-Auth-Token", scheme = "basic", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 @SpringBootApplication
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements
