@@ -87,33 +87,37 @@ public class DialogueController {
 			String language,
 			@RequestParam(value="woolUserId", required=false, defaultValue="")
 			String woolUserId,
-			@RequestParam(value="time", required=false, defaultValue="")
-			String time,
-			@RequestParam(value="timezone", required=false, defaultValue="")
-			String timezone) throws Exception {
+			@RequestParam(value="localTime", required=false, defaultValue="")
+			String localTime,
+			@RequestParam(value="timeZone", required=false, defaultValue="")
+			String timeZone) throws Exception {
+
+		// Construct a minimal String for logging purposes
+		String logInfo = "POST /start-dialogue?dialogueName= " + dialogueName + "&language=" + language;
+		if(!woolUserId.equals("")) logInfo += "&userId="+woolUserId;
+		if(!localTime.equals("")) logInfo += "&localTime=" + localTime;
+		if(!timeZone.equals("")) logInfo += "&timeZone=" + timeZone;
+		logger.info(logInfo);
+
 		if(woolUserId.equals("")) {
-			logger.info("Post /start-dialogue?dialogueName=" + dialogueName +
-					"&language=" + language);
 			return QueryRunner.runQuery(
 					(version, user) -> doStartDialogue(user, dialogueName,
-							language, time, timezone),
+							language, localTime, timeZone),
 					versionName, request, response, woolUserId, application);
 		} else {
-			logger.info("Post /start-dialogue?dialogueName=" + dialogueName +
-					"&language=" + language+"&userId="+woolUserId);
 			return QueryRunner.runQuery(
 					(version, user) -> doStartDialogue(woolUserId, dialogueName,
-							language, time, timezone),
+							language, localTime, timeZone),
 					versionName, request, response, woolUserId, application);
 		}
 	}
 
 	/**
-	 * Executes a call to the /start-dialogue/ end-point.
-	 * @param woolUserId
-	 * @param dialogueName
-	 * @param language
-	 * @param timeStr
+	 * Processes a call to the /start-dialogue/ end-point.
+	 * @param woolUserId the {@link String} identifier of the user for whom to start a dialogue.
+	 * @param dialogueName the name of the dialogue to start executing
+	 * @param language the language in which to start the dialogue
+	 * @param localTime
 	 * @param timezone
 	 * @return
 	 * @throws HttpException
@@ -121,9 +125,9 @@ public class DialogueController {
 	 * @throws IOException
 	 */
 	private DialogueMessage doStartDialogue(
-			String woolUserId, String dialogueName, String language, String timeStr,
-			String timezone) throws HttpException, DatabaseException, IOException {
-		DateTime time = parseTime(timeStr, timezone);
+			String woolUserId, String dialogueName, String language, String localTime,
+			String timeZone) throws HttpException, DatabaseException, IOException {
+		DateTime time = parseTime(localTime, timeZone);
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
 		ExecuteNodeResult node;
