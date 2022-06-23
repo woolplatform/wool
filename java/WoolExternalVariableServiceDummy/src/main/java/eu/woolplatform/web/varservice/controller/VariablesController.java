@@ -22,6 +22,14 @@
 package eu.woolplatform.web.varservice.controller;
 
 import eu.woolplatform.web.varservice.controller.model.WoolVariableParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -42,20 +50,34 @@ import java.util.Random;
  */
 @RestController
 @RequestMapping("/v{version}/variables")
+@Tag(name = "Variables", description = "End-points for retrieving variables from- and sending to the service")
 public class VariablesController {
 
 	// ----- END-POINT: "retrieve-updates"
 
+	@Operation(summary = "Retrieve updates for a given list of WOOL Variables",
+			description = "The use case for this end-point is as follows. Before executing a WOOL Dialogue, " +
+					"you (or e.g. the WOOL Web Service) may gather a list of all the WOOL Variables used in its " +
+					"execution. Before starting the execution, you may call this end-point with the list of WOOL " +
+					"Variables in order to verify that you have the latest values for all variables. In return you" +
+					"will receive a list - which is a subset of the list you provided - that contains all WOOL " +
+					"Variables for which an updated value is available. You are basically asking: 'Hey, I have this " +
+					"list of WOOL Variables for this user, is this up-to-date?'.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successful operation",
+					content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class)))) })
 	@RequestMapping(value="/retrieve-updates/{userId}", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
 	public List<WoolVariableParam> retrieveUpdates(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			@PathVariable("version")
-					String versionName,
-			@PathVariable String userId,
-			@RequestBody
-					List<WoolVariableParam> woolVariables) {
+			@Parameter(description = "API Version to use, e.g. '1.0.0'")
+				@PathVariable("version") String versionName,
+			@Parameter(description = "The userId of the WOOL user")
+				@PathVariable String userId,
+			@Parameter(description = "List of WOOL Variables for which to check for updates.",
+					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
+				@RequestBody List<WoolVariableParam> woolVariables) {
 		return executeRetrieveUpdates(userId, woolVariables);
 	}
 
@@ -96,16 +118,24 @@ public class VariablesController {
 
 	// ----- END-POINT: "notify-updated"
 
+	@Operation(summary = "Inform that the given list of WOOL Variables have been updated",
+			description = "With this end-point you can inform this WOOL External Variable Service " +
+					"that a list of WOOL Variables have been updated (e.g. during dialogue execution) " +
+					"for a particular user.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successful operation") })
 	@RequestMapping(value="/notify-updated/{userId}", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<?> notifyUpdated(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			@PathVariable("version")
-					String versionName,
-			@PathVariable String userId,
-			@RequestBody
-					List<WoolVariableParam> woolVariables) {
+			@Parameter(description = "API Version to use, e.g. '1.0.0'")
+				@PathVariable("version") String versionName,
+			@Parameter(description = "The userId of the WOOL user")
+				@PathVariable String userId,
+			@Parameter(description = "List of WOOL Variables for which to check for updates.",
+					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
+				@RequestBody List<WoolVariableParam> woolVariables) {
 		return executeNotifyUpdated(userId, woolVariables);
 	}
 

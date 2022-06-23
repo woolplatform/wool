@@ -21,10 +21,20 @@
  */
 package eu.woolplatform.web.varservice.controller.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class WoolVariableParam {
 
+	@Schema(description = "Name of the WOOL Variable",
+			example = "woolVariableName", required = true)
 	private String name;
+
+	@Schema(description = "Value of the WOOL Variable",
+			example = "some value", required = true)
 	private String value;
+
+	@Schema(description = "UNIX Timestamp indicating when this value was last updated",
+			example = "1655985982", required = true)
 	private Long lastUpdated;
 
 	// ----- Constructors

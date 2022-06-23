@@ -25,11 +25,13 @@ import eu.woolplatform.web.varservice.Application;
 import eu.woolplatform.web.varservice.Configuration;
 import eu.woolplatform.web.varservice.ServiceContext;
 import eu.woolplatform.web.varservice.controller.model.ServiceInfo;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/v{version}/info")
+@Tag(name = "Information", description = "End-points that provide information about the running service")
 public class InfoController {
 
 	@Autowired

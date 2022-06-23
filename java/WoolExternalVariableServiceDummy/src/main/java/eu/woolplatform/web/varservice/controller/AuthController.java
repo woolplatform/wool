@@ -28,6 +28,7 @@ import eu.woolplatform.web.varservice.*;
 import eu.woolplatform.web.varservice.controller.model.LoginParams;
 import eu.woolplatform.web.varservice.exception.*;
 import eu.woolplatform.web.varservice.controller.model.LoginResult;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.http.MediaType;
@@ -42,6 +43,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/v{version}/auth")
+@Tag(name = "Authentication", description = "End-points related to Authentication (currently not used)")
 public class AuthController {
 	private static final Object AUTH_LOCK = new Object();
 
