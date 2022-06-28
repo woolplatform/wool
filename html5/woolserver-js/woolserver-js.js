@@ -145,12 +145,14 @@ _signupURL = _baseURL +  "auth/signup?user=" + _userName + "&password=" + _passw
 
 */
 
-if (require) {
+if (typeof exports != "undefined") {
 	// we are node.js module, include dependencies
 	var mod = require("../lib/utils.js");
-	Utils = mod.Utils;
-	Utils.requireGlobal("../lib/debug.js");
-	Utils.requireGlobal("../woolserver-js/woolserver-js.js");
+	if (mod) {
+		Utils = mod.Utils;
+		Utils.requireGlobal("../lib/debug.js");
+		Utils.requireGlobal("../woolserver-js/woolserver-js.js");
+	}
 }
 
 

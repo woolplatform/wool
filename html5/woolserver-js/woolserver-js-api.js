@@ -1,8 +1,8 @@
 
-if (require) {
+if (typeof exports != "undefined") {
 	// we are node.js module, include dependencies
 	var mod = require("../lib/debug.js");
-	dbg = mod.dbg;
+	if (mod) dbg = mod.dbg;
 }
 
 var directServer = {};

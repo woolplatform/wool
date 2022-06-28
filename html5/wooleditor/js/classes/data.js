@@ -614,6 +614,13 @@ var data =
 		return false;
 	},
 
+	clearDictionary: function() {
+		app.clearLangDefs();
+		alert("Removed translations");
+	},
+
+	// various UI dialogs
+
 	tryClearData: function() {
 		if (!confirm("Clear all nodes?")) return;
 		app.filename("unnamed");
@@ -631,11 +638,6 @@ var data =
 
 	tryOpenLang: function() {
 		data.openFileDialog($('#open-lang'), data.openLang);
-	},
-
-	clearDictionary: function() {
-		app.clearLangDefs();
-		alert("Removed translations");
 	},
 
 	tryOpenFolder: function() {

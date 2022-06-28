@@ -415,8 +415,12 @@
 
 			<!-- navigation / menu -->
 			<div class="app-menu">
-				<div class="menu small">
-					<span class="title" data-bind="click:app.newNode">+ Node</span>
+				<div class="menu">
+					<span class="title" data-bind="click:app.newNode">Add Node</span>
+					<div class="dropdown">
+						<span class="item" data-bind="click: app.historyDirection('undo'), text: app.getLastNodeOp('Undo')"></span>
+						<span class="item" data-bind="click: app.historyDirection('redo'), text: app.getNextNodeOp('Redo')"></span>
+					</div>
 				</div>
 				<div class="menu">
 					<span class="title" data-bind="click:app.runDialogue">Run</span>
@@ -683,7 +687,7 @@
 		<script type="text/javascript">
 			// TODO move this to App, then we can get rid of static parts
 			var filePath = App.getCurrentPath();
-			var app = new App("Wool Editor", "1.10.8",
+			var app = new App("Wool Editor", "1.11.1",
 				filePath ? filePath : "unnamed");
 			app.run();
 			if (app.isNwjs) {

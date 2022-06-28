@@ -1,9 +1,7 @@
 var App = function(name, version, filename) {
 	var self = this;
-	console.log(filename);
-	// self
 	this.instance = this;
-	this.domroot = null;
+	this.domroot = null; // DOM root of visual editor
 	this.name = ko.observable(name);
 	this.version = ko.observable(version);
 	this.filename = ko.observable(filename);
@@ -21,8 +19,8 @@ var App = function(name, version, filename) {
 	this.cachedScale = 1;
 	this.canvas;
 	this.context;
-	this.nodeHistory = [];
-	this.nodeFuture = [];
+	this.nodeHistory = ko.observableArray();
+	this.nodeFuture = ko.observableArray();
 	this.editingHistory = [];
 	//this.appleCmdKey = false;
 	this.editingSaveHistoryTimeout = null;
@@ -59,6 +57,8 @@ var App = function(name, version, filename) {
 	// node-webkit
 	this.isNwjs = detectNodeJS();
 	this.fs = getPlatformFileSystem();
+
+	// getters / setters / helpers -------------------------------------
 
 	this.numberOfNodes = function() {
 		var nr = self.nodes().length;
@@ -119,6 +119,13 @@ var App = function(name, version, filename) {
 		}
 		return false;
 	}
+
+	this.trim = function(x) {
+		return x.replace(/^\s+|\s+$/gm,'');
+	}
+
+	// INIT --------------------------------------------------------
+
 	this.run = function() {
 		//TODO(Al):
 		// delete mutliple nodes at the same time
@@ -149,10 +156,10 @@ var App = function(name, version, filename) {
 			alert("Missing Start node added.");
 		}
 
+		// Title bar
 		self.refreshWindowTitle();
-
-		if (osName != "Windows" && osName != "Linux" && self.gui != undefined)
-		{
+		// Mac title bar
+		if (osName != "Windows" && osName != "Linux" && self.gui != undefined){
 			var win = self.gui.Window.get();
 			var nativeMenuBar = new self.gui.Menu({ type: "menubar" });
 			if(nativeMenuBar.createMacBuiltin) {
@@ -162,8 +169,7 @@ var App = function(name, version, filename) {
 		}
 
 		// search field enter
-		self.$searchField.on("keydown", function (e)
-		{
+		self.$searchField.on("keydown", function (e) {
 				// enter
 				if (e.keyCode == 13)
 					self.searchWarp();
@@ -174,13 +180,10 @@ var App = function(name, version, filename) {
 			});
 
 		// prevent click bubbling
-		ko.bindingHandlers.preventBubble =
-		{
-			init: function(element, valueAccessor)
-			{
+		ko.bindingHandlers.preventBubble = {
+			init: function(element, valueAccessor) {
 				var eventName = ko.utils.unwrapObservable(valueAccessor());
-				ko.utils.registerEventHandler(element, eventName, function(event)
-				{
+				ko.utils.registerEventHandler(element,eventName,function(event){
 					event.cancelBubble = true;
 					if (event.stopPropagation)
 						event.stopPropagation();
@@ -188,13 +191,10 @@ var App = function(name, version, filename) {
 			}
 		};
 
-		ko.bindingHandlers.mousedown =
-		{
-			init: function(element, valueAccessor, allBindings, viewModel, bindingContext)
-			{
+		ko.bindingHandlers.mousedown = {
+			init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
 				var value = ko.unwrap(valueAccessor());
-				$(element).mousedown(function()
-				{
+				$(element).mousedown(function() {
 					value();
 				});
 			}
@@ -203,7 +203,7 @@ var App = function(name, version, filename) {
 		// updateArrows
 		// setInterval(function() { self.updateArrows(); }, 16);
 
-		// drag node holder around
+		// handle drag view and selection marquee
 		(function() {
 			var dragging = false;
 			var offset = { x: 0, y: 0 };
@@ -212,8 +212,29 @@ var App = function(name, version, filename) {
 			var MarqRect = {x1:0,y1:0,x2:0,y2:0};
 			var MarqueeOffset = [0, 0];
 
+			function stopDragging() {
+				dragging = false;
+
+				if(MarqueeOn && MarqueeSelection.length == 0) {
+					self.deselectAllNodes();
+				}
+
+				MarqueeSelection = [];
+				MarqRect = {x1:0,y1:0,x2:0,y2:0};
+				$("#marquee").css({x:0, y:0, width:0, height:0});
+				MarqueeOn = false;
+
+				//XXX save after a second because position is obtained from css
+				//transform which is not updated immediately after style is set.
+				// TODO maintain node position in different way
+				// Coords are no longer changed, so not needed
+				//setTimeout(data.saveToBuffer,500);
+			}
+
 			$(".nodes").on("mousedown", function(e) {
+				// start either drag view or draw marquee
 				if (e.buttons&2) return; // right button is create node
+				// reset marquee and offset
 				$("#marquee").css({x:0, y:0, width:0, height:0});
 				dragging = true;
 				var rootofs = self.domroot.offset();
@@ -226,9 +247,11 @@ var App = function(name, version, filename) {
 
 				MarqueeOffset[0] = 0;
 				MarqueeOffset[1] = 0;
-
-				if (!e.altKey && !e.shiftKey)
+				// choose between marquee drag or view drag
+				if (!e.altKey && !e.shiftKey && !(e.buttons&4)) {
 					self.deselectAllNodes();
+					MarqueeOn = true;
+				}
 			});
 
 			$(".nodes").on("mousemove", function(e) {
@@ -239,42 +262,17 @@ var App = function(name, version, filename) {
 					// middle button or shift/alt: drag the view
 					// We added shiftKey because altKey interferes with
 					// xfce metakey
-					if (e.shiftKey || e.altKey || e.buttons & 4) {
-						//prevents jumping straight back to standard dragging
-						if (MarqueeOn) {
-							// turn off marquee
-							MarqueeSelection = [];
-							MarqRect = {x1:0,y1:0,x2:0,y2:0};
-							$("#marquee").css({x:0, y:0, width:0, height:0});
-						}
-						// drag the view
-						/*
-						self.transformOrigin[0] += erootX - offset.x;
-						self.transformOrigin[1] += erootY - offset.y;
-
-						self.translate();
-
-						offset.x = erootX;
-						offset.y = erootY;
-						*/
-
+					//if (e.shiftKey || e.altKey || e.buttons & 4) {
+					if (!MarqueeOn) {
+						// drag view
 						self.transformOrigin[0] += (erootX - offset.x);
 						self.transformOrigin[1] += (erootY - offset.y);
-
-						/*var nodes = self.nodes();
-						for (var i in nodes)
-						{
-							nodes[i].x(nodes[i].x() + (erootX - offset.x) / self.cachedScale);
-							nodes[i].y(nodes[i].y() + (erootY - offset.y) / self.cachedScale);
-						}*/
 
 						offset.x = erootX;
 						offset.y = erootY;
 						self.translate();
 					} else {
 						// drag marquee
-						MarqueeOn = true;
-
 						var scale = self.cachedScale;
 
 						if(erootX > offset.x && erootY < offset.y) {
@@ -309,12 +307,11 @@ var App = function(name, version, filename) {
 						// selected nodes and deselecting onces which have been selected
 						// by the marquee 
 						var nodes = self.nodes();
-						for(var i in nodes)
-						{
+						for (var i in nodes) {
 							var index = MarqueeSelection.indexOf(nodes[i]);
 							var inMarqueeSelection = (index >= 0);
 
-							//test the Marque scaled to the nodes x,y values
+							//test the Marquee scaled to the nodes x,y values
 
 							var holder = $(".nodes-holder").offset(); 
 							holder.left -= rootofs.left;
@@ -323,22 +320,16 @@ var App = function(name, version, filename) {
         									   && (MarqRect.y2 - holder.top) / scale > nodes[i].y()   
         									   && (MarqRect.y1 - holder.top) / scale < nodes[i].y() + nodes[i].tempHeight;
 
-							if(marqueeOverNode)
-							{
-								if(!inMarqueeSelection)
-								{
+							if(marqueeOverNode) {
+								if(!inMarqueeSelection) {
 									self.addNodeSelected(nodes[i]);
 									MarqueeSelection.push(nodes[i]);
 								}
-							}
-							else
-							{
-								if(inMarqueeSelection)
-								{
+							} else {
+								if(inMarqueeSelection) {
 									self.removeNodeSelection(nodes[i]);
 									MarqueeSelection.splice(index, 1);
 								}
-
 							}
 						}
 					}
@@ -347,25 +338,16 @@ var App = function(name, version, filename) {
 
 			});
 
-			$(".nodes").on("mouseup", function(e)
-			{
-				//console.log("finished dragging");
-				dragging = false;
-
-				if(MarqueeOn && MarqueeSelection.length == 0)
-				{
-					self.deselectAllNodes();
+			$(".nodes").on("mouseup", function(e) {
+				stopDragging();
+			});
+			$(".nodes").on("mouseleave", function(e) {
+			});
+			$(".nodes").on("mouseenter", function(e) {
+				// stop dragging if buttons were released outside of element
+				if (!(e.buttons&4 || e.buttons&1)) {
+					stopDragging();
 				}
-
-				MarqueeSelection = [];
-				MarqRect = {x1:0,y1:0,x2:0,y2:0};
-				$("#marquee").css({x:0, y:0, width:0, height:0});
-				MarqueeOn = false;
-
-				//XXX save after a second because position is obtained from css
-				//transform which is not updated immediately after style is set.
-				// TODO maintain node position in different way
-				setTimeout(data.saveToBuffer,500);
 			});
 		})();
 
@@ -409,7 +391,9 @@ var App = function(name, version, filename) {
 			self.translate();
 		});
 
-		this.domroot.on('keyup keydown', function(e) { self.shifted = e.shiftKey; } );
+		this.domroot.on('keyup keydown', function(e) {
+			self.shifted = e.shiftKey; 
+		} );
 
 		this.domroot.contextmenu( function(e){
 			var isAllowedEl = (
@@ -431,70 +415,27 @@ var App = function(name, version, filename) {
 			return !isAllowedEl; 
 		}); 
 
+		// global control-key shortkuts
 		this.domroot.on('keydown', function(e){
-			//global ctrl+z
-			if((e.metaKey || e.ctrlKey) && !self.editing())
-			{
-				switch(e.keyCode)
-				{
+			if((e.metaKey || e.ctrlKey) && !self.editing()) {
+				switch(e.keyCode) {
+					// ctrl z
 					case 90: self.historyDirection("undo");
 					break;
+					// ctrl y
 					case 89: self.historyDirection("redo");
 					break;
+					// ctrl d
 					case 68: self.deselectAllNodes();
 				}
 			}
 		});
-                
-        this.domroot.on('keydown', function(e) {
-			// XXX Is this supposed to be node-webkit only? It works in the
-			// browser but interferes with metakeys.
-            if (self.isNwjs === false) { return; }
-            
-            if (e.ctrlKey || e.metaKey) {
-                if (e.shiftKey) {
-                    switch(e.keyCode)
-                    {
-                        //case 83: // 's'
-                        //    data.trySave(FILETYPE.JSON);
-                        //    self.fileKeyPressed = true;
-                        //break;
-                        case 65: // 'a'
-                            data.tryAppend();
-                            self.fileKeyPressed = true;
-                        break;
-                    }
-                } else if(e.altKey) {
-                    switch(e.keyCode)
-                    {
-                        case 83:  // 's'
-                            data.trySave(FILETYPE.WOOL);
-                            self.fileKeyPressed = true;
-                        break;
-                    }  
-                } else {
-                    switch(e.keyCode)
-                    {
-                       // case 83: // 's'
-                       //     if (data.editingPath() != null) {
-                       //         data.trySaveCurrent();     
-                       //     } else {
-                       //         data.trySave(FILETYPE.JSON);
-                       //     }
-                       //     self.fileKeyPressed = true;
-                       // break;
-                        case 79: // 'o'
-                            data.tryOpenFile();
-                            self.fileKeyPressed = true;
-                        break;                        
-                    }
-                }                
-            }                  
-        });
-        
+
+        // cursors / wsad = move view
+		// space: center successive nodes
 		this.domroot.on('keydown', function(e) {
-			if (self.translating() || self.editing() || self.$searchField.is(':focus') || e.ctrlKey || e.metaKey) return;                                                    
-			var scale = self.cachedScale || 1,
+			if (self.translating() || self.editing() || self.$searchField.is(':focus') || e.ctrlKey || e.metaKey) return;                                                    
+			var scale = self.cachedScale || 1,
 				movement = scale * 400;
 
 			if(e.shiftKey) {
@@ -509,7 +450,7 @@ var App = function(name, version, filename) {
 				self.transformOrigin[1] += movement;
 			} else if (e.keyCode === 83 || e.keyCode === 40) {  // w or down arrow
 				self.transformOrigin[1] -= movement;
-			} else if (e.keyCode === 32) {
+			} else if (e.keyCode === 32) { // space
 				var selectedNodes = self.getSelectedNodes();
 				var nodes = selectedNodes.length > 0
 							? selectedNodes
@@ -526,12 +467,10 @@ var App = function(name, version, filename) {
 					self.focusedNodeIdx = 0;
 				}
 				self.cachedScale = 1;
-				if (isNodeSelected)
-				{
+				if (isNodeSelected) {
 					self.warpToSelectedNodeIdx(self.focusedNodeIdx);
 				}
-				else
-				{
+				else {
 					self.warpToNodeIdx(self.focusedNodeIdx);
 				}
 			}
@@ -544,8 +483,7 @@ var App = function(name, version, filename) {
 		});
 
 		this.domroot.on('keyup keydown mousedown mouseup', function(e) {
-			if(self.editing() != null)
-			{
+			if(self.editing() != null) {
 				self.updateEditorStats();
 			}
 		});
@@ -575,21 +513,19 @@ var App = function(name, version, filename) {
 
 		self.translate();
 
-	} // this.run()
+	} // END this.run()
 
-	this.getNodesConnectedTo = function(toNode)
-	{
+
+	// UI / various ----------------------------------------------------
+
+	this.getNodesConnectedTo = function(toNode) {
 		var connectedNodes = [];
 		var nodes = self.nodes();
-		for (var i in nodes)
-		{
-			if (nodes[i] != toNode && nodes[i].isConnectedTo(toNode, true))
-			{
+		for (var i in nodes) {
+			if (nodes[i] != toNode && nodes[i].isConnectedTo(toNode, true)) {
 				var hasNode = false;
-				for (var j in connectedNodes)
-				{
-					if (connectedNodes[j] == nodes[i])
-					{
+				for (var j in connectedNodes) {
+					if (connectedNodes[j] == nodes[i]) {
 						hasNode = true;
 						break;
 					}
@@ -614,11 +550,6 @@ var App = function(name, version, filename) {
 	this.areChangesSaved = function() {
 		var newsource = data.normalizeSource(data.getSaveData(FILETYPE.WOOL));
 		var oldsource = data.normalizeSource(this.lastSavedSource);
-		// test output for changesnotsaved bug test
-		// file1:
-		//console.log(newsource);
-		// file2:
-		//console.log(oldsource);
 		return !oldsource || newsource == oldsource;
 	}
 
@@ -629,26 +560,23 @@ var App = function(name, version, filename) {
 	}
 
 
-	this.mouseUpOnNodeNotMoved = function()
-	{
+	this.mouseUpOnNodeNotMoved = function() {
 		self.deselectAllNodes();
 	}
 
-	this.matchConnectedColorID = function(fromNode)
-	{
+	this.matchConnectedColorID = function(fromNode) {
 		var nodes = self.getNodesConnectedTo(fromNode);
 		for (var i in nodes)
 			nodes[i].colorID(fromNode.colorID());
 	}
 
-	this.quit = function()
-	{
-		if (self.gui != undefined)
-		{
+	this.quit = function() {
+		if (self.gui != undefined) {
 			self.gui.App.quit();
 		}
 	}
 
+	// XXX does not seem to work
 	this.refreshWindowTitle = function(editingPath) {
 		if (!editingPath) {
 			editingPath = App.getCurrentPath();
@@ -666,37 +594,56 @@ var App = function(name, version, filename) {
 		//localStorage.setItem(App.LOCALSTORAGEPREFIX+"path",editingPath);
 	}
 
-	this.recordNodeAction = function(action, node)
-	{
+
+	// undo / redo -------------------------------------------------------
+
+	this.recordNodeAction = function(action, node) {
 		//we can't go forward in 'time' when
 		//new actions have been made
-		if(self.nodeFuture.length > 0)
-		{
-			for (var i = 0; i < self.nodeFuture.length; i++) {
+		if(self.nodeFuture().length > 0) {
+			for (var i = 0; i < self.nodeFuture().length; i++) {
 				var future = self.nodeFuture.pop();
 				delete future.node;
 			};
-
-			delete self.nodeFuture;
-			self.nodeFuture = [];
 		}
 
-		var historyItem = {action: action, node: node, lastX: node.x(), lastY: node.y()};
+		var historyItem = {
+			action: action,
+			node: node,
+			lastX: node.x(),
+			lastY: node.y()
+		};
 
-		if(action == "removed")
-		{
+		if (action == "removed") {
 			historyItem.lastY+=80;
 		}
 
 		self.nodeHistory.push(historyItem);
 	}
 
-	this.historyDirection = function(direction)
-	{
-		function removeNode(node){
+	this.getLastNodeOp = function(opstring) {
+		return self.getLastNextNodeOp(self.nodeHistory,opstring);
+	}
+
+	this.getNextNodeOp = function(opstring) {
+		return self.getLastNextNodeOp(self.nodeFuture,opstring);
+	}
+
+	this.getLastNextNodeOp = function(variable,opstring) {
+		if (variable().length == 0) {
+			return "[No "+opstring+"]";
+		}
+		if (variable()[variable().length-1].action=="created") {
+			return opstring+" Add";
+		} else {
+			return opstring+" Del";
+		}
+	}
+
+	this.historyDirection = function(direction) {
+		function removeNode(node) {
 			var index = self.nodes.indexOf(node);
-			if  (index >= 0)
-			{
+			if  (index >= 0) {
 				self.nodes.splice(index, 1);
 			}
 			self.updateNodeLinks();
@@ -704,56 +651,45 @@ var App = function(name, version, filename) {
 
 		var historyItem = null;
 
-		if(direction == "undo") 
+		if (direction == "undo") 
 			historyItem = self.nodeHistory.pop();
 		else
 			historyItem = self.nodeFuture.pop();
 		
-		if(!historyItem) return;
+		if (!historyItem) return;
 
 		var action = historyItem.action;
 		var node = historyItem.node;
-
 		
-		if(direction == "undo") //undo actions
-		{
-			if(action == "created")
-			{
+		if (direction == "undo") {
+			if (action == "created") {
 				historyItem.lastX = node.x();
 				historyItem.lastY = node.y();
 				removeNode(node);
-			}
-			else if(action == "removed")
-			{
+			} else if(action == "removed") {
 				self.recreateNode(node, historyItem.lastX, historyItem.lastY);
 			}
-
 			self.nodeFuture.push(historyItem);
-		}
-		else //redo undone actions
-		{
-			if(action == "created")
-			{
+		} else { //redo undone actions
+			if(action == "created") {
 				self.recreateNode(node, historyItem.lastX, historyItem.lastY);
-			}
-			else if(action == "removed")
-			{
+			} else if(action == "removed") {
 				removeNode(node);
 			}
-
 			self.nodeHistory.push(historyItem);
 		}		
 	}
 
-	this.recreateNode = function(node, x, y)
-	{
+	this.recreateNode = function(node, x, y) {
 		self.nodes.push(node);
 		node.moveTo(x, y);
 		self.updateNodeLinks(); 
 	}
 
-	this.setSelectedColors = function(node)
-	{
+
+	// Node ops -----------------------------------------------------
+
+	this.setSelectedColors = function(node) {
 		var nodes = self.getSelectedNodes();
 		nodes.splice(nodes.indexOf(node), 1);
 
@@ -761,15 +697,11 @@ var App = function(name, version, filename) {
 			nodes[i].colorID(node.colorID());		
 	}
 
-	this.getSelectedNodes = function()
-	{
+	this.getSelectedNodes = function() {
 		var selectedNode = [];
-
-		for(var i in self.nodeSelection)
-		{
+		for(var i in self.nodeSelection) {
 			selectedNode.push(self.nodeSelection[i]);
 		}
-
 		return selectedNode;
 	}
 
@@ -842,15 +774,12 @@ var App = function(name, version, filename) {
 		return node;
 	}
 
-	this.removeNode = function(node)
-	{	
-		if(node.selected)
-		{
+	this.removeNode = function(node) {	
+		if(node.selected) {
 			self.deleteSelectedNodes();
 		}
 		var index = self.nodes.indexOf(node);
-		if  (index >= 0)
-		{
+		if  (index >= 0) {
 			self.recordNodeAction("removed", node);
 			self.nodes.splice(index, 1);
 		}
@@ -875,11 +804,6 @@ var App = function(name, version, filename) {
 		}
 	}
 
-	this.trim = function(x)
-	{
-		return x.replace(/^\s+|\s+$/gm,'');
-	}
-
 	this.saveNode = function() {
 		if (self.editing() != null) {
 			data.saveToBuffer();
@@ -896,6 +820,9 @@ var App = function(name, version, filename) {
 			setTimeout(self.updateSearch, 100);
 		}
 	}
+
+
+	// UI -----------------------------------------------------
 
 	this.updateSearch = function() {
 		// Start node is checked after saveNode is finished, this is because
@@ -1230,10 +1157,9 @@ var App = function(name, version, filename) {
 		}
 	}
 
-	this.zoom = function(zoomLevel)
-	{
-		switch (zoomLevel)
-		{
+	// currently unused, zoom controls disabled
+	this.zoom = function(zoomLevel) {
+		switch (zoomLevel) {
 			case 1:
 				self.cachedScale = 0.25;
 				break;
@@ -1247,7 +1173,6 @@ var App = function(name, version, filename) {
 				self.cachedScale = 1;
 				break;
 		}
-
 		self.translate(200);
 	}
 
@@ -1368,8 +1293,8 @@ var App = function(name, version, filename) {
 		return { x: avgx / nrNodes, y: avgy/nrNodes }
 	}
 
-	this.arrangeSpiral = function()
-	{
+	// currently unused, ui control disabled
+	this.arrangeSpiral = function() {
 		for (var i in self.nodes())
 		{
 			var node = self.nodes()[i];
@@ -1379,8 +1304,8 @@ var App = function(name, version, filename) {
 		}
 	}
 
-	this.sortAlphabetical = function()
-	{
+	// currently unused, ui control disabled
+	this.sortAlphabetical = function() {
 		console.log(self.nodes.sort);
 		self.nodes.sort(function(a, b) { return a.title().localeCompare(b.title()); });
 	}
