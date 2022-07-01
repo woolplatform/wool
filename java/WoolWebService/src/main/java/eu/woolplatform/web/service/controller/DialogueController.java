@@ -45,7 +45,9 @@ import eu.woolplatform.wool.model.WoolMessageSource;
 import eu.woolplatform.wool.model.protocol.DialogueMessage;
 import eu.woolplatform.wool.model.protocol.DialogueMessageFactory;
 import eu.woolplatform.wool.model.protocol.NullableResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,12 +71,21 @@ import java.util.Map;
 @RestController
 @SecurityRequirement(name = "X-Auth-Token")
 @RequestMapping("/v{version}/dialogue")
+@Tag(name = "Dialogues", description = "End-points for starting, and controlling the lifecycle of remotely executed dialogues")
 public class DialogueController {
 	@Autowired
 	Application application;
 
 	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
+	// ----- END-POINT: "start-dialogue"
+
+	@Operation(summary = "Start the step-by-step execution of the dialogue identified by the given parameters",
+			description = "A client application that wants to start executing a dialogue should use this end-point " +
+					"to do so. The dialogueName (which is the dialogue's filename without it's .wool extension and " +
+					"language are mandatory parameters. The 'woolUserId' is an optional parameter that may be used " +
+					"if the currently authorized user is an admin and wants to execute a dialogue on behalf of another " +
+					"user. If the authenticated user is running a dialogue 'for himself' this should be left empty.")
 	@RequestMapping(value="/start-dialogue", method= RequestMethod.POST)
 	public DialogueMessage startDialogue(
 			HttpServletRequest request,
@@ -138,6 +149,8 @@ public class DialogueController {
 			throw createHttpException(e);
 		}
 	}
+
+	// ----- END-POINT: "progress-dialogue"
 
 	/**
 	 * End point that returns the next statement by the agent and its
@@ -224,6 +237,8 @@ public class DialogueController {
 		}
 	}
 
+	// ----- END-POINT: "back-dialogue"
+
 	@RequestMapping(value="/back-dialogue", method=RequestMethod.POST)
 	public DialogueMessage backDialogue(
 			HttpServletRequest request,
@@ -271,6 +286,8 @@ public class DialogueController {
 			throw createHttpException(e);
 		}
 	}
+
+	// ----- END-POINT: "current-dialogue"
 
 	@RequestMapping(value="/current-dialogue", method=RequestMethod.GET)
 	public NullableResponse<DialogueMessage> getCurrentDialogue(
@@ -332,6 +349,8 @@ public class DialogueController {
 			return new NullableResponse<>(null);
 		}
 	}
+
+	// ----- END-POINT: "cancel-dialogue"
 
 	@RequestMapping(value="/cancel-dialogue", method=RequestMethod.POST)
 	public void cancelDialogue(

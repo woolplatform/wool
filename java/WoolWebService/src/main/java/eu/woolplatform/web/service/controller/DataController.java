@@ -30,6 +30,7 @@ import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
 import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.QueryRunner;
+import eu.woolplatform.web.service.controller.model.LoginParams;
 import eu.woolplatform.web.service.exception.BadRequestException;
 import eu.woolplatform.web.service.exception.ErrorCode;
 import eu.woolplatform.web.service.exception.HttpError;
@@ -176,36 +177,25 @@ public class DataController {
 			@PathVariable("version")
 			String versionName,
 			@RequestParam(value="woolUserId",required=false,defaultValue="")
-			String woolUserId) throws Exception {
+			String woolUserId,
+			@RequestBody
+			Map<String,Object> woolVariables) throws Exception {
 		if(woolUserId.equals("")) {
 			logger.info("Post /variables");
-			QueryRunner.runQuery((version, user) -> doSetVariables(request, user),
+			QueryRunner.runQuery((version, user) -> doSetVariables(request, user, woolVariables),
 				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("Post /variables?woolUserId="+woolUserId);
-			QueryRunner.runQuery((version, user) -> doSetVariables(request, woolUserId),
+			QueryRunner.runQuery((version, user) -> doSetVariables(request, woolUserId, woolVariables),
 				versionName, request, response, woolUserId, application);
 		}
 	}
 
-	private Object doSetVariables(HttpServletRequest request, String woolUserId)
+	private Object doSetVariables(HttpServletRequest request, String woolUserId, Map<String,Object> woolVariables)
 			throws Exception {
-		InputStream input = request.getInputStream();
-		Map<String, ?> varMap;
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			varMap = mapper.readValue(input,
-					new TypeReference<Map<String, ?>>() {
-					});
-		} catch (JsonProcessingException ex) {
-			String msg = "Invalid input: " + ex.getMessage();
-			HttpError error = new HttpError(ErrorCode.INVALID_INPUT, msg);
-			throw new BadRequestException(error);
-		} finally {
-			input.close();
-		}
+
 		List<String> invalidNames = new ArrayList<>();
-		for (String name : varMap.keySet()) {
+		for (String name : woolVariables.keySet()) {
 			if (!name.matches("[A-Za-z][A-Za-z0-9_]*"))
 				invalidNames.add(name);
 		}
@@ -219,7 +209,7 @@ public class DataController {
 				.getActiveUserService(woolUserId);
 		Map<String,Object> varStore = userService.variableStore
 				.getModifiableMap(true, null);
-		varStore.putAll(varMap);
+		varStore.putAll(woolVariables);
 		return null;
 	}
 }
