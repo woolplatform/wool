@@ -21,16 +21,12 @@
  */
 package eu.woolplatform.web.service.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
 import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.QueryRunner;
-import eu.woolplatform.web.service.controller.model.LoginParams;
 import eu.woolplatform.web.service.exception.BadRequestException;
 import eu.woolplatform.web.service.exception.ErrorCode;
 import eu.woolplatform.web.service.exception.HttpError;
@@ -53,7 +49,7 @@ public class DataController {
 	@Autowired
 	Application application;
 
-	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	@RequestMapping(value="/variables", method=RequestMethod.GET)
 	public Map<String,Object> getVariables(
