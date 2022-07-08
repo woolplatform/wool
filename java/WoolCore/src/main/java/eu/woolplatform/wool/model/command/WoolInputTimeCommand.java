@@ -1,6 +1,7 @@
 package eu.woolplatform.wool.model.command;
 
 import eu.woolplatform.utils.exception.LineNumberParseException;
+import eu.woolplatform.wool.execution.WoolVariable;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.utils.expressions.EvaluationException;
 import eu.woolplatform.utils.expressions.Value;
@@ -97,7 +98,8 @@ public class WoolInputTimeCommand extends WoolInputCommand {
 
 	@Override
 	public String getStatementLog(WoolVariableStore varStore) {
-		Value value = new Value(varStore.getValue(variableName));
+		WoolVariable woolVariable = varStore.getWoolVariable(variableName);
+		Value value = new Value(woolVariable.getValue());
 		return value.toString();
 	}
 

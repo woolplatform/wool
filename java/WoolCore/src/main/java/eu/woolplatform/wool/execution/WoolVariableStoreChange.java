@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class WoolVariableStoreChange {
+
 	public static class Put extends WoolVariableStoreChange {
 		private Map<String,?> variables;
 		private DateTime time;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Roessingh Research and Development.
+ * Copyright 2019-2022 WOOL Foundation.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -26,195 +26,298 @@ import org.joda.time.DateTime;
 
 import java.util.*;
 
-
 /**
- * Interface class for {@link WoolVariableStore}'s. A {@link WoolVariableStore} implementation acts
- * as an interface between Wool scripts (and the variables used in e.g. "if" and "set" statements therein) and
- * the dialogue execution engine. 
+ * A {@link WoolVariableStore} is an object that stores all WOOL variable values for a given
+ * user.
  * 
  * @author Harm op den Akker
  */
 public class WoolVariableStore {
-	private final Map<String,Object> variableMap = new HashMap<>();
 
-	private final List<OnChangeListener> onChangeListeners = new ArrayList<>();
+	// Contains the list of all WoolVariables in this store
+	private final Map<String,WoolVariable> woolVariables = new HashMap<>();
 
-	public void addOnChangeListener(OnChangeListener listener) {
+	// Contains the list of all WoolVariableChangeListeners that need to be notified in case of updates
+	private final List<WoolVariableStoreOnChangeListener> onChangeListeners = new ArrayList<>();
+
+	// ----- Listeners
+
+	/**
+	 * Adds the given {@link WoolVariableStoreOnChangeListener} to the list of listeners
+	 * for this {@link WoolVariableStore}.
+	 *
+	 * @param listener a {@link WoolVariableStoreOnChangeListener} that should be notified whenever
+	 *                 the WoolVariableStore is changed
+	 */
+	public void addOnChangeListener(WoolVariableStoreOnChangeListener listener) {
 		synchronized (onChangeListeners) {
 			onChangeListeners.add(listener);
 		}
 	}
 
-	public void removeOnChangeListener(OnChangeListener listener) {
+	/**
+	 * Removes the given {@link WoolVariableStoreOnChangeListener} from the list of listeners
+	 * for this {@link WoolVariableStore}.
+	 *
+	 * @param listener a {@link WoolVariableStoreOnChangeListener} that was previously registered
+	 *                 to listen for changes.
+	 * @return {@code true} if the given {@link WoolVariableStoreOnChangeListener} was removed, or {@code false}
+	 * if it was not registered as a listener to begin with.
+	 */
+	public boolean removeOnChangeListener(WoolVariableStoreOnChangeListener listener) {
 		synchronized (onChangeListeners) {
-			onChangeListeners.remove(listener);
-		}
-	}
-
-	private void notifyOnChange(WoolVariableStoreChange... changes) {
-		List<OnChangeListener> ls;
-		synchronized (onChangeListeners) {
-			ls = new ArrayList<>(onChangeListeners);
-		}
-		for (OnChangeListener l : ls) {
-			l.onChange(this, Arrays.asList(changes));
+			return onChangeListeners.remove(listener);
 		}
 	}
 
 	/**
-	 * Stores the given {@code value} under the given {@code name} in this
-	 * {@link WoolVariableStore}.
+	 * Notifies all {@link WoolVariableStoreOnChangeListener} that are listening for changes to this
+	 * {@link WoolVariableStore} of one or more changes as represented by the list of
+	 * {@link WoolVariableStoreChange} {@code changes}.
 	 *
-	 * @param name the name of the variable to store.
-	 * @param value the value of the variable to store.
-	 * @param save true if the variable should be saved in the database, false
-	 * if it can be kept just in memory
-	 * @param time the time (in the time zone of the user) that should be stored
-	 * with this value. This is ignored and can be null if "save" is false
+	 * @param changes one or multiple {@link WoolVariableStoreChange}s representing a modification to
+	 *                this {@link WoolVariableStore}.
 	 */
-	public void setValue(String name, Object value, boolean save,
-			DateTime time) {
-		synchronized (variableMap) {
-			variableMap.put(name, value);
+	private void notifyOnChange(WoolVariableStoreChange... changes) {
+		List<WoolVariableStoreOnChangeListener> listeners;
+		synchronized (onChangeListeners) {
+			listeners = new ArrayList<>(onChangeListeners);
 		}
-		if (save)
-			notifyOnChange(new WoolVariableStoreChange.Put(name, value, time));
+		for (WoolVariableStoreOnChangeListener listener : listeners) {
+			listener.onChange(this, Arrays.asList(changes));
+		}
+	}
+
+	// ---- Modify Methods
+
+	/**
+	 * Stores the given {@code value} under the given variable-{@code name} in this
+	 * {@link WoolVariableStore} and sets the lastUpdatedTime to {@code time}.
+	 *
+	 * @param name            the name of the variable to store.
+	 * @param value           the value of the variable to store.
+	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
+	 *                        notified about this update.
+	 * @param updatedTime     the time (in the time zone of the user) that should be stored
+	 *                        with this value.
+	 */
+	public void setValue(String name, Object value, boolean notifyObservers,
+						 DateTime updatedTime) {
+		synchronized (woolVariables) {
+			woolVariables.put(name,new WoolVariable(name, value, updatedTime));
+		}
+		if (notifyObservers) {
+			notifyOnChange(new WoolVariableStoreChange.Put(name, value, updatedTime));
+		}
 	}
 
 	/**
 	 * Retrieves the variable identified by the given {@code name}, or returns
-	 * null if no such variable is known.
+	 * {@code null} if no such variable is known in this {@link WoolVariableStore}.
+	 *
 	 * @param name the name of the variable to retrieve.
-	 * @return the associated value of the variable ({@link String}, {@link Number}, {@link Boolean}, null)
+	 * @return the {@link WoolVariable} with the given {@code name}, nor {@code null}.
 	 */
-	public Object getValue(String name) {
-		synchronized (variableMap) {
-			return variableMap.get(name);
+	public WoolVariable getWoolVariable(String name) {
+		synchronized (woolVariables) {
+			return woolVariables.get(name);
 		}
 	}
 
 	/**
-	 * Returns a modifiable map for this variable store. If "save" is true, then
-	 * any modification is saved to the database with the specified time.
+	 * Remove the {@link WoolVariable} with the given {@code name} from this {@link WoolVariableStore}. This method
+	 * returns the {@link WoolVariable} object that has been deleted, or {@code null} if the element to be deleted was
+	 * not found.
 	 *
-	 * @param save true if the variable should be saved in the database, false
-	 * if it can be kept just in memory
-	 * @param time the time in the time zone of the user. This is ignored and
-	 * can be null if "save" is false
+	 * @param name            the name of the {@link WoolVariable} to remove.
+	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
+	 *                        notified about this update.
+	 * @param updatedTime     the time (in the time zone of the user) that should be passed on
+	 *                        with the notification of observers.
+	 * @return the {@link WoolVariable} that was removed, or {@code null}.
+	 */
+	public WoolVariable removeByName(String name, boolean notifyObservers, DateTime updatedTime) {
+		WoolVariable result;
+		synchronized (woolVariables) {
+			result = woolVariables.remove(name);
+		}
+		if(result == null) {
+			return null;
+		} else {
+			if(notifyObservers) {
+				notifyOnChange(new WoolVariableStoreChange.Remove(name, updatedTime));
+			}
+			return result;
+		}
+	}
+
+	/**
+	 * Adds all the entries in the {@code variablesToAdd}-map as {@link WoolVariable}s to this {@link WoolVariableStore}. The
+	 * {@code variablesToAdd}-map is treated as a mapping from variable names ({@link String}s) to variable values ({@link Object}s).
+	 * @param variablesToAdd  the {@link Map} of name-value pairs to add as {@link WoolVariable}s.
+	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
+	 *                        notified about this update.
+	 * @param updatedTime     the time (in the time zone of the user) that should be passed on
+	 *                        with the notification of observers.
+	 */
+	public void addAll(Map<? extends String, ?> variablesToAdd, boolean notifyObservers, DateTime updatedTime) {
+		for (Map.Entry<? extends String, ?> entry : variablesToAdd.entrySet()) {
+			String name = entry.getKey();
+			Object value = entry.getValue();
+			WoolVariable woolVariable = new WoolVariable(name,value,updatedTime);
+			synchronized (woolVariables) {
+				woolVariables.put(name,woolVariable);
+			}
+		}
+
+		if (notifyObservers) {
+			Map<String, Object> notifyMap = new LinkedHashMap<>(variablesToAdd);
+			notifyOnChange(new WoolVariableStoreChange.Put(notifyMap, updatedTime));
+		}
+	}
+
+	/**
+	 * Returns a modifiable mapping of {@link String}s to {@link Object}s that is linked to the contents
+	 * of this {@link WoolVariableStore}. The {@link Object} values in this map are the values of the stored {@link WoolVariable}s,
+	 * so not the {@link WoolVariable}s themselves! This {@code Map<String,Object>} can be used as a regular map,
+	 * but is actually a specific implementation for this variable store. All basic map operations on
+	 * the resulting map are observable by the {@link WoolVariableStoreOnChangeListener}s that are registered
+	 * to listen to this {@link WoolVariableStore}.
+	 *
+	 * This "modifiable map" is used in the execution of WOOL Dialogues containing WOOL Variables, as the implementation
+	 * relies on the {@link eu.woolplatform.utils.expressions.Expression} interface.
+	 *
+	 * In other words, if you are thinking "Man, I wish WoolVariableStore was just a simple mapping of variable names to values",
+	 * use this method, and you can pretend that it is so.
+	 *
+	 * If {@code notifyObservers} is {@code true}, then any action that modifies the content of this {@link Map}
+	 * will result in all listeners being notified, passing along the given {@code time} as a {@link DateTime} object.
+	 *
+	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should
+	 *                        be notified about updates to the Map.
+	 * @param updatedTime the time in the time zone of the user.
 	 * @return the modifiable map
 	 */
-	public Map<String,Object> getModifiableMap(boolean save, DateTime time) {
-		return new SourceMap(save, time);
+	public Map<String, Object> getModifiableMap(boolean notifyObservers, DateTime updatedTime) {
+		return new WoolVariableMap(notifyObservers, updatedTime);
 	}
-	
-	private class SourceMap implements Map<String,Object> {
-		private boolean save;
-		private DateTime time;
 
-		public SourceMap(boolean save, DateTime time) {
-			this.save = save;
-			this.time = time;
+	private class WoolVariableMap implements Map<String, Object> {
+
+		private final boolean notifyObservers;
+		private final DateTime updatedTime;
+
+		public WoolVariableMap(boolean notifyObservers, DateTime updatedTime) {
+			this.notifyObservers = notifyObservers;
+			this.updatedTime = updatedTime;
 		}
 
 		@Override
 		public int size() {
-			synchronized (variableMap) {
-				return variableMap.size();
+			synchronized (woolVariables) {
+				return woolVariables.size();
 			}
 		}
 
 		@Override
 		public boolean isEmpty() {
-			synchronized (variableMap) {
-				return variableMap.isEmpty();
+			synchronized (woolVariables) {
+				return woolVariables.isEmpty();
 			}
 		}
 
 		@Override
 		public boolean containsKey(Object key) {
-			synchronized (variableMap) {
-				return variableMap.containsKey(key);
+			synchronized (woolVariables) {
+				return woolVariables.containsKey(key);
 			}
 		}
 
 		@Override
 		public boolean containsValue(Object value) {
-			synchronized (variableMap) {
-				return variableMap.containsValue(value);
+			synchronized (woolVariables) {
+				for (Map.Entry<String,WoolVariable> entry : woolVariables.entrySet()) {
+					if(entry.getValue().getValue().equals(value)) return true;
+				}
+				return false;
 			}
 		}
 
 		@Override
 		public Object get(Object key) {
-			synchronized (variableMap) {
-				return variableMap.get(key);
+			synchronized (woolVariables) {
+				if(woolVariables.get(key) != null) {
+					return woolVariables.get(key).getValue();
+				} else return null;
 			}
 		}
 
 		@Override
 		public Object put(String key, Object value) {
 			Object result = get(key);
-			setValue(key, value, save, time);
+			setValue(key, value, notifyObservers, updatedTime);
 			return result;
 		}
 
 		@Override
 		public Object remove(Object key) {
-			Object result;
-			synchronized (variableMap) {
-				result = variableMap.remove(key);
-			}
-			if (save) {
-				notifyOnChange(new WoolVariableStoreChange.Remove((String) key,
-						time));
-			}
-			return result;
+			WoolVariable result = removeByName((String)key, notifyObservers, updatedTime);
+			if(result != null) return result.getValue();
+			else return null;
 		}
 
 		@Override
-		public void putAll(Map<? extends String, ?> m) {
-			synchronized (variableMap) {
-				variableMap.putAll(m);
-			}
-			if (save) {
-				Map<String, Object> notifyMap = new LinkedHashMap<>(m);
-				notifyOnChange(new WoolVariableStoreChange.Put(notifyMap, time));
-			}
+		public void putAll(Map<? extends String, ?> variablesToAdd) {
+			addAll(variablesToAdd,notifyObservers,updatedTime);
 		}
 
 		@Override
 		public void clear() {
-			synchronized (variableMap) {
-				variableMap.clear();
+			synchronized (woolVariables) {
+				woolVariables.clear();
 			}
-			if (save)
-				notifyOnChange(new WoolVariableStoreChange.Clear(time));
+			if (notifyObservers)
+				notifyOnChange(new WoolVariableStoreChange.Clear(updatedTime));
 		}
 
 		@Override
 		public Set<String> keySet() {
-			synchronized (variableMap) {
-				return variableMap.keySet();
+			synchronized (woolVariables) {
+				return woolVariables.keySet();
 			}
 		}
 
 		@Override
 		public Collection<Object> values() {
-			synchronized (variableMap) {
-				return variableMap.values();
+			Collection<Object> objectCollection = new ArrayList<>();
+
+			synchronized (woolVariables) {
+				Collection<WoolVariable> woolVariableCollection = woolVariables.values();
+				for(WoolVariable woolVariable : woolVariableCollection) {
+					objectCollection.add(woolVariable.getValue());
+				}
 			}
+
+			return objectCollection;
 		}
 
 		@Override
 		public Set<Entry<String, Object>> entrySet() {
-			synchronized (variableMap) {
-				return variableMap.entrySet();
+			Set<Entry<String,Object>> resultSet = new HashSet<>();
+
+			synchronized (woolVariables) {
+				Set<Entry<String,WoolVariable>> entrySet = woolVariables.entrySet();
+
+				for(Entry<String,WoolVariable> entry : entrySet) {
+					String key = entry.getKey();
+					Object value = entry.getValue().getValue();
+					Map.Entry<String,Object> newEntry = new AbstractMap.SimpleEntry<>(key, value);
+					resultSet.add(newEntry);
+				}
 			}
+
+			return resultSet;
 		}
 	}
-
-	public interface OnChangeListener {
-		void onChange(WoolVariableStore varStore,
-				List<WoolVariableStoreChange> changes);
-	}
 }
+

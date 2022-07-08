@@ -32,9 +32,7 @@ import eu.woolplatform.web.service.model.LoggedDialogueStoreIO;
 import eu.woolplatform.web.service.model.VariableStoreIO;
 import eu.woolplatform.web.service.model.WoolVariableResponse;
 import eu.woolplatform.wool.exception.WoolException;
-import eu.woolplatform.wool.execution.ActiveWoolDialogue;
-import eu.woolplatform.wool.execution.ExecuteNodeResult;
-import eu.woolplatform.wool.execution.WoolVariableStore;
+import eu.woolplatform.wool.execution.*;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
 import eu.woolplatform.wool.model.*;
 import org.joda.time.DateTime;
@@ -75,11 +73,11 @@ public class UserService {
 	 * and loads in all known variables for the user.
 	 * @param userId - A unique identifier of the current user this {@link UserService} is interacting with.
 	 * @param userServiceManager the server's {@link UserServiceManager} instance.
-	 * @param onVarChangeListener the {@link WoolVariableStore.OnChangeListener} to be added to the {@link WoolVariableStore}
+	 * @param onVarChangeListener the {@link WoolVariableStoreOnChangeListener} to be added to the {@link WoolVariableStore}
 	 *                            instance that this {@link UserService} creates.
 	 */
 	public UserService(String userId, UserServiceManager userServiceManager,
-			WoolVariableStore.OnChangeListener onVarChangeListener)
+			WoolVariableStoreOnChangeListener onVarChangeListener)
 			throws DatabaseException, IOException {
 
 		this.logger = AppComponents.getLogger(getClass().getSimpleName());
@@ -280,17 +278,16 @@ public class UserService {
 			logger.info("URL: "+config.getExternalVariableServiceURL());
 			logger.info("API Version: "+config.getExternalVariableServiceAPIVersion());
 
-			List<WoolVariableResponse> varsToUpdate = new ArrayList<>();
+			List<WoolVariable> varsToUpdate = new ArrayList<>();
 			for(String variableName : variableNames) {
-				Object variableValue = variableStore.getValue(variableName);
-				String variableValueString;
-				if(variableValue != null) {
-					logger.info("An existing value is known for variable '"+variableName+"' for User '"+userId+"': "+variableValue);
-					variableValueString = variableValue.toString();
+				WoolVariable woolVariable = variableStore.getWoolVariable(variableName);
+				if(woolVariable != null) {
+					logger.info("A WOOL Variable '"+variableName+"' exists for User '"+userId+"': "+woolVariable);
+					varsToUpdate.add(woolVariable); //TODO: Remove WoolVariableResponse
 				} else {
-					variableValueString = "";
+					varsToUpdate.add(new WoolVariable(variableName,null,DateTime.now()));
 				}
-				varsToUpdate.add(new WoolVariableResponse(variableName,variableValueString,0l));
+
 			}
 
 			// Construct the api end-point to call for retrieving variable updates
