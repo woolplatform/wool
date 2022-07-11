@@ -25,6 +25,8 @@ public class LoginResult {
 	private String user;
 	private String token;
 
+	public LoginResult() {}
+
 	public LoginResult(String user, String token) {
 		this.user = user;
 		this.token = token;
@@ -36,5 +38,13 @@ public class LoginResult {
 
 	public String getToken() {
 		return token;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
 	}
 }

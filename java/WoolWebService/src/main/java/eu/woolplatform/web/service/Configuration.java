@@ -52,7 +52,8 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public static final String EXTERNAL_VARIABLE_SERVICE_ENABLED = "externalVariableServiceEnabled";
 	public static final String EXTERNAL_VARIABLE_SERVICE_URL = "externalVariableServiceUrl";
 	public static final String EXTERNAL_VARIABLE_SERVICE_API_VERSION = "externalVariableServiceAPIVersion";
-	public static final String EXTERNAL_VARIABLE_SERVICE_API_TOKEN = "externalVariableServiceApiToken";
+	public static final String EXTERNAL_VARIABLE_SERVICE_USERNAME = "externalVariableServiceUsername";
+	public static final String EXTERNAL_VARIABLE_SERVICE_PASSWORD = "externalVariableServicePassword";
 
 	private static final Object LOCK = new Object();
 	private static Configuration instance = null;
@@ -132,6 +133,30 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public String getExternalVariableServiceAPIVersion() {
 		if(containsKey(EXTERNAL_VARIABLE_SERVICE_API_VERSION)) {
 			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_API_VERSION);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	/**
+	 * Returns the username for the External Variable Service as a String, or an empty string if incorrectly configured.
+	 * @return the username for the External Variable Service as a String, or an empty string if incorrectly configured.
+	 */
+	public String getExternalVariableServiceUsername() {
+		if(containsKey(EXTERNAL_VARIABLE_SERVICE_USERNAME)) {
+			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_USERNAME);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	/**
+	 * Returns the password for the External Variable Service as a String, or an empty string if incorrectly configured.
+	 * @return the password for the External Variable Service as a String, or an empty string if incorrectly configured.
+	 */
+	public String getExternalVariableServicePassword() {
+		if(containsKey(EXTERNAL_VARIABLE_SERVICE_PASSWORD)) {
+			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_PASSWORD);
 			if(returnValue != null) return returnValue;
 		}
 		return "";
