@@ -319,7 +319,7 @@ public class UserService {
 					request,
 					WoolVariableResponse[].class);
 
-			// If call not succesful, retry once after login
+			// If call not successful, retry once after login
 			if (response.getStatusCode() != HttpStatus.OK) {
 				userServiceManager.loginToExternalVariableService();
 				response = restTemplate.postForEntity(

@@ -278,15 +278,14 @@ public class UserServiceManager {
 		loginParams.setPassword(config.getExternalVariableServicePassword());
 		loginParams.setTokenExpiration(null);
 		HttpEntity request = new HttpEntity(loginParams, headers);
-		logger.info(request.toString());
+
 		ResponseEntity<LoginResult> response = restTemplate.postForEntity(
 				loginUrl, request, LoginResult.class);
-		logger.info(response.toString());
 
 		if (response.getStatusCode() == HttpStatus.OK) {
 			LoginResult loginResult = response.getBody();
 			this.setExternVariableServiceAPIToken(loginResult.getToken());
-			logger.info("Login succesful");
+			logger.info("User '"+config.getExternalVariableServiceUsername()+"' logged in successfully to external variable service.");
 		} else {
 			logger.info("Login failed: " + response.getStatusCode());
 		}
