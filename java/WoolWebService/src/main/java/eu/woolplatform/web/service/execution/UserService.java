@@ -27,10 +27,7 @@ import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.i18n.I18nLanguageFinder;
 import eu.woolplatform.utils.i18n.I18nUtils;
 import eu.woolplatform.web.service.Configuration;
-import eu.woolplatform.web.service.model.LoggedDialogue;
-import eu.woolplatform.web.service.model.LoggedDialogueStoreIO;
-import eu.woolplatform.web.service.model.VariableStoreIO;
-import eu.woolplatform.web.service.model.WoolVariableResponse;
+import eu.woolplatform.web.service.model.*;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.execution.*;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
@@ -83,19 +80,16 @@ public class UserService {
 		this.logger = AppComponents.getLogger(getClass().getSimpleName());
 		this.userId = userId;
 		this.userServiceManager = userServiceManager;
-		this.variableStore = new WoolVariableStore();
 
-		Map<String, ?> vars;
+		Configuration config = AppComponents.get(Configuration.class);
+		WoolVariableStoreStorageHandler storageHandler = new WoolVariableStoreJSONStorageHandler(config.getDataDir()+"/variables");
 		try {
-			vars = VariableStoreIO.readVariables(userId);
+			this.variableStore = storageHandler.read(userId);
 		} catch (ParseException ex) {
 			throw new DatabaseException("Failed to read initial variables: " +
 					ex.getMessage(), ex);
 		}
 
-		Map<String,Object> varStoreMap = this.variableStore.getModifiableMap(
-				false, null);
-		varStoreMap.putAll(vars);
 		this.variableStore.addOnChangeListener(onVarChangeListener);
 		dialogueExecutor = new DialogueExecutor(this);
 

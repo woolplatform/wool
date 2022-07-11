@@ -40,6 +40,18 @@ public class WoolVariableStore {
 	// Contains the list of all WoolVariableChangeListeners that need to be notified in case of updates
 	private final List<WoolVariableStoreOnChangeListener> onChangeListeners = new ArrayList<>();
 
+	// ----- Constructors
+
+	public WoolVariableStore(WoolVariable[] woolVariableArray) {
+		synchronized(woolVariables) {
+			for (WoolVariable variable : woolVariableArray) {
+				woolVariables.put(variable.getName(),variable);
+			}
+		}
+	}
+
+	public WoolVariableStore() { }
+
 	// ----- Listeners
 
 	/**
@@ -88,7 +100,32 @@ public class WoolVariableStore {
 		}
 	}
 
-	// ---- Modify Methods
+	// ---- Retrieval Methods
+
+	/**
+	 * Retrieves the variable identified by the given {@code name}, or returns
+	 * {@code null} if no such variable is known in this {@link WoolVariableStore}.
+	 *
+	 * @param name the name of the variable to retrieve.
+	 * @return the {@link WoolVariable} with the given {@code name}, nor {@code null}.
+	 */
+	public WoolVariable getWoolVariable(String name) {
+		synchronized (woolVariables) {
+			return woolVariables.get(name);
+		}
+	}
+
+	/**
+	 * Returns the contents of this {@link WoolVariableStore} as an array of {@link WoolVariable}s.
+	 * @return the contents of this {@link WoolVariableStore} as an array of {@link WoolVariable}s.
+	 */
+	public WoolVariable[] getWoolVariables() {
+		synchronized (woolVariables) {
+			return woolVariables.values().toArray(new WoolVariable[woolVariables.size()]);
+		}
+	}
+
+	// ----- Modification Methods
 
 	/**
 	 * Stores the given {@code value} under the given variable-{@code name} in this
@@ -108,19 +145,6 @@ public class WoolVariableStore {
 		}
 		if (notifyObservers) {
 			notifyOnChange(new WoolVariableStoreChange.Put(name, value, updatedTime));
-		}
-	}
-
-	/**
-	 * Retrieves the variable identified by the given {@code name}, or returns
-	 * {@code null} if no such variable is known in this {@link WoolVariableStore}.
-	 *
-	 * @param name the name of the variable to retrieve.
-	 * @return the {@link WoolVariable} with the given {@code name}, nor {@code null}.
-	 */
-	public WoolVariable getWoolVariable(String name) {
-		synchronized (woolVariables) {
-			return woolVariables.get(name);
 		}
 	}
 

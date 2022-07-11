@@ -105,6 +105,15 @@ public class Configuration extends LinkedHashMap<String,String> {
 	// ----- checking).
 
 	/**
+	 * Returns the location of the data directory used by the web service as a String.
+	 * @return the location of the data directory used by the web service as a String.
+	 */
+	public String getDataDir() {
+		if(get(DATA_DIR) == null) return "";
+		else return get(DATA_DIR);
+	}
+
+	/**
 	 * Returns whether an "External WOOL Variable Service" has been configured to be used.
 	 * @return whether an "External WOOL Variable Service" has been configured to be used.
 	 */
