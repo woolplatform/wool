@@ -41,6 +41,9 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -301,11 +304,17 @@ public class UserService {
 
 			logger.info("Retrieve updates URL: "+retrieveUpdatesUrl);
 
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.valueOf("application/json"));
+			headers.set("X-Auth-Token", userServiceManager.getExternalVariableServiceAPIToken());
+
 			RestTemplate restTemplate = new RestTemplate();
+
+			HttpEntity request = new HttpEntity(varsToUpdate,headers);
 
 			ResponseEntity<WoolVariableResponse[]> response = restTemplate.postForEntity(
 					retrieveUpdatesUrl,
-					varsToUpdate,
+					request,
 					WoolVariableResponse[].class);
 
 			WoolVariableResponse[] woolVariableResponses = response.getBody();

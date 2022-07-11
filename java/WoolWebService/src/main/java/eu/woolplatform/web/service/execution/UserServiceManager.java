@@ -60,6 +60,7 @@ public class UserServiceManager {
 	private WoolProject woolProject;
 	private List<UserService> activeUserServices = new ArrayList<>();
 	private List<UserCredentials> userCredentials;
+	private String externalVariableServiceAPIToken = "Dikkepiemel123";
 
 	// ----- Constructors
 	
@@ -231,5 +232,13 @@ public class UserServiceManager {
 		if (!errors.isEmpty())
 			return null;
 		return parsedTime.toDateTime(parsedTimezone);
+	}
+
+	public String getExternalVariableServiceAPIToken() {
+		return externalVariableServiceAPIToken;
+	}
+
+	public void setExternVariableServiceAPIToken(String externalVariableServiceAPIToken) {
+		this.externalVariableServiceAPIToken = externalVariableServiceAPIToken;
 	}
 }
