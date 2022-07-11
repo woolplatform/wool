@@ -35,6 +35,9 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.SpringVersion;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.ClassUtils;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 
 import java.net.URL;
 
@@ -43,6 +46,7 @@ import java.net.URL;
  * 
  * @author Harm op den Akker
  */
+@SecurityScheme(name = "X-Auth-Token", scheme = "basic", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 @SpringBootApplication
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements
