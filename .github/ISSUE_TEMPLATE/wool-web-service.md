@@ -2,7 +2,7 @@
 name: WOOL Web Service
 about: Bug reports or feature request related to the WOOL Web Service
 title: 'WOOL Web Service: '
-labels: ''
+labels: java, web-service
 assignees: hopdenakker
 
 ---
