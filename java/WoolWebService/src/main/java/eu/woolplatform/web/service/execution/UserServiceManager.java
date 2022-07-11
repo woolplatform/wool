@@ -24,9 +24,12 @@ package eu.woolplatform.web.service.execution;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.UserCredentials;
 import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.UserFile;
+import eu.woolplatform.web.service.controller.model.LoginParams;
+import eu.woolplatform.web.service.controller.model.LoginResult;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
 import eu.woolplatform.wool.model.WoolDialogue;
@@ -40,6 +43,12 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -60,7 +69,7 @@ public class UserServiceManager {
 	private WoolProject woolProject;
 	private List<UserService> activeUserServices = new ArrayList<>();
 	private List<UserCredentials> userCredentials;
-	private String externalVariableServiceAPIToken = "Dikkepiemel123";
+	private String externalVariableServiceAPIToken;
 
 	// ----- Constructors
 	
@@ -103,6 +112,14 @@ public class UserServiceManager {
 				ParseException e) {
 			throw new RuntimeException(e);
 		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		// login to external variable service
+		try {
+			this.loginToExternalVariableService();
+		} catch (Exception e) {
+			logger.info(e.toString());
 			throw new RuntimeException(e);
 		}
 	}
@@ -240,5 +257,38 @@ public class UserServiceManager {
 
 	public void setExternVariableServiceAPIToken(String externalVariableServiceAPIToken) {
 		this.externalVariableServiceAPIToken = externalVariableServiceAPIToken;
+	}
+
+	public void loginToExternalVariableService() {
+		Configuration config = AppComponents.get(Configuration.class);
+
+		String loginUrl = config.getExternalVariableServiceURL()
+				+ "/v" + config.getExternalVariableServiceAPIVersion()
+				+ "/auth/login";
+
+		logger.info("Attempting login to external variable service at " + loginUrl);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.valueOf("application/json"));
+
+		RestTemplate restTemplate = new RestTemplate();
+
+		LoginParams loginParams = new LoginParams();
+		loginParams.setUser(config.getExternalVariableServiceUsername());
+		loginParams.setPassword(config.getExternalVariableServicePassword());
+		loginParams.setTokenExpiration(null);
+		HttpEntity request = new HttpEntity(loginParams, headers);
+		logger.info(request.toString());
+		ResponseEntity<LoginResult> response = restTemplate.postForEntity(
+				loginUrl, request, LoginResult.class);
+		logger.info(response.toString());
+
+		if (response.getStatusCode() == HttpStatus.OK) {
+			LoginResult loginResult = response.getBody();
+			this.setExternVariableServiceAPIToken(loginResult.getToken());
+			logger.info("Login succesful");
+		} else {
+			logger.info("Login failed: " + response.getStatusCode());
+		}
 	}
 }
