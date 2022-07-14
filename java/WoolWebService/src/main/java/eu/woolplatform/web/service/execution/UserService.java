@@ -340,8 +340,15 @@ public class UserService {
 						String varName = wvr.getName();
 						String varValue = wvr.getValue();
 						Long varUpdated = wvr.getLastUpdated();
+						Object varValueObject;
+						if(varValue.equals("true")) {
+							varValueObject = Boolean.valueOf("true");
+						} else if (varValue.equals("false")) {
+							varValueObject = Boolean.valueOf("false");
+						} else
+							varValueObject = varValue;
 
-						variableStore.setValue(varName, varValue, true, new DateTime(varUpdated));
+						variableStore.setValue(varName, varValueObject, true, new DateTime(varUpdated));
 					}
 				}
 			}
