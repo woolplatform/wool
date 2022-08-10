@@ -182,9 +182,9 @@ public class AppComponents {
 		return getInstance().getComponent(clazz);
 	}
 	
-	private Set<Object> components = new HashSet<Object>();
+	private Set<Object> components = new HashSet<>();
 	private List<AppComponentAttributeMapping<?>> attrMappings =
-			new ArrayList<AppComponentAttributeMapping<?>>();
+			new ArrayList<>();
 	
 	/**
 	 * This private constructor is used in {@link #getInstance()
@@ -236,11 +236,8 @@ public class AppComponents {
 	 */
 	public void buildComponents(URL config) throws IOException, ParseException,
 	BuildException {
-		InputStream in = config.openStream();
-		try {
+		try (InputStream in = config.openStream()) {
 			buildComponents(in);
-		} finally {
-			in.close();
 		}
 	}
 	
