@@ -36,6 +36,10 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -292,27 +296,50 @@ public class UserService {
 
 			logger.info("Retrieve updates URL: "+retrieveUpdatesUrl);
 
+			//Construct headers for call
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.valueOf("application/json"));
+			headers.set("X-Auth-Token", userServiceManager.getExternalVariableServiceAPIToken());
+
 			RestTemplate restTemplate = new RestTemplate();
+
+			HttpEntity request = new HttpEntity(varsToUpdate,headers);
 
 			ResponseEntity<WoolVariableResponse[]> response = restTemplate.postForEntity(
 					retrieveUpdatesUrl,
-					varsToUpdate,
+					request,
 					WoolVariableResponse[].class);
+
+			// If call not successful, retry once after login
+			if (response.getStatusCode() != HttpStatus.OK) {
+				userServiceManager.loginToExternalVariableService();
+				response = restTemplate.postForEntity(
+						retrieveUpdatesUrl,
+						request,
+						WoolVariableResponse[].class);
+			}
 
 			WoolVariableResponse[] woolVariableResponses = response.getBody();
 
-			if(woolVariableResponses != null) {
-				if(woolVariableResponses.length == 0) {
+			if (woolVariableResponses != null) {
+				if (woolVariableResponses.length == 0) {
 					logger.info("Received response from WOOL Variable Service: no variable updates needed.");
 				} else {
 					logger.info("Received response from WOOL Variable Service: the following variables have updated values:");
-					for(WoolVariableResponse wvr : woolVariableResponses) {
+					for (WoolVariableResponse wvr : woolVariableResponses) {
 						logger.info(wvr.toString());
 						String varName = wvr.getName();
 						String varValue = wvr.getValue();
 						Long varUpdated = wvr.getLastUpdated();
+						Object varValueObject;
+						if(varValue.equals("true")) {
+							varValueObject = Boolean.valueOf("true");
+						} else if (varValue.equals("false")) {
+							varValueObject = Boolean.valueOf("false");
+						} else
+							varValueObject = varValue;
 
-						variableStore.setValue(varName,varValue,true,new DateTime(varUpdated));
+						variableStore.setValue(varName, varValueObject, true, new DateTime(varUpdated));
 					}
 				}
 			}

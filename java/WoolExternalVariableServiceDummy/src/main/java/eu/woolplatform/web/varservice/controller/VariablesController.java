@@ -21,6 +21,8 @@
  */
 package eu.woolplatform.web.varservice.controller;
 
+import eu.woolplatform.utils.AppComponents;
+import eu.woolplatform.web.varservice.QueryRunner;
 import eu.woolplatform.web.varservice.controller.model.WoolVariableParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,7 +31,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,17 +45,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-
 /**
  * Controller for the /variables/ -end-points of the WOOL External Variable Service
  * Dummy.
  *
  * @author Harm op den Akker
+ * @author Tessa Beinema
  */
 @RestController
+@SecurityRequirement(name = "X-Auth-Token")
 @RequestMapping("/v{version}/variables")
 @Tag(name = "Variables", description = "End-points for retrieving variables from- and sending to the service")
 public class VariablesController {
+
+	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	// ----- END-POINT: "retrieve-updates"
 
@@ -68,7 +75,7 @@ public class VariablesController {
 					content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class)))) })
 	@RequestMapping(value="/retrieve-updates/{userId}", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
-	public List<WoolVariableParam> retrieveUpdates(
+	public List<WoolVariableParam> retrieveUpdates (
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@Parameter(description = "API Version to use, e.g. '1.0.0'")
@@ -77,8 +84,21 @@ public class VariablesController {
 				@PathVariable String userId,
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
 					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
-				@RequestBody List<WoolVariableParam> woolVariables) {
-		return executeRetrieveUpdates(userId, woolVariables);
+				@RequestBody List<WoolVariableParam> woolVariables) throws Exception {
+
+		// Log endpoint calls:
+		String logInfo = "POST /retrieve-updates?userId=" + userId;
+		logger.info(logInfo);
+
+		if(userId.equals("")) {
+			return QueryRunner.runQuery(
+				(version, user) -> executeRetrieveUpdates(user, woolVariables),
+				versionName, request, response, userId);
+		} else {
+			return QueryRunner.runQuery(
+				(version, user) -> executeRetrieveUpdates(userId, woolVariables),
+				versionName, request, response, userId);
+		}
 	}
 
 	/**
@@ -95,7 +115,7 @@ public class VariablesController {
 	 * @return a {@code List} of {@link WoolVariableParam}s with each of the parameters for which an updated value has been found
 	 * (note that this may be an empty list).
 	 */
-	private List<WoolVariableParam> executeRetrieveUpdates(String userId, List<WoolVariableParam> params) {
+	private List<WoolVariableParam> executeRetrieveUpdates (String userId, List<WoolVariableParam> params) {
 
 		List<WoolVariableParam> result = new ArrayList<>();
 
@@ -136,6 +156,8 @@ public class VariablesController {
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
 					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
 				@RequestBody List<WoolVariableParam> woolVariables) {
+		String logInfo = "POST /notify-updated?userId=" + userId;
+		logger.info(logInfo);
 		return executeNotifyUpdated(userId, woolVariables);
 	}
 
