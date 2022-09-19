@@ -82,17 +82,50 @@ public class POEditorTools {
 		switch(scenario) {
 			case "1":
 				System.out.println("Please provide the full file path to the POEditor Key-Value-pair export file.");
+
 				System.out.print("POEditor export file: ");
-				String poEditorKeyValueFileName = userInputScanner.nextLine();  // Read user input
+				String poEditorKeyValueFileName = userInputScanner.nextLine();
+
 				File poEditorKeyValueFile = new File(poEditorKeyValueFileName);
 				try {
 					Map<String, WoolTranslationFile> woolTranslationFiles = tools.generateWoolTranslationFiles(poEditorKeyValueFile);
 					System.out.println("Successfully read translations for "+woolTranslationFiles.keySet().size()+" files.");
 					System.out.println("Please choose a directory where you would like to store the WOOL Translation files.");
-					//TODO: Check if the directory exists, create it if the user wants to
+
 					System.out.print("Output directory: ");
 					String outputDirectoryName = userInputScanner.nextLine();  // Read user input
+
 					File outputDirectory = new File(outputDirectoryName);
+
+					if(!outputDirectory.exists()) {
+						System.out.println("The given directory '"+outputDirectoryName+"' does not exist, do you want to create it?");
+						boolean inputUnderstood = false;
+						boolean createDirectory = false;
+						while(!inputUnderstood) {
+							System.out.print("Create directory? ");
+							String createDirectoryConfirm = userInputScanner.nextLine();
+							if(createDirectoryConfirm.equals("y") || createDirectoryConfirm.equals("yes")) {
+								createDirectory = true;
+								inputUnderstood = true;
+							} else if(createDirectoryConfirm.equals("n") || createDirectoryConfirm.equals("no")) {
+								inputUnderstood = true;
+							}
+							if(!inputUnderstood) System.out.println("I don't know what you mean by '"+createDirectoryConfirm+"', why don't you try 'y' or 'n'?");
+						}
+						if(createDirectory) {
+							if(outputDirectory.mkdir()) {
+								System.out.println("Created directory '" + outputDirectory + "'.");
+							} else {
+								System.out.println("An error occurred in attempting to create the following directory: '"+outputDirectoryName+"', please try again.");
+								System.exit(1);
+							}
+						} else {
+							System.out.println("Please provide a valid output directory.");
+							System.exit(0);
+						}
+					}
+
+					// The output directory should exist at this point...
 					Iterator<String> translationFileIterator = woolTranslationFiles.keySet().iterator();
 					while(translationFileIterator.hasNext()) {
 						WoolTranslationFile wtf = woolTranslationFiles.get(translationFileIterator.next());
@@ -101,6 +134,7 @@ public class POEditorTools {
 				} catch(IOException e) {
 					System.out.println("An error has occurred reading from the given file '"+poEditorKeyValueFile+"'.");
 					e.printStackTrace();
+					System.exit(1);
 				}
 				break;
 			default:
@@ -109,5 +143,6 @@ public class POEditorTools {
 		}
 
 		System.out.println("Finished.");
+		System.exit(0);
 	}
 }
