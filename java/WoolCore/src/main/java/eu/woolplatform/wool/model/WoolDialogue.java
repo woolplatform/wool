@@ -146,7 +146,13 @@ public class WoolDialogue {
 	public Set<String> getVariablesWritten() {
 		return Collections.unmodifiableSet(variablesWritten);
 	}
-	
+
+	/**
+	 * Returns a {@link Set} of {@link String}s containing all the names of dialogues
+	 * that are referenced by this {@link WoolDialogue}. These names do not include path and
+	 * file extension information.
+	 * @return all WOOL dialogues referenced directly from this {@link WoolDialogue}.
+	 */
 	public Set<String> getDialoguesReferenced() {
 		return Collections.unmodifiableSet(dialoguesReferenced);
 	}
