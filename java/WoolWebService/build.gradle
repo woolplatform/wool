@@ -111,16 +111,18 @@ def listDirFiles(dir, writer) {
 	writer.write('[')
 	def first = true
 	dir.eachFile() { child ->
-		if (!first)
-			writer.write(',')
-		if (child.isDirectory()) {
-			writer.write('{"' + child.name + '":')
-			listDirFiles(child, writer)
-			writer.write('}')
-			first = false
-		} else if (child.name.endsWith('.json') || child.name.endsWith('.wool')) {
-			writer.write('"' + child.name + '"')
-			first = false
+		if (!child.name.startsWith('.')) {
+			if (!first)
+				writer.write(',')
+			if (child.isDirectory()) {
+				writer.write('{"' + child.name + '":')
+				listDirFiles(child, writer)
+				writer.write('}')
+				first = false
+			} else if (child.name.endsWith('.json') || child.name.endsWith('.wool')) {
+				writer.write('"' + child.name + '"')
+				first = false
+			}
 		}
 	}
 	writer.write(']')
