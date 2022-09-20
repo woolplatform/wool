@@ -1,0 +1,23 @@
+{
+    "Bob": {
+        "Hi, my name is Bob, and this is the Default WOOL Test dialogue.": "你好，我叫鲍勃，这里是 \"默认的羊毛测试 \"对话。",
+        "This dialogue is very basic, and shows only dialogue flow and ending.": "这段对话非常基本，只显示了对话的流程和结局。",
+        "Any node can have zero or more reply options. When there are none, the dialogue is over.": "任何节点都可以有零个或多个回复选项。当没有的时候，对话就结束了。",
+        "We deal with statements, reply options, and ending dialogues.": "我们处理的是声明、回答选项和结束对话。",
+        "When a node has no reply options, the dialogue will end.": "当一个节点没有回复选项时，对话将结束。",
+        "I have the last say, and I declare this dialogue to be over!": "我有最后的发言权，我宣布这次对话结束。",
+        "Statements are things that a speaker says, like this!": "语句是说话人说的东西，就像这样!",
+        "Alternatively, a reply option can point to the reserved node name \"End\". When the dialogue reaches this node, the dialogue is also over.": "或者，回复选项可以指向保留节点名称 \"结束\"。当对话到达这个节点时，对话也就结束了。"
+    },
+    "_user": {
+        "Nice to meet you Bob.": "很高兴见到你，鲍勃。",
+        "Goodbye.": "再见。",
+        "Tell me more.": "告诉我更多。",
+        "Dialogue over?": "对话结束？",
+        "Tell me about statements.": "告诉我有关声明。",
+        "Reply Options?": "回复选项？",
+        "How do you end a dialogue?": "你如何结束一场对话？",
+        "This reply option points to the \"End\" node.": "这个回复选项指向 \"结束 \"节点。",
+        "This one points to a node without replies.": "这个人指向一个没有回复的节点。"
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "Bob": {
+        "Hi, my name is Bob, and this is the Default WOOL Test dialogue.": "Здравейте, казвам се Боб и това е диалогът за тест на WOOL по подразбиране.",
+        "This dialogue is very basic, and shows only dialogue flow and ending.": "Този диалог е много елементарен и показва само протичането и края на диалога.",
+        "Any node can have zero or more reply options. When there are none, the dialogue is over.": "Всеки възел може да има нула или повече опции за отговор. Когато няма такива, диалогът приключва.",
+        "We deal with statements, reply options, and ending dialogues.": "Работим с изказвания, опции за отговор и завършващи диалози.",
+        "When a node has no reply options, the dialogue will end.": "Когато даден възел няма опции за отговор, диалогът се прекратява.",
+        "I have the last say, and I declare this dialogue to be over!": "Аз имам последната дума и обявявам този диалог за приключен!",
+        "Statements are things that a speaker says, like this!": "Аз имам последната дума и обявявам този диалог за приключен!",
+        "Alternatively, a reply option can point to the reserved node name \"End\". When the dialogue reaches this node, the dialogue is also over.": "Алтернативно, опцията за отговор може да сочи към запазеното име на възел \"End\". Когато диалогът достигне до този възел, той също приключва."
+    },
+    "_user": {
+        "Nice to meet you Bob.": "Приятно ми е да се запозная с вас, Боб.",
+        "Goodbye.": "Сбогом.",
+        "Tell me more.": "Разкажете ми повече.",
+        "Dialogue over?": "Диалогът приключи?",
+        "Tell me about statements.": "Разкажете ми за изявленията.",
+        "Reply Options?": "Опции за отговор?",
+        "How do you end a dialogue?": "Как завършвате един диалог?",
+        "This reply option points to the \"End\" node.": "Тази опция за отговор насочва към възела \"End\".",
+        "This one points to a node without replies.": "Тази точка сочи към възел без отговори."
+    }
+}
