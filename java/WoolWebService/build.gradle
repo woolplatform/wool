@@ -12,10 +12,13 @@ plugins {
 	id 'org.springframework.boot' version '2.7.0'
 	id 'com.bmuschko.cargo' version '2.9.0'
 	id 'org.hidetake.ssh' version '2.9.0'
+
+	// Plugin for visualising the gradle task tree, by running e.g. ./gradlew tiTree build
+	id 'org.barfuin.gradle.taskinfo' version '1.0.5'
 }
 
 group = 'eu.woolplatform'
-version = '1.2.0' // run updateVersion after changing this property
+version = '1.2.1' // run updateVersion after changing this property
 sourceCompatibility = 11
 targetCompatibility = 11
 archivesBaseName = 'wool-webservice'
@@ -197,5 +200,20 @@ javadoc {
 		addStringOption('Xdoclint:all,-html', '-quiet')
 	}
 }
+
+/**
+ * Creates a copy of the wool-webservice-VERSION.war to wool-webservice-latest.war
+ * in the build/libs folder.
+ * */
+task generateStaticWar(type: Copy) {
+	group = 'build'
+	description = 'Generates a .war file named wool-webservice-latest.war.'
+
+	from layout.buildDirectory.file("libs/wool-webservice-"+version+".war")
+	into layout.buildDirectory.dir("libs")
+	rename "wool-webservice-"+version+".war", "wool-webservice-latest.war"
+}
+
+tasks.named("build") { finalizedBy("generateStaticWar") }
 
 processResources.dependsOn checkResources
