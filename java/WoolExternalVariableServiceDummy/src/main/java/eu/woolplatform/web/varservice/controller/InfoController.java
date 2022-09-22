@@ -24,6 +24,7 @@ package eu.woolplatform.web.varservice.controller;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.varservice.Application;
 import eu.woolplatform.web.varservice.Configuration;
+import eu.woolplatform.web.varservice.ProtocolVersion;
 import eu.woolplatform.web.varservice.ServiceContext;
 import eu.woolplatform.web.varservice.controller.model.ServiceInfo;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,7 +44,7 @@ public class InfoController {
 
 	@GetMapping("/all")
 	public ServiceInfo all() {
-		logger.info("Request for application info received.");
+		logger.info("/v"+ ProtocolVersion.getLatestVersion().versionName()+"/info/all");
 		return new ServiceInfo(Configuration.getInstance().get(Configuration.BUILD_TIME),
 				ServiceContext.getCurrentVersion(),
 				Configuration.getInstance().get(Configuration.VERSION));
