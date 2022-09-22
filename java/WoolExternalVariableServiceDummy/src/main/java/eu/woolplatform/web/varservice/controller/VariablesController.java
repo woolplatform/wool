@@ -171,7 +171,7 @@ public class VariablesController {
 		for(WoolVariableParam woolVariableParam : woolVariables) {
 			logger.info(woolVariableParam.toString());
 		}
-		
+
 		return executeNotifyUpdated(userId, woolVariables);
 	}
 
