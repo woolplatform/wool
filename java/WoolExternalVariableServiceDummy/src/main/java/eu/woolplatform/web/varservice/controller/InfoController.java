@@ -21,11 +21,13 @@
  */
 package eu.woolplatform.web.varservice.controller;
 
+import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.varservice.Application;
 import eu.woolplatform.web.varservice.Configuration;
 import eu.woolplatform.web.varservice.ServiceContext;
 import eu.woolplatform.web.varservice.controller.model.ServiceInfo;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,11 +36,14 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Information", description = "End-points that provide information about the running service")
 public class InfoController {
 
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+
 	@Autowired
 	Application application;
 
 	@GetMapping("/all")
 	public ServiceInfo all() {
+		logger.info("Request for application info received.");
 		return new ServiceInfo(Configuration.getInstance().get(Configuration.BUILD_TIME),
 				ServiceContext.getCurrentVersion(),
 				Configuration.getInstance().get(Configuration.VERSION));

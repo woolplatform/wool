@@ -56,15 +56,16 @@ import javax.servlet.http.HttpServletResponse;
  * </ul></p>
  * 
  * @author Dennis Hofs (RRD)
+ * @author Harm op den Akker
  */
 @RestController
 public class ErrorController implements org.springframework.boot.web.servlet.error.ErrorController {
-	private static final String LOGTAG = ErrorController.class.getSimpleName();
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	@RequestMapping("/error")
 	public Object error(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
-		Logger logger = AppComponents.getLogger(LOGTAG);
+
 		int statusCode = (Integer)request.getAttribute(
 				"javax.servlet.error.status_code");
 		Object obj = request.getAttribute(

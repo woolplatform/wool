@@ -71,4 +71,12 @@ public class WoolVariableParam {
 		this.lastUpdated = lastUpdated;
 	}
 
+	@Override
+	public String toString() {
+		return "WoolVariableParam{" +
+				"name='" + name + '\'' +
+				", value='" + value + '\'' +
+				", lastUpdated=" + lastUpdated +
+				'}';
+	}
 }
