@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.woolplatform.utils.json.JsonObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.IOException;
 
@@ -51,8 +52,17 @@ import java.io.IOException;
  * @author Harm op den Akker
  */
 public class LoginParams extends JsonObject {
+
+	@Schema(description = "Username of the person or entity logging in",
+			example = "user", required = true)
 	private String user = null;
+
+	@Schema(description = "Password for the given user",
+			example = "password", required = true)
 	private String password = null;
+
+	@Schema(description = "Number of minutes (>=0) after which the authentication token should expire, or 'never'",
+			example = "1440", required = true)
 	private Integer tokenExpiration = 1440;
 
 	/**

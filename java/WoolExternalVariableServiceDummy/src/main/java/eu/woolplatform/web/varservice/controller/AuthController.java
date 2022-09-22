@@ -28,6 +28,7 @@ import eu.woolplatform.web.varservice.*;
 import eu.woolplatform.web.varservice.controller.model.LoginParams;
 import eu.woolplatform.web.varservice.exception.*;
 import eu.woolplatform.web.varservice.controller.model.LoginResult;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -48,6 +49,10 @@ public class AuthController {
 	private static final Object AUTH_LOCK = new Object();
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
+	@Operation(summary = "Obtain an authentication token by logging in",
+			description = "Log in to the service by providing a username, password and indicate the desired " +
+					"duration of the authentication token in minutes. If you want to obtain an authentication " +
+					"token that does not expire, either provide '0' or 'never' as the value for '*tokenExpiration*'.")
 	@RequestMapping(value="/login", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
 	public LoginResult login(
