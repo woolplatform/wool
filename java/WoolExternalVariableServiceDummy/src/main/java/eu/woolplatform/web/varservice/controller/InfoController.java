@@ -27,6 +27,7 @@ import eu.woolplatform.web.varservice.Configuration;
 import eu.woolplatform.web.varservice.ProtocolVersion;
 import eu.woolplatform.web.varservice.ServiceContext;
 import eu.woolplatform.web.varservice.controller.model.ServiceInfo;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,13 @@ public class InfoController {
 
 	@Autowired
 	Application application;
+
+	@Operation(summary = "Retrieve a set of metadata parameters about the running service",
+			description = "This end-point may be called without authentication and will return 3 variables" +
+					" that describe the current version of the service:" +
+					" <ul><li>build - Date & Time when the service was built</li>" +
+					" <li>protocolVersion - latest supported API Protocol version</li>" +
+					" <li>serviceVersion - software version of the service</li></ul>")
 
 	@GetMapping("/all")
 	public ServiceInfo all() {

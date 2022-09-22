@@ -21,6 +21,8 @@
  */
 package eu.woolplatform.web.varservice.controller.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * A {@code ServiceInfo} object may be used to consolidate certain metadata
  * about this WOOL Web Service instance.
@@ -29,8 +31,16 @@ package eu.woolplatform.web.varservice.controller.model;
  */
 public class ServiceInfo {
 
+	@Schema(description = "A string describing the date and time when this service was built",
+			example = "09/22/2022 16:21:51")
 	private String build;
+
+	@Schema(description = "The latest supported API protocol version",
+			example = "1.0.0")
 	private String protocolVersion;
+
+	@Schema(description = "The software version of the service",
+			example = "1.0.0")
 	private String serviceVersion;
 
 	public ServiceInfo(String build, String protocolVersion, String serviceVersion) {
