@@ -22,6 +22,7 @@
 package eu.woolplatform.web.varservice.controller;
 
 import eu.woolplatform.utils.AppComponents;
+import eu.woolplatform.web.varservice.ProtocolVersion;
 import eu.woolplatform.web.varservice.QueryRunner;
 import eu.woolplatform.web.varservice.controller.model.WoolVariableParam;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,7 +59,7 @@ import java.util.Random;
 @Tag(name = "Variables", description = "End-points for retrieving variables from- and sending to the service")
 public class VariablesController {
 
-	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	// ----- END-POINT: "retrieve-updates"
 
@@ -79,15 +80,18 @@ public class VariablesController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@Parameter(description = "API Version to use, e.g. '1.0.0'")
-				@PathVariable("version") String versionName,
+				@RequestParam(value = "version", required = false) String versionName,
 			@Parameter(description = "The userId of the WOOL user")
 				@PathVariable String userId,
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
 					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
 				@RequestBody List<WoolVariableParam> woolVariables) throws Exception {
 
+		// If no explicit protocol version is provided, assume the latest version
+		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+
 		// Log this call to the service log
-		logger.info("POST /retrieve-updates?userId=" + userId + "with the following variables:");
+		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId + "with the following variables:");
 		for(WoolVariableParam woolVariableParam : woolVariables) {
 			logger.info(woolVariableParam.toString());
 		}
@@ -152,19 +156,22 @@ public class VariablesController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@Parameter(description = "API Version to use, e.g. '1.0.0'")
-				@PathVariable("version") String versionName,
+				@RequestParam(value = "version", required = false) String versionName,
 			@Parameter(description = "The userId of the WOOL user")
 				@PathVariable String userId,
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
 					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
 				@RequestBody List<WoolVariableParam> woolVariables) {
 
+		// If no explicit protocol version is provided, assume the latest version
+		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+
 		// Log this call to the service log
-		logger.info("POST /retrieve-updates?userId=" + userId + "with the following variables:");
+		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId + "with the following variables:");
 		for(WoolVariableParam woolVariableParam : woolVariables) {
 			logger.info(woolVariableParam.toString());
 		}
-
+		
 		return executeNotifyUpdated(userId, woolVariables);
 	}
 

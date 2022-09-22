@@ -53,11 +53,20 @@ public class AuthController {
 	public LoginResult login(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			@PathVariable("version")
-			String versionName,
+			@RequestParam(value = "version", required = false) String versionName,
 			@RequestBody
 			LoginParams loginParams) throws Exception {
-		logger.info("Login request for user '"+loginParams.getUser()+"'.");
+
+		// If no explicit protocol version is provided, assume the latest version
+		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		if(loginParams != null) {
+			logger.info("POST /v" + versionName + "/auth/login for user '" + loginParams.getUser() + "'.");
+		} else {
+			logger.info("POST /v" + versionName + "/auth/login with empty login parameters.");
+		}
+
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(
 					(version, user) -> doLogin(request, loginParams),
