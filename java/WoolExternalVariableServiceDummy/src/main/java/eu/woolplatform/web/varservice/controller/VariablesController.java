@@ -86,9 +86,11 @@ public class VariablesController {
 					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
 				@RequestBody List<WoolVariableParam> woolVariables) throws Exception {
 
-		// Log endpoint calls:
-		String logInfo = "POST /retrieve-updates?userId=" + userId;
-		logger.info(logInfo);
+		// Log this call to the service log
+		logger.info("POST /retrieve-updates?userId=" + userId + "with the following variables:");
+		for(WoolVariableParam woolVariableParam : woolVariables) {
+			logger.info(woolVariableParam.toString());
+		}
 
 		if(userId.equals("")) {
 			return QueryRunner.runQuery(
@@ -156,8 +158,13 @@ public class VariablesController {
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
 					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
 				@RequestBody List<WoolVariableParam> woolVariables) {
-		String logInfo = "POST /notify-updated?userId=" + userId;
-		logger.info(logInfo);
+
+		// Log this call to the service log
+		logger.info("POST /retrieve-updates?userId=" + userId + "with the following variables:");
+		for(WoolVariableParam woolVariableParam : woolVariables) {
+			logger.info(woolVariableParam.toString());
+		}
+
 		return executeNotifyUpdated(userId, woolVariables);
 	}
 
