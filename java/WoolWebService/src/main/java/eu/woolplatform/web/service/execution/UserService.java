@@ -41,12 +41,11 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.*;
@@ -314,35 +313,34 @@ public class UserService {
 				varsToUpdate.add(new WoolVariableResponse(variableName,variableValueString,0l));
 			}
 
-			// Construct the api end-point to call for retrieving variable updates
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders requestHeaders = new HttpHeaders();
+			requestHeaders.setContentType(MediaType.valueOf("application/json"));
+			requestHeaders.set("X-Auth-Token", userServiceManager.getExternalVariableServiceAPIToken());
+
 			String retrieveUpdatesUrl = config.getExternalVariableServiceURL()
 					+ "/v"+config.getExternalVariableServiceAPIVersion()
-					+ "/variables/retrieve-updates/"
-					+ getUserId();
+					+ "/variables/retrieve-updates";
 
-			logger.info("Retrieve updates URL: "+retrieveUpdatesUrl);
+			LinkedMultiValueMap<String,String> allRequestParams = new LinkedMultiValueMap<>();
+			allRequestParams.put("userId",Arrays.asList(getUserId()));
+			allRequestParams.put("timeZone",Arrays.asList(getTimeZone()));
 
-			//Construct headers for call
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.valueOf("application/json"));
-			headers.set("X-Auth-Token", userServiceManager.getExternalVariableServiceAPIToken());
-
-			RestTemplate restTemplate = new RestTemplate();
-
-			HttpEntity request = new HttpEntity(varsToUpdate,headers);
-
-			ResponseEntity<WoolVariableResponse[]> response = restTemplate.postForEntity(
-					retrieveUpdatesUrl,
-					request,
-					WoolVariableResponse[].class);
+			HttpEntity<?> entity = new HttpEntity<>(varsToUpdate, requestHeaders); // requestBody is of string type and requestHeaders is of type HttpHeaders
+			UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(retrieveUpdatesUrl) // rawValidURl = http://example.com/hotels
+					.queryParams(
+							(LinkedMultiValueMap<String, String>) allRequestParams); // The allRequestParams must have been built for all the query params
+			UriComponents uriComponents = builder.build().encode(); // encode() is to ensure that characters like {, }, are preserved and not encoded. Skip if not needed.
+			ResponseEntity<WoolVariableResponse[]> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST,
+					entity, WoolVariableResponse[].class);
 
 			// If call not successful, retry once after login
 			if (response.getStatusCode() != HttpStatus.OK) {
 				userServiceManager.loginToExternalVariableService();
-				response = restTemplate.postForEntity(
-						retrieveUpdatesUrl,
-						request,
-						WoolVariableResponse[].class);
+
+				response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST,
+						entity, WoolVariableResponse[].class);
+
 			}
 
 			WoolVariableResponse[] woolVariableResponses = response.getBody();
