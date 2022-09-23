@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -70,7 +71,10 @@ public class VariablesController {
 					"Variables in order to verify that you have the latest values for all variables. In return you" +
 					"will receive a list - which is a subset of the list you provided - that contains all WOOL " +
 					"Variables for which an updated value is available. You are basically asking: 'Hey, I have this " +
-					"list of WOOL Variables for this user, is this up-to-date?'.")
+					"list of WOOL Variables for this user, is this up-to-date?'." +
+					"<br/><br/>In this dummy implementation, for every variable that you include in the request list" +
+					" there is a 50% chance that it will be returned in the response list, with the same value as provided" +
+					" in the request, and the lastUpdated time set to the current UTC time in epoch seconds.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful operation",
 					content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class)))) })
@@ -111,10 +115,9 @@ public class VariablesController {
 	 * This method performs the "dummy" updating of the requested list of WOOL Variables. For a real-world
 	 * implementation you should replace this method and make sure it does something useful.
 	 *
-	 * In this dummy implementation, the method does the following. There is a 50% chance that this
-	 * method will return an empty list (i.e. no variables need to be updated). The other 50% of the
-	 * time, this method will return the given input list of parameters, with each of the {@code value}s reversed,
-	 * and the {@code lastUpdated} set to the current time.
+	 * In this dummy implementation, the method does the following. For every WOOL Variable for which an
+	 * update is requested, there is a 50% chance that this variable will be included in the result set with
+	 * a lastUpdated timestamp set to the current UTC time in Epoch seconds.
 	 *
 	 * @param userId the {@code String} identifier of the user who's variable updates are requested.
 	 * @param params the {@code List} of {@link WoolVariableParam}s for which it should be verified if an update is needed.
@@ -127,16 +130,16 @@ public class VariablesController {
 
 		Random random = new Random();
 
-		if(random.nextBoolean()) { // With 50% chance, reverse all parameter values
+		Instant now = Instant.now();
 
-			for (WoolVariableParam param : params) {
+		for (WoolVariableParam param : params) {
+			if(random.nextBoolean()) { // With 50% chance, return the variable as if it has been updated
 				WoolVariableParam newParam = new WoolVariableParam(
 						param.getName(),
-						new StringBuilder(param.getValue()).reverse().toString(),
-						System.currentTimeMillis());
+						param.getValue(),
+						now.getEpochSecond());
 				result.add(newParam);
 			}
-
 		}
 
 		return result;
@@ -147,7 +150,9 @@ public class VariablesController {
 	@Operation(summary = "Inform that the given list of WOOL Variables have been updated",
 			description = "With this end-point you can inform this WOOL External Variable Service " +
 					"that a list of WOOL Variables have been updated (e.g. during dialogue execution) " +
-					"for a particular user.")
+					"for a particular user." +
+					"<br/><br/>In this dummy implementation, the service will do nothing with your provided" +
+					" variables, and the end-point will simply return a status 200 (OK).")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful operation") })
 	@RequestMapping(value="/notify-updated/{userId}", method= RequestMethod.POST, consumes={

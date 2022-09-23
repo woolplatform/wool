@@ -61,6 +61,7 @@ import java.util.*;
 public class UserService {
 
 	public String userId;
+	private String timeZone;
 	public UserServiceManager userServiceManager;
 	public WoolVariableStore variableStore;
 
@@ -124,6 +125,22 @@ public class UserService {
 	 */
 	public String getUserId() {
 		return userId;
+	}
+
+	/**
+	 * Returns the latest known timezone for this user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
+	 * @return the latest known timezone for this user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
+	 */
+	public String getTimeZone() {
+		return timeZone;
+	}
+
+	/**
+	 * Sets the latest known timezone for this user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
+	 * @param timeZone the latest known timezone for this user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
+	 */
+	public void setTimeZone(String timeZone) {
+		this.timeZone = timeZone;
 	}
 
 	public WoolTranslationContext getTranslationContext() {

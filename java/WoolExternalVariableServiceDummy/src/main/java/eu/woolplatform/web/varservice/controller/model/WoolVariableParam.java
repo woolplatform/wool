@@ -33,7 +33,7 @@ public class WoolVariableParam {
 			example = "some value", required = true)
 	private String value;
 
-	@Schema(description = "UNIX Timestamp indicating when this value was last updated",
+	@Schema(description = "UTC Timestamp indicating when this value was last updated",
 			example = "1655985982", required = true)
 	private Long lastUpdated;
 

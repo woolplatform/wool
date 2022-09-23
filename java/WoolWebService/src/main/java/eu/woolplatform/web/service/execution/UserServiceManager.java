@@ -219,36 +219,34 @@ public class UserServiceManager {
 		return result;
 	}
 
-	public static DateTime parseTimeParameters(String time, String timezone,
-			List<HttpFieldError> errors) {
+	/**
+	 *
+	 * @param timeZone one of {@code DateTimeZone.getAvailableIDs()} (e.g. "Europe/Lisbon").
+	 * @param errors
+	 * @return
+	 */
+	public static DateTime parseTimeParameters(String timeZone, List<HttpFieldError> errors) {
 		DateTimeZone parsedTimezone = null;
-		LocalDateTime parsedTime = null;
 		int errorsStart = errors.size();
-		if (timezone == null || timezone.length() == 0) {
+
+		if (timeZone == null || timeZone.length() == 0) {
 			parsedTimezone = DateTimeZone.getDefault();
 		} else {
 			try {
-				parsedTimezone = DateTimeZone.forID(timezone);
+				parsedTimezone = DateTimeZone.forID(timeZone);
 			} catch (IllegalArgumentException ex) {
-				errors.add(new HttpFieldError("timezone",
-						"Invalid value for field \"timezone\": " + timezone));
+				errors.add(new HttpFieldError("timeZone",
+						"Invalid value for field \"timeZone\": " + timeZone));
 			}
 		}
-		if (time == null || time.length() == 0) {
-			parsedTime = new LocalDateTime(parsedTimezone);
-		} else {
-			DateTimeFormatter parser = DateTimeFormat.forPattern(
-					"yyyy-MM-dd'T'HH:mm:ss.SSS");
-			try {
-				parsedTime = parser.parseLocalDateTime(time);
-			} catch (IllegalArgumentException ex) {
-				errors.add(errorsStart, new HttpFieldError("time",
-						"Invalid value for field \"time\": " + time));
-			}
-		}
-		if (!errors.isEmpty())
+
+		LocalDateTime parsedTime = new LocalDateTime(parsedTimezone);
+
+		if (!errors.isEmpty()) {
 			return null;
-		return parsedTime.toDateTime(parsedTimezone);
+		} else {
+			return parsedTime.toDateTime(parsedTimezone);
+		}
 	}
 
 	public String getExternalVariableServiceAPIToken() {
