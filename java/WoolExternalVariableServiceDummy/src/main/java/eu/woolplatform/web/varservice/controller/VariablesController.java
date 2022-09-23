@@ -91,14 +91,17 @@ public class VariablesController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			@Parameter(description = "API Version to use, e.g. '1.0.0'")
-				@RequestParam(value = "version", required = false) String versionName,
+			@RequestParam(value = "version", required = false) String versionName,
+
 			@Parameter(description = "The userId of the WOOL user")
-				@RequestParam(value="userId") String userId,
+			@RequestParam(value="userId") String userId,
+
 			@Parameter(description = "The current time zone of the WOOL user")
-				@RequestParam(value="timeZone") String timeZone,
+			@RequestParam(value="timeZone") String timeZone,
+
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
 					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
-				@RequestBody List<WoolVariableParam> woolVariables) throws Exception {
+			@RequestBody List<WoolVariableParam> woolVariables) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
 		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
@@ -175,28 +178,33 @@ public class VariablesController {
 	public ResponseEntity<?> notifyUpdated(
 			HttpServletRequest request,
 			HttpServletResponse response,
+
 			@Parameter(description = "API Version to use, e.g. '1.0.0'")
-				@RequestParam(value = "version", required = false) String versionName,
+			@RequestParam(value = "version", required = false) String versionName,
+
 			@Parameter(description = "The userId of the WOOL user")
-				@RequestParam(value="userId") String userId,
+			@RequestParam(value="userId") String userId,
+
 			@Parameter(description = "The current time zone of the WOOL user")
-				@RequestParam(value="timeZone") String timeZone,
+			@RequestParam(value="timeZone") String timeZone,
+
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
 					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
-				@RequestBody List<WoolVariableParam> woolVariables) throws BadRequestException {
+			@RequestBody List<WoolVariableParam> woolVariables) throws BadRequestException {
 
 		// If no explicit protocol version is provided, assume the latest version
 		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
 		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId + "&timeZone=" + timeZone + " with the following variables:");
+		for(WoolVariableParam woolVariableParam : woolVariables) {
+			logger.info(woolVariableParam.toString());
+		}
 
 		// Parse the provided time zone string to make sure it is correct (value is otherwise not used in this dummy service)
 		parseTime(timeZone);
 
-		for(WoolVariableParam woolVariableParam : woolVariables) {
-			logger.info(woolVariableParam.toString());
-		}
+
 
 		return executeNotifyUpdated(userId, timeZone, woolVariables);
 	}
@@ -217,9 +225,16 @@ public class VariablesController {
 		return new ResponseEntity<ResponseEntity<?>>(HttpStatus.OK);
 	}
 
+	/**
+	 * Generates a DateTime object representing the current time in the given {@code timeZone} represented as
+	 * one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
+	 * @param timeZone the timeZone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
+	 * @return a {@link DateTime} object representing the current time at the given timezone
+	 * @throws BadRequestException if the given {@code timeZone} is not formatted correctly.
+	 */
 	public static DateTime parseTime(String timeZone) throws BadRequestException {
 
-		DateTimeZone parsedTimezone = null;
+		DateTimeZone parsedTimezone;
 
 		if (timeZone == null || timeZone.length() == 0) {
 			parsedTimezone = DateTimeZone.getDefault();
@@ -236,36 +251,6 @@ public class VariablesController {
 
 		LocalDateTime parsedTime = new LocalDateTime(parsedTimezone);
 		return parsedTime.toDateTime(parsedTimezone);
-	}
-
-	/**
-	 *
-	 * @param timeZone one of {@code DateTimeZone.getAvailableIDs()} (e.g. "Europe/Lisbon").
-	 * @param errors
-	 * @return
-	 */
-	public static DateTime parseTimeParameters(String timeZone, List<HttpFieldError> errors) {
-		DateTimeZone parsedTimezone = null;
-		int errorsStart = errors.size();
-
-		if (timeZone == null || timeZone.length() == 0) {
-			parsedTimezone = DateTimeZone.getDefault();
-		} else {
-			try {
-				parsedTimezone = DateTimeZone.forID(timeZone);
-			} catch (IllegalArgumentException ex) {
-				errors.add(new HttpFieldError("timeZone",
-						"Invalid value for field \"timeZone\": " + timeZone));
-			}
-		}
-
-		LocalDateTime parsedTime = new LocalDateTime(parsedTimezone);
-
-		if (!errors.isEmpty()) {
-			return null;
-		} else {
-			return parsedTime.toDateTime(parsedTimezone);
-		}
 	}
 
 }
