@@ -76,7 +76,7 @@ public class DialogueController {
 	@Autowired
 	Application application;
 
-	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	// ----- END-POINT: "start-dialogue"
 
@@ -96,29 +96,26 @@ public class DialogueController {
 			String dialogueName,
 			@RequestParam(value="language")
 			String language,
+			@RequestParam(value="timeZone")
+			String timeZone,
 			@RequestParam(value="woolUserId", required=false, defaultValue="")
-			String woolUserId,
-			@RequestParam(value="localTime", required=false, defaultValue="")
-			String localTime,
-			@RequestParam(value="timeZone", required=false, defaultValue="")
-			String timeZone) throws Exception {
+			String woolUserId) throws Exception {
 
 		// Construct a minimal String for logging purposes
 		String logInfo = "POST /start-dialogue?dialogueName= " + dialogueName + "&language=" + language;
 		if(!woolUserId.equals("")) logInfo += "&userId="+woolUserId;
-		if(!localTime.equals("")) logInfo += "&localTime=" + localTime;
 		if(!timeZone.equals("")) logInfo += "&timeZone=" + timeZone;
 		logger.info(logInfo);
 
 		if(woolUserId.equals("")) {
 			return QueryRunner.runQuery(
 					(version, user) -> doStartDialogue(user, dialogueName,
-							language, localTime, timeZone),
+							language, timeZone),
 					versionName, request, response, woolUserId, application);
 		} else {
 			return QueryRunner.runQuery(
 					(version, user) -> doStartDialogue(woolUserId, dialogueName,
-							language, localTime, timeZone),
+							language, timeZone),
 					versionName, request, response, woolUserId, application);
 		}
 	}
@@ -128,19 +125,20 @@ public class DialogueController {
 	 * @param woolUserId the {@link String} identifier of the user for whom to start a dialogue.
 	 * @param dialogueName the name of the dialogue to start executing
 	 * @param language the language in which to start the dialogue
-	 * @param localTime
-	 * @param timeZone
-	 * @return
-	 * @throws HttpException
-	 * @throws DatabaseException
-	 * @throws IOException
+	 * @param timeZone the timeZone of the client as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
+	 * @return the {@link DialogueMessage} that represents the start node of the dialogue.
+	 * @throws HttpException in case of an error in the dialogue execution.
+	 * @throws DatabaseException in case of an error in retrieving the current active user.
+	 * @throws IOException in case of any network error.
 	 */
 	private DialogueMessage doStartDialogue(
-			String woolUserId, String dialogueName, String language, String localTime,
-			String timeZone) throws HttpException, DatabaseException, IOException {
-		DateTime time = parseTime(localTime, timeZone);
+			String woolUserId, String dialogueName, String language,
+			String timeZone) throws HttpException, IOException, DatabaseException {
+		DateTime time = parseTime(timeZone);
+		logger.info("The date/time of the client is: "+time.toString());
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
+		userService.setTimeZone(timeZone);
 		ExecuteNodeResult node;
 		try {
 			node = userService.startDialogue(dialogueName, null, language, time);
@@ -175,34 +173,27 @@ public class DialogueController {
 			@RequestParam(value="replyId")
 			int replyId,
 			@RequestParam(value="woolUserId", required=false, defaultValue="")
-			String woolUserId,
-			@RequestParam(value="time", required=false, defaultValue="")
-			String time,
-			@RequestParam(value="timezone", required=false, defaultValue="")
-			String timezone) throws Exception {
+			String woolUserId) throws Exception {
 		if(woolUserId.equals("")) {
 			logger.info("POST /progress-dialogue?replyId=" + replyId);
 			return QueryRunner.runQuery(
 				(version, user) -> doProgressDialogue(user, request,
-						loggedDialogueId, loggedInteractionIndex, replyId,
-						time, timezone),
+						loggedDialogueId, loggedInteractionIndex, replyId),
 				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("POST /progress-dialogue?replyId=" + replyId+"&woolUserId="+woolUserId);
 			return QueryRunner.runQuery(
 				(version, user) -> doProgressDialogue(woolUserId, request,
-					loggedDialogueId, loggedInteractionIndex, replyId,
-					time, timezone),
+					loggedDialogueId, loggedInteractionIndex, replyId),
 				versionName, request, response, woolUserId, application);
 		}
 	}
 
 	private NullableResponse<DialogueMessage> doProgressDialogue(String woolUserId,
 			HttpServletRequest request, String loggedDialogueId,
-			int loggedInteractionIndex, int replyId, String timeStr,
-			String timezone) throws HttpException, DatabaseException,
+			int loggedInteractionIndex, int replyId) throws HttpException, DatabaseException,
 			IOException {
-		DateTime time = parseTime(timeStr, timezone);
+
 		String body;
 		try (InputStream input = request.getInputStream()) {
 			body = FileUtils.readFileString(input);
@@ -211,7 +202,8 @@ public class DialogueController {
 		if (body.trim().length() > 0) {
 			try {
 				variables = JsonMapper.parse(body,
-						new TypeReference<Map<String, ?>>() {});
+						new TypeReference<>() {
+						});
 			} catch (ParseException ex) {
 				throw new BadRequestException(
 						"Request body is not a JSON object: " +
@@ -221,6 +213,7 @@ public class DialogueController {
 		try {
 			UserService userService = application.getServiceManager()
 					.getActiveUserService(woolUserId);
+			DateTime time = parseTime(userService.getTimeZone());
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
 			if (!variables.isEmpty())
@@ -250,34 +243,30 @@ public class DialogueController {
 			@RequestParam(value="loggedInteractionIndex")
 			int loggedInteractionIndex,
 			@RequestParam(value="woolUserId", required=false, defaultValue = "")
-			String woolUserId,
-			@RequestParam(value="time", required=false, defaultValue="")
-			String time,
-			@RequestParam(value="timezone", required=false, defaultValue="")
-			String timezone) throws HttpException, Exception {
+			String woolUserId) throws Exception {
 		if(woolUserId.equals("")) {
 			logger.info("POST /back-dialogue");
 			return QueryRunner.runQuery(
 				(version, user) -> doBackDialogue(user, loggedDialogueId,
-						loggedInteractionIndex, time, timezone),
+						loggedInteractionIndex),
 				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("POST /back-dialogue?woolUserId="+woolUserId);
 			return QueryRunner.runQuery(
 				(version, user) -> doBackDialogue(woolUserId, loggedDialogueId,
-						loggedInteractionIndex, time, timezone),
+						loggedInteractionIndex),
 				versionName, request, response, woolUserId, application);
 		}
 	}
 
 	private DialogueMessage doBackDialogue(String woolUserId,
-			String loggedDialogueId, int loggedInteractionIndex,
-			String timeStr, String timezone) throws HttpException,
+			String loggedDialogueId, int loggedInteractionIndex) throws HttpException,
 			DatabaseException, IOException {
-		DateTime time = parseTime(timeStr, timezone);
+
 		try {
 			UserService userService = application.getServiceManager()
 					.getActiveUserService(woolUserId);
+			DateTime time = parseTime(userService.getTimeZone());
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
 			ExecuteNodeResult prevNode = userService.backDialogue(state, time);
@@ -297,31 +286,27 @@ public class DialogueController {
 			String versionName,
 			@RequestParam(value="dialogueName")
 			String dialogueName,
+			@RequestParam(value="timeZone")
+			String timeZone,
 			@RequestParam(value="woolUserId", required=false, defaultValue="")
-			String woolUserId,
-			@RequestParam(value="time", required=false, defaultValue="")
-			String time,
-			@RequestParam(value="timezone", required=false, defaultValue="")
-			String timezone) throws HttpException, Exception {
+			String woolUserId) throws Exception {
 		if(woolUserId.equals("")) {
 			logger.info("Get /current-dialogue?dialogueName=" + dialogueName);
 			return QueryRunner.runQuery(
-				(version, user) -> doGetCurrentDialogue(user, dialogueName,
-						time, timezone),
+				(version, user) -> doGetCurrentDialogue(user, dialogueName, timeZone),
 				versionName, request, response, woolUserId, application);
 		} else {
 			logger.info("Get /current-dialogue?dialogueName=" + dialogueName+"&woolUserId="+woolUserId);
 			return QueryRunner.runQuery(
-				(version, user) -> doGetCurrentDialogue(woolUserId, dialogueName,
-						time, timezone),
+				(version, user) -> doGetCurrentDialogue(woolUserId, dialogueName, timeZone),
 				versionName, request, response, woolUserId, application);
 		}
 	}
 
 	private NullableResponse<DialogueMessage> doGetCurrentDialogue(
-			String woolUserId, String dialogueName, String timeStr, String timezone)
+			String woolUserId, String dialogueName, String timeZone)
 			throws HttpException, DatabaseException, IOException {
-		DateTime time = parseTime(timeStr, timezone);
+		DateTime time = parseTime(timeZone);
 		LoggedDialogue currDlg =
 				LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId,
 				dialogueName);
@@ -361,7 +346,7 @@ public class DialogueController {
 			@RequestParam(value="loggedDialogueId")
 			String loggedDialogueId,
 			@RequestParam(value="woolUserId", required=false, defaultValue="")
-			String woolUserId) throws HttpException, Exception {
+			String woolUserId) throws Exception {
 		if(woolUserId.equals("")) {
 			logger.info("POST /cancel-dialogue");
 			QueryRunner.runQuery((version, user) -> doCancelDialogue(user, loggedDialogueId),
@@ -374,17 +359,16 @@ public class DialogueController {
 	}
 
 	private Object doCancelDialogue(String woolUserId, String loggedDialogueId)
-			throws HttpException, DatabaseException, IOException {
+			throws DatabaseException, IOException {
 		application.getServiceManager().getActiveUserService(woolUserId)
 				.cancelDialogue(loggedDialogueId);
 		return null;
 	}
 
-	public static DateTime parseTime(String timeStr, String timezone)
+	public static DateTime parseTime(String timezone)
 			throws BadRequestException {
 		List<HttpFieldError> errors = new ArrayList<>();
-		DateTime time = UserServiceManager.parseTimeParameters(timeStr, timezone,
-				errors);
+		DateTime time = UserServiceManager.parseTimeParameters(timezone, errors);
 		if (!errors.isEmpty())
 			throw BadRequestException.withInvalidInput(errors);
 		return time;
