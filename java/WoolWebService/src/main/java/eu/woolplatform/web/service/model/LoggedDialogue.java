@@ -161,4 +161,16 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 	public void setInteractionList(List<WoolLoggedInteraction> interactionList) {
 		this.interactionList = interactionList;
 	}
+
+	/**
+	 * Returns the timestamp (milliseconds since Jan 1st 1970 UTC) of the latest step in this
+	 * {@link LoggedDialogue}.
+	 * @return the timestamp of the latest step in this {@link LoggedDialogue}.
+	 */
+	public long getLatestInteractionTimestamp() {
+		if(interactionList.size() == 0) return this.getUtcTime();
+		else {
+			return interactionList.get(interactionList.size()-1).getTimestamp();
+		}
+	}
 }

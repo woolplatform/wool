@@ -26,8 +26,7 @@ package eu.woolplatform.web.service;
  * the {protocol_version} is defined by the last available item in this {@code enum}.
  */
 public enum ProtocolVersion {
-	V1("1.0.0"),
-	V2("1.1.0");
+	V1("1.0.0");
 	
 	private final String versionName;
 	

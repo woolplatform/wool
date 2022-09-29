@@ -28,7 +28,9 @@ import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
 import eu.woolplatform.web.service.Application;
+import eu.woolplatform.web.service.ProtocolVersion;
 import eu.woolplatform.web.service.QueryRunner;
+import eu.woolplatform.web.service.controller.model.DialogueMetadata;
 import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.exception.NotFoundException;
 import eu.woolplatform.web.service.model.LoggedDialogue;
@@ -46,12 +48,14 @@ import eu.woolplatform.wool.model.protocol.DialogueMessage;
 import eu.woolplatform.wool.model.protocol.DialogueMessageFactory;
 import eu.woolplatform.wool.model.protocol.NullableResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -63,51 +67,64 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controller for the /dialogue/... end-points of the WOOL Web Service
+ * Controller for the /dialogue/... end-points of the WOOL Web Service.
  *
  * @author Dennis Hofs (RRD)
  * @author Harm op den Akker
  */
 @RestController
 @SecurityRequirement(name = "X-Auth-Token")
-@RequestMapping("/v{version}/dialogue")
-@Tag(name = "Dialogues", description = "End-points for starting, and controlling the lifecycle of remotely executed dialogues")
+@RequestMapping("/dialogue")
+@Tag(name = "Dialogue", description = "End-points for starting and controlling the lifecycle of remotely executed dialogues")
 public class DialogueController {
 	@Autowired
 	Application application;
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
-	// ----- END-POINT: "start-dialogue"
+	// -------------------------------------------------- //
+	// ---------- END-POINT: "/dialogue/start" ---------- //
+	// -------------------------------------------------- //
 
-	@Operation(summary = "Start the step-by-step execution of the dialogue identified by the given parameters",
-			description = "A client application that wants to start executing a dialogue should use this end-point " +
+	@Operation(
+		summary = "Start the step-by-step execution of the dialogue identified by the given parameters",
+		description = "A client application that wants to start executing a dialogue should use this end-point " +
 					"to do so. The dialogueName (which is the dialogue's filename without it's .wool extension and " +
 					"language are mandatory parameters. The 'woolUserId' is an optional parameter that may be used " +
 					"if the currently authorized user is an admin and wants to execute a dialogue on behalf of another " +
 					"user. If the authenticated user is running a dialogue 'for himself' this should be left empty.")
-	@RequestMapping(value="/start-dialogue", method= RequestMethod.POST)
+	@RequestMapping(value="/start", method= RequestMethod.POST)
 	public DialogueMessage startDialogue(
-			HttpServletRequest request,
-			HttpServletResponse response,
-			@PathVariable("version")
-			String versionName,
-			@RequestParam(value="dialogueName")
-			String dialogueName,
-			@RequestParam(value="language")
-			String language,
-			@RequestParam(value="timeZone")
-			String timeZone,
-			@RequestParam(value="woolUserId", required=false, defaultValue="")
-			String woolUserId) throws Exception {
+		HttpServletRequest request,
+		HttpServletResponse response,
 
-		// Construct a minimal String for logging purposes
-		String logInfo = "POST /start-dialogue?dialogueName= " + dialogueName + "&language=" + language;
-		if(!woolUserId.equals("")) logInfo += "&userId="+woolUserId;
+		@Parameter(description = "Name of the WOOL Dialogue to start (excluding .wool)")
+		@RequestParam(value="dialogueName")
+		String dialogueName,
+
+		@Parameter(description = "Language code of the language in which to start the dialogue (e.g. 'en')")
+		@RequestParam(value="language")
+		String language,
+
+		@Parameter(description = "The current time zone of the WOOL user (as IANA, e.g. 'Europe/Lisbon')")
+		@RequestParam(value="timeZone")
+		String timeZone,
+
+		@Parameter(description = "The user for which to execute the dialogue (leave empty if executing for the currently authenticated user)")
+		@RequestParam(value="woolUserId", required=false)
+		String woolUserId
+	) throws Exception {
+
+		// Versioning is removed for the time being, assume the latest version
+		String versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		String logInfo = "POST /dialogue/start?dialogueName=" + dialogueName + "&language=" + language;
+		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		if(!timeZone.equals("")) logInfo += "&timeZone=" + timeZone;
 		logger.info(logInfo);
 
-		if(woolUserId.equals("")) {
+		if(woolUserId == null || woolUserId.equals("")) {
 			return QueryRunner.runQuery(
 					(version, user) -> doStartDialogue(user, dialogueName,
 							language, timeZone),
@@ -121,7 +138,7 @@ public class DialogueController {
 	}
 
 	/**
-	 * Processes a call to the /start-dialogue/ end-point.
+	 * Processes a call to the /dialogue/start end-point.
 	 * @param woolUserId the {@link String} identifier of the user for whom to start a dialogue.
 	 * @param dialogueName the name of the dialogue to start executing
 	 * @param language the language in which to start the dialogue
@@ -135,7 +152,6 @@ public class DialogueController {
 			String woolUserId, String dialogueName, String language,
 			String timeZone) throws HttpException, IOException, DatabaseException {
 		DateTime time = parseTime(timeZone);
-		logger.info("The date/time of the client is: "+time.toString());
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
 		userService.setTimeZone(timeZone);
@@ -148,7 +164,9 @@ public class DialogueController {
 		}
 	}
 
-	// ----- END-POINT: "progress-dialogue"
+	// ----------------------------------------------------- //
+	// ---------- END-POINT: "/dialogue/progress" ---------- //
+	// ----------------------------------------------------- //
 
 	/**
 	 * End point that returns the next statement by the agent and its
@@ -156,32 +174,59 @@ public class DialogueController {
 	 * statement). The request body may contain a JSON object with variables
 	 * from input segments.
 	 *
-	 * @param replyId the id of the reply that was selected for the previous
-	 * statement
-	 * @return a dialogue message or null
+	 * @param request the HTTPRequest object (to retrieve authentication headers and optional body parameters).
+	 * @param response the HTTP response (to add header WWW-Authenticate in
+	 *                  case of 401 Unauthorized).
+	 * @param loggedDialogueId The identifier of the (in-progress) dialogue to progress
+	 * @param loggedInteractionIndex The interaction index is the step in the dialogue execution from which to progress the dialogue
+	 * @param replyId the id of the reply that was selected for the previous statement.
+	 * @param woolUserId The user for which to execute the dialogue (leave empty if executing for the currently authenticated user)
+	 * @return a {@link NullableResponse} containing either a {@link DialogueMessage} or {@code null}.
 	 */
-	@RequestMapping(value="/progress-dialogue", method=RequestMethod.POST)
+	@Operation(
+			summary = "Progresses a given dialogue from a given state with a given reply id",
+			description = "The client application that wants to progress a previously started dialogue should use this end-point " +
+					"to do so. The loggedDialogueId identifies the ongoing dialogue (and will have been provided by a call to start-dialogue) " +
+					"and the loggedInteractionIndex identifies the current step in the dialogue execution (also provided previously). The replyId " +
+					"depicts the reply that the user has chosen to progress the dialogue. The 'woolUserId' is an optional parameter that may be " +
+					"used if the currently authorized user is an admin and wants to execute a dialogue on behalf of another " +
+					"user. If the authenticated user is running a dialogue 'for himself' this should be left empty.")
+	@RequestMapping(value="/progress", method=RequestMethod.POST)
 	public NullableResponse<DialogueMessage> progressDialogue(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			@PathVariable("version")
-			String versionName,
+
+			@Parameter(description = "The identifier of the (in-progress) dialogue to progress")
 			@RequestParam(value="loggedDialogueId")
 			String loggedDialogueId,
+
+			@Parameter(description = "The interaction index is the step in the dialogue execution from which to progress the dialogue")
 			@RequestParam(value="loggedInteractionIndex")
 			int loggedInteractionIndex,
+
+			@Parameter(description = "The identifier of the reply that the user has chose to progress the dialogue")
 			@RequestParam(value="replyId")
 			int replyId,
-			@RequestParam(value="woolUserId", required=false, defaultValue="")
-			String woolUserId) throws Exception {
-		if(woolUserId.equals("")) {
-			logger.info("POST /progress-dialogue?replyId=" + replyId);
+
+			@Parameter(description = "The user for which to execute the dialogue (leave empty if executing for the currently authenticated user)")
+			@RequestParam(value="woolUserId", required=false)
+			String woolUserId
+	) throws Exception {
+
+		// Versioning is removed for the time being, assume the latest version
+		String versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		String logInfo = "POST /dialogue/progress?replyId=" + replyId;
+		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
+		logger.info(logInfo);
+
+		if(woolUserId == null || woolUserId.equals("")) {
 			return QueryRunner.runQuery(
 				(version, user) -> doProgressDialogue(user, request,
 						loggedDialogueId, loggedInteractionIndex, replyId),
 				versionName, request, response, woolUserId, application);
 		} else {
-			logger.info("POST /progress-dialogue?replyId=" + replyId+"&woolUserId="+woolUserId);
 			return QueryRunner.runQuery(
 				(version, user) -> doProgressDialogue(woolUserId, request,
 					loggedDialogueId, loggedInteractionIndex, replyId),
@@ -189,6 +234,19 @@ public class DialogueController {
 		}
 	}
 
+	/**
+	 * Processes a call to the /dialogue/progress end-point.
+	 * @param woolUserId the user for which to execute the dialogue (leave empty or {@code null} if executing
+	 *                      for the currently authenticated user).
+	 * @param request the HTTPRequest object (to retrieve authentication headers and optional body parameters).
+	 * @param loggedDialogueId the identifier of the (in-progress) dialogue to progress.
+	 * @param loggedInteractionIndex the interaction index is the step in the dialogue execution from which to progress the dialogue.
+	 * @param replyId the identifier of the reply that the user has chosen to progress the dialogue.
+	 * @return a {@link NullableResponse} containing either a {@link DialogueMessage} or {@code null}.
+	 * @throws HttpException in case of a network error.
+	 * @throws DatabaseException in case of an error retrieving the current dialogue state.
+	 * @throws IOException in case of a network error.
+	 */
 	private NullableResponse<DialogueMessage> doProgressDialogue(String woolUserId,
 			HttpServletRequest request, String loggedDialogueId,
 			int loggedInteractionIndex, int replyId) throws HttpException, DatabaseException,
@@ -230,93 +288,82 @@ public class DialogueController {
 		}
 	}
 
-	// ----- END-POINT: "back-dialogue"
+	// ----------------------------------------------------- //
+	// ---------- END-POINT: "/dialogue/continue" ---------- //
+	// ----------------------------------------------------- //
 
-	@RequestMapping(value="/back-dialogue", method=RequestMethod.POST)
-	public DialogueMessage backDialogue(
+	@Operation(
+			summary = "Continue the latest ongoing dialogue with a given name",
+			description = "Pick up the conversation by providing a dialogue name. If there is an ongoing dialogue " +
+					"with the given name (that is not finished or cancelled), this method will return the next step " +
+					"in that conversation. As with all methods that 'start' dialogue executions, a valid time zone " +
+					"in which the user currently resided must be provided so that time sensitive information may be " +
+					"processed correctly.")
+	@RequestMapping(value="/continue", method=RequestMethod.POST)
+	public NullableResponse<DialogueMessage> continueDialogue(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			@PathVariable("version")
-			String versionName,
-			@RequestParam(value="loggedDialogueId")
-			String loggedDialogueId,
-			@RequestParam(value="loggedInteractionIndex")
-			int loggedInteractionIndex,
-			@RequestParam(value="woolUserId", required=false, defaultValue = "")
-			String woolUserId) throws Exception {
-		if(woolUserId.equals("")) {
-			logger.info("POST /back-dialogue");
-			return QueryRunner.runQuery(
-				(version, user) -> doBackDialogue(user, loggedDialogueId,
-						loggedInteractionIndex),
-				versionName, request, response, woolUserId, application);
-		} else {
-			logger.info("POST /back-dialogue?woolUserId="+woolUserId);
-			return QueryRunner.runQuery(
-				(version, user) -> doBackDialogue(woolUserId, loggedDialogueId,
-						loggedInteractionIndex),
-				versionName, request, response, woolUserId, application);
-		}
-	}
 
-	private DialogueMessage doBackDialogue(String woolUserId,
-			String loggedDialogueId, int loggedInteractionIndex) throws HttpException,
-			DatabaseException, IOException {
-
-		try {
-			UserService userService = application.getServiceManager()
-					.getActiveUserService(woolUserId);
-			DateTime time = parseTime(userService.getTimeZone());
-			DialogueState state = userService.getDialogueState(loggedDialogueId,
-					loggedInteractionIndex);
-			ExecuteNodeResult prevNode = userService.backDialogue(state, time);
-			return DialogueMessageFactory.generateDialogueMessage(prevNode);
-		} catch (WoolException e) {
-			throw createHttpException(e);
-		}
-	}
-
-	// ----- END-POINT: "current-dialogue"
-
-	@RequestMapping(value="/current-dialogue", method=RequestMethod.GET)
-	public NullableResponse<DialogueMessage> getCurrentDialogue(
-			HttpServletRequest request,
-			HttpServletResponse response,
-			@PathVariable("version")
-			String versionName,
+			@Parameter(description = "Name of the WOOL Dialogue to continue (excluding .wool)")
 			@RequestParam(value="dialogueName")
 			String dialogueName,
+
+			@Parameter(description = "The current time zone of the WOOL user (as IANA, e.g. 'Europe/Lisbon')")
 			@RequestParam(value="timeZone")
 			String timeZone,
+
+			@Parameter(description = "The user for which to continue executing the dialogue (leave empty if executing for the currently authenticated user)")
 			@RequestParam(value="woolUserId", required=false, defaultValue="")
-			String woolUserId) throws Exception {
-		if(woolUserId.equals("")) {
-			logger.info("Get /current-dialogue?dialogueName=" + dialogueName);
+			String woolUserId
+	) throws Exception {
+
+		// Versioning is removed for the time being, assume the latest version
+		String versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		String logInfo = "POST /dialogue/continue?dialogueName=" + dialogueName + "&timeZone=" + timeZone;
+		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
+		logger.info(logInfo);
+
+		if(woolUserId == null || woolUserId.equals("")) {
 			return QueryRunner.runQuery(
-				(version, user) -> doGetCurrentDialogue(user, dialogueName, timeZone),
-				versionName, request, response, woolUserId, application);
+					(version, user) -> doContinueDialogue(user, dialogueName, timeZone),
+					versionName, request, response, woolUserId, application);
 		} else {
-			logger.info("Get /current-dialogue?dialogueName=" + dialogueName+"&woolUserId="+woolUserId);
 			return QueryRunner.runQuery(
-				(version, user) -> doGetCurrentDialogue(woolUserId, dialogueName, timeZone),
-				versionName, request, response, woolUserId, application);
+					(version, user) -> doContinueDialogue(woolUserId, dialogueName, timeZone),
+					versionName, request, response, woolUserId, application);
 		}
 	}
 
-	private NullableResponse<DialogueMessage> doGetCurrentDialogue(
+	/**
+	 * Processes a call to the /dialogue/continue end-point.
+	 * @param woolUserId the user for which to continue executing the dialogue (leave empty if executing for the currently authenticated user)").
+	 * @param dialogueName name of the WOOL Dialogue to continue (excluding .wool).
+	 * @param timeZone the current time zone of the WOOL user (as IANA, e.g. 'Europe/Lisbon').
+	 * @return a {@link NullableResponse} object containing the {@link DialogueMessage} or {@code null}.
+	 * @throws HttpException in case of a network error.
+	 * @throws DatabaseException in case of an error retrieving the ongoing dialogue from the database.
+	 * @throws IOException in case of a file io error.
+	 */
+	private NullableResponse<DialogueMessage> doContinueDialogue(
 			String woolUserId, String dialogueName, String timeZone)
 			throws HttpException, DatabaseException, IOException {
+
 		DateTime time = parseTime(timeZone);
+		UserService userService = application.getServiceManager()
+				.getActiveUserService(woolUserId);
+		userService.setTimeZone(timeZone);
+
 		LoggedDialogue currDlg =
 				LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId,
-				dialogueName);
+						dialogueName);
 		WoolLoggedInteraction lastInteraction = null;
 		if (currDlg != null && !currDlg.getInteractionList().isEmpty()) {
 			lastInteraction = currDlg.getInteractionList().get(
 					currDlg.getInteractionList().size() - 1);
 		}
-		UserService userService = application.getServiceManager()
-				.getActiveUserService(woolUserId);
+
 		if (lastInteraction != null && lastInteraction.getMessageSource() ==
 				WoolMessageSource.AGENT) {
 			ExecuteNodeResult node;
@@ -335,29 +382,54 @@ public class DialogueController {
 		}
 	}
 
-	// ----- END-POINT: "cancel-dialogue"
+	// --------------------------------------------------- //
+	// ---------- END-POINT: "/dialogue/cancel" ---------- //
+	// --------------------------------------------------- //
 
-	@RequestMapping(value="/cancel-dialogue", method=RequestMethod.POST)
+	@Operation(
+		summary = "Cancels a dialogue that is currently in progress, terminating its execution state",
+		description = "If a client application detects that a user has navigated away, or has deliberately requested " +
+				"to stop an ongoing dialogue through a user interface action, this end-point should be called so that the " +
+				"dialogue's state can be updated, indicating that it is no longer ongoing.")
+	@RequestMapping(value="/cancel", method=RequestMethod.POST)
 	public void cancelDialogue(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			@PathVariable("version")
-			String versionName,
+
+			@Parameter(description = "The identifier of the (in-progress) dialogue to progress")
 			@RequestParam(value="loggedDialogueId")
 			String loggedDialogueId,
-			@RequestParam(value="woolUserId", required=false, defaultValue="")
+
+			@Parameter(description = "The user for which to execute the dialogue (leave empty if executing for the currently authenticated user)")
+			@RequestParam(value="woolUserId", required=false)
 			String woolUserId) throws Exception {
-		if(woolUserId.equals("")) {
-			logger.info("POST /cancel-dialogue");
+
+		// Versioning is removed for the time being, assume the latest version
+		String versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		String logInfo = "POST /dialogue/cancel?loggedDialogueId=" + loggedDialogueId;
+		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
+		logger.info(logInfo);
+
+		if(woolUserId == null || woolUserId.equals("")) {
 			QueryRunner.runQuery((version, user) -> doCancelDialogue(user, loggedDialogueId),
-				versionName, request, response, woolUserId, application);
+					versionName, request, response, woolUserId, application);
 		} else {
-			logger.info("POST /cancel-dialogue?woolUserId="+woolUserId);
 			QueryRunner.runQuery((version, user) -> doCancelDialogue(woolUserId, loggedDialogueId),
 					versionName, request, response, woolUserId, application);
 		}
 	}
 
+	/**
+	 * Processes a call to the /dialogue/cancel end-point.
+	 * @param woolUserId the user for which to execute the dialogue (leave empty or {@code null} if executing
+	 * 	 *               for the currently authenticated user).
+	 * @param loggedDialogueId the identifier of the (in-progress) dialogue to progress.
+	 * @return {@code null}
+	 * @throws DatabaseException in case of an error in retrieving the specified dialogue.
+	 * @throws IOException in case of any network error.
+	 */
 	private Object doCancelDialogue(String woolUserId, String loggedDialogueId)
 			throws DatabaseException, IOException {
 		application.getServiceManager().getActiveUserService(woolUserId)
@@ -365,6 +437,161 @@ public class DialogueController {
 		return null;
 	}
 
+	// ------------------------------------------------- //
+	// ---------- END-POINT: "/dialogue/back" ---------- //
+	// ------------------------------------------------- //
+
+	@Operation(
+			summary = "Go back to the previous step in an ongoing dialogue",
+			description = "Use this end-point by providing a loggedDialogueId (specifying an ongoing dialogue) and the " +
+					"loggedInteractionIndex (identifying the current step in the dialogue). This end-point will return the " +
+					"previous dialogue step (based on the loggedInteractionIndex) by providing that previous DialogueMessage. " +
+					"<br/><br/><b>Caution: Using this method takes the dialogue back to the previous step as if there was a " +
+					"regular reply option leading back to that step, but it will not undo any variable operations (i.e. setting " +
+					"WOOL Variables) that may have occurred in the execution of the current step. This may lead to unexpected " +
+					"results if the execution of the 'previous' dialogue step is affected by variables set in the 'current' step.</b>")
+	@RequestMapping(value="/back", method=RequestMethod.POST)
+	public DialogueMessage backDialogue(
+		HttpServletRequest request,
+		HttpServletResponse response,
+
+		@Parameter(description = "The identifier of the (in-progress) dialogue to take a step back in")
+		@RequestParam(value="loggedDialogueId")
+		String loggedDialogueId,
+
+		@Parameter(description = "The interaction index is the step in the dialogue execution from which to take a step back in the dialogue")
+		@RequestParam(value="loggedInteractionIndex")
+		int loggedInteractionIndex,
+
+		@Parameter(description = "The user for which to take a step back in the dialogue (leave empty if executing for the currently authenticated user)")
+		@RequestParam(value="woolUserId", required=false)
+		String woolUserId
+	) throws Exception {
+
+		// Versioning is removed for the time being, assume the latest version
+		String versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		String logInfo = "POST /dialogue/back?loggedDialogueId=" + loggedDialogueId + "&loggedInteractionIndex=" + loggedInteractionIndex;
+		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
+		logger.info(logInfo);
+
+		if(woolUserId == null || woolUserId.equals("")) {
+			return QueryRunner.runQuery(
+				(version, user) -> doBackDialogue(user, loggedDialogueId,
+						loggedInteractionIndex),
+				versionName, request, response, woolUserId, application);
+		} else {
+			return QueryRunner.runQuery(
+				(version, user) -> doBackDialogue(woolUserId, loggedDialogueId,
+						loggedInteractionIndex),
+				versionName, request, response, woolUserId, application);
+		}
+	}
+
+	/**
+	 * Processes a call to the /dialogue/back-dialogue end-point.
+	 * @param woolUserId the user for which to take a step back in the dialogue (leave empty if executing for the currently authenticated user).
+	 * @param loggedDialogueId the identifier of the (in-progress) dialogue to take a step back in.
+	 * @param loggedInteractionIndex the interaction index is the step in the dialogue execution from which to take a step back in the dialogue.
+	 * @return a {@link DialogueMessage} object depicting the previous step in the given ongoing dialogue.
+	 * @throws HttpException in case of any network error.
+	 * @throws DatabaseException in case of an error retrieving the ongoing dialogue from the database.
+	 * @throws IOException in case of a file IO error.
+	 */
+	private DialogueMessage doBackDialogue(String woolUserId,
+			String loggedDialogueId, int loggedInteractionIndex) throws HttpException,
+			DatabaseException, IOException {
+
+		try {
+			UserService userService = application.getServiceManager()
+					.getActiveUserService(woolUserId);
+			DateTime time = parseTime(userService.getTimeZone());
+			DialogueState state = userService.getDialogueState(loggedDialogueId,
+					loggedInteractionIndex);
+			ExecuteNodeResult prevNode = userService.backDialogue(state, time);
+			return DialogueMessageFactory.generateDialogueMessage(prevNode);
+		} catch (WoolException e) {
+			throw createHttpException(e);
+		}
+	}
+
+	// -------------------------------------------------------- //
+	// ---------- END-POINT: "/dialogue/get-ongoing" ---------- //
+	// -------------------------------------------------------- //
+
+	@Operation(
+			summary = "Get information about the latest ongoing dialogue for a given user",
+			description = "This end-point answers the question 'was there any unfinished business? and if so, how long ago?'. As a client " +
+					"application, you may want to call this end-point at the start of a session to see if there was an ongoing dialogue left " +
+					"over from a previous session. If so, you will get the dialogue-name and the time (in seconds) since the last 'engagement' with" +
+					"that dialogue (the last time since either the user or the agent said something). If this wasn't too long ago, you may decide" +
+					"to continue the conversation by passing the dialogue name to the /dialogues/continue-dialogue/ end-point. ")
+	@RequestMapping(value="/get-ongoing", method=RequestMethod.GET)
+	public NullableResponse<DialogueMetadata> getOngoingDialogue(
+			HttpServletRequest request,
+			HttpServletResponse response,
+
+			@Parameter(description = "The user for which to retrieve the latest ongoing dialogue information (leave empty if retrieving for the currently authenticated user)")
+			@RequestParam(value="woolUserId", required=false, defaultValue="")
+			String woolUserId
+	) throws Exception {
+
+		// Versioning is removed for the time being, assume the latest version
+		String versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		String logInfo = "GET /dialogue/get-ongoing";
+		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "?woolUserId="+woolUserId;
+		logger.info(logInfo);
+
+		if(woolUserId == null || woolUserId.equals("")) {
+			return QueryRunner.runQuery(
+					(version, user) -> doGetOngoingDialogue(user),
+					versionName, request, response, woolUserId, application);
+		} else {
+			return QueryRunner.runQuery(
+					(version, user) -> doGetOngoingDialogue(woolUserId),
+					versionName, request, response, woolUserId, application);
+		}
+	}
+
+	/**
+	 * Processes a call to the /dialogue/get-ongoing end-point.
+	 * @param woolUserId the user for which to retrieve the latest ongoing dialogue information (leave empty
+	 *                      if retrieving for the currently authenticated user).
+	 * @return a {@link NullableResponse} containing either a {@link DialogueMetadata} object or {@code null}.
+	 * @throws DatabaseException in case of an error retrieving logged dialogues from the database.
+	 * @throws IOException in case of any network error.
+	 */
+	private NullableResponse<DialogueMetadata> doGetOngoingDialogue(String woolUserId)
+			throws DatabaseException, IOException {
+
+		LoggedDialogue latestOngoingDialogue =
+				LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId);
+
+		if(latestOngoingDialogue != null) {
+			String dialogueName = latestOngoingDialogue.getDialogueName();
+			long latestInteractionTimestamp = latestOngoingDialogue.getLatestInteractionTimestamp();
+			long secondsSinceLastEngagement = (long) Math.floor((System.currentTimeMillis() - latestInteractionTimestamp) / 1000.0);
+			DialogueMetadata dialogueMetadata = new DialogueMetadata(dialogueName, secondsSinceLastEngagement);
+			return new NullableResponse<>(dialogueMetadata);
+		} else {
+			return new NullableResponse<>(null);
+		}
+	}
+
+	// -------------------------------------- //
+	// ---------- Helper Functions ---------- //
+	// -------------------------------------- //
+
+	/**
+	 * Retrieves a {@link DateTime} object given the current {@code timezone} as IANA String,
+	 * e.g. "Europe/Lisbon".
+	 * @param timezone the timeZone of the client as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
+	 * @return a {@link DateTime} object representing the current time in the given {@code timezone}.
+	 * @throws BadRequestException in case the given timezone is not valid or not formatted correctly.
+	 */
 	public static DateTime parseTime(String timezone)
 			throws BadRequestException {
 		List<HttpFieldError> errors = new ArrayList<>();
@@ -374,6 +601,11 @@ public class DialogueController {
 		return time;
 	}
 
+	/**
+	 * Generates a {@link HttpException} with a valid HTTP Status Code from the given {@link WoolException}.
+	 * @param exception the {@link WoolException} that should be "wrapped" into an {@link HttpException}.
+	 * @return the {@link HttpException} object representing the error including a valid status code.
+	 */
 	public static HttpException createHttpException(WoolException exception) {
 		switch (exception.getType()) {
 			case AGENT_NOT_FOUND:
