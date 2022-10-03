@@ -1,0 +1,23 @@
+{
+    "Bob": {
+        "Hi, my name is Bob, and this is the Default WOOL Test dialogue.": "Tere, minu nimi on Bob ja see on vaikimisi WOOLi testdialoog.",
+        "This dialogue is very basic, and shows only dialogue flow and ending.": "See dialoog on väga lihtne ja näitab ainult dialoogi kulgu ja lõppu.",
+        "Any node can have zero or more reply options. When there are none, the dialogue is over.": "Igal sõlmel võib olla null või rohkem vastusevarianti. Kui neid ei ole, on dialoog lõppenud.",
+        "We deal with statements, reply options, and ending dialogues.": "Tegeleme avalduste, vastusevariantide ja lõppdialoogidega.",
+        "When a node has no reply options, the dialogue will end.": "Kui sõlmpunktil ei ole vastusevariante, lõpeb dialoog.",
+        "I have the last say, and I declare this dialogue to be over!": "Mul on viimane sõna ja ma kuulutan selle dialoogi lõppenuks!",
+        "Statements are things that a speaker says, like this!": "Avaldused on asjad, mida kõneleja ütleb, näiteks nii!",
+        "Alternatively, a reply option can point to the reserved node name \"End\". When the dialogue reaches this node, the dialogue is also over.": "Teise võimalusena võib vastusevariant osutada reserveeritud sõlme nimele \"End\". Kui dialoog jõuab sellesse sõlme, on ka dialoog lõppenud."
+    },
+    "_user": {
+        "Nice to meet you Bob.": "Tore kohtuda, Bob.",
+        "Goodbye.": "Hüvasti.",
+        "Tell me more.": "Räägi mulle lähemalt.",
+        "Dialogue over?": "Dialoog lõppenud?",
+        "Tell me about statements.": "Rääkige mulle avaldustest.",
+        "Reply Options?": "Vastus Valikud?",
+        "How do you end a dialogue?": "Kuidas lõpetada dialoog?",
+        "This reply option points to the \"End\" node.": "See vastusevariant osutab sõlme \"End\".",
+        "This one points to a node without replies.": "See osutab sõlme ilma vastusteta."
+    }
+}

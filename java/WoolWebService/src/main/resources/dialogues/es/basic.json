@@ -1,0 +1,23 @@
+{
+    "Bob": {
+        "Hi, my name is Bob, and this is the Default WOOL Test dialogue.": "Hola, me llamo Bob, y este es el diálogo de la prueba de lana por defecto.",
+        "This dialogue is very basic, and shows only dialogue flow and ending.": "Este diálogo es muy básico y sólo muestra el flujo y el final del diálogo.",
+        "Any node can have zero or more reply options. When there are none, the dialogue is over.": "Cualquier nodo puede tener cero o más opciones de respuesta. Cuando no hay ninguna, el diálogo se acaba.",
+        "We deal with statements, reply options, and ending dialogues.": "Tratamos las declaraciones, las opciones de respuesta y los diálogos finales.",
+        "When a node has no reply options, the dialogue will end.": "Cuando un nodo no tenga opciones de respuesta, el diálogo terminará.",
+        "I have the last say, and I declare this dialogue to be over!": "Tengo la última palabra y declaro que este diálogo ha terminado.",
+        "Statements are things that a speaker says, like this!": "Las declaraciones son cosas que un orador dice, ¡así!",
+        "Alternatively, a reply option can point to the reserved node name \"End\". When the dialogue reaches this node, the dialogue is also over.": "Alternativamente, una opción de respuesta puede apuntar al nombre del nodo reservado \"End\". Cuando el diálogo llega a este nodo, el diálogo también termina."
+    },
+    "_user": {
+        "Nice to meet you Bob.": "Encantado de conocerte Bob.",
+        "Goodbye.": "Adiós.",
+        "Tell me more.": "Cuéntame más.",
+        "Dialogue over?": "¿Se acabó el diálogo?",
+        "Tell me about statements.": "Háblame de las declaraciones.",
+        "Reply Options?": "¿Opciones de respuesta?",
+        "How do you end a dialogue?": "¿Cómo se termina un diálogo?",
+        "This reply option points to the \"End\" node.": "Esta opción de respuesta apunta al nodo \"End\".",
+        "This one points to a node without replies.": "Este apunta a un nodo sin respuestas."
+    }
+}

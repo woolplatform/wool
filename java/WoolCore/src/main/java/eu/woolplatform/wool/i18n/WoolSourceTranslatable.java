@@ -1,7 +1,7 @@
 package eu.woolplatform.wool.i18n;
 
 public class WoolSourceTranslatable {
-	public static final String USER = "USER";
+	public static final String USER = "_user";
 
 	private String speaker;
 	private String addressee;

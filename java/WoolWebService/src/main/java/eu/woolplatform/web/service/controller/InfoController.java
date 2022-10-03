@@ -25,16 +25,25 @@ import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.ServiceContext;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.controller.model.ServiceInfo;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v{version}/info")
+@Tag(name = "4. Information", description = "End-points that provide information about the running service")
+@RequestMapping("/info")
 public class InfoController {
 
 	@Autowired
 	Application application;
 
+	@Operation(summary = "Retrieve a set of metadata parameters about the running service",
+			description = "This end-point may be called without authentication and will return 3 variables" +
+					" that describe the current version of the service:" +
+					" <ul><li>build - Date & Time when the service was built</li>" +
+					" <li>protocolVersion - latest supported API Protocol version</li>" +
+					" <li>serviceVersion - software version of the service</li></ul>")
 	@GetMapping("/all")
 	public ServiceInfo all() {
 		return new ServiceInfo(Configuration.getInstance().get(Configuration.BUILD_TIME),

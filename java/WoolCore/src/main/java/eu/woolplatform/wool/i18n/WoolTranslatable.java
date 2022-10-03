@@ -68,9 +68,9 @@ public class WoolTranslatable {
 	}
 
 	/**
-	 * Returns the translatable segment.
+	 * Returns the translatable segments.
 	 *
-	 * @return the translatable segment
+	 * @return the translatable segments
 	 */
 	public List<WoolNodeBody.Segment> getSegments() {
 		return segments;
@@ -96,6 +96,15 @@ public class WoolTranslatable {
 		StringBuilder builder = new StringBuilder();
 		for (WoolNodeBody.Segment segment : segments) {
 			builder.append(segment);
+		}
+		return builder.toString();
+	}
+
+	public String toExportFriendlyString() {
+		StringBuilder builder = new StringBuilder();
+		for (WoolNodeBody.Segment segment : segments) {
+			String sourceString = segment.toString();
+			builder.append(sourceString.trim());
 		}
 		return builder.toString();
 	}

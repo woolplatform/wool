@@ -31,6 +31,8 @@ import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.exception.UnauthorizedException;
 import eu.woolplatform.web.service.*;
 import eu.woolplatform.web.service.controller.model.LoginResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,22 +47,29 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/v{version}/auth")
+@RequestMapping("/auth")
+@Tag(name = "1. Authentication", description = "End-points related to Authentication.")
 public class AuthController {
 	@Autowired
 	Application application;
 
 	private static final Object AUTH_LOCK = new Object();
 
+	@Operation(summary = "Obtain an authentication token by logging in",
+			description = "Log in to the service by providing a username, password and indicating the desired " +
+					"duration of the authentication token in minutes. If you want to obtain an authentication " +
+					"token that does not expire, either provide '0' or 'never' as the value for '*tokenExpiration*'.")
 	@RequestMapping(value="/login", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
 	public LoginResult login(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			@PathVariable("version")
-			String versionName,
 			@RequestBody
 			LoginParams loginParams) throws Exception {
+
+		// Versioning is removed for the time being, assume the latest version
+		String versionName = ProtocolVersion.getLatestVersion().versionName();
+
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(
 					(version, user) -> doLogin(request, loginParams),

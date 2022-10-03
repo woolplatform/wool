@@ -24,6 +24,7 @@ package eu.woolplatform.web.varservice.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.varservice.exception.HttpException;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -56,15 +57,18 @@ import javax.servlet.http.HttpServletResponse;
  * </ul></p>
  * 
  * @author Dennis Hofs (RRD)
+ * @author Harm op den Akker
  */
+
+@Hidden
 @RestController
 public class ErrorController implements org.springframework.boot.web.servlet.error.ErrorController {
-	private static final String LOGTAG = ErrorController.class.getSimpleName();
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	@RequestMapping("/error")
 	public Object error(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
-		Logger logger = AppComponents.getLogger(LOGTAG);
+
 		int statusCode = (Integer)request.getAttribute(
 				"javax.servlet.error.status_code");
 		Object obj = request.getAttribute(

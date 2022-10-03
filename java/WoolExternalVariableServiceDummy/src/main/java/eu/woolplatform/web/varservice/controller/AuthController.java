@@ -28,6 +28,7 @@ import eu.woolplatform.web.varservice.*;
 import eu.woolplatform.web.varservice.controller.model.LoginParams;
 import eu.woolplatform.web.varservice.exception.*;
 import eu.woolplatform.web.varservice.controller.model.LoginResult;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -43,19 +44,34 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/v{version}/auth")
-@Tag(name = "Authentication", description = "End-points related to Authentication (currently not used)")
+@Tag(name = "Authentication", description = "End-points related to Authentication.")
 public class AuthController {
 	private static final Object AUTH_LOCK = new Object();
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
+	@Operation(summary = "Obtain an authentication token by logging in",
+			description = "Log in to the service by providing a username, password and indicating the desired " +
+					"duration of the authentication token in minutes. If you want to obtain an authentication " +
+					"token that does not expire, either provide '0' or 'never' as the value for '*tokenExpiration*'.")
 	@RequestMapping(value="/login", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
 	public LoginResult login(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			@PathVariable("version")
-			String versionName,
+			@RequestParam(value = "version", required = false) String versionName,
 			@RequestBody
-			LoginParams loginParams) throws HttpException, Exception {
+			LoginParams loginParams) throws Exception {
+
+		// If no explicit protocol version is provided, assume the latest version
+		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		if(loginParams != null) {
+			logger.info("POST /v" + versionName + "/auth/login for user '" + loginParams.getUser() + "'.");
+		} else {
+			logger.info("POST /v" + versionName + "/auth/login with empty login parameters.");
+		}
+
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(
 					(version, user) -> doLogin(request, loginParams),
@@ -64,8 +80,7 @@ public class AuthController {
 	}
 
 	private LoginResult doLogin(HttpServletRequest request,
-			LoginParams loginParams) throws HttpException, Exception {
-		Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+			LoginParams loginParams) throws Exception {
 		validateForbiddenQueryParams(request, "user", "password");
 		String user = loginParams.getUser();
 		String password = loginParams.getPassword();
@@ -87,21 +102,21 @@ public class AuthController {
 			logger.info("Failed login attempt: " + fieldErrors);
 			throw BadRequestException.withInvalidInput(fieldErrors);
 		}
-		UserCredentials creds = UserFile.findUser(user);
+		UserCredentials credentials = UserFile.findUser(user);
 		String invalidError = "Username or password is invalid";
-		if (creds == null) {
+		if (credentials == null) {
 			logger.info("Failed login attempt for user {}: user unknown",
 					user);
 			throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS,
 					invalidError);
 		}
-		if (!creds.getPassword().equals(password)) {
+		if (!credentials.getPassword().equals(password)) {
 			logger.info("Failed login attempt for user {}: invalid credentials",
 					user);
 			throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS,
 					invalidError);
 		}
-		logger.info("User {} logged in", creds.getUsername());
+		logger.info("User {} logged in", credentials.getUsername());
 		Date expiration = null;
 		DateTime now = new DateTime();
 		if (loginParams.getTokenExpiration() != null) {
@@ -110,7 +125,7 @@ public class AuthController {
 		}
 		AuthDetails details = new AuthDetails(user, now.toDate(), expiration);
 		String token = AuthToken.createToken(details);
-		return new LoginResult(creds.getUsername(), token);
+		return new LoginResult(credentials.getUsername(), token);
 	}
 
 	private void validateForbiddenQueryParams(HttpServletRequest request,
@@ -124,8 +139,6 @@ public class AuthController {
 		} catch (ParseException ex) {
 			throw new BadRequestException(ex.getMessage());
 		}
-		if (params == null)
-			return;
 		for (String name : paramNames) {
 			if (params.containsKey(name)) {
 				throw new BadRequestException(

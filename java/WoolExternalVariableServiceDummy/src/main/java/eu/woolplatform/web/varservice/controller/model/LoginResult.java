@@ -21,8 +21,16 @@
  */
 package eu.woolplatform.web.varservice.controller.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class LoginResult {
+
+	@Schema(description = "Username associated with this authentication token",
+			example = "user")
 	private String user;
+
+	@Schema(description = "The JSON Web Token associated to the given user",
+			example = "JWT")
 	private String token;
 
 	public LoginResult(String user, String token) {

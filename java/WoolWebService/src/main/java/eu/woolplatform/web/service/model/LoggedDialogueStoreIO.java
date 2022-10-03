@@ -67,6 +67,17 @@ public class LoggedDialogueStoreIO {
 		return null;
 	}
 
+	public static LoggedDialogue findLatestOngoingDialogue(String user) throws IOException, DatabaseException {
+		List<LoggedDialogue> loggedDialogues = read(user);
+		for (int i = loggedDialogues.size() - 1; i >= 0; i--) {
+			LoggedDialogue dialogue = loggedDialogues.get(i);
+			if (!dialogue.isCompleted() && !dialogue.isCancelled()) {
+				return dialogue;
+			}
+		}
+		return null;
+	}
+
 	public static void createLoggedDialogue(LoggedDialogue loggedDialogue)
 			throws DatabaseException, IOException {
 		synchronized (LOCK) {
