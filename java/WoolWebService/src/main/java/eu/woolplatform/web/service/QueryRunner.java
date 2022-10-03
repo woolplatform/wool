@@ -74,7 +74,7 @@ public class QueryRunner {
 			UserCredentials user = null;
 			if (request != null)
 				user = validateToken(request, application);
-			if(woolUserId.equals("")) { // If the request was made for "this" (authenticated) user
+			if(woolUserId == null || woolUserId.equals("")) { // If the request was made for "this" (authenticated) user
 				String queryUserName = "";
 				if(user != null) queryUserName = user.getUsername();
 				return query.runQuery(version, queryUserName);

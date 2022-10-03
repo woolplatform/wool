@@ -18,7 +18,7 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '1.2.1' // run updateVersion after changing this property
+version = '1.3.0' // run updateVersion after changing this property
 sourceCompatibility = 11
 targetCompatibility = 11
 archivesBaseName = 'wool-webservice'

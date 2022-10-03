@@ -90,14 +90,18 @@ public class VariablesController {
 	public List<WoolVariableParam> retrieveUpdates (
 			HttpServletRequest request,
 			HttpServletResponse response,
+
 			@Parameter(description = "API Version to use, e.g. '1.0.0'")
-			@RequestParam(value = "version", required = false) String versionName,
+			@RequestParam(value = "version", required = false)
+			String versionName,
 
 			@Parameter(description = "The userId of the WOOL user")
-			@RequestParam(value="userId") String userId,
+			@RequestParam(value="userId")
+			String userId,
 
 			@Parameter(description = "The current time zone of the WOOL user")
-			@RequestParam(value="timeZone") String timeZone,
+			@RequestParam(value="timeZone")
+			String timeZone,
 
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
 					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
