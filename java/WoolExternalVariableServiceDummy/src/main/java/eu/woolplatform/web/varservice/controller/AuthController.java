@@ -50,7 +50,7 @@ public class AuthController {
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	@Operation(summary = "Obtain an authentication token by logging in",
-			description = "Log in to the service by providing a username, password and indicate the desired " +
+			description = "Log in to the service by providing a username, password and indicating the desired " +
 					"duration of the authentication token in minutes. If you want to obtain an authentication " +
 					"token that does not expire, either provide '0' or 'never' as the value for '*tokenExpiration*'.")
 	@RequestMapping(value="/login", method= RequestMethod.POST, consumes={

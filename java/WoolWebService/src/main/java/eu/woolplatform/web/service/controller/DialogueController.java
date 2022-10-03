@@ -75,8 +75,9 @@ import java.util.Map;
 @RestController
 @SecurityRequirement(name = "X-Auth-Token")
 @RequestMapping("/dialogue")
-@Tag(name = "Dialogue", description = "End-points for starting and controlling the lifecycle of remotely executed dialogues")
+@Tag(name = "2. Dialogue", description = "End-points for starting and controlling the lifecycle of remotely executed dialogues")
 public class DialogueController {
+
 	@Autowired
 	Application application;
 
@@ -151,7 +152,7 @@ public class DialogueController {
 	private DialogueMessage doStartDialogue(
 			String woolUserId, String dialogueName, String language,
 			String timeZone) throws HttpException, IOException, DatabaseException {
-		DateTime time = parseTime(timeZone);
+		DateTime time = ControllerFunctions.parseTime(timeZone);
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
 		userService.setTimeZone(timeZone);
@@ -160,7 +161,7 @@ public class DialogueController {
 			node = userService.startDialogue(dialogueName, null, language, time);
 			return DialogueMessageFactory.generateDialogueMessage(node);
 		} catch (WoolException e) {
-			throw createHttpException(e);
+			throw ControllerFunctions.createHttpException(e);
 		}
 	}
 
@@ -271,7 +272,7 @@ public class DialogueController {
 		try {
 			UserService userService = application.getServiceManager()
 					.getActiveUserService(woolUserId);
-			DateTime time = parseTime(userService.getTimeZone());
+			DateTime time = ControllerFunctions.parseTime(userService.getTimeZone());
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
 			if (!variables.isEmpty())
@@ -284,7 +285,7 @@ public class DialogueController {
 					nextNode);
 			return new NullableResponse<>(reply);
 		} catch (WoolException e) {
-			throw createHttpException(e);
+			throw ControllerFunctions.createHttpException(e);
 		}
 	}
 
@@ -350,7 +351,7 @@ public class DialogueController {
 			String woolUserId, String dialogueName, String timeZone)
 			throws HttpException, DatabaseException, IOException {
 
-		DateTime time = parseTime(timeZone);
+		DateTime time = ControllerFunctions.parseTime(timeZone);
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
 		userService.setTimeZone(timeZone);
@@ -372,7 +373,7 @@ public class DialogueController {
 						currDlg.getInteractionList().size() - 1);
 				node = userService.executeCurrentNode(state, time);
 			} catch (WoolException ex) {
-				throw createHttpException(ex);
+				throw ControllerFunctions.createHttpException(ex);
 			}
 			DialogueMessage result =
 					DialogueMessageFactory.generateDialogueMessage(node);
@@ -506,13 +507,13 @@ public class DialogueController {
 		try {
 			UserService userService = application.getServiceManager()
 					.getActiveUserService(woolUserId);
-			DateTime time = parseTime(userService.getTimeZone());
+			DateTime time = ControllerFunctions.parseTime(userService.getTimeZone());
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
 			ExecuteNodeResult prevNode = userService.backDialogue(state, time);
 			return DialogueMessageFactory.generateDialogueMessage(prevNode);
 		} catch (WoolException e) {
-			throw createHttpException(e);
+			throw ControllerFunctions.createHttpException(e);
 		}
 	}
 
@@ -581,42 +582,4 @@ public class DialogueController {
 		}
 	}
 
-	// -------------------------------------- //
-	// ---------- Helper Functions ---------- //
-	// -------------------------------------- //
-
-	/**
-	 * Retrieves a {@link DateTime} object given the current {@code timezone} as IANA String,
-	 * e.g. "Europe/Lisbon".
-	 * @param timezone the timeZone of the client as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
-	 * @return a {@link DateTime} object representing the current time in the given {@code timezone}.
-	 * @throws BadRequestException in case the given timezone is not valid or not formatted correctly.
-	 */
-	public static DateTime parseTime(String timezone)
-			throws BadRequestException {
-		List<HttpFieldError> errors = new ArrayList<>();
-		DateTime time = UserServiceManager.parseTimeParameters(timezone, errors);
-		if (!errors.isEmpty())
-			throw BadRequestException.withInvalidInput(errors);
-		return time;
-	}
-
-	/**
-	 * Generates a {@link HttpException} with a valid HTTP Status Code from the given {@link WoolException}.
-	 * @param exception the {@link WoolException} that should be "wrapped" into an {@link HttpException}.
-	 * @return the {@link HttpException} object representing the error including a valid status code.
-	 */
-	public static HttpException createHttpException(WoolException exception) {
-		switch (exception.getType()) {
-			case AGENT_NOT_FOUND:
-			case DIALOGUE_NOT_FOUND:
-			case NODE_NOT_FOUND:
-			case REPLY_NOT_FOUND:
-			case NO_ACTIVE_DIALOGUE:
-				return new NotFoundException(exception.getMessage());
-			default:
-				throw new RuntimeException("Unexpected WoolAgentException: " +
-						exception.getMessage(), exception);
-		}
-	}
 }

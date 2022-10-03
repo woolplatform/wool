@@ -26,10 +26,12 @@ import eu.woolplatform.web.service.ServiceContext;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.controller.model.ServiceInfo;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Tag(name = "4. Information", description = "End-points that provide information about the running service")
 @RequestMapping("/info")
 public class InfoController {
 
