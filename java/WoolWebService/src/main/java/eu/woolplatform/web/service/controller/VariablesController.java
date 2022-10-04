@@ -34,13 +34,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 @RestController
@@ -107,13 +107,14 @@ public class VariablesController {
 	 * @param variableNames a space-separated list of variable names, or the empty string
 	 * @return a mapping of variable names to variable values
 	 * @throws Exception in case of an error retrieving variable data from file.
+	 * TODO: Return a list of WoolVariable objects
 	 */
 	private Map<String,Object> doGetVariables(String woolUserId, String variableNames)
 			throws Exception {
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
-		Map<String,?> varStore = userService.variableStore.getModifiableMap(
-				false, null);
+		Map<String,?> varStore = userService.getVariableStore().getModifiableMap(
+				false);
 		variableNames = variableNames.trim();
 		List<String> nameList;
 		if (variableNames.length() == 0) {
@@ -208,7 +209,9 @@ public class VariablesController {
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
 
-		userService.variableStore.setValue(name, value, true, null);
+		ZonedDateTime updatedTime = ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+
+		userService.getVariableStore().setValue(name, value, true, updatedTime);
 		return null;
 	}
 
@@ -275,8 +278,8 @@ public class VariablesController {
 
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
-		Map<String,Object> varStore = userService.variableStore
-				.getModifiableMap(true, null);
+		Map<String,Object> varStore = userService.getVariableStore()
+				.getModifiableMap(true);
 		varStore.putAll(woolVariables);
 		return null;
 	}

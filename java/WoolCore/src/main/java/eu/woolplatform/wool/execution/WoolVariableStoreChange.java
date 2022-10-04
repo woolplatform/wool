@@ -33,61 +33,40 @@ public abstract class WoolVariableStoreChange {
 
 	public static class Put extends WoolVariableStoreChange {
 		private Map<String,?> variables;
-		private DateTime time;
 
-		public Put(Map<String,?> variables, DateTime time) {
+		public Put(Map<String,?> variables) {
 			this.variables = variables;
-			this.time = time;
 		}
 
-		public Put(String name, Object value, DateTime time) {
+		public Put(String name, Object value) {
 			Map<String,Object> variables = new LinkedHashMap<>();
 			variables.put(name, value);
 			this.variables = variables;
-			this.time = time;
 		}
 
 		public Map<String,?> getVariables() {
 			return variables;
 		}
 
-		public DateTime getTime() {
-			return time;
-		}
 	}
 
 	public static class Remove extends WoolVariableStoreChange {
 		private Collection<String> variableNames;
-		private DateTime time;
 
-		public Remove(Collection<String> variableNames, DateTime time) {
+		public Remove(Collection<String> variableNames) {
 			this.variableNames = variableNames;
-			this.time = time;
 		}
 
-		public Remove(String variableName, DateTime time) {
+		public Remove(String variableName) {
 			variableNames = Collections.singletonList(variableName);
-			this.time = time;
 		}
 
 		public Collection<String> getVariableNames() {
 			return variableNames;
 		}
-
-		public DateTime getTime() {
-			return time;
-		}
 	}
 
 	public static class Clear extends WoolVariableStoreChange {
-		private DateTime time;
 
-		public Clear(DateTime time) {
-			this.time = time;
-		}
-
-		public DateTime getTime() {
-			return time;
-		}
 	}
 }

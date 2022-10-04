@@ -24,6 +24,7 @@ package eu.woolplatform.web.service;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.service.execution.DefaultUserServiceFactory;
 import eu.woolplatform.web.service.execution.UserServiceFactory;
+import eu.woolplatform.web.service.execution.UserServiceManager;
 import eu.woolplatform.web.service.model.WoolVariableStoreJSONStorageHandler;
 import eu.woolplatform.wool.parser.WoolResourceFileLoader;
 import org.slf4j.Logger;

@@ -26,13 +26,15 @@ import eu.woolplatform.wool.model.WoolLoggedDialogue;
 import eu.woolplatform.wool.model.WoolLoggedInteraction;
 import org.joda.time.DateTime;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class LoggedDialogue implements WoolLoggedDialogue {
-	public static final String LOCAL_TIME_FORMAT =
-			"yyyy-MM-dd'T'HH:mm:ss.SSS";
+
+	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
 	private String id;
 	private String user;
@@ -53,13 +55,13 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 	 * local time and location-based time zone (not an offset).
 	 *
 	 * @param user the user ID
-	 * @param tzTime the time
+	 * @param dialogueStartTime the time that this dialogue started in the time zone of the user.
 	 */
-	public LoggedDialogue(String user, DateTime tzTime) {
+	public LoggedDialogue(String user, ZonedDateTime dialogueStartTime) {
 		this.user = user;
-		this.utcTime = tzTime.getMillis();
-		this.timezone = tzTime.getZone().getID();
-		this.localTime = tzTime.toString(LOCAL_TIME_FORMAT);
+		this.utcTime = dialogueStartTime.toInstant().toEpochMilli();
+		this.timezone = dialogueStartTime.getZone().toString();
+		this.localTime = dialogueStartTime.format(formatter);
 	}
 
 	@Override

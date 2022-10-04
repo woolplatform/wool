@@ -163,12 +163,12 @@ public class UserServiceManager {
 	public UserService getActiveUserService(String userId) throws DatabaseException, IOException {
 		
 		for(UserService userService : activeUserServices) {
-			if(userService.getUserId().equals(userId)) {
+			if(userService.getWoolUser().getId().equals(userId)) {
 				return userService;
 			}
 		}
 		
-		logger.info("No active UserService for userId '"+userId+"' creating UserService instance.");
+		logger.info("No active UserService for userId '" + userId + "' creating UserService instance.");
 		
 		// Initialize new userService
 		UserServiceFactory appConfig = UserServiceFactory.getInstance();

@@ -22,14 +22,15 @@
 package eu.woolplatform.web.service.model;
 
 import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.wool.execution.WoolUser;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 
 import java.io.IOException;
 
 public interface WoolVariableStoreStorageHandler {
 
-    WoolVariableStore read(String userName) throws IOException, ParseException;
+    WoolVariableStore read(WoolUser woolUser) throws IOException, ParseException;
 
-    void write(String userName, WoolVariableStore woolVariableStore) throws IOException;
+    void write(WoolVariableStore woolVariableStore) throws IOException;
 
 }

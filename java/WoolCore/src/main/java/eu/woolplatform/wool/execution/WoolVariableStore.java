@@ -19,11 +19,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE.
  */
-
 package eu.woolplatform.wool.execution;
 
-import org.joda.time.DateTime;
-
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 /**
@@ -37,20 +36,30 @@ public class WoolVariableStore {
 	// Contains the list of all WoolVariables in this store
 	private final Map<String,WoolVariable> woolVariables = new HashMap<>();
 
+	// The WOOL user associated with this WoolVariableStore
+	private WoolUser woolUser;
+
 	// Contains the list of all WoolVariableChangeListeners that need to be notified in case of updates
 	private final List<WoolVariableStoreOnChangeListener> onChangeListeners = new ArrayList<>();
 
 	// ----- Constructors
 
-	public WoolVariableStore(WoolVariable[] woolVariableArray) {
+	/**
+	 * Creates an instance of a new {@link WoolVariableStore} for a user in the given {@code timeZone}.
+	 * @param woolUser the {@link WoolUser} associated with this {@link WoolVariableStore}.
+	 */
+	public WoolVariableStore(WoolUser woolUser) {
+		this.woolUser = woolUser;
+	}
+
+	public WoolVariableStore(WoolUser woolUser, WoolVariable[] woolVariableArray) {
+		this.woolUser = woolUser;
 		synchronized(woolVariables) {
 			for (WoolVariable variable : woolVariableArray) {
 				woolVariables.put(variable.getName(),variable);
 			}
 		}
 	}
-
-	public WoolVariableStore() { }
 
 	// ----- Listeners
 
@@ -125,26 +134,34 @@ public class WoolVariableStore {
 		}
 	}
 
+	/**
+	 * Returns the {@link WoolUser} associated with this {@link WoolVariableStore}.
+	 * @return the {@link WoolUser} associated with this {@link WoolVariableStore}.
+	 */
+	public WoolUser getWoolUser() {
+		return woolUser;
+	}
+
 	// ----- Modification Methods
 
 	/**
 	 * Stores the given {@code value} under the given variable-{@code name} in this
-	 * {@link WoolVariableStore} and sets the lastUpdatedTime to {@code time}.
+	 * {@link WoolVariableStore} and sets the lastUpdatedTime to {@code updatedTime}.
 	 *
 	 * @param name            the name of the variable to store.
 	 * @param value           the value of the variable to store.
 	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
 	 *                        notified about this update.
-	 * @param updatedTime     the time (in the time zone of the user) that should be stored
+	 * @param updatedTime     the time (as UTC timestamp) that should be stored
 	 *                        with this value.
 	 */
 	public void setValue(String name, Object value, boolean notifyObservers,
-						 DateTime updatedTime) {
+						 ZonedDateTime updatedTime) {
 		synchronized (woolVariables) {
 			woolVariables.put(name,new WoolVariable(name, value, updatedTime));
 		}
 		if (notifyObservers) {
-			notifyOnChange(new WoolVariableStoreChange.Put(name, value, updatedTime));
+			notifyOnChange(new WoolVariableStoreChange.Put(name, value));
 		}
 	}
 
@@ -156,11 +173,9 @@ public class WoolVariableStore {
 	 * @param name            the name of the {@link WoolVariable} to remove.
 	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
 	 *                        notified about this update.
-	 * @param updatedTime     the time (in the time zone of the user) that should be passed on
-	 *                        with the notification of observers.
 	 * @return the {@link WoolVariable} that was removed, or {@code null}.
 	 */
-	public WoolVariable removeByName(String name, boolean notifyObservers, DateTime updatedTime) {
+	public WoolVariable removeByName(String name, boolean notifyObservers) {
 		WoolVariable result;
 		synchronized (woolVariables) {
 			result = woolVariables.remove(name);
@@ -169,7 +184,7 @@ public class WoolVariableStore {
 			return null;
 		} else {
 			if(notifyObservers) {
-				notifyOnChange(new WoolVariableStoreChange.Remove(name, updatedTime));
+				notifyOnChange(new WoolVariableStoreChange.Remove(name));
 			}
 			return result;
 		}
@@ -181,10 +196,9 @@ public class WoolVariableStore {
 	 * @param variablesToAdd  the {@link Map} of name-value pairs to add as {@link WoolVariable}s.
 	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
 	 *                        notified about this update.
-	 * @param updatedTime     the time (in the time zone of the user) that should be passed on
-	 *                        with the notification of observers.
+	 * @param updatedTime     the timestamp of when the variables
 	 */
-	public void addAll(Map<? extends String, ?> variablesToAdd, boolean notifyObservers, DateTime updatedTime) {
+	public void addAll(Map<? extends String, ?> variablesToAdd, boolean notifyObservers, ZonedDateTime updatedTime) {
 		for (Map.Entry<? extends String, ?> entry : variablesToAdd.entrySet()) {
 			String name = entry.getKey();
 			Object value = entry.getValue();
@@ -196,8 +210,12 @@ public class WoolVariableStore {
 
 		if (notifyObservers) {
 			Map<String, Object> notifyMap = new LinkedHashMap<>(variablesToAdd);
-			notifyOnChange(new WoolVariableStoreChange.Put(notifyMap, updatedTime));
+			notifyOnChange(new WoolVariableStoreChange.Put(notifyMap));
 		}
+	}
+
+	public void setWoolUser(WoolUser woolUser) {
+		this.woolUser = woolUser;
 	}
 
 	/**
@@ -212,28 +230,29 @@ public class WoolVariableStore {
 	 * relies on the {@link eu.woolplatform.utils.expressions.Expression} interface.
 	 *
 	 * In other words, if you are thinking "Man, I wish WoolVariableStore was just a simple mapping of variable names to values",
-	 * use this method, and you can pretend that it is so.
+	 * use this method, and you can pretend that that is the case.
 	 *
 	 * If {@code notifyObservers} is {@code true}, then any action that modifies the content of this {@link Map}
-	 * will result in all listeners being notified, passing along the given {@code time} as a {@link DateTime} object.
+	 * will result in all listeners being notified.
 	 *
-	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should
-	 *                        be notified about updates to the Map.
-	 * @param updatedTime the time in the time zone of the user.
+	 * @param notifyObservers 	true if observers of this {@link WoolVariableStore} should
+	 *                          be notified about updates to the Map.
 	 * @return the modifiable map
 	 */
-	public Map<String, Object> getModifiableMap(boolean notifyObservers, DateTime updatedTime) {
-		return new WoolVariableMap(notifyObservers, updatedTime);
+	public Map<String, Object> getModifiableMap(boolean notifyObservers) {
+		return new WoolVariableMap(notifyObservers);
 	}
 
+	/**
+	 * A {@link WoolVariableMap} is a Mapping from variable name to variable value and can be used
+	 * as an observable "view" of the {@link WoolVariableStore}.
+	 */
 	private class WoolVariableMap implements Map<String, Object> {
 
 		private final boolean notifyObservers;
-		private final DateTime updatedTime;
 
-		public WoolVariableMap(boolean notifyObservers, DateTime updatedTime) {
+		public WoolVariableMap(boolean notifyObservers) {
 			this.notifyObservers = notifyObservers;
-			this.updatedTime = updatedTime;
 		}
 
 		@Override
@@ -279,20 +298,20 @@ public class WoolVariableStore {
 		@Override
 		public Object put(String key, Object value) {
 			Object result = get(key);
-			setValue(key, value, notifyObservers, updatedTime);
+			setValue(key, value, notifyObservers, ZonedDateTime.now(woolUser.getTimeZone()));
 			return result;
 		}
 
 		@Override
 		public Object remove(Object key) {
-			WoolVariable result = removeByName((String)key, notifyObservers, updatedTime);
+			WoolVariable result = removeByName((String)key, notifyObservers);
 			if(result != null) return result.getValue();
 			else return null;
 		}
 
 		@Override
 		public void putAll(Map<? extends String, ?> variablesToAdd) {
-			addAll(variablesToAdd,notifyObservers,updatedTime);
+			addAll(variablesToAdd,notifyObservers,ZonedDateTime.now(woolUser.getTimeZone()));
 		}
 
 		@Override
@@ -301,7 +320,7 @@ public class WoolVariableStore {
 				woolVariables.clear();
 			}
 			if (notifyObservers)
-				notifyOnChange(new WoolVariableStoreChange.Clear(updatedTime));
+				notifyOnChange(new WoolVariableStoreChange.Clear());
 		}
 
 		@Override

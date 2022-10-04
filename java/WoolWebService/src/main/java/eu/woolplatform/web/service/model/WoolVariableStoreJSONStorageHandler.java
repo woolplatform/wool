@@ -23,11 +23,15 @@ package eu.woolplatform.web.service.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
 import eu.woolplatform.web.service.Configuration;
+import eu.woolplatform.wool.execution.WoolUser;
 import eu.woolplatform.wool.execution.WoolVariable;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 
@@ -55,18 +59,18 @@ public class WoolVariableStoreJSONStorageHandler implements WoolVariableStoreSto
     }
 
     @Override
-    public WoolVariableStore read(String userName) throws IOException, ParseException {
+    public WoolVariableStore read(WoolUser woolUser) throws IOException, ParseException {
         synchronized (LOCK) {
             File dataDir = new File(dataDirectory);
             FileUtils.mkdir(dataDir);
-            File dataFile = new File(dataDir, userName + ".json");
+            File dataFile = new File(dataDir, woolUser.getId() + ".json");
             if (!dataFile.exists())
-                return new WoolVariableStore();
+                return new WoolVariableStore(woolUser);
             ObjectMapper mapper = new ObjectMapper();
             try {
                 WoolVariable[] woolVariableArray = mapper.readValue(dataFile,
                         new TypeReference<WoolVariable[]>() {});
-                return new WoolVariableStore(woolVariableArray);
+                return new WoolVariableStore(woolUser, woolVariableArray);
             } catch (JsonProcessingException ex) {
                 throw new ParseException(
                         "Failed to parse variable store file: " +
@@ -76,13 +80,21 @@ public class WoolVariableStoreJSONStorageHandler implements WoolVariableStoreSto
     }
 
     @Override
-    public void write(String userName, WoolVariableStore woolVariableStore) throws IOException {
+    public void write(WoolVariableStore woolVariableStore) throws IOException {
         synchronized (LOCK) {
-            String json = JsonMapper.generate(woolVariableStore.getWoolVariables());
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.configure(SerializationFeature.WRITE_DATES_WITH_CONTEXT_TIME_ZONE, true);
+
             File dataDir = new File(dataDirectory);
             FileUtils.mkdir(dataDir);
-            File dataFile = new File(dataDir, userName + ".json");
-            FileUtils.writeFileString(dataFile, json);
+            File dataFile = new File(dataDir, woolVariableStore.getWoolUser().getId() + ".json");
+
+            objectMapper.writeValue(dataFile,woolVariableStore);
+
+            //String json = JsonMapper.generate(woolVariableStore.getWoolVariables());
+
+            //FileUtils.writeFileString(dataFile, json);
         }
     }
 }

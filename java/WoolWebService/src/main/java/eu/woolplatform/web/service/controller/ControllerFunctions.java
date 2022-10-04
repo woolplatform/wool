@@ -28,7 +28,11 @@ import eu.woolplatform.web.service.exception.NotFoundException;
 import eu.woolplatform.web.service.execution.UserServiceManager;
 import eu.woolplatform.wool.exception.WoolException;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
+import java.time.DateTimeException;
+import java.time.ZoneId;
+import java.time.zone.ZoneRulesException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,19 +47,40 @@ public class ControllerFunctions {
 	// -------------------------------------- //
 
 	/**
-	 * Retrieves a {@link DateTime} object given the current {@code timezone} as IANA String,
-	 * e.g. "Europe/Lisbon".
-	 * @param timezone the timeZone of the client as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
-	 * @return a {@link DateTime} object representing the current time in the given {@code timezone}.
-	 * @throws BadRequestException in case the given timezone is not valid or not formatted correctly.
+	 * Parses a given String into a {@link ZoneId} time zone object. The given {@code timeZone} String
+	 * should be formatted according to the rules defined in {@link ZoneId#of(String)}}. When given an
+	 * empty string, or {@code null}, this method returns the default time zone as given by
+	 * {@link ZoneId#systemDefault()}.
+ 	 * @param timeZone a String representation of a time zone.
+	 * @return the time zone as a {@link ZoneId}
+	 * @throws BadRequestException in case of a wrongly formatted {@code timeZone} string.
 	 */
-	public static DateTime parseTime(String timezone)
-			throws BadRequestException {
+	public static ZoneId parseTimeZone(String timeZone) throws BadRequestException {
+
+		if (timeZone == null || timeZone.length() == 0) {
+			return ZoneId.systemDefault();
+		}
+
 		List<HttpFieldError> errors = new ArrayList<>();
-		DateTime time = UserServiceManager.parseTimeParameters(timezone, errors);
-		if (!errors.isEmpty())
+
+		ZoneId result = null;
+
+		try {
+			result = ZoneId.of(timeZone);
+		} catch (ZoneRulesException zoneRulesException) {
+			errors.add(new HttpFieldError("timeZone",
+					"Invalid value for field \"timeZone\": " + timeZone + " (zone not recognized)."));
+		} catch(DateTimeException dateTimeException) {
+			errors.add(new HttpFieldError("timeZone",
+					"Invalid value for field \"timeZone\": " + timeZone + " (format incorrect)."));
+		}
+
+		if(!errors.isEmpty()) {
 			throw BadRequestException.withInvalidInput(errors);
-		return time;
+		} else {
+			return result;
+		}
+
 	}
 
 	/**

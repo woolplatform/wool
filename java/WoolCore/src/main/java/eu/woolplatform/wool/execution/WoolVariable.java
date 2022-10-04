@@ -21,19 +21,21 @@
  */
 package eu.woolplatform.wool.execution;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.joda.time.DateTime;
+
+import java.time.ZonedDateTime;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WoolVariable {
 
 	private String name;
 	private Object value;
-	private DateTime lastUpdated;
+	private ZonedDateTime lastUpdated;
 
 	public WoolVariable() { }
 
-	public WoolVariable(String name, Object value, DateTime lastUpdated) {
+	public WoolVariable(String name, Object value, ZonedDateTime lastUpdated) {
 		this.name = name;
 		this.value = value;
 		this.lastUpdated = lastUpdated;
@@ -41,27 +43,51 @@ public class WoolVariable {
 
 	// ----- Getters & Setters
 
+	/**
+	 * Returns the name of the WOOL Variable as a String.
+	 * @return the name of the WOOL Variable as a String.
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * Sets the name of the WOOL Variable.
+	 * @param name the name of the WOOL Variable.
+	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	/**
+	 * Returns the value of the WOOL Variable as an {@link Object}.
+	 * @return the value of the WOOL Variable as an {@link Object}.
+	 */
 	public Object getValue() {
 		return value;
 	}
 
+	/**
+	 * Sets the value of the WOOL Variable as an {@link Object}.
+	 * @param value the value of the WOOL Variable as an {@link Object}.
+	 */
 	public void setValue(Object value) {
 		this.value = value;
 	}
 
-	public DateTime getLastUpdated() {
+	/**
+	 * Returns the timestamp of when this WOOL Variable was last updated (in the timezone of the user).
+	 * @return the UTC timestamp of when this WOOL Variable was last updated (in the timezone of the user).
+	 */
+	public ZonedDateTime getLastUpdated() {
 		return lastUpdated;
 	}
 
-	public void setLastUpdated(DateTime lastUpdated) {
+	/**
+	 * Sets the timestamp of when this WOOL Variable was last updated (in the timezone of the user).
+	 * @param lastUpdated the timestamp of when this WOOL Variable was last updated (in the timezone of the user).
+	 */
+	public void setLastUpdated(ZonedDateTime lastUpdated) {
 		this.lastUpdated = lastUpdated;
 	}
 

@@ -21,6 +21,7 @@
  */
 package eu.woolplatform.web.service;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -81,4 +82,5 @@ public class OpenApiSwaggerConfig {
 				.sorted(Comparator.comparing(tag -> StringUtils.stripAccents(tag.getName())))
 				.collect(Collectors.toList()));
 	}
+
 }
