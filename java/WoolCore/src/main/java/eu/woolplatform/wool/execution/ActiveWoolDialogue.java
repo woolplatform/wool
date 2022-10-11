@@ -31,7 +31,6 @@ import eu.woolplatform.wool.model.command.WoolSetCommand;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerInternal;
 
-import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +41,8 @@ import java.util.Map;
  * The {@link ActiveWoolDialogue} also contains utility functions to keep track of the state during 
  * "execution" of the dialogue.
  * 
- * @author Harm op den Akker (Roessingh Research and Development)
- * @author Tessa Beinema (Roessingh Research and Development)
+ * @author Harm op den Akker
+ * @author Tessa Beinema
  */
 public class ActiveWoolDialogue {
 

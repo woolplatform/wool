@@ -21,7 +21,6 @@
  */
 package eu.woolplatform.wool.execution;
 
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -158,11 +157,13 @@ public class WoolVariableStore {
 	public void setValue(String name, Object value, boolean notifyObservers,
 						 ZonedDateTime updatedTime) {
 		synchronized (woolVariables) {
-			woolVariables.put(name,new WoolVariable(name, value, updatedTime));
+			WoolVariable woolVariable = new WoolVariable(name, value, updatedTime);
+			woolVariables.put(name,woolVariable);
+			if (notifyObservers) {
+				notifyOnChange(new WoolVariableStoreChange.Put(woolVariable));
+			}
 		}
-		if (notifyObservers) {
-			notifyOnChange(new WoolVariableStoreChange.Put(name, value));
-		}
+
 	}
 
 	/**
@@ -199,18 +200,24 @@ public class WoolVariableStore {
 	 * @param updatedTime     the timestamp of when the variables
 	 */
 	public void addAll(Map<? extends String, ?> variablesToAdd, boolean notifyObservers, ZonedDateTime updatedTime) {
+
+		List<WoolVariable> woolVariablesToAdd = new ArrayList<>();
+
 		for (Map.Entry<? extends String, ?> entry : variablesToAdd.entrySet()) {
 			String name = entry.getKey();
 			Object value = entry.getValue();
 			WoolVariable woolVariable = new WoolVariable(name,value,updatedTime);
-			synchronized (woolVariables) {
-				woolVariables.put(name,woolVariable);
+			woolVariablesToAdd.add(woolVariable);
+		}
+
+		synchronized (woolVariables) {
+			for(WoolVariable woolVariable : woolVariablesToAdd) {
+				woolVariables.put(woolVariable.getName(),woolVariable);
 			}
 		}
 
 		if (notifyObservers) {
-			Map<String, Object> notifyMap = new LinkedHashMap<>(variablesToAdd);
-			notifyOnChange(new WoolVariableStoreChange.Put(notifyMap));
+			notifyOnChange(new WoolVariableStoreChange.Put(woolVariablesToAdd));
 		}
 	}
 
