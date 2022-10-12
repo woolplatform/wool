@@ -23,26 +23,41 @@ package eu.woolplatform.web.varservice.controller.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-public class WoolVariableParam {
+/**
+ * A representation of a WOOL Variable using only primitive types, which makes it more convenient
+ * for serialization / deserialization.
+ */
+public class WoolVariablePrimitive {
 
 	@Schema(description = "Name of the WOOL Variable",
-			example = "woolVariableName", required = true)
+			example = "woolVariableName",
+			required = true)
 	private String name;
 
 	@Schema(description = "Value of the WOOL Variable",
-			example = "some value", required = true)
-	private String value;
+			example = "some value",
+			required = true)
+	private Object value;
 
-	@Schema(description = "UTC Timestamp indicating when this value was last updated",
-			example = "1655985982", required = true)
-	private Long lastUpdated;
+	@Schema(description = "UTC Timestamp in milliseconds representing the moment the variable was last updated",
+			example = "1665571549000",
+			required = true)
+	private Long lastUpdatedTime;
+
+	@Schema(description = "The time zone in which the lastUpdatedTimestamp occurred.",
+			example = "Europe/Lisbon",
+			required = true)
+	private String lastUpdatedTimeZone;
 
 	// ----- Constructors
 
-	public WoolVariableParam(String name, String value, Long lastUpdated) {
+	public WoolVariablePrimitive() { }
+
+	public WoolVariablePrimitive(String name, Object value, Long lastUpdatedTime, String lastUpdatedTimeZone) {
 		this.name = name;
 		this.value = value;
-		this.lastUpdated = lastUpdated;
+		this.lastUpdatedTime = lastUpdatedTime;
+		this.lastUpdatedTimeZone = lastUpdatedTimeZone;
 	}
 
 	// ----- Getters & Setters
@@ -55,28 +70,37 @@ public class WoolVariableParam {
 		this.name = name;
 	}
 
-	public String getValue() {
+	public Object getValue() {
 		return value;
 	}
 
-	public void setValue(String value) {
+	public void setValue(Object value) {
 		this.value = value;
 	}
 
-	public Long getLastUpdated() {
-		return lastUpdated;
+	public Long getLastUpdatedTime() {
+		return lastUpdatedTime;
 	}
 
-	public void setLastUpdated(Long lastUpdated) {
-		this.lastUpdated = lastUpdated;
+	public void setLastUpdatedTime(Long lastUpdatedTime) {
+		this.lastUpdatedTime = lastUpdatedTime;
+	}
+
+	public String getLastUpdatedTimeZone() {
+		return lastUpdatedTimeZone;
+	}
+
+	public void setLastUpdatedTimeZone(String lastUpdatedTimeZone) {
+		this.lastUpdatedTimeZone = lastUpdatedTimeZone;
 	}
 
 	@Override
 	public String toString() {
 		return "WoolVariableParam{" +
-				"name='" + name + '\'' +
-				", value='" + value + '\'' +
-				", lastUpdated=" + lastUpdated +
+				"name='" + name + "'" +
+				", value='" + value + "'" +
+				", lastUpdatedTime='" + lastUpdatedTime + "'" +
+				", lastUpdatedTimeZone=" + lastUpdatedTimeZone + "'" +
 				'}';
 	}
 }

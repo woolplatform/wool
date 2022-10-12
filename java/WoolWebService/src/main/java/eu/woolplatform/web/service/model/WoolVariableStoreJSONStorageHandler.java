@@ -67,6 +67,7 @@ public class WoolVariableStoreJSONStorageHandler implements WoolVariableStoreSto
             if (!dataFile.exists())
                 return new WoolVariableStore(woolUser);
             ObjectMapper mapper = new ObjectMapper();
+
             try {
                 WoolVariable[] woolVariableArray = mapper.readValue(dataFile,
                         new TypeReference<WoolVariable[]>() {});
@@ -90,11 +91,8 @@ public class WoolVariableStoreJSONStorageHandler implements WoolVariableStoreSto
             FileUtils.mkdir(dataDir);
             File dataFile = new File(dataDir, woolVariableStore.getWoolUser().getId() + ".json");
 
-            objectMapper.writeValue(dataFile,woolVariableStore);
-
-            //String json = JsonMapper.generate(woolVariableStore.getWoolVariables());
-
-            //FileUtils.writeFileString(dataFile, json);
+            // Write the WoolVariableStore only as a list of WoolVariables (for easier deserialization).
+            objectMapper.writeValue(dataFile,woolVariableStore.getWoolVariables());
         }
     }
 }

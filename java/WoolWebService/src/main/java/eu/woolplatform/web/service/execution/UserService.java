@@ -27,7 +27,10 @@ import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.i18n.I18nLanguageFinder;
 import eu.woolplatform.utils.i18n.I18nUtils;
 import eu.woolplatform.web.service.Configuration;
-import eu.woolplatform.web.service.model.*;
+import eu.woolplatform.web.service.model.LoggedDialogue;
+import eu.woolplatform.web.service.model.LoggedDialogueStoreIO;
+import eu.woolplatform.web.service.model.WoolVariableStoreJSONStorageHandler;
+import eu.woolplatform.web.service.model.WoolVariableStoreStorageHandler;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.execution.*;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
@@ -42,7 +45,6 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -246,7 +248,7 @@ public class UserService {
 	 */
 	public void storeReplyInput(DialogueState state, Map<String,?> variables) throws WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
-		dialogue.storeReplyInput(variables);
+		dialogue.storeReplyInput(variables,woolUser.getTimeZone());
 	}
 
 	/**
@@ -274,12 +276,10 @@ public class UserService {
 				WoolVariable woolVariable = variableStore.getWoolVariable(variableName);
 				if(woolVariable != null) {
 					logger.info("A WOOL Variable '"+variableName+"' exists for User '" + woolUser.getId() + "': "+woolVariable);
-					varsToUpdate.add(woolVariable); //TODO: Remove WoolVariableResponse
+					varsToUpdate.add(woolVariable);
 				} else {
-					ZonedDateTime updateTime = ZonedDateTime.now(woolUser.getTimeZone());
-					varsToUpdate.add(new WoolVariable(variableName,null,null));
+					varsToUpdate.add(new WoolVariable(variableName,null,null,null));
 				}
-
 			}
 
 			RestTemplate restTemplate = new RestTemplate();
@@ -323,7 +323,7 @@ public class UserService {
 						logger.info(woolVariable.toString());
 						String varName = woolVariable.getName();
 						Object varValue = woolVariable.getValue();
-						ZonedDateTime varUpdated = woolVariable.getLastUpdated();
+						ZonedDateTime varUpdated = woolVariable.getUpdatedTime();
 						Object varValueObject;
 
 						variableStore.setValue(varName, varValue, true, varUpdated);

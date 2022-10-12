@@ -65,7 +65,7 @@ import java.util.List;
  */
 public class UserServiceManager {
 
-	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 	private WoolProject woolProject;
 	private List<UserService> activeUserServices = new ArrayList<>();
 	private List<UserCredentials> userCredentials;

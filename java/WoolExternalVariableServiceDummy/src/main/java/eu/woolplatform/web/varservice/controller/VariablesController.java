@@ -24,9 +24,8 @@ package eu.woolplatform.web.varservice.controller;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.varservice.ProtocolVersion;
 import eu.woolplatform.web.varservice.QueryRunner;
-import eu.woolplatform.web.varservice.controller.model.WoolVariableParam;
+import eu.woolplatform.web.varservice.controller.model.WoolVariablePrimitive;
 import eu.woolplatform.web.varservice.exception.BadRequestException;
-import eu.woolplatform.web.varservice.exception.HttpFieldError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -36,9 +35,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -48,6 +44,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -62,7 +61,7 @@ import java.util.Random;
 @RestController
 @SecurityRequirement(name = "X-Auth-Token")
 @RequestMapping("/v{version}/variables")
-@Tag(name = "Variables", description = "End-points for retrieving variables from- and sending to the service")
+@Tag(name = "2. Variables", description = "End-points for retrieving variables from- and sending to the service")
 public class VariablesController {
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
@@ -84,15 +83,15 @@ public class VariablesController {
 					" in the request, and the lastUpdated time set to the current UTC time in epoch seconds.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful operation",
-					content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class)))) })
+					content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariablePrimitive.class)))) })
 	@RequestMapping(value="/retrieve-updates", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
-	public List<WoolVariableParam> retrieveUpdates (
+	public List<WoolVariablePrimitive> retrieveUpdates (
 			HttpServletRequest request,
 			HttpServletResponse response,
 
-			@Parameter(description = "API Version to use, e.g. '1.0.0'")
-			@RequestParam(value = "version", required = false)
+			@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
+			@PathVariable(value = "version")
 			String versionName,
 
 			@Parameter(description = "The userId of the WOOL user")
@@ -104,20 +103,17 @@ public class VariablesController {
 			String timeZone,
 
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
-					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
-			@RequestBody List<WoolVariableParam> woolVariables) throws Exception {
+					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariablePrimitive.class))))
+			@RequestBody List<WoolVariablePrimitive> woolVariables) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
 		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
 		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId + "&timeZone=" + timeZone + " with the following variables:");
-		for(WoolVariableParam woolVariableParam : woolVariables) {
+		for(WoolVariablePrimitive woolVariableParam : woolVariables) {
 			logger.info(woolVariableParam.toString());
 		}
-
-		// Parse the provided time zone string to make sure it is correct (value is otherwise not used in this dummy service)
-		parseTime(timeZone);
 
 		if(userId.equals("")) {
 			return QueryRunner.runQuery(
@@ -136,28 +132,50 @@ public class VariablesController {
 	 *
 	 * In this dummy implementation, the method does the following. For every WOOL Variable for which an
 	 * update is requested, there is a 50% chance that this variable will be included in the result set with
-	 * a lastUpdated timestamp set to the current UTC time in Epoch seconds.
+	 * a lastUpdated timestamp of "now" (in the provided time zone of the user).
 	 *
 	 * @param userId the {@code String} identifier of the user who's variable updates are requested.
-	 * @param timeZone the timeZone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
-	 * @param params the {@code List} of {@link WoolVariableParam}s for which it should be verified if an update is needed.
-	 * @return a {@code List} of {@link WoolVariableParam}s with each of the parameters for which an updated value has been found
+	 * @param timeZone the time zone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
+	 * @param params the {@code List} of {@link WoolVariablePrimitive}s for which it should be verified if an update is needed.
+	 * @return a {@code List} of {@link WoolVariablePrimitive}s with each of the parameters for which an updated value has been found
 	 * (note that this may be an empty list).
 	 */
-	private List<WoolVariableParam> executeRetrieveUpdates (String userId, String timeZone, List<WoolVariableParam> params) {
+	private List<WoolVariablePrimitive> executeRetrieveUpdates (String userId, String timeZone, List<WoolVariablePrimitive> params) throws BadRequestException {
 
-		List<WoolVariableParam> result = new ArrayList<>();
+		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
+
+		List<WoolVariablePrimitive> result = new ArrayList<>();
 
 		Random random = new Random();
 
-		Instant now = Instant.now();
+		for (WoolVariablePrimitive param : params) {
 
-		for (WoolVariableParam param : params) {
+			if(param.getLastUpdatedTime() != null && param.getLastUpdatedTimeZone() != null) {
+				ZonedDateTime paramZonedDateTime =
+						ZonedDateTime.ofInstant(
+								Instant.ofEpochMilli(
+										param.getLastUpdatedTime()),
+								ControllerFunctions.parseTimeZone(param.getLastUpdatedTimeZone()));
+
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss Z");
+				String readableTimeString = paramZonedDateTime.format(formatter);
+				logger.info("The WOOL Variable '"+param.getName()+"' " +
+						"with value '"+param.getValue()+"' " +
+						"was last updated at '"+param.getLastUpdatedTime()+"', " +
+						"which was '"+readableTimeString+"' " +
+						"in '"+param.getLastUpdatedTimeZone()+"'.");
+			} else {
+				logger.info("The WOOL Variable '"+param.getName()+"' " +
+						"with value '"+param.getValue()+"' " +
+						"was last updated at an unknown time.");
+			}
+
 			if(random.nextBoolean()) { // With 50% chance, return the variable as if it has been updated
-				WoolVariableParam newParam = new WoolVariableParam(
+				WoolVariablePrimitive newParam = new WoolVariablePrimitive(
 						param.getName(),
 						param.getValue(),
-						now.getEpochSecond());
+						Instant.now().toEpochMilli(),
+						timeZone);
 				result.add(newParam);
 			}
 		}
@@ -180,35 +198,45 @@ public class VariablesController {
 	@RequestMapping(value="/notify-updated", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<?> notifyUpdated(
-			HttpServletRequest request,
-			HttpServletResponse response,
+		HttpServletRequest request,
+		HttpServletResponse response,
 
-			@Parameter(description = "API Version to use, e.g. '1.0.0'")
-			@RequestParam(value = "version", required = false) String versionName,
+		@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
+		@PathVariable(value = "version")
+		String versionName,
 
-			@Parameter(description = "The userId of the WOOL user")
-			@RequestParam(value="userId") String userId,
+		@Parameter(description = "The userId of the WOOL user")
+		@RequestParam(value="userId")
+		String userId,
 
-			@Parameter(description = "The current time zone of the WOOL user")
-			@RequestParam(value="timeZone") String timeZone,
+		@Parameter(description = "The current time zone of the WOOL user")
+		@RequestParam(value="timeZone")
+		String timeZone,
 
-			@Parameter(description = "List of WOOL Variables for which to check for updates.",
-					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableParam.class))))
-			@RequestBody List<WoolVariableParam> woolVariables) throws BadRequestException {
+		@Parameter(
+			description = "List of WOOL Variables for which to check for updates.",
+			required = true,
+			content = @Content(
+				array = @ArraySchema(
+					schema = @Schema(
+						implementation = WoolVariablePrimitive.class)
+				)
+			)
+		)
+		@RequestBody List<WoolVariablePrimitive> woolVariables
+	) throws BadRequestException {
 
 		// If no explicit protocol version is provided, assume the latest version
 		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
 		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId + "&timeZone=" + timeZone + " with the following variables:");
-		for(WoolVariableParam woolVariableParam : woolVariables) {
+		for(WoolVariablePrimitive woolVariableParam : woolVariables) {
 			logger.info(woolVariableParam.toString());
 		}
 
 		// Parse the provided time zone string to make sure it is correct (value is otherwise not used in this dummy service)
-		parseTime(timeZone);
-
-
+		ControllerFunctions.parseTimeZone(timeZone);
 
 		return executeNotifyUpdated(userId, timeZone, woolVariables);
 	}
@@ -221,40 +249,12 @@ public class VariablesController {
 	 *
 	 * @param userId the {@code String} identifier of the user for whom variable updates are available.
 	 * @param timeZone the timeZone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
-	 * @param params the {@code List} of {@link WoolVariableParam}s that were updated and may need to be
+	 * @param params the {@code List} of {@link WoolVariablePrimitive}s that were updated and may need to be
 	 *               processed in the external service.
 	 * @return a {@link ResponseEntity} to indicate whether the update was executed successfully.
 	 */
-	private ResponseEntity<?> executeNotifyUpdated(String userId, String timeZone, List<WoolVariableParam> params) {
+	private ResponseEntity<?> executeNotifyUpdated(String userId, String timeZone, List<WoolVariablePrimitive> params) {
 		return new ResponseEntity<ResponseEntity<?>>(HttpStatus.OK);
-	}
-
-	/**
-	 * Generates a DateTime object representing the current time in the given {@code timeZone} represented as
-	 * one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
-	 * @param timeZone the timeZone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
-	 * @return a {@link DateTime} object representing the current time at the given timezone
-	 * @throws BadRequestException if the given {@code timeZone} is not formatted correctly.
-	 */
-	public static DateTime parseTime(String timeZone) throws BadRequestException {
-
-		DateTimeZone parsedTimezone;
-
-		if (timeZone == null || timeZone.length() == 0) {
-			parsedTimezone = DateTimeZone.getDefault();
-		} else {
-			try {
-				parsedTimezone = DateTimeZone.forID(timeZone);
-			} catch (IllegalArgumentException ex) {
-				List<HttpFieldError> errors = new ArrayList<>();
-				errors.add(new HttpFieldError("timeZone",
-						"Invalid value for field \"timeZone\": " + timeZone));
-				throw BadRequestException.withInvalidInput(errors);
-			}
-		}
-
-		LocalDateTime parsedTime = new LocalDateTime(parsedTimezone);
-		return parsedTime.toDateTime(parsedTimezone);
 	}
 
 }

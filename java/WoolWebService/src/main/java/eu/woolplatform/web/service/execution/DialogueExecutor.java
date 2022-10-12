@@ -103,7 +103,7 @@ public class DialogueExecutor {
 
 		WoolNode startNode;
 		try {
-			startNode = dialogue.startDialogue(nodeId);
+			startNode = dialogue.startDialogue(nodeId,userService.getWoolUser().getTimeZone());
 		} catch (EvaluationException e) {
 			throw new RuntimeException("Expression evaluation error: " +
 					e.getMessage(), e);
@@ -156,7 +156,7 @@ public class DialogueExecutor {
 		// Find next WoolNode:
 		WoolNodePointer nodePointer;
 		try {
-			nodePointer = dialogue.processReplyAndGetNodePointer(replyId);
+			nodePointer = dialogue.processReplyAndGetNodePointer(replyId,userService.getWoolUser().getTimeZone());
 		} catch (EvaluationException ex) {
 			throw new RuntimeException("Expression evaluation error: " +
 					ex.getMessage(), ex);
@@ -165,8 +165,7 @@ public class DialogueExecutor {
 		WoolNode nextWoolNode;
 		if (nodePointer instanceof WoolNodePointerInternal) {
 			try {
-				nextWoolNode = dialogue.progressDialogue(
-						(WoolNodePointerInternal)nodePointer);
+				nextWoolNode = dialogue.progressDialogue((WoolNodePointerInternal)nodePointer,userService.getWoolUser().getTimeZone());
 			} catch (EvaluationException e) {
 				throw new RuntimeException("Expression evaluation error: " +
 						e.getMessage(), e);
@@ -221,7 +220,7 @@ public class DialogueExecutor {
 		dialogue.setWoolVariableStore(userService.getVariableStore());
 		WoolNode node = dialogue.getCurrentNode();
 		try {
-			node = dialogue.executeWoolNode(node);
+			node = dialogue.executeWoolNode(node,userService.getWoolUser().getTimeZone());
 		} catch (EvaluationException e) {
 			throw new RuntimeException("Expression evaluation error: " +
 					e.getMessage(), e);

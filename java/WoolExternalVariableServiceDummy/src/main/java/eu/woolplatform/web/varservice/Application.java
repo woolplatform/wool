@@ -46,7 +46,6 @@ import java.net.URL;
  * 
  * @author Harm op den Akker
  */
-@SecurityScheme(name = "X-Auth-Token", scheme = "basic", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 @SpringBootApplication
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements

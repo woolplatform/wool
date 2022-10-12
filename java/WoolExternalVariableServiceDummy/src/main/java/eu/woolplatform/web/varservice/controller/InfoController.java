@@ -28,6 +28,7 @@ import eu.woolplatform.web.varservice.ProtocolVersion;
 import eu.woolplatform.web.varservice.ServiceContext;
 import eu.woolplatform.web.varservice.controller.model.ServiceInfo;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +36,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/v{version}/info")
-@Tag(name = "Information", description = "End-points that provide information about the running service")
+@Tag(name = "3. Information", description = "End-points that provide information about the running service")
 public class InfoController {
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
-
-	@Autowired
-	Application application;
 
 	@Operation(summary = "Retrieve a set of metadata parameters about the running service",
 			description = "This end-point may be called without authentication and will return 3 variables" +
@@ -51,8 +49,18 @@ public class InfoController {
 					" <li>serviceVersion - software version of the service</li></ul>")
 
 	@GetMapping("/all")
-	public ServiceInfo all() {
-		logger.info("/v"+ ProtocolVersion.getLatestVersion().versionName()+"/info/all");
+	public ServiceInfo all(
+		@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
+		@PathVariable(value = "version")
+		String versionName
+	) {
+
+		// If no explicit protocol version is provided, assume the latest version
+		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		logger.info("/v"+ versionName+"/info/all");
+
 		return new ServiceInfo(Configuration.getInstance().get(Configuration.BUILD_TIME),
 				ServiceContext.getCurrentVersion(),
 				Configuration.getInstance().get(Configuration.VERSION));

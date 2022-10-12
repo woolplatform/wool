@@ -4,7 +4,7 @@ speaker: Bob
 colorID: 2
 position: 758,-148
 ---
-Hi $userFirstName, my name is Bob, and this is the Default WOOL Test dialogue.
+Hi, my name is Bob, and this is the Default WOOL Test dialogue.
 
 [[Nice to meet you Bob.|Continue]]
 [[Goodbye.|End]]

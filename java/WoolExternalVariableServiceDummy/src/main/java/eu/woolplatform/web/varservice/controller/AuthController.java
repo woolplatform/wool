@@ -26,9 +26,13 @@ import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.http.URLParameters;
 import eu.woolplatform.web.varservice.*;
 import eu.woolplatform.web.varservice.controller.model.LoginParams;
-import eu.woolplatform.web.varservice.exception.*;
 import eu.woolplatform.web.varservice.controller.model.LoginResult;
+import eu.woolplatform.web.varservice.exception.BadRequestException;
+import eu.woolplatform.web.varservice.exception.ErrorCode;
+import eu.woolplatform.web.varservice.exception.HttpFieldError;
+import eu.woolplatform.web.varservice.exception.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -44,7 +48,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/v{version}/auth")
-@Tag(name = "Authentication", description = "End-points related to Authentication.")
+@Tag(name = "1. Authentication", description = "End-points related to Authentication.")
 public class AuthController {
 	private static final Object AUTH_LOCK = new Object();
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
@@ -58,7 +62,11 @@ public class AuthController {
 	public LoginResult login(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			@RequestParam(value = "version", required = false) String versionName,
+
+			@Parameter(hidden = true)
+			@PathVariable(value = "version")
+			String versionName,
+
 			@RequestBody
 			LoginParams loginParams) throws Exception {
 

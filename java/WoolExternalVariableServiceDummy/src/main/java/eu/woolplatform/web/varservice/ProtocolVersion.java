@@ -22,12 +22,11 @@
 package eu.woolplatform.web.varservice;
 
 /**
- * All endpoints will be available at {base_path}/{protocol_version} whereby
+ * All endpoints will be available at {base_path}/v{protocol_version} whereby
  * the {protocol_version} is defined by the last available item in this {@code enum}.
  */
 public enum ProtocolVersion {
-	V1("0.1.0"),
-	V2("1.0.0");
+	V1("1");
 	
 	private final String versionName;
 	

@@ -21,8 +21,11 @@
  */
 package eu.woolplatform.wool.execution;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -30,14 +33,26 @@ public class WoolVariable {
 
 	private String name;
 	private Object value;
-	private ZonedDateTime lastUpdated;
+	private Long lastUpdatedTime;
+	private String lastUpdatedTimeZone;
+
+	// ----- Constructors
 
 	public WoolVariable() { }
 
+	public WoolVariable(String name, Object value, Long lastUpdatedTime, String lastUpdatedTimeZone) {
+		this.name = name;
+		this.value = value;
+		this.lastUpdatedTime = lastUpdatedTime;
+		this.lastUpdatedTimeZone = lastUpdatedTimeZone;
+	}
+
+	@JsonIgnore
 	public WoolVariable(String name, Object value, ZonedDateTime lastUpdated) {
 		this.name = name;
 		this.value = value;
-		this.lastUpdated = lastUpdated;
+		this.lastUpdatedTime = lastUpdated.toInstant().toEpochMilli();
+		this.lastUpdatedTimeZone = lastUpdated.getZone().toString();
 	}
 
 	// ----- Getters & Setters
@@ -75,26 +90,60 @@ public class WoolVariable {
 	}
 
 	/**
-	 * Returns the timestamp of when this WOOL Variable was last updated (in the timezone of the user).
-	 * @return the UTC timestamp of when this WOOL Variable was last updated (in the timezone of the user).
+	 * Returns the timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
+	 * @return the UTC timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
 	 */
-	public ZonedDateTime getLastUpdated() {
-		return lastUpdated;
+	public Long getLastUpdatedTime() {
+		return lastUpdatedTime;
 	}
 
 	/**
-	 * Sets the timestamp of when this WOOL Variable was last updated (in the timezone of the user).
-	 * @param lastUpdated the timestamp of when this WOOL Variable was last updated (in the timezone of the user).
+	 * Sets the timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
+	 * @param lastUpdatedTime the timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
 	 */
-	public void setLastUpdated(ZonedDateTime lastUpdated) {
-		this.lastUpdated = lastUpdated;
+	public void setLastUpdatedTime(Long lastUpdatedTime) {
+		this.lastUpdatedTime = lastUpdatedTime;
 	}
 
+	public String getLastUpdatedTimeZone() {
+		return lastUpdatedTimeZone;
+	}
+
+	public void setLastUpdatedTimeZone(String lastUpdatedTimeZone) {
+		this.lastUpdatedTimeZone = lastUpdatedTimeZone;
+	}
+
+	// ---------- Convenience
+
+	/**
+	 * Returns a {@link ZonedDateTime} object representing the date/time that this {@link WoolVariable} was last updated
+	 * in the timezone of the user.
+	 * @return the last updated time for this variable in the timezone of the user.
+	 */
+	@JsonIgnore
+	public ZonedDateTime getUpdatedTime() {
+		ZoneId timeZone;
+
+		if (this.getLastUpdatedTimeZone() == null || this.getLastUpdatedTimeZone().length() == 0) {
+			timeZone = ZoneId.systemDefault();
+		} else {
+			timeZone = ZoneId.of(this.getLastUpdatedTimeZone());
+		}
+
+		if(this.getLastUpdatedTime() == null) {
+			return ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), timeZone);
+		} else {
+			return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getLastUpdatedTime()), timeZone);
+		}
+	}
+
+	@Override
 	public String toString() {
-		return "WoolVariable[" +
-				"name:'"+getName()+"',"+
-				"value:'"+getValue()+"',"+
-				"lastUpdated:'"+getLastUpdated()+"']";
+		return "WoolVariable{" +
+				"name='" + name + '\'' +
+				", value=" + value +
+				", lastUpdatedTime=" + lastUpdatedTime +
+				", lastUpdatedTimeZone='" + lastUpdatedTimeZone + '\'' +
+				'}';
 	}
-
 }
