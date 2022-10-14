@@ -328,7 +328,7 @@ public class WoolVariableStore {
 				woolVariables.clear();
 			}
 			if (notifyObservers)
-				notifyOnChange(new WoolVariableStoreChange.Clear());
+				notifyOnChange(new WoolVariableStoreChange.Clear(eventTime));
 		}
 
 		// -----------------------------------------------------------

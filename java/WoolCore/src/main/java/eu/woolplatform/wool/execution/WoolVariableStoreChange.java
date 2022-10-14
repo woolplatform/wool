@@ -93,6 +93,9 @@ public abstract class WoolVariableStoreChange {
 			return addedVariables;
 		}
 
+		public ZonedDateTime getTime() {
+			return time;
+		}
 	}
 
 	/**
@@ -134,6 +137,10 @@ public abstract class WoolVariableStoreChange {
 		public Collection<String> getRemovedVariableNames() {
 			return removedVariableNames;
 		}
+
+		public ZonedDateTime getTime() {
+			return time;
+		}
 	}
 
 	/**
@@ -143,6 +150,14 @@ public abstract class WoolVariableStoreChange {
 	 * @author Harm op den Akker
 	 */
 	public static class Clear extends WoolVariableStoreChange {
+		private final ZonedDateTime time;
 
+		public Clear(ZonedDateTime time) {
+			this.time = time;
+		}
+
+		public ZonedDateTime getTime() {
+			return time;
+		}
 	}
 }
