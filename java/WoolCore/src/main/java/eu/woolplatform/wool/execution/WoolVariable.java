@@ -33,26 +33,26 @@ public class WoolVariable {
 
 	private String name;
 	private Object value;
-	private Long lastUpdatedTime;
-	private String lastUpdatedTimeZone;
+	private Long updatedTime;
+	private String updatedTimeZone;
 
 	// ----- Constructors
 
 	public WoolVariable() { }
 
-	public WoolVariable(String name, Object value, Long lastUpdatedTime, String lastUpdatedTimeZone) {
+	public WoolVariable(String name, Object value, Long updatedTime, String updatedTimeZone) {
 		this.name = name;
 		this.value = value;
-		this.lastUpdatedTime = lastUpdatedTime;
-		this.lastUpdatedTimeZone = lastUpdatedTimeZone;
+		this.updatedTime = updatedTime;
+		this.updatedTimeZone = updatedTimeZone;
 	}
 
 	@JsonIgnore
 	public WoolVariable(String name, Object value, ZonedDateTime lastUpdated) {
 		this.name = name;
 		this.value = value;
-		this.lastUpdatedTime = lastUpdated.toInstant().toEpochMilli();
-		this.lastUpdatedTimeZone = lastUpdated.getZone().toString();
+		this.updatedTime = lastUpdated.toInstant().toEpochMilli();
+		this.updatedTimeZone = lastUpdated.getZone().toString();
 	}
 
 	// ----- Getters & Setters
@@ -93,24 +93,24 @@ public class WoolVariable {
 	 * Returns the timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
 	 * @return the UTC timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
 	 */
-	public Long getLastUpdatedTime() {
-		return lastUpdatedTime;
+	public Long getUpdatedTime() {
+		return updatedTime;
 	}
 
 	/**
 	 * Sets the timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
-	 * @param lastUpdatedTime the timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
+	 * @param updatedTime the timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
 	 */
-	public void setLastUpdatedTime(Long lastUpdatedTime) {
-		this.lastUpdatedTime = lastUpdatedTime;
+	public void setUpdatedTime(Long updatedTime) {
+		this.updatedTime = updatedTime;
 	}
 
-	public String getLastUpdatedTimeZone() {
-		return lastUpdatedTimeZone;
+	public String getUpdatedTimeZone() {
+		return updatedTimeZone;
 	}
 
-	public void setLastUpdatedTimeZone(String lastUpdatedTimeZone) {
-		this.lastUpdatedTimeZone = lastUpdatedTimeZone;
+	public void setUpdatedTimeZone(String updatedTimeZone) {
+		this.updatedTimeZone = updatedTimeZone;
 	}
 
 	// ---------- Convenience
@@ -121,19 +121,19 @@ public class WoolVariable {
 	 * @return the last updated time for this variable in the timezone of the user.
 	 */
 	@JsonIgnore
-	public ZonedDateTime getUpdatedTime() {
+	public ZonedDateTime getZonedUpdatedTime() {
 		ZoneId timeZone;
 
-		if (this.getLastUpdatedTimeZone() == null || this.getLastUpdatedTimeZone().length() == 0) {
+		if (this.getUpdatedTimeZone() == null || this.getUpdatedTimeZone().length() == 0) {
 			timeZone = ZoneId.systemDefault();
 		} else {
-			timeZone = ZoneId.of(this.getLastUpdatedTimeZone());
+			timeZone = ZoneId.of(this.getUpdatedTimeZone());
 		}
 
-		if(this.getLastUpdatedTime() == null) {
+		if(this.getUpdatedTime() == null) {
 			return ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), timeZone);
 		} else {
-			return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getLastUpdatedTime()), timeZone);
+			return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getUpdatedTime()), timeZone);
 		}
 	}
 
@@ -142,8 +142,8 @@ public class WoolVariable {
 		return "WoolVariable{" +
 				"name='" + name + '\'' +
 				", value=" + value +
-				", lastUpdatedTime=" + lastUpdatedTime +
-				", lastUpdatedTimeZone='" + lastUpdatedTimeZone + '\'' +
+				", lastUpdatedTime=" + updatedTime +
+				", lastUpdatedTimeZone='" + updatedTimeZone + '\'' +
 				'}';
 	}
 }

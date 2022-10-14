@@ -206,7 +206,7 @@ public class UserService {
 		return dialogueExecutor.progressDialogue(state, replyId);
 	}
 
-	public ExecuteNodeResult backDialogue(DialogueState state)
+	public ExecuteNodeResult backDialogue(DialogueState state, ZonedDateTime eventTime)
 			throws WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		String dialogueName = dialogue.getDialogueName();
@@ -214,11 +214,12 @@ public class UserService {
 		logger.info(String.format(
 				"User %s goes back in dialogue from node %s.%s",
 				woolUser.getId(), dialogueName, nodeName));
-		return dialogueExecutor.backDialogue(state);
+		return dialogueExecutor.backDialogue(state, eventTime);
 	}
 
-	public ExecuteNodeResult executeCurrentNode(DialogueState state) throws WoolException {
-		return dialogueExecutor.executeCurrentNode(state);
+	public ExecuteNodeResult executeCurrentNode(DialogueState state, ZonedDateTime eventTime)
+			throws WoolException {
+		return dialogueExecutor.executeCurrentNode(state,eventTime);
 	}
 
 	/**
@@ -245,10 +246,13 @@ public class UserService {
 	 * Stores the specified variables in the variable store.
 	 * @param state
 	 * @param variables the variables
+	 * @param eventTime the timestamp (in the time zone of the user) of the event that triggered
+	 *                  this change of WOOL Variables
 	 */
-	public void storeReplyInput(DialogueState state, Map<String,?> variables) throws WoolException {
+	public void storeReplyInput(DialogueState state, Map<String,?> variables,
+								ZonedDateTime eventTime) throws WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
-		dialogue.storeReplyInput(variables,woolUser.getTimeZone());
+		dialogue.storeReplyInput(variables,eventTime);
 	}
 
 	/**
@@ -323,7 +327,7 @@ public class UserService {
 						logger.info(woolVariable.toString());
 						String varName = woolVariable.getName();
 						Object varValue = woolVariable.getValue();
-						ZonedDateTime varUpdated = woolVariable.getUpdatedTime();
+						ZonedDateTime varUpdated = woolVariable.getZonedUpdatedTime();
 						Object varValueObject;
 
 						variableStore.setValue(varName, varValue, true, varUpdated);

@@ -30,6 +30,8 @@ import eu.woolplatform.web.service.exception.ErrorCode;
 import eu.woolplatform.web.service.exception.HttpError;
 import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.execution.UserService;
+import eu.woolplatform.wool.execution.WoolVariable;
+import eu.woolplatform.wool.execution.WoolVariableStore;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -40,6 +42,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -100,9 +104,11 @@ public class VariablesController {
 	}
 
 	/**
-	 * For the given {@code woolUserId} returns a mapping from names to value of WOOL Variables for those
-	 * variables provided in the given {@code variableNames} string. The {@code variableNames} string should
-	 * be a 'space-separated' list of WOOL Variable names (e.g. "variable1 variable_two variable-three").
+	 * For the given {@code woolUserId} returns a mapping from names to value of WOOL Variables for
+	 * those variables provided in the given {@code variableNames} string. The {@code variableNames}
+	 * string should be a 'space-separated' list of WOOL Variable names (e.g. "variable1
+	 * variable_two variable-three").
+	 *
 	 * @param woolUserId the WOOL user for which to retrieve variable data.
 	 * @param variableNames a space-separated list of variable names, or the empty string
 	 * @return a mapping of variable names to variable values
@@ -113,13 +119,14 @@ public class VariablesController {
 			throws Exception {
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
-		Map<String,?> varStore = userService.getVariableStore().getModifiableMap(
-				false);
+
+		WoolVariableStore woolVariableStore = userService.getVariableStore();
+
 		variableNames = variableNames.trim();
+
 		List<String> nameList;
 		if (variableNames.length() == 0) {
-			nameList = new ArrayList<>(varStore.keySet());
-			Collections.sort(nameList);
+			nameList = woolVariableStore.getSortedWoolVariableNames();
 		} else {
 			List<String> invalidNames = new ArrayList<>();
 			String[] nameArray = variableNames.split("\\s+");
@@ -135,9 +142,10 @@ public class VariablesController {
 			}
 			nameList = Arrays.asList(nameArray);
 		}
+
 		Map<String,Object> result = new LinkedHashMap<>();
 		for (String name : nameList) {
-			result.put(name, varStore.get(name));
+			result.put(name, woolVariableStore.getWoolVariable(name).getValue());
 		}
 		return result;
 	}
@@ -232,6 +240,10 @@ public class VariablesController {
 			@RequestParam(value="woolUserId",required=false)
 			String woolUserId,
 
+			@Parameter(description = "The current time zone of the WOOL user (as IANA, e.g. 'Europe/Lisbon')")
+			@RequestParam(value="timeZone")
+			String timeZone,
+
 			@Parameter(description = "A JSON map of WOOL Variable names to values")
 			@RequestBody
 			Map<String,Object> woolVariables) throws Exception {
@@ -245,10 +257,10 @@ public class VariablesController {
 		logger.info(logInfo);
 
 		if(woolUserId == null || woolUserId.equals("")) {
-			QueryRunner.runQuery((version, user) -> doSetVariables(user, woolVariables),
+			QueryRunner.runQuery((version, user) -> doSetVariables(user, woolVariables, timeZone),
 				versionName, request, response, woolUserId, application);
 		} else {
-			QueryRunner.runQuery((version, user) -> doSetVariables(woolUserId, woolVariables),
+			QueryRunner.runQuery((version, user) -> doSetVariables(woolUserId, woolVariables, timeZone),
 				versionName, request, response, woolUserId, application);
 		}
 	}
@@ -260,8 +272,8 @@ public class VariablesController {
 	 * @return {@code null}
 	 * @throws Exception in case of an invalid variable name, or an error writing variables to the database.
 	 */
-	private Object doSetVariables(String woolUserId, Map<String,Object> woolVariables)
-			throws Exception {
+	private Object doSetVariables(String woolUserId, Map<String,Object> woolVariables,
+								  String timeZoneString) throws Exception {
 
 		List<String> invalidNames = new ArrayList<>();
 		for (String name : woolVariables.keySet()) {
@@ -276,11 +288,20 @@ public class VariablesController {
 			throw new BadRequestException(error);
 		}
 
-		UserService userService = application.getServiceManager()
-				.getActiveUserService(woolUserId);
-		Map<String,Object> varStore = userService.getVariableStore()
-				.getModifiableMap(true);
-		varStore.putAll(woolVariables);
+		// Update the WOOL User's time zone with the latest given value
+		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZoneString);
+		UserService userService = application.getServiceManager().getActiveUserService(woolUserId);
+		userService.getWoolUser().setTimeZone(timeZoneId);
+
+		WoolVariableStore woolVariableStore = userService.getVariableStore();
+		for(Map.Entry<String, Object> entry : woolVariables.entrySet()) {
+			woolVariableStore.setValue(
+					entry.getKey(),
+					entry.getValue(),
+					true,
+					ZonedDateTime.now(userService.getWoolUser().getTimeZone()));
+		}
+
 		return null;
 	}
 }

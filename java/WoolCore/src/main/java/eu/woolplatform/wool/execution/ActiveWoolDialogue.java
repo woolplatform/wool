@@ -31,6 +31,7 @@ import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerInternal;
 
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,15 +119,15 @@ public class ActiveWoolDialogue {
 	 * "Starts" this {@link ActiveWoolDialogue}, returning the start node and
 	 * updating its internal state.
 	 *
-	 * @param timeZone the time zone of the current WOOL user, used to determine timestamps
-	 * 	               for changes to the {@link WoolVariableStore}.
+	 * @param eventTime the timestamp (in the time zone of the user) of the event that triggered
+	 *                  this start of the WOOL dialogue.
 	 * @return the initial {@link WoolNode}.
 	 * @throws WoolException if the request is invalid
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode startDialogue(ZoneId timeZone) throws WoolException,
+	public WoolNode startDialogue(ZonedDateTime eventTime) throws WoolException,
 			EvaluationException {
-		return startDialogue(null, timeZone);
+		return startDialogue(null, eventTime);
 	}
 	
 	/**
@@ -136,15 +137,14 @@ public class ActiveWoolDialogue {
 	 * state. If you set the nodeId to null, it will return the start node.
 	 *
 	 * @param nodeId the node ID or {@code null} (to start from the "Start" node).
-	 * @param timeZone the time zone of the current WOOL user, used to determine timestamps
-	 *                 for changes to the {@link WoolVariableStore}.
+	 * @param eventTime the timestamp (in the time zone of the user) that triggered this start of
+	 *                  the WOOL dialogue
 	 * @return the {@link WoolNode}
 	 * @throws WoolException if the request is invalid
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode startDialogue(String nodeId, ZoneId timeZone)
+	public WoolNode startDialogue(String nodeId, ZonedDateTime eventTime)
 			throws WoolException, EvaluationException {
-		woolVariableStore.getWoolUser().setTimeZone(timeZone);
 		WoolNode nextNode;
 		if (nodeId == null) {
 			nextNode = dialogueDefinition.getStartNode();
@@ -156,7 +156,7 @@ public class ActiveWoolDialogue {
 								nodeId, dialogueDefinition.getDialogueName()));
 			}
 		}
-		this.currentNode = executeWoolNode(nextNode,timeZone);
+		this.currentNode = executeWoolNode(nextNode,eventTime);
 		return currentNode;
 	}
 	
@@ -166,16 +166,16 @@ public class ActiveWoolDialogue {
 	 * "set" actions associated with the reply.
 	 * 
 	 * @param replyId the reply ID
-	 * @param timeZone the time zone of the current WOOL user, used to determine timestamps
-	 * 	               for changes to the {@link WoolVariableStore}.
+	 * @param eventTime the time (in the user's timezone) of the event that triggered this
+	 *                  processing of the reply.
 	 * @return WoolNodePointer the pointer to the next node
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNodePointer processReplyAndGetNodePointer(int replyId, ZoneId timeZone) throws EvaluationException {
-		WoolReply selectedWoolReply = currentNode.getBody().findReplyById(
-				replyId);
-		Map<String,Object> variableMap = woolVariableStore.getModifiableMap(
-				true);
+	public WoolNodePointer processReplyAndGetNodePointer(int replyId, ZonedDateTime eventTime)
+			throws EvaluationException {
+		WoolReply selectedWoolReply = currentNode.getBody().findReplyById(replyId);
+		Map<String,Object> variableMap =
+				woolVariableStore.getModifiableMap(true, eventTime);
 		for (WoolCommand command : selectedWoolReply.getCommands()) {
 			if (command instanceof WoolSetCommand) {
 				WoolSetCommand setCommand = (WoolSetCommand)command;
@@ -195,33 +195,32 @@ public class ActiveWoolDialogue {
 	 * next {@link WoolNode}.</p>
 	 *  
 	 * @param nodePointer the next node pointer from the selected reply
-	 * @param timeZone the time zone of the current WOOL user, used to determine timestamps
-	 * 	               for changes to the {@link WoolVariableStore}.
+	 * @param eventTime the timestamp (in the time zone of the user) of the event that triggered the
+	 *                  progressing of the dialogue
 	 * @return the next {@link WoolNode} that follows on the selected reply or
 	 * null  
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode progressDialogue(WoolNodePointerInternal nodePointer, ZoneId timeZone) throws EvaluationException {
+	public WoolNode progressDialogue(WoolNodePointerInternal nodePointer, ZonedDateTime eventTime)
+			throws EvaluationException {
 		WoolNode nextNode = null;
 		if (!nodePointer.getNodeId().equalsIgnoreCase("end"))
 			nextNode = dialogueDefinition.getNodeById(nodePointer.getNodeId());
 		this.currentNode = nextNode;
 		if (nextNode != null)
-			this.currentNode = executeWoolNode(nextNode, timeZone);
+			this.currentNode = executeWoolNode(nextNode, eventTime);
 		return currentNode;
 	}
 
 	/**
 	 * Stores the specified variables in the variable store.
 	 *
-	 * @param timeZone the time zone of the current WOOL user, used to determine timestamps
-	 *                 for changes to the {@link WoolVariableStore}.
+	 * @param eventTime the time (in the time zone of the user) of the event that triggered this
+	 *                  change in WOOL Variables.
 	 * @param variables the variables
 	 */
-	public void storeReplyInput(Map<String,?> variables, ZoneId timeZone) {
-		woolVariableStore.getWoolUser().setTimeZone(timeZone);
-		Map<String,Object> map = woolVariableStore.getModifiableMap(true);
-		map.putAll(variables);
+	public void storeReplyInput(Map<String,?> variables, ZonedDateTime eventTime) {
+		woolVariableStore.addAll(variables,true,eventTime);
 	}
 
 	/**
@@ -270,18 +269,18 @@ public class ActiveWoolDialogue {
 	 * can be text or client commands, with all variables resolved.
 	 *
 	 * @param woolNode a node to execute
-	 * @param timeZone the time zone of the current WOOL user, used to determine timestamps
-	 *                 for changes to the {@link WoolVariableStore}.
+	 * @param eventTime the time stamp (in the time zone of the user) of the event that triggered
+	 *                  the execution of this WOOL Node
 	 * @return the executed WoolNode
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode executeWoolNode(WoolNode woolNode, ZoneId timeZone)
+	public WoolNode executeWoolNode(WoolNode woolNode, ZonedDateTime eventTime)
 			throws EvaluationException {
 		WoolNode processedNode = new WoolNode();
 		processedNode.setHeader(woolNode.getHeader());
 		WoolNodeBody processedBody = new WoolNodeBody();
-		woolVariableStore.getWoolUser().setTimeZone(timeZone);
-		Map<String,Object> variables = woolVariableStore.getModifiableMap(true);
+		Map<String,Object> variables =
+				woolVariableStore.getModifiableMap(true, eventTime);
 		woolNode.getBody().execute(variables, true, processedBody);
 		processedNode.setBody(processedBody);
 		return processedNode;
@@ -297,17 +296,19 @@ public class ActiveWoolDialogue {
 	 * <p>This method does not change the dialogue state and does not change
 	 * any variables. Any "set" commands have no effect.</p>
 	 *
-	 * @param woolNode a node to execute
+	 * @param woolNode a node to execute.
+	 * @param eventTime the timestamp (in the time zone of the user) of the event that triggered the
+	 *                  execution of the WOOL Node
 	 * @return the executed WoolNode
 	 * @throws EvaluationException if an expression cannot be evaluated
 	 */
-	public WoolNode executeWoolNodeStateless(WoolNode woolNode)
+	public WoolNode executeWoolNodeStateless(WoolNode woolNode, ZonedDateTime eventTime)
 			throws EvaluationException {
 		WoolNode processedNode = new WoolNode();
 		processedNode.setHeader(woolNode.getHeader());
 		WoolNodeBody processedBody = new WoolNodeBody();
 		Map<String,Object> variables = new LinkedHashMap<>(
-				woolVariableStore.getModifiableMap(false));
+				woolVariableStore.getModifiableMap(false,eventTime));
 		woolNode.getBody().execute(variables, true, processedBody);
 		processedNode.setBody(processedBody);
 		return processedNode;

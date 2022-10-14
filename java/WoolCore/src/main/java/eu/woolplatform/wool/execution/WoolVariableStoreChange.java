@@ -19,7 +19,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-
 package eu.woolplatform.wool.execution;
 
 import java.time.ZonedDateTime;
@@ -34,14 +33,20 @@ public abstract class WoolVariableStoreChange {
 	 * @author Harm op den Akker
 	 */
 	public static class Put extends WoolVariableStoreChange {
-		private Map<String,WoolVariable> variables;
+		private final ZonedDateTime time;
+		private final Map<String,Object> addedVariables;
 
 		/**
 		 * Creates an instance of a {@link Put} {@link WoolVariableStoreChange} with a given map of {@link WoolVariable}s.
-		 * @param variables the mapping from variable name to {@link WoolVariable} that was added in this {@link WoolVariableStoreChange}.
+		 * @param woolVariablesMap the mapping from variable name to {@link WoolVariable} that was added in this {@link WoolVariableStoreChange}.
+		 * @param time the time that this change took place (in the time zone of the user).
 		 */
-		public Put(Map<String,WoolVariable> variables) {
-			this.variables = variables;
+		public Put(Map<String,WoolVariable> woolVariablesMap, ZonedDateTime time) {
+			addedVariables = new LinkedHashMap<>();
+			for(WoolVariable woolVariable : woolVariablesMap.values()) {
+				addedVariables.put(woolVariable.getName(),woolVariable.getValue());
+			}
+			this.time = time;
 		}
 
 		/**
@@ -49,43 +54,45 @@ public abstract class WoolVariableStoreChange {
 		 * and {@code lastUpdated} timestamp in the timezone of the WOOL user.
 		 * @param variableName the name of the {@link WoolVariable} representing this Put change.
 		 * @param variableValue the value of the {@link WoolVariable} representing this Put change.
-		 * @param lastUpdated the timestamp (in the timezone of the WOOL user) representing this Put change.
+		 * @param time the time that this change took place (in the time zone of the user).
 		 */
-		public Put(String variableName, Object variableValue, ZonedDateTime lastUpdated) {
-			Map<String,WoolVariable> variables = new LinkedHashMap<>();
-			variables.put(variableName, new WoolVariable(variableName,variableValue,lastUpdated));
-			this.variables = variables;
+		public Put(String variableName, Object variableValue, ZonedDateTime time) {
+			addedVariables = new LinkedHashMap<>();
+			addedVariables.put(variableName, variableValue);
+			this.time = time;
 		}
 
 		/**
 		 * Creates an instance of a {@link Put} {@link WoolVariableStoreChange} with a single given {@link WoolVariable}.
 		 * @param woolVariable the one and only {@link WoolVariable} that was added in this {@link WoolVariableStoreChange}.
+		 * @param time the time that this change took place (in the time zone of the user).
 		 */
-		public Put(WoolVariable woolVariable) {
-			Map<String,WoolVariable> variables = new LinkedHashMap<>();
-			variables.put(woolVariable.getName(), woolVariable);
-			this.variables = variables;
+		public Put(WoolVariable woolVariable, ZonedDateTime time) {
+			addedVariables = new LinkedHashMap<>();
+			addedVariables.put(woolVariable.getName(), woolVariable.getValue());
+			this.time = time;
 		}
 
 		/**
 		 * Creates an instance of a {@link Put} {@link WoolVariableStoreChange} with a list of given {@link WoolVariable}s.
-		 * @param woolVariables the list of {@link WoolVariable}s that were added in this {@link WoolVariableStoreChange}.
+		 * @param woolVariablesList the list of {@link WoolVariable}s that were added in this {@link WoolVariableStoreChange}.
+		 * @param time the time that this change took place (in the time zone of the user).
 		 */
-		public Put(List<WoolVariable> woolVariables) {
-			Map<String,WoolVariable> variables = new LinkedHashMap<>();
-			for(WoolVariable woolVariable : woolVariables) {
-				variables.put(woolVariable.getName(), woolVariable);
+		public Put(List<WoolVariable> woolVariablesList, ZonedDateTime time) {
+			addedVariables = new LinkedHashMap<>();
+			for(WoolVariable woolVariable : woolVariablesList) {
+				addedVariables.put(woolVariable.getName(), woolVariable.getValue());
 			}
-			this.variables = variables;
+			this.time = time;
 		}
 
 		/**
-		 * Returns the mapping of variable name to {@link WoolVariable} representing all the variables that
+		 * Returns the mapping of variable name to value ({@link Object}) representing all the variables that
 		 * have been added in this {@link WoolVariableStoreChange}.
 		 * @return the added WOOL Variables.
 		 */
-		public Map<String,WoolVariable> getVariables() {
-			return variables;
+		public Map<String,Object> getAddedVariables() {
+			return addedVariables;
 		}
 
 	}
@@ -98,31 +105,36 @@ public abstract class WoolVariableStoreChange {
 	 * @author Harm op den Akker
 	 */
 	public static class Remove extends WoolVariableStoreChange {
-		private Collection<String> variableNames;
+		private Collection<String> removedVariableNames;
+		private ZonedDateTime time;
 
 		/**
 		 * Creates an instance of a {@link Remove} {@link WoolVariableStoreChange} with a given collection of variableNames.
 		 * @param variableNames the names of the variables that have been removed in this change.
+		 * @param time the time that this change took place (in the time zone of the user).
 		 */
-		public Remove(Collection<String> variableNames) {
-			this.variableNames = variableNames;
+		public Remove(Collection<String> variableNames, ZonedDateTime time) {
+			this.removedVariableNames = variableNames;
+			this.time = time;
 		}
 
 		/**
 		 * Creates an instance of a {@link Remove} {@link WoolVariableStoreChange} with a given single variable name, representing
 		 * the variable that was removed with this change.
 		 * @param variableName the name of the variable that was removed with this change.
+		 * @param time the time that this change took place (in the time zone of the user).
 		 */
-		public Remove(String variableName) {
-			variableNames = Collections.singletonList(variableName);
+		public Remove(String variableName, ZonedDateTime time) {
+			removedVariableNames = Collections.singletonList(variableName);
+			this.time = time;
 		}
 
 		/**
 		 * Returns the collection of variable names that are associated with this {@link Remove} {@link WoolVariableStoreChange}.
 		 * @return the collection of variable names of variables that have been removed.
 		 */
-		public Collection<String> getVariableNames() {
-			return variableNames;
+		public Collection<String> getRemovedVariableNames() {
+			return removedVariableNames;
 		}
 	}
 
