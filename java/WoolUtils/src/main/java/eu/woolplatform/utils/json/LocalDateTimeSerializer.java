@@ -23,8 +23,8 @@
 package eu.woolplatform.utils.json;
 
 import java.io.IOException;
-
-import org.joda.time.LocalDateTime;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -49,6 +49,7 @@ public class LocalDateTimeSerializer extends JsonSerializer<Object> {
 					value.getClass().getName(), jgen);
 		}
 		LocalDateTime time = (LocalDateTime)value;
-		jgen.writeString(time.toString("yyyy-MM-dd'T'HH:mm:ss.SSS"));
+		jgen.writeString(time.format(DateTimeFormatter.ofPattern(
+				"yyyy-MM-dd'T'HH:mm:ss.SSS")));
 	}
 }

@@ -22,9 +22,9 @@
 
 package eu.woolplatform.utils.schedule;
 
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 /**
  * Base class for a task schedule. This is part of a {@link ScheduledTask
@@ -106,9 +106,9 @@ public abstract class TaskSchedule {
 	 */
 	public static class TimeSchedule extends TaskSchedule {
 		private LocalDate startDate;
-		private org.joda.time.LocalTime startTime;
+		private java.time.LocalTime startTime;
 		private LocalDate endDate = null;
-		private org.joda.time.LocalTime endTime = null;
+		private java.time.LocalTime endTime = null;
 		private DateDuration repeatDate = null;
 		private TimeDuration repeatTime = null;
 
@@ -121,8 +121,7 @@ public abstract class TaskSchedule {
 		 * @param startDate the start date
 		 * @param startTime the start time
 		 */
-		public TimeSchedule(LocalDate startDate,
-				org.joda.time.LocalTime startTime) {
+		public TimeSchedule(LocalDate startDate, java.time.LocalTime startTime) {
 			this.startDate = startDate;
 			this.startTime = startTime;
 		}
@@ -140,7 +139,7 @@ public abstract class TaskSchedule {
 
 		/**
 		 * Sets the date when the task should be first run. The time is set with
-		 * {@link #setStartTime(org.joda.time.LocalTime) setStartTime()}. If no
+		 * {@link #setStartTime(java.time.LocalTime) setStartTime()}. If no
 		 * date repeat is defined, this is the only date.
 		 *
 		 * @param startDate the start date
@@ -156,7 +155,7 @@ public abstract class TaskSchedule {
 		 *
 		 * @return the start time
 		 */
-		public org.joda.time.LocalTime getStartTime() {
+		public java.time.LocalTime getStartTime() {
 			return startTime;
 		}
 
@@ -167,7 +166,7 @@ public abstract class TaskSchedule {
 		 *
 		 * @param startTime the start time
 		 */
-		public void setStartTime(org.joda.time.LocalTime startTime) {
+		public void setStartTime(java.time.LocalTime startTime) {
 			this.startTime = startTime;
 		}
 
@@ -203,7 +202,7 @@ public abstract class TaskSchedule {
 		 *
 		 * @return the end time or null (default)
 		 */
-		public org.joda.time.LocalTime getEndTime() {
+		public java.time.LocalTime getEndTime() {
 			return endTime;
 		}
 
@@ -215,7 +214,7 @@ public abstract class TaskSchedule {
 		 *
 		 * @param endTime the end time or null (default)
 		 */
-		public void setEndTime(org.joda.time.LocalTime endTime) {
+		public void setEndTime(java.time.LocalTime endTime) {
 			this.endTime = endTime;
 		}
 
@@ -273,7 +272,7 @@ public abstract class TaskSchedule {
 		 * scheduled date, this method sets the repeat interval. At each date,
 		 * the task will be run at the start time and then at each interval
 		 * after that until an optional end time (see {@link
-		 * #setEndTime(org.joda.time.LocalTime) setEndTime()}).
+		 * #setEndTime(java.time.LocalTime) setEndTime()}).
 		 *
 		 * <p>If the task should only run at the start time within each
 		 * scheduled date, you should set the repeat interval to null.</p>
@@ -329,7 +328,7 @@ public abstract class TaskSchedule {
 	 * Schedule for a task that should run once at a specific UTC time.
 	 */
 	public static class UtcTime extends TaskSchedule {
-		private DateTime time;
+		private ZonedDateTime time;
 		private boolean exact;
 
 		/**
@@ -339,7 +338,7 @@ public abstract class TaskSchedule {
 		 * @param exact true if the task should be run exactly at the specified
 		 * time, false if it can be run later to save energy
 		 */
-		public UtcTime(DateTime time, boolean exact) {
+		public UtcTime(ZonedDateTime time, boolean exact) {
 			this.time = time;
 			this.exact = exact;
 		}
@@ -349,7 +348,7 @@ public abstract class TaskSchedule {
 		 *
 		 * @return the time when the task should run
 		 */
-		public DateTime getTime() {
+		public ZonedDateTime getTime() {
 			return time;
 		}
 

@@ -30,11 +30,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 import java.io.IOException;
-
-import org.joda.time.LocalDate;
-
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * This deserializer can convert a string in format yyyy-MM-dd to a {@link
@@ -47,9 +44,9 @@ public class SqlDateDeserializer extends JsonDeserializer<LocalDate> {
 	public LocalDate deserialize(JsonParser jp, DeserializationContext ctxt)
 			throws IOException, JsonProcessingException {
 		String val = jp.readValueAs(String.class);
-		DateTimeFormatter parser = DateTimeFormat.forPattern("yyyy-MM-dd");
+		DateTimeFormatter parser = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		try {
-			return parser.parseLocalDate(val);
+			return parser.parse(val, LocalDate::from);
 		} catch (IllegalArgumentException ex) {
 			throw new JsonParseException(jp, "Invalid date string: " + val +
 					": " + ex.getMessage(), jp.getTokenLocation(), ex);

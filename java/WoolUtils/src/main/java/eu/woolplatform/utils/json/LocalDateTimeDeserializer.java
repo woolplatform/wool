@@ -22,17 +22,16 @@
 
 package eu.woolplatform.utils.json;
 
-import java.io.IOException;
-
-import org.joda.time.LocalDateTime;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import eu.woolplatform.utils.datetime.DateTimeUtils;
+import eu.woolplatform.utils.exception.ParseException;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 /**
  * This deserializer can convert a string in format yyyy-MM-dd'T'HH:mm:ss.SSS to
@@ -46,10 +45,9 @@ extends JsonDeserializer<LocalDateTime> {
 	public LocalDateTime deserialize(JsonParser jp, DeserializationContext ctxt)
 			throws IOException, JsonProcessingException {
 		String val = jp.readValueAs(String.class);
-		DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
 		try {
-			return parser.parseLocalDateTime(val);
-		} catch (IllegalArgumentException ex) {
+			return DateTimeUtils.parseDateTime(val, LocalDateTime.class);
+		} catch (ParseException ex) {
 			throw new JsonParseException(jp, "Invalid date/time string: " +
 					val + ": " + ex.getMessage(), jp.getTokenLocation(), ex);
 		}

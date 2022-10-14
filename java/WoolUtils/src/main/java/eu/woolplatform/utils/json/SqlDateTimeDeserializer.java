@@ -23,10 +23,8 @@
 package eu.woolplatform.utils.json;
 
 import java.io.IOException;
-
-import org.joda.time.LocalDateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -46,10 +44,10 @@ extends JsonDeserializer<LocalDateTime> {
 	public LocalDateTime deserialize(JsonParser jp, DeserializationContext ctxt)
 			throws IOException, JsonProcessingException {
 		String val = jp.readValueAs(String.class);
-		DateTimeFormatter parser = DateTimeFormat.forPattern(
+		DateTimeFormatter parser = DateTimeFormatter.ofPattern(
 				"yyyy-MM-dd HH:mm:ss");
 		try {
-			return parser.parseLocalDateTime(val);
+			return parser.parse(val, LocalDateTime::from);
 		} catch (IllegalArgumentException ex) {
 			throw new JsonParseException(jp, "Invalid date/time string: " +
 					val + ": " + ex.getMessage(), jp.getTokenLocation(), ex);

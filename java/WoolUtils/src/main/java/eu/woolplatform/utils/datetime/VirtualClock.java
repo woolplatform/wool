@@ -22,10 +22,11 @@
 
 package eu.woolplatform.utils.datetime;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
-
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 
 /**
  * The virtual clock can be used for simulations. It can run in system mode,
@@ -149,11 +150,13 @@ public class VirtualClock {
 	}
 	
 	/**
-	 * Returns the current time as a {@link DateTime DateTime}.
+	 * Returns the current time as a {@link ZonedDateTime ZonedDateTime}.
 	 * 
 	 * @return the current time
 	 */
-	public DateTime getTime() {
-		return new DateTime(currentTimeMillis());
+	public ZonedDateTime getTime() {
+		return ZonedDateTime.ofInstant(
+				Instant.ofEpochMilli(currentTimeMillis()),
+				ZoneId.systemDefault());
 	}
 }

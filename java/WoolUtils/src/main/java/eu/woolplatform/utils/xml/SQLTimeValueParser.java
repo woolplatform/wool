@@ -24,10 +24,8 @@ package eu.woolplatform.utils.xml;
 
 import eu.woolplatform.utils.exception.ParseException;
 
-import org.joda.time.LocalTime;
-
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Values parser for SQL time values. It accepts strings formatted as HH:mm:ss.
@@ -39,9 +37,9 @@ public class SQLTimeValueParser implements XMLValueParser<LocalTime> {
 	@Override
 	public LocalTime parse(String xml) throws ParseException {
 		try {
-			DateTimeFormatter formatter = DateTimeFormat.forPattern(
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
 					"HH:mm:ss");
-			return formatter.parseLocalTime(xml);
+			return formatter.parse(xml, LocalTime::from);
 		} catch (Exception ex) {
 			throw new ParseException("Value is not an SQL time string: \"" +
 					xml + "\": " + ex.getMessage(), ex);

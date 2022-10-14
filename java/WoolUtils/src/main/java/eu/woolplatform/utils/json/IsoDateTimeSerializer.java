@@ -25,17 +25,16 @@ package eu.woolplatform.utils.json;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import java.io.IOException;
-
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
-
-import org.joda.time.DateTime;
-import org.joda.time.Instant;
 
 /**
  * This serializer can convert a date/time type to a string in format
@@ -46,7 +45,7 @@ import org.joda.time.Instant;
  * <li>{@link Date Date}</li>
  * <li>{@link Instant Instant}</li>
  * <li>{@link Calendar Calendar}</li>
- * <li>{@link DateTime DateTime}</li>
+ * <li>{@link ZonedDateTime ZonedDateTime}</li>
  * </ul></p>
  * 
  * <p>The types Long, Date and Instant are translated to the default time zone.
@@ -60,19 +59,26 @@ public class IsoDateTimeSerializer extends JsonSerializer<Object> {
 	public void serialize(Object value, JsonGenerator jgen,
 			SerializerProvider provider) throws IOException,
 			JsonProcessingException {
-		DateTime dateTime;
-		if (value instanceof Long || value instanceof Date ||
-				value instanceof Calendar) {
-			dateTime = new DateTime(value);
+		ZonedDateTime dateTime;
+		if (value instanceof Long) {
+			dateTime = ZonedDateTime.ofInstant(
+					Instant.ofEpochMilli((Long)value), ZoneId.systemDefault());
+		} else if (value instanceof Date) {
+			dateTime = ZonedDateTime.ofInstant(((Date)value).toInstant(),
+					ZoneId.systemDefault());
+		} else if (value instanceof Calendar) {
+			Calendar cal = (Calendar)value;
+			dateTime = cal.toInstant().atZone(cal.getTimeZone().toZoneId());
 		} else if (value instanceof Instant) {
-			dateTime = ((Instant)value).toDateTime();
-		} else if (value instanceof DateTime) {
-			dateTime = (DateTime)value;
+			dateTime = ((Instant)value).atZone(ZoneId.systemDefault());
+		} else if (value instanceof ZonedDateTime) {
+			dateTime = (ZonedDateTime)value;
 		} else {
 			throw new JsonGenerationException(
 					"Can't serialize type to ISO date/time: " +
 					value.getClass().getName(), jgen);
 		}
-		jgen.writeString(dateTime.toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ"));
+		jgen.writeString(dateTime.format(DateTimeFormatter.ofPattern(
+				"yyyy-MM-dd'T'HH:mm:ss.SSSXXX")));
 	}
 }

@@ -30,8 +30,8 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import java.io.IOException;
-
-import org.joda.time.LocalTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * This serializer can convert a {@link LocalTime LocalTime} to a string in
@@ -50,6 +50,6 @@ public class SqlTimeSerializer extends JsonSerializer<Object> {
 					value.getClass().getName(), jgen);
 		}
 		LocalTime time = (LocalTime)value;
-		jgen.writeString(time.toString("HH:mm:ss"));
+		jgen.writeString(time.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
 	}
 }

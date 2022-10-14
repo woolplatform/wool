@@ -22,24 +22,17 @@
 
 package eu.woolplatform.utils.log;
 
-import org.joda.time.LocalDate;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+import eu.woolplatform.utils.io.FileUtils;
+import eu.woolplatform.utils.io.ZipUtils;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import eu.woolplatform.utils.io.FileUtils;
-import eu.woolplatform.utils.io.ZipUtils;
 
 /**
  * This class can write log messages to log files. It is constructed with a log
@@ -68,19 +61,16 @@ public class FileLogger {
 	public FileLogger(File logDir) throws IOException {
 		this.logDir = logDir;
 		FileUtils.mkdir(logDir);
-		String[] zipFiles = logDir.list(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String filename) {
-				return filename.matches("[0-9]{8}\\.zip");
-			}
-		});
+		String[] zipFiles = logDir.list((dir, filename) ->
+				filename.matches("[0-9]{8}\\.zip"));
 		if (zipFiles.length > 0) {
 			List<String> zipFileList = new ArrayList<>(Arrays.asList(
 					zipFiles));
 			Collections.sort(zipFileList);
 			String lastFile = zipFileList.get(zipFileList.size() - 1);
-			DateTimeFormatter parser = DateTimeFormat.forPattern("yyyyMMdd");
-			archivedUntil = parser.parseLocalDate(lastFile.substring(0, 8));
+			DateTimeFormatter parser = DateTimeFormatter.ofPattern("yyyyMMdd");
+			archivedUntil = parser.parse(lastFile.substring(0, 8),
+					LocalDate::from);
 		}
 	}
 	
@@ -130,10 +120,8 @@ public class FileLogger {
 				Writer out = openLogFile(date);
 				if (out == null)
 					return 0;
-				try {
+				try (out) {
 					out.write(msg);
-				} finally {
-					out.close();
 				}
 				return 0;
 			} catch (IOException ex) {
@@ -157,11 +145,11 @@ public class FileLogger {
 				(purgedUntil != null && !purgedUntil.isBefore(date))) {
 			return null;
 		}
-		DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyyMMdd");
-		String filename = formatter.print(date) + ".log";
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+		String filename = formatter.format(date) + ".log";
 		File file = new File(logDir, filename);
 		return new OutputStreamWriter(new FileOutputStream(file, true),
-				"UTF-8");
+				StandardCharsets.UTF_8);
 	}
 
 	/**
@@ -292,10 +280,10 @@ public class FileLogger {
 			if (!filename.matches("[0-9]{8}\\.log"))
 				return false;
 			String dateStr = filename.substring(0, 8);
-			DateTimeFormatter parser = DateTimeFormat.forPattern("yyyyMMdd");
+			DateTimeFormatter parser = DateTimeFormatter.ofPattern("yyyyMMdd");
 			LocalDate fileDate;
 			try {
-				fileDate = parser.parseLocalDate(dateStr);
+				fileDate = parser.parse(dateStr, LocalDate::from);
 			} catch (IllegalArgumentException ex) {
 				return false;
 			}
@@ -332,10 +320,10 @@ public class FileLogger {
 			if (!filename.matches("[0-9]{8}\\..*"))
 				return false;
 			String dateStr = filename.substring(0, 8);
-			DateTimeFormatter parser = DateTimeFormat.forPattern("yyyyMMdd");
+			DateTimeFormatter parser = DateTimeFormatter.ofPattern("yyyyMMdd");
 			LocalDate fileDate;
 			try {
-				fileDate = parser.parseLocalDate(dateStr);
+				fileDate = parser.parse(dateStr, LocalDate::from);
 			} catch (IllegalArgumentException ex) {
 				return false;
 			}

@@ -27,10 +27,13 @@ import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.ReflectionUtils;
 import eu.woolplatform.utils.exception.HandledException;
 import eu.woolplatform.utils.exception.ParseException;
-import org.joda.time.*;
 import org.slf4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 /**
@@ -90,6 +93,11 @@ public abstract class TaskScheduler {
 	private Map<String,ScheduledTaskSpec> scheduledTaskInstances =
 			new HashMap<>();
 
+	private DateTimeFormatter localFormat = DateTimeFormatter.ofPattern(
+			"yyyy-MM-dd'T'HH:mm:ss.SSS");
+	private DateTimeFormatter zonedFormat = DateTimeFormatter.ofPattern(
+			"yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
 	private Logger logger;
 
 	public TaskScheduler() {
@@ -130,11 +138,11 @@ public abstract class TaskScheduler {
 		boolean exact = scheduleParams.isExact();
 		String time;
 		if (scheduleParams.getLocalTime() != null) {
-			time = scheduleParams.getLocalTime().toString(
-					"yyyy-MM-dd'T'HH:mm:ss.SSS");
+			time = scheduleParams.getLocalTime().format(localFormat);
 		} else {
-			time = new DateTime(scheduleParams.getUtcTime()).toString(
-					"yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
+			Instant instant = Instant.ofEpochMilli(scheduleParams.getUtcTime());
+			time = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault())
+					.format(zonedFormat);
 		}
 		return String.format("\"%s\" (%s) scheduled %s at %s",
 				taskSpec.getName(), taskSpec.getId(),
@@ -188,16 +196,16 @@ public abstract class TaskScheduler {
 		synchronized (lock) {
 			task.setId(taskId);
 			scheduledTasks.put(taskId, task);
-			DateTime now = new DateTime();
+			ZonedDateTime now = ZonedDateTime.now();
 			TaskSchedule schedule = task.getSchedule();
 			if (schedule instanceof TaskSchedule.Immediate) {
 				startImmediate(context, task, now);
 			} else if (schedule instanceof TaskSchedule.FixedDelay) {
 				startFixedDelay(context, task, now, new ScheduleParams(
-						now.getMillis(), false));
+						now.toInstant().toEpochMilli(), false));
 			} else if (schedule instanceof TaskSchedule.FixedRate) {
 				startFixedRate(context, task, now, new ScheduleParams(
-						now.getMillis(), true));
+						now.toInstant().toEpochMilli(), true));
 			} else if (schedule instanceof TaskSchedule.TimeSchedule) {
 				scheduleTimeSchedule(context, task, now.toLocalDateTime());
 			} else if (schedule instanceof TaskSchedule.LocalTime) {
@@ -301,14 +309,9 @@ public abstract class TaskScheduler {
 	 * @param now the current time
 	 */
 	private void startImmediate(final Object context, final ScheduledTask task,
-			final DateTime now) {
+			final ZonedDateTime now) {
 		if (!canRunTaskOnMainThread() || task.isRunOnWorkerThread()) {
-			new Thread() {
-				@Override
-				public void run() {
-					runImmediate(context, task, now);
-				}
-			}.start();
+			new Thread(() -> runImmediate(context, task, now)).start();
 		} else {
 			runImmediate(context, task, now);
 		}
@@ -325,7 +328,7 @@ public abstract class TaskScheduler {
 	 * @param now the current time
 	 */
 	private void runImmediate(Object context, ScheduledTask task,
-			DateTime now) {
+			ZonedDateTime now) {
 		String taskId = task.getId();
 		synchronized (lock) {
 			if (!scheduledTasks.containsKey(taskId))
@@ -334,8 +337,8 @@ public abstract class TaskScheduler {
 					task.getName(), taskId));
 			runningTasks.put(taskId, task);
 		}
-		ScheduleParams scheduleParams = new ScheduleParams(now.getMillis(),
-				true);
+		ScheduleParams scheduleParams = new ScheduleParams(
+				now.toInstant().toEpochMilli(), true);
 		Throwable exception = null;
 		try {
 			task.run(context, taskId, now, scheduleParams);
@@ -370,17 +373,16 @@ public abstract class TaskScheduler {
 	 * @param time the scheduled time
 	 */
 	private void scheduleFixedDelay(Object context, ScheduledTask task,
-			DateTime time) {
+			ZonedDateTime time) {
 		synchronized (lock) {
 			String taskId = task.getId();
 			if (!scheduledTasks.containsKey(taskId))
 				return;
 			logger.info(String.format(
 					"Schedule fixed delay task \"%s\" (%s) at %s",
-					task.getName(), taskId,
-					time.toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")));
-			ScheduleParams scheduleParams = new ScheduleParams(time.getMillis(),
-					false);
+					task.getName(), taskId, time.format(zonedFormat)));
+			ScheduleParams scheduleParams = new ScheduleParams(
+					time.toInstant().toEpochMilli(), false);
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
 					scheduleParams);
 			scheduledTaskInstances.put(taskId, taskSpec);
@@ -399,14 +401,10 @@ public abstract class TaskScheduler {
 	 * @param scheduleParams the scheduled time parameters
 	 */
 	private void startFixedDelay(final Object context, final ScheduledTask task,
-			final DateTime now, final ScheduleParams scheduleParams) {
+			final ZonedDateTime now, final ScheduleParams scheduleParams) {
 		if (!canRunTaskOnMainThread() || task.isRunOnWorkerThread()) {
-			new Thread() {
-				@Override
-				public void run() {
-					runFixedDelay(context, task, now, scheduleParams);
-				}
-			}.start();
+			new Thread(() -> runFixedDelay(context, task, now, scheduleParams))
+					.start();
 		} else {
 			runFixedDelay(context, task, now, scheduleParams);
 		}
@@ -424,16 +422,17 @@ public abstract class TaskScheduler {
 	 * @param scheduleParams the scheduled time parameters
 	 */
 	private void runFixedDelay(final Object context, final ScheduledTask task,
-			DateTime now, ScheduleParams scheduleParams) {
+			ZonedDateTime now, ScheduleParams scheduleParams) {
 		String taskId = task.getId();
 		synchronized (lock) {
 			if (!scheduledTasks.containsKey(taskId))
 				return;
-			DateTime time = new DateTime(scheduleParams.getUtcTime());
+			ZonedDateTime time = ZonedDateTime.ofInstant(
+					Instant.ofEpochMilli(scheduleParams.getUtcTime()),
+					ZoneId.systemDefault());
 			logger.info(String.format(
 					"Start fixed delay task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId,
-					time.toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")));
+					task.getName(), taskId, time.format(zonedFormat)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
@@ -445,7 +444,7 @@ public abstract class TaskScheduler {
 		synchronized (lock) {
 			if (!scheduledTasks.containsKey(taskId))
 				return;
-			now = new DateTime();
+			now = ZonedDateTime.now();
 			runningTasks.remove(taskId);
 			if (exception == null) {
 				logger.info(String.format(
@@ -459,13 +458,11 @@ public abstract class TaskScheduler {
 			}
 			TaskSchedule.FixedDelay schedule =
 					(TaskSchedule.FixedDelay)task.getSchedule();
-			final long next = now.getMillis() + schedule.getDelay();
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					scheduleFixedDelay(context, task, new DateTime(next));
-				}
-			});
+			final long next = now.toInstant().toEpochMilli() +
+					schedule.getDelay();
+			runOnUiThread(() ->
+					scheduleFixedDelay(context, task, ZonedDateTime.ofInstant(
+					Instant.ofEpochMilli(next), ZoneId.systemDefault())));
 		}
 	}
 
@@ -479,17 +476,16 @@ public abstract class TaskScheduler {
 	 * @param time the scheduled time
 	 */
 	private void scheduleFixedRate(Object context, ScheduledTask task,
-			DateTime time) {
+			ZonedDateTime time) {
 		synchronized (lock) {
 			String taskId = task.getId();
 			if (!scheduledTasks.containsKey(taskId))
 				return;
 			logger.info(String.format(
 					"Schedule fixed rate task \"%s\" (%s) at %s",
-					task.getName(), taskId,
-					time.toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")));
-			ScheduleParams scheduleParams = new ScheduleParams(time.getMillis(),
-					true);
+					task.getName(), taskId, time.format(zonedFormat)));
+			ScheduleParams scheduleParams = new ScheduleParams(
+					time.toInstant().toEpochMilli(), true);
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
 					scheduleParams);
 			scheduledTaskInstances.put(taskId, taskSpec);
@@ -508,14 +504,10 @@ public abstract class TaskScheduler {
 	 * @param scheduleParams the scheduled time parameters
 	 */
 	private void startFixedRate(final Object context, final ScheduledTask task,
-			final DateTime now, final ScheduleParams scheduleParams) {
+			final ZonedDateTime now, final ScheduleParams scheduleParams) {
 		if (!canRunTaskOnMainThread() || task.isRunOnWorkerThread()) {
-			new Thread() {
-				@Override
-				public void run() {
-					runFixedRate(context, task, now, scheduleParams);
-				}
-			}.start();
+			new Thread(() -> runFixedRate(context, task, now, scheduleParams))
+					.start();
 		} else {
 			runFixedRate(context, task, now, scheduleParams);
 		}
@@ -533,16 +525,17 @@ public abstract class TaskScheduler {
 	 * @param scheduleParams the scheduled time parameters
 	 */
 	private void runFixedRate(final Object context, final ScheduledTask task,
-			DateTime now, ScheduleParams scheduleParams) {
+			ZonedDateTime now, ScheduleParams scheduleParams) {
 		String taskId = task.getId();
-		DateTime time = new DateTime(scheduleParams.getUtcTime());
+		ZonedDateTime time = ZonedDateTime.ofInstant(
+				Instant.ofEpochMilli(scheduleParams.getUtcTime()),
+				ZoneId.systemDefault());
 		synchronized (lock) {
 			if (!scheduledTasks.containsKey(taskId))
 				return;
 			logger.info(String.format(
 					"Start fixed rate task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId,
-					time.toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")));
+					task.getName(), taskId, time.format(zonedFormat)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
@@ -569,15 +562,12 @@ public abstract class TaskScheduler {
 					(TaskSchedule.FixedRate)task.getSchedule();
 			long interval = schedule.getInterval();
 			long nowMs = System.currentTimeMillis();
-			long timeMs = time.getMillis();
+			long timeMs = time.toInstant().toEpochMilli();
 			long iter = (nowMs - timeMs) / interval;
 			final long next = timeMs + (iter + 1) * interval;
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					scheduleFixedRate(context, task, new DateTime(next));
-				}
-			});
+			runOnUiThread(() -> scheduleFixedRate(context, task,
+					ZonedDateTime.ofInstant(Instant.ofEpochMilli(next),
+					ZoneId.systemDefault())));
 		}
 	}
 
@@ -600,16 +590,14 @@ public abstract class TaskScheduler {
 					(TaskSchedule.TimeSchedule)task.getSchedule();
 			String logStr = String.format(
 					"Find next time for time schedule task \"%s\" (%s) at or after %s",
-					task.getName(), taskId,
-					start.toString("yyyy-MM-dd'T'HH:mm:ss.SSS"));
+					task.getName(), taskId, start.format(localFormat));
 			LocalDateTime taskTime = getNextScheduledDateTime(start, schedule);
 			if (taskTime == null) {
 				logger.info(logStr + ": no next time");
 				scheduledTasks.remove(taskId);
 				return;
 			}
-			logger.info(logStr + ": " +
-					taskTime.toString("yyyy-MM-dd'T'HH:mm:ss.SSS"));
+			logger.info(logStr + ": " + taskTime.format(localFormat));
 			ScheduleParams scheduleParams = new ScheduleParams(taskTime, true);
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
 					scheduleParams);
@@ -629,15 +617,12 @@ public abstract class TaskScheduler {
 	 * @param scheduleParams the scheduled time parameters
 	 */
 	private void startTimeSchedule(final Object context,
-			final ScheduledTask task, final DateTime now,
+			final ScheduledTask task, final ZonedDateTime now,
 			final ScheduleParams scheduleParams) {
 		if (!canRunTaskOnMainThread() || task.isRunOnWorkerThread()) {
-			new Thread() {
-				@Override
-				public void run() {
-					runTimeSchedule(context, task, now, scheduleParams);
-				}
-			}.start();
+			new Thread(() ->
+					runTimeSchedule(context, task, now, scheduleParams))
+					.start();
 		} else {
 			runTimeSchedule(context, task, now, scheduleParams);
 		}
@@ -655,7 +640,7 @@ public abstract class TaskScheduler {
 	 * @param scheduleParams the scheduled time parameters
 	 */
 	private void runTimeSchedule(final Object context, final ScheduledTask task,
-			DateTime now, ScheduleParams scheduleParams) {
+			ZonedDateTime now, ScheduleParams scheduleParams) {
 		String taskId = task.getId();
 		LocalDateTime time = scheduleParams.getLocalTime();
 		synchronized (lock) {
@@ -663,8 +648,7 @@ public abstract class TaskScheduler {
 				return;
 			logger.info(String.format(
 					"Start time schedule task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId,
-					time.toString("yyyy-MM-dd'T'HH:mm:ss.SSS")));
+					task.getName(), taskId, time.format(localFormat)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
@@ -687,16 +671,12 @@ public abstract class TaskScheduler {
 						task.getName(), taskId) + ": " + exception.getMessage(),
 						exception);
 			}
-			LocalDateTime start = new LocalDateTime();
+			LocalDateTime start = LocalDateTime.now();
 			if (!start.isAfter(time))
-				start = time.plusMillis(1);
+				start = time.plus(1, ChronoUnit.MILLIS);
 			final LocalDateTime finalStart = start;
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					scheduleTimeSchedule(context, task, finalStart);
-				}
-			});
+			runOnUiThread(() ->
+					scheduleTimeSchedule(context, task, finalStart));
 		}
 	}
 
@@ -714,7 +694,7 @@ public abstract class TaskScheduler {
 		LocalDate nextDate = getNextScheduledDate(startDate, timeSchedule);
 		if (nextDate == null)
 			return null;
-		LocalTime startDayTime = new LocalTime(0, 0, 0);
+		LocalTime startDayTime = LocalTime.of(0, 0, 0);
 		LocalTime fromTime = nextDate.isEqual(startDate) ? start.toLocalTime() :
 				startDayTime;
 		LocalTime nextTime = getNextScheduledTime(fromTime, timeSchedule);
@@ -725,7 +705,7 @@ public abstract class TaskScheduler {
 				return null;
 			nextTime = getNextScheduledTime(startDayTime, timeSchedule);
 		}
-		return nextDate.toLocalDateTime(nextTime);
+		return LocalDateTime.of(nextDate, nextTime);
 	}
 
 	/**
@@ -747,28 +727,28 @@ public abstract class TaskScheduler {
 		LocalDate nextDate;
 		if (repeat.getUnit() == DateUnit.YEAR) {
 			// get years rounded up
-			int years = Years.yearsBetween(timeSchedule.getStartDate(),
-					date.minusDays(1)).getYears() + 1;
+			int years = (int)ChronoUnit.YEARS.between(
+					timeSchedule.getStartDate(), date.minusDays(1)) + 1;
 			int repeatCount = repeat.getCount();
 			// get iterations rounded up
 			int it = (years + repeatCount - 1) / repeatCount;
-			nextDate = startDate.plusYears(it * repeatCount);
+			nextDate = startDate.plusYears((long)it * repeatCount);
 		} else if (repeat.getUnit() == DateUnit.MONTH) {
 			// get months rounded up
-			int months = Months.monthsBetween(timeSchedule.getStartDate(),
-					date.minusDays(1)).getMonths() + 1;
+			int months = (int)ChronoUnit.MONTHS.between(
+					timeSchedule.getStartDate(), date.minusDays(1)) + 1;
 			int repeatCount = repeat.getCount();
 			// get iterations rounded up
 			int it = (months + repeatCount - 1) / repeatCount;
-			nextDate = startDate.plusMonths(it * repeatCount);
+			nextDate = startDate.plusMonths((long)it * repeatCount);
 		} else {
-			int days = Days.daysBetween(timeSchedule.getStartDate(), date)
-					.getDays();
+			int days = (int)ChronoUnit.DAYS.between(timeSchedule.getStartDate(),
+					date);
 			int repeatCount = repeat.getUnit() == DateUnit.WEEK ?
 					7 * repeat.getCount() : repeat.getCount();
 			// get iterations rounded up
 			int it = (days + repeatCount - 1) / repeatCount;
-			nextDate = startDate.plusDays(it * repeatCount);
+			nextDate = startDate.plusDays((long)it * repeatCount);
 		}
 		LocalDate endDate = timeSchedule.getEndDate();
 		if (endDate != null && !nextDate.isBefore(endDate))
@@ -793,15 +773,17 @@ public abstract class TaskScheduler {
 		TimeDuration repeat = timeSchedule.getRepeatTime();
 		if (repeat == null)
 			return null;
-		int startMs = startTime.getMillisOfDay();
+		int startMs = startTime.get(ChronoField.MILLI_OF_DAY);
 		int dayEndMs = 86400000;
 		int repeatMs = (int)repeat.getDuration();
-		int intervalMs = time.getMillisOfDay() - startTime.getMillisOfDay();
+		int intervalMs = time.get(ChronoField.MILLI_OF_DAY) -
+				startTime.get(ChronoField.MILLI_OF_DAY);
 		int it = (intervalMs + repeatMs - 1) / repeatMs;
 		int nextMs = startMs + it * repeatMs;
 		if (nextMs >= dayEndMs)
 			return null;
-		LocalTime nextTime = new LocalTime().withMillisOfDay(nextMs);
+		LocalTime nextTime = LocalTime.of(0, 0, 0).plus(nextMs,
+				ChronoUnit.MILLIS);
 		LocalTime endTime = timeSchedule.getEndTime();
 		if (endTime != null && !nextTime.isBefore(endTime))
 			return null;
@@ -826,8 +808,7 @@ public abstract class TaskScheduler {
 			LocalDateTime time = schedule.getTime();
 			logger.info(String.format(
 					"Schedule local time task \"%s\" (%s) at %s",
-					task.getName(), taskId,
-					time.toString("yyyy-MM-dd'T'HH:mm:ss.SSS")));
+					task.getName(), taskId, time.format(localFormat)));
 			ScheduleParams scheduleParams = new ScheduleParams(time,
 					schedule.isExact());
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
@@ -848,14 +829,10 @@ public abstract class TaskScheduler {
 	 * @param scheduleParams the scheduled time parameters
 	 */
 	private void startLocalTime(final Object context, final ScheduledTask task,
-			final DateTime now, final ScheduleParams scheduleParams) {
+			final ZonedDateTime now, final ScheduleParams scheduleParams) {
 		if (!canRunTaskOnMainThread() || task.isRunOnWorkerThread()) {
-			new Thread() {
-				@Override
-				public void run() {
-					runLocalTime(context, task, now, scheduleParams);
-				}
-			}.start();
+			new Thread(() -> runLocalTime(context, task, now, scheduleParams))
+					.start();
 		} else {
 			runLocalTime(context, task, now, scheduleParams);
 		}
@@ -872,8 +849,8 @@ public abstract class TaskScheduler {
 	 * @param now the current time
 	 * @param scheduleParams the scheduled time parameters
 	 */
-	private void runLocalTime(Object context, ScheduledTask task, DateTime now,
-			ScheduleParams scheduleParams) {
+	private void runLocalTime(Object context, ScheduledTask task,
+			ZonedDateTime now, ScheduleParams scheduleParams) {
 		String taskId = task.getId();
 		synchronized (lock) {
 			if (!scheduledTasks.containsKey(taskId))
@@ -881,8 +858,7 @@ public abstract class TaskScheduler {
 			LocalDateTime time = scheduleParams.getLocalTime();
 			logger.info(String.format(
 					"Start local time task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId,
-					time.toString("yyyy-MM-dd'T'HH:mm:ss.SSS")));
+					task.getName(), taskId, time.format(localFormat)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
@@ -924,13 +900,12 @@ public abstract class TaskScheduler {
 				return;
 			TaskSchedule.UtcTime schedule =
 					(TaskSchedule.UtcTime)task.getSchedule();
-			DateTime time = schedule.getTime();
+			ZonedDateTime time = schedule.getTime();
 			logger.info(String.format(
 					"Schedule UTC time task \"%s\" (%s) at %s",
-					task.getName(), taskId,
-					time.toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")));
+					task.getName(), taskId, time.format(zonedFormat)));
 			ScheduleParams scheduleParams = new ScheduleParams(
-					time.getMillis(), schedule.isExact());
+					time.toInstant().toEpochMilli(), schedule.isExact());
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
 					scheduleParams);
 			scheduledTaskInstances.put(taskId, taskSpec);
@@ -948,14 +923,10 @@ public abstract class TaskScheduler {
 	 * @param scheduleParams the scheduled time parameters
 	 */
 	private void startUtcTime(final Object context, final ScheduledTask task,
-			final DateTime now, final ScheduleParams scheduleParams) {
+			final ZonedDateTime now, final ScheduleParams scheduleParams) {
 		if (!canRunTaskOnMainThread() || task.isRunOnWorkerThread()) {
-			new Thread() {
-				@Override
-				public void run() {
-					runUtcTime(context, task, now, scheduleParams);
-				}
-			}.start();
+			new Thread(() -> runUtcTime(context, task, now, scheduleParams))
+					.start();
 		} else {
 			runUtcTime(context, task, now, scheduleParams);
 		}
@@ -972,17 +943,17 @@ public abstract class TaskScheduler {
 	 * @param now the current time
 	 * @param scheduleParams the scheduled time parameters
 	 */
-	private void runUtcTime(Object context, ScheduledTask task, DateTime now,
-			ScheduleParams scheduleParams) {
+	private void runUtcTime(Object context, ScheduledTask task,
+			ZonedDateTime now, ScheduleParams scheduleParams) {
 		String taskId = task.getId();
 		synchronized (lock) {
 			if (!scheduledTasks.containsKey(taskId))
 				return;
-			DateTime time = new DateTime(scheduleParams.getUtcTime());
+			ZonedDateTime time = ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+					scheduleParams.getUtcTime()), ZoneId.systemDefault());
 			logger.info(String.format(
 					"Start UTC time task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId,
-					time.toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")));
+					task.getName(), taskId, time.format(zonedFormat)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
@@ -1016,7 +987,7 @@ public abstract class TaskScheduler {
 	 */
 	public void onTriggerTask(Object context, ScheduledTaskSpec taskSpec) {
 		synchronized (lock) {
-			DateTime now = new DateTime();
+			ZonedDateTime now = ZonedDateTime.now();
 			String taskId = taskSpec.getId();
 			ScheduledTaskSpec scheduledSpec = scheduledTaskInstances.get(
 					taskId);
@@ -1083,9 +1054,7 @@ public abstract class TaskScheduler {
 		if (context != null) {
 			try {
 				task = ReflectionUtils.newInstance(taskClass, context);
-			} catch (InstantiationException ex) {
-			} catch (InvocationTargetException ex) {
-			}
+			} catch (InstantiationException | InvocationTargetException ex) {}
 		}
 		if (task == null) {
 			try {

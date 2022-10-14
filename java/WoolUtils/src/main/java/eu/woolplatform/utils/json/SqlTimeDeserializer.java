@@ -25,16 +25,12 @@ package eu.woolplatform.utils.json;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 import java.io.IOException;
-
-import org.joda.time.LocalTime;
-
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * This deserializer can convert a string in format HH:mm:ss to a {@link
@@ -48,9 +44,9 @@ extends JsonDeserializer<LocalTime> {
 	public LocalTime deserialize(JsonParser jp, DeserializationContext ctxt)
 			throws IOException, JsonProcessingException {
 		String val = jp.readValueAs(String.class);
-		DateTimeFormatter parser = DateTimeFormat.forPattern("HH:mm:ss");
+		DateTimeFormatter parser = DateTimeFormatter.ofPattern("HH:mm:ss");
 		try {
-			return parser.parseLocalTime(val);
+			return parser.parse(val, LocalTime::from);
 		} catch (IllegalArgumentException ex) {
 			throw new JsonParseException(jp, "Invalid time string: " + val +
 					": " + ex.getMessage(), jp.getTokenLocation(), ex);

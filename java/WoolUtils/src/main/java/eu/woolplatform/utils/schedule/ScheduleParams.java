@@ -25,10 +25,10 @@ package eu.woolplatform.utils.schedule;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import org.joda.time.LocalDateTime;
-
 import eu.woolplatform.utils.json.LocalDateTimeDeserializer;
 import eu.woolplatform.utils.json.LocalDateTimeSerializer;
+
+import java.time.LocalDateTime;
 
 /**
  * This class contains information about the scheduled time for one run of a

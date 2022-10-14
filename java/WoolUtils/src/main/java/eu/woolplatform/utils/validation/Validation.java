@@ -22,10 +22,10 @@
 
 package eu.woolplatform.utils.validation;
 
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 /**
  * This class can validate values with respect to certain criteria.
@@ -190,9 +190,9 @@ public class Validation {
 			throws ValidationException {
 		if (dateStr.isEmpty())
 			throw new ValidationException("Empty value");
-		DateTimeFormatter parser = DateTimeFormat.forPattern("yyyy-MM-dd");
+		DateTimeFormatter parser = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		try {
-			return parser.parseLocalDate(dateStr);
+			return parser.parse(dateStr, LocalDate::from);
 		} catch (IllegalArgumentException ex) {
 			throw new ValidationException("Invalid date: " + dateStr);
 		}
@@ -208,9 +208,9 @@ public class Validation {
 	public static String validateTimeZone(String timeZone)
 			throws ValidationException {
 		try {
-			DateTimeZone.forID(timeZone);
+			ZoneId.of(timeZone);
 			return timeZone;
-		} catch (IllegalArgumentException ex) {
+		} catch (DateTimeException ex) {
 			throw new ValidationException("Invalid time zone: " + timeZone);
 		}
 	}

@@ -22,10 +22,10 @@
 
 package eu.woolplatform.utils.schedule;
 
-import org.joda.time.DateTime;
-
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.exception.TaskException;
+
+import java.time.ZonedDateTime;
 
 /**
  * This class defines a scheduled task that can be run with the {@link
@@ -112,7 +112,7 @@ public interface ScheduledTask {
 	 * @param scheduleParams the scheduled time parameters
 	 * @throws TaskException if an error occurs that should be logged
 	 */
-	void run(Object context, String taskId, DateTime now,
+	void run(Object context, String taskId, ZonedDateTime now,
 			ScheduleParams scheduleParams) throws TaskException;
 
 	/**

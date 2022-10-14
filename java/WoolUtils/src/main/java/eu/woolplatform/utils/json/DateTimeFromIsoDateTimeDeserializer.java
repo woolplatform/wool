@@ -28,31 +28,27 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import eu.woolplatform.utils.datetime.DateTimeUtils;
+import eu.woolplatform.utils.exception.ParseException;
 
 import java.io.IOException;
-
-import org.joda.time.DateTime;
-
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
+import java.time.ZonedDateTime;
 
 /**
  * This deserializer can convert a string in ISO date/time format to a {@link
- * DateTime DateTime}.
+ * ZonedDateTime ZonedDateTime}.
  * 
  * @author Dennis Hofs (RRD)
  */
 public class DateTimeFromIsoDateTimeDeserializer
-extends JsonDeserializer<DateTime> {
+extends JsonDeserializer<ZonedDateTime> {
 	@Override
-	public DateTime deserialize(JsonParser jp, DeserializationContext ctxt)
+	public ZonedDateTime deserialize(JsonParser jp, DeserializationContext ctxt)
 			throws IOException, JsonProcessingException {
 		String val = jp.readValueAs(String.class);
-		DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser()
-				.withOffsetParsed();
 		try {
-			return parser.parseDateTime(val);
-		} catch (IllegalArgumentException ex) {
+			return DateTimeUtils.parseDateTime(val, ZonedDateTime.class);
+		} catch (ParseException ex) {
 			throw new JsonParseException(jp, "Invalid ISO date/time string: " +
 					val + ": " + ex.getMessage(), jp.getTokenLocation(), ex);
 		}

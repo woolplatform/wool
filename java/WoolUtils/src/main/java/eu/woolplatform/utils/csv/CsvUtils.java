@@ -1,13 +1,13 @@
 package eu.woolplatform.utils.csv;
 
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalDateTime;
-import org.joda.time.LocalTime;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormatSymbols;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public class CsvUtils {
@@ -48,16 +48,18 @@ public class CsvUtils {
 			return value.toString();
 		} else if (value instanceof LocalDate) {
 			LocalDate date = (LocalDate)value;
-			return date.toString("yyyy-MM-dd");
+			return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		} else if (value instanceof LocalTime) {
 			LocalTime time = (LocalTime)value;
-			return time.toString("HH:mm:ss");
+			return time.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 		} else if (value instanceof LocalDateTime) {
 			LocalDateTime time = (LocalDateTime)value;
-			return time.toString("yyyy-MM-dd HH:mm:ss");
-		} else if (value instanceof DateTime) {
-			DateTime time = (DateTime)value;
-			return time.toString("yyyy-MM-dd HH:mm:ss");
+			return time.format(DateTimeFormatter.ofPattern(
+					"yyyy-MM-dd HH:mm:ss"));
+		} else if (value instanceof ZonedDateTime) {
+			ZonedDateTime time = (ZonedDateTime)value;
+			return time.format(DateTimeFormatter.ofPattern(
+					"yyyy-MM-dd HH:mm:ss"));
 		} else {
 			return '"' + value.toString().replaceAll("\"", "\"\"") + '"';
 		}

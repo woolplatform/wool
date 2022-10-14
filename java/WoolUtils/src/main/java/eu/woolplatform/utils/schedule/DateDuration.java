@@ -22,14 +22,11 @@
 
 package eu.woolplatform.utils.schedule;
 
-import org.joda.time.Days;
-import org.joda.time.Months;
-import org.joda.time.ReadableInstant;
-import org.joda.time.ReadablePartial;
-import org.joda.time.ReadablePeriod;
-import org.joda.time.Years;
-
 import eu.woolplatform.utils.exception.ParseException;
+
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 
 /**
  * This class specifies a duration that spans one or more days. It consists of
@@ -80,54 +77,33 @@ public class DateDuration {
 	 * @param end the end time
 	 * @return the number of durations between the start and end time
 	 */
-	public int getCountBetween(ReadableInstant start, ReadableInstant end) {
+	public int getCountBetween(Temporal start, Temporal end) {
 		int singleCount;
 		if (unit == DateUnit.DAY)
-			singleCount = Days.daysBetween(start, end).getDays();
+			singleCount = (int)ChronoUnit.DAYS.between(start, end);
 		else if (unit == DateUnit.WEEK)
-			singleCount = Days.daysBetween(start, end).getDays() / 7;
+			singleCount = (int)ChronoUnit.WEEKS.between(start, end);
 		else if (unit == DateUnit.MONTH)
-			singleCount = Months.monthsBetween(start, end).getMonths();
+			singleCount = (int)ChronoUnit.MONTHS.between(start, end);
 		else
-			singleCount = Years.yearsBetween(start, end).getYears();
+			singleCount = (int)ChronoUnit.YEARS.between(start, end);
 		return singleCount / count;
 	}
 
 	/**
-	 * Returns the number of times this date duration completely fits between
-	 * the two specified times.
-	 * 
-	 * @param start the start time
-	 * @param end the end time
-	 * @return the number of durations between the start and end time
-	 */
-	public int getCountBetween(ReadablePartial start, ReadablePartial end) {
-		int singleCount;
-		if (unit == DateUnit.DAY)
-			singleCount = Days.daysBetween(start, end).getDays();
-		else if (unit == DateUnit.WEEK)
-			singleCount = Days.daysBetween(start, end).getDays() / 7;
-		else if (unit == DateUnit.MONTH)
-			singleCount = Months.monthsBetween(start, end).getMonths();
-		else
-			singleCount = Years.yearsBetween(start, end).getYears();
-		return singleCount / count;
-	}
-
-	/**
-	 * Returns this date duration as a {@link ReadablePeriod ReadablePeriod}.
+	 * Returns this date duration as a {@link Period Period}.
 	 * 
 	 * @return the readable period
 	 */
-	public ReadablePeriod toReadablePeriod() {
+	public Period toReadablePeriod() {
 		if (unit == DateUnit.DAY)
-			return Days.days(count);
+			return Period.ofDays(count);
 		else if (unit == DateUnit.WEEK)
-			return Days.days(count * 7);
+			return Period.ofWeeks(count);
 		else if (unit == DateUnit.MONTH)
-			return Months.months(count);
+			return Period.ofMonths(count);
 		else
-			return Years.years(count);
+			return Period.ofYears(count);
 	}
 	
 	@Override
@@ -178,8 +154,6 @@ public class DateDuration {
 		try {
 			count = Integer.parseInt(split[0]);
 			unit = DateUnit.parse(split[1], min, max);
-		} catch (NumberFormatException ex) {
-			throw new ParseException("Invalid date duration: " + s, ex);
 		} catch (IllegalArgumentException ex) {
 			throw new ParseException("Invalid date duration: " + s, ex);
 		}

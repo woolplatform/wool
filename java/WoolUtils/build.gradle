@@ -21,7 +21,6 @@ dependencies {
 	api 'com.fasterxml.jackson.core:jackson-core:2.13.4'
 	api 'com.fasterxml.jackson.core:jackson-annotations:2.13.4'
 	api 'com.fasterxml.jackson.core:jackson-databind:2.13.4'
-	api 'joda-time:joda-time:2.11.1'
 	// newer versions of slf4j-api are not compatible with older versions of
 	// logback, newer version of logback (1.2.11) are not compatible with latest
 	// Spring Boot (2.7.3)

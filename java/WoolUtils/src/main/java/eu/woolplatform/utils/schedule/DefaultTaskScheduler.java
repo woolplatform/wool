@@ -22,13 +22,10 @@
 
 package eu.woolplatform.utils.schedule;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 import eu.woolplatform.utils.datetime.DateTimeUtils;
 
@@ -56,21 +53,21 @@ public class DefaultTaskScheduler extends TaskScheduler {
 			final String taskId = taskSpec.getId();
 			timerMap.put(taskId, timer);
 			taskMap.put(taskId, taskSpec);
-			DateTime time;
+			ZonedDateTime time;
 			ScheduleParams scheduleParams = taskSpec.getScheduleParams();
 			if (scheduleParams.getLocalTime() != null) {
 				time = DateTimeUtils.localToUtcWithGapCorrection(
-						scheduleParams.getLocalTime(),
-						DateTimeZone.getDefault());
+						scheduleParams.getLocalTime(), ZoneId.systemDefault());
 			} else {
-				time = new DateTime(scheduleParams.getUtcTime());
+				time = ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+						scheduleParams.getUtcTime()), ZoneId.systemDefault());
 			}
 			timer.schedule(new TimerTask() {
 				@Override
 				public void run() {
 					runTask(taskId);
 				}
-			}, time.toDate());
+			}, Date.from(time.toInstant()));
 		}
 	}
 

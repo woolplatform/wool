@@ -34,6 +34,7 @@ import java.lang.reflect.Modifier;
 
 import java.net.URL;
 
+import java.time.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -51,12 +52,6 @@ import eu.woolplatform.utils.datetime.DateTimeUtils;
 
 import eu.woolplatform.utils.exception.BuildException;
 import eu.woolplatform.utils.exception.ParseException;
-
-import org.joda.time.DateTime;
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalDateTime;
-import org.joda.time.LocalTime;
 
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
@@ -98,7 +93,7 @@ import org.xml.sax.SAXException;
  * <li>{@link Date Date}</li>
  * <li>{@link Instant Instant}</li>
  * <li>{@link Calendar Calendar}</li>
- * <li>{@link DateTime DateTime}</li>
+ * <li>{@link ZonedDateTime ZonedDateTime}</li>
  * <li>{@link LocalDate LocalDate}</li>
  * <li>{@link LocalTime LocalTime}</li>
  * <li>{@link LocalDateTime LocalDateTime}</li>
@@ -463,7 +458,7 @@ public class AppComponents {
 				}
 				field.set(component, longVal);
 			} else if (type == Date.class || type == Instant.class ||
-					type == Calendar.class || type == DateTime.class ||
+					type == Calendar.class || type == ZonedDateTime.class ||
 					type == LocalDate.class || type == LocalTime.class ||
 					type == LocalDateTime.class) {
 				Object dateTime = DateTimeUtils.parseDateTime(value, type);
@@ -547,7 +542,7 @@ public class AppComponents {
 				}
 				method.invoke(component, longVal);
 			} else if (type == Date.class || type == Instant.class ||
-					type == Calendar.class || type == DateTime.class ||
+					type == Calendar.class || type == ZonedDateTime.class ||
 					type == LocalDate.class || type == LocalTime.class ||
 					type == LocalDateTime.class) {
 				Object dateTime = DateTimeUtils.parseDateTime(value, type);

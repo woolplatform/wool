@@ -22,9 +22,8 @@
 
 package eu.woolplatform.utils.log;
 
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * This class can tag lines in a log message before the message is written. The
@@ -46,13 +45,13 @@ public class LogLineTagger {
 	 * @param msg the log message
 	 * @return the log message with tagged lines
 	 */
-	public static String tagLines(int level, String tag, DateTime time,
+	public static String tagLines(int level, String tag, ZonedDateTime time,
 			String msg) {
 		String newline = System.getProperty("line.separator");
-		DateTimeFormatter formatter = ISODateTimeFormat.dateTime();
-		String timeStr = formatter.print(time);
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+		String timeStr = formatter.format(time);
 		String[] lines = msg.split("\r\n|\r|\n", -1);
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		for (String line : lines) {
 			buf.append("[");
 			buf.append(levelToString(level));

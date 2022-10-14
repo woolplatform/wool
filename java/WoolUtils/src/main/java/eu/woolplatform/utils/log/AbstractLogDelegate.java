@@ -34,6 +34,8 @@ import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +46,6 @@ import eu.woolplatform.utils.schedule.SerialJobRunner;
 import eu.woolplatform.utils.xml.SimpleSAXHandler;
 import eu.woolplatform.utils.xml.SimpleSAXParser;
 
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 
@@ -140,11 +140,8 @@ public abstract class AbstractLogDelegate implements LogDelegate {
 	 * @throws IOException if a reading error occurs
 	 */
 	public void setLogLevels(File xmlFile) throws ParseException, IOException {
-		FileInputStream in = new FileInputStream(xmlFile);
-		try {
+		try (FileInputStream in = new FileInputStream(xmlFile)) {
 			setLogLevels(in);
-		} finally {
-			in.close();
 		}
 	}
 	
@@ -295,7 +292,7 @@ public abstract class AbstractLogDelegate implements LogDelegate {
 	public int println(int priority, String tag, String msg) {
 		if (!isLoggable(tag, priority))
 			return 0;
-		DateTime time = new DateTime();
+		ZonedDateTime time = ZonedDateTime.now();
 		String taggedMsg = LogLineTagger.tagLines(priority, tag, time, msg);
 		synchronized (lock) {
 			int result = printTaggedMessage(priority, tag, taggedMsg);
@@ -444,7 +441,7 @@ public abstract class AbstractLogDelegate implements LogDelegate {
 	/**
 	 * This XML handler can parse an XML file log levels.
 	 */
-	private class XMLHandler implements SimpleSAXHandler<LogLevelMap> {
+	private static class XMLHandler implements SimpleSAXHandler<LogLevelMap> {
 		private LogLevelMap map = new LogLevelMap();
 		
 		@Override
@@ -515,7 +512,7 @@ public abstract class AbstractLogDelegate implements LogDelegate {
 	 * This class is returned by the XML handler that parses an XML file with
 	 * log levels.
 	 */
-	private class LogLevelMap {
+	private static class LogLevelMap {
 		/**
 		 * The log level for messages with a tag for which no specific log
 		 * level has been defined.

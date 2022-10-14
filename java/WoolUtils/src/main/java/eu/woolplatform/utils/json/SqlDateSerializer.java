@@ -30,8 +30,8 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import java.io.IOException;
-
-import org.joda.time.LocalDate;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * This serializer can convert a {@link LocalDate LocalDate} to a string in
@@ -50,6 +50,7 @@ public class SqlDateSerializer extends JsonSerializer<Object> {
 					value.getClass().getName(), jgen);
 		}
 		LocalDate date = (LocalDate)value;
-		jgen.writeString(date.toString("yyyy-MM-dd"));
+		jgen.writeString(date.format(DateTimeFormatter.ofPattern(
+				"yyyy-MM-dd")));
 	}
 }
