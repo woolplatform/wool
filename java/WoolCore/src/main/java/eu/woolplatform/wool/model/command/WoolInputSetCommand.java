@@ -4,6 +4,7 @@ import eu.woolplatform.utils.exception.LineNumberParseException;
 import eu.woolplatform.utils.expressions.EvaluationException;
 import eu.woolplatform.utils.expressions.Value;
 import eu.woolplatform.utils.json.JsonMapper;
+import eu.woolplatform.wool.execution.WoolVariable;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.model.WoolVariableString;
@@ -51,8 +52,8 @@ public class WoolInputSetCommand extends WoolInputCommand {
 	public String getStatementLog(WoolVariableStore varStore) {
 		List<String> optionTexts = new ArrayList<>();
 		for (Option option : options) {
-			Value value = new Value(varStore.getValue(
-					option.getVariableName()));
+			WoolVariable woolVariable = varStore.getWoolVariable(option.getVariableName());
+			Value value = new Value(woolVariable.getValue());
 			if (value.asBoolean())
 				optionTexts.add(option.getText().evaluate(null));
 		}

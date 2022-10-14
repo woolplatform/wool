@@ -65,7 +65,7 @@ import java.util.List;
  */
 public class UserServiceManager {
 
-	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 	private WoolProject woolProject;
 	private List<UserService> activeUserServices = new ArrayList<>();
 	private List<UserCredentials> userCredentials;
@@ -163,12 +163,12 @@ public class UserServiceManager {
 	public UserService getActiveUserService(String userId) throws DatabaseException, IOException {
 		
 		for(UserService userService : activeUserServices) {
-			if(userService.getUserId().equals(userId)) {
+			if(userService.getWoolUser().getId().equals(userId)) {
 				return userService;
 			}
 		}
 		
-		logger.info("No active UserService for userId '"+userId+"' creating UserService instance.");
+		logger.info("No active UserService for userId '" + userId + "' creating UserService instance.");
 		
 		// Initialize new userService
 		UserServiceFactory appConfig = UserServiceFactory.getInstance();

@@ -61,6 +61,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -152,13 +155,13 @@ public class DialogueController {
 	private DialogueMessage doStartDialogue(
 			String woolUserId, String dialogueName, String language,
 			String timeZone) throws HttpException, IOException, DatabaseException {
-		DateTime time = ControllerFunctions.parseTime(timeZone);
+		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
-		userService.setTimeZone(timeZone);
+		userService.getWoolUser().setTimeZone(timeZoneId);
 		ExecuteNodeResult node;
 		try {
-			node = userService.startDialogue(dialogueName, null, language, time);
+			node = userService.startDialogue(dialogueName, null, language);
 			return DialogueMessageFactory.generateDialogueMessage(node);
 		} catch (WoolException e) {
 			throw ControllerFunctions.createHttpException(e);
@@ -272,13 +275,14 @@ public class DialogueController {
 		try {
 			UserService userService = application.getServiceManager()
 					.getActiveUserService(woolUserId);
-			DateTime time = ControllerFunctions.parseTime(userService.getTimeZone());
+
+			ZonedDateTime eventTime = ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
 			if (!variables.isEmpty())
-				userService.storeReplyInput(state, variables, time);
-			ExecuteNodeResult nextNode = userService.progressDialogue(state,
-					replyId, time);
+				userService.storeReplyInput(state, variables,eventTime);
+			ExecuteNodeResult nextNode = userService.progressDialogue(state, replyId);
 			if (nextNode == null)
 				return new NullableResponse<>(null);
 			DialogueMessage reply = DialogueMessageFactory.generateDialogueMessage(
@@ -351,10 +355,15 @@ public class DialogueController {
 			String woolUserId, String dialogueName, String timeZone)
 			throws HttpException, DatabaseException, IOException {
 
-		DateTime time = ControllerFunctions.parseTime(timeZone);
+		// Update/set the WOOL User's timezone to the given value
+		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
-		userService.setTimeZone(timeZone);
+		userService.getWoolUser().setTimeZone(timeZoneId);
+
+		// Determine the event timestamp
+		ZonedDateTime continueDialogueEventTime =
+				ZonedDateTime.now(userService.getWoolUser().getTimeZone());
 
 		LoggedDialogue currDlg =
 				LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId,
@@ -371,7 +380,7 @@ public class DialogueController {
 			try {
 				DialogueState state = userService.getDialogueState(currDlg,
 						currDlg.getInteractionList().size() - 1);
-				node = userService.executeCurrentNode(state, time);
+				node = userService.executeCurrentNode(state,continueDialogueEventTime);
 			} catch (WoolException ex) {
 				throw ControllerFunctions.createHttpException(ex);
 			}
@@ -507,10 +516,14 @@ public class DialogueController {
 		try {
 			UserService userService = application.getServiceManager()
 					.getActiveUserService(woolUserId);
-			DateTime time = ControllerFunctions.parseTime(userService.getTimeZone());
+
+			// Determine the event time stamp
+			ZonedDateTime backDialogueEventTime =
+					ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
-			ExecuteNodeResult prevNode = userService.backDialogue(state, time);
+			ExecuteNodeResult prevNode = userService.backDialogue(state, backDialogueEventTime);
 			return DialogueMessageFactory.generateDialogueMessage(prevNode);
 		} catch (WoolException e) {
 			throw ControllerFunctions.createHttpException(e);

@@ -21,56 +21,16 @@
  */
 package eu.woolplatform.web.service.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import eu.woolplatform.utils.exception.ParseException;
+import eu.woolplatform.wool.execution.WoolUser;
+import eu.woolplatform.wool.execution.WoolVariableStore;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class WoolVariableResponse {
+import java.io.IOException;
 
-	private String name;
-	private String value;
-	private Long lastUpdated;
+public interface WoolVariableStoreStorageHandler {
 
-	// ----- Constructors
+    WoolVariableStore read(WoolUser woolUser) throws IOException, ParseException;
 
-	public WoolVariableResponse() { }
-
-	public WoolVariableResponse(String name, String value, Long lastUpdated) {
-		this.name = name;
-		this.value = value;
-		this.lastUpdated = lastUpdated;
-	}
-
-	// ----- Getters & Setters
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getValue() {
-		return value;
-	}
-
-	public void setValue(String value) {
-		this.value = value;
-	}
-
-	public Long getLastUpdated() {
-		return lastUpdated;
-	}
-
-	public void setLastUpdated(Long lastUpdated) {
-		this.lastUpdated = lastUpdated;
-	}
-
-	public String toString() {
-		return "WoolVariableResponse[" +
-				"name:'"+getName()+"',"+
-				"value:'"+getValue()+"',"+
-				"lastUpdated:'"+getLastUpdated()+"']";
-	}
+    void write(WoolVariableStore woolVariableStore) throws IOException;
 
 }

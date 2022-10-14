@@ -19,36 +19,19 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-package eu.woolplatform.web.varservice;
+package eu.woolplatform.wool.execution;
+
+import java.util.List;
 
 /**
- * All endpoints will be available at {base_path}/v{protocol_version} whereby
- * the {protocol_version} is defined by the last available item in this {@code enum}.
+ * Interface for listeners that can be registered at a {@link WoolVariableStore}. Whenever the
+ * WOOL Variable Store object is changed, that listener's {@link WoolVariableStoreOnChangeListener#onChange(WoolVariableStore,List<WoolVariableStoreChange>)}
+ * method will be called.
+ *
+ * @author Dennis Hofs
+ * @author Harm op den Akker
  */
-public enum ProtocolVersion {
-	V1("1");
-	
-	private final String versionName;
-	
-	ProtocolVersion(String versionName) {
-		this.versionName = versionName;
-	}
-	
-	public String versionName() {
-		return versionName;
-	}
-	
-	public static ProtocolVersion forVersionName(String versionName)
-			throws IllegalArgumentException {
-		for (ProtocolVersion value : ProtocolVersion.values()) {
-			if (value.versionName.equals(versionName))
-				return value;
-		}
-		throw new IllegalArgumentException("Version not found: " +
-				versionName);
-	}
-
-	public static ProtocolVersion getLatestVersion() {
-		return ProtocolVersion.values()[ProtocolVersion.values().length-1];
-	}
+public interface WoolVariableStoreOnChangeListener {
+	void onChange(WoolVariableStore woolVariableStore, List<WoolVariableStoreChange> changes);
 }
+

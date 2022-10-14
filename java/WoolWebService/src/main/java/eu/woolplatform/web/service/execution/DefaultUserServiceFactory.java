@@ -25,6 +25,8 @@ import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.web.service.model.VariableStoreIO;
+import eu.woolplatform.web.service.model.WoolVariableStoreStorageHandler;
+import eu.woolplatform.wool.execution.WoolUser;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import org.slf4j.Logger;
 
@@ -32,25 +34,26 @@ import java.io.IOException;
 
 public class DefaultUserServiceFactory extends UserServiceFactory {
 
-	public DefaultUserServiceFactory() {
+	private WoolVariableStoreStorageHandler storageHandler;
+
+	public DefaultUserServiceFactory(WoolVariableStoreStorageHandler storageHandler) {
+		this.storageHandler = storageHandler;
 	}
 
 	@Override
 	public UserService createUserService(String userId,
 			UserServiceManager userServiceManager)
 			throws DatabaseException, IOException {
-		return new UserService(userId, userServiceManager,
+		return new UserService(new WoolUser(userId), userServiceManager,
 				(varStore, changes) -> onVariableStoreChanges(userId,
 						varStore));
 	}
 
-	private void onVariableStoreChanges(String userId,
-			WoolVariableStore varStore) {
+	private void onVariableStoreChanges(String userId, WoolVariableStore varStore) {
 		Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 		try {
-			VariableStoreIO.writeVariables(userId, varStore.getModifiableMap(
-					false, null));
-		} catch (ParseException | IOException ex) {
+			storageHandler.write(varStore);
+		} catch (IOException ex) {
 			logger.error("Failed to write variable store changes: " +
 					ex.getMessage(), ex);
 		}

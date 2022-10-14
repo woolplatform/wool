@@ -19,13 +19,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-package eu.woolplatform.web.service.controller;
+package eu.woolplatform.web.varservice.controller;
 
-import eu.woolplatform.web.service.exception.BadRequestException;
-import eu.woolplatform.web.service.exception.HttpException;
-import eu.woolplatform.web.service.exception.HttpFieldError;
-import eu.woolplatform.web.service.exception.NotFoundException;
-import eu.woolplatform.wool.exception.WoolException;
+import eu.woolplatform.web.varservice.exception.BadRequestException;
+import eu.woolplatform.web.varservice.exception.HttpFieldError;
 
 import java.time.DateTimeException;
 import java.time.ZoneId;
@@ -48,7 +45,7 @@ public class ControllerFunctions {
 	 * should be formatted according to the rules defined in {@link ZoneId#of(String)}}. When given an
 	 * empty string, or {@code null}, this method returns the default time zone as given by
 	 * {@link ZoneId#systemDefault()}.
- 	 * @param timeZone a String representation of a time zone.
+	 * @param timeZone a String representation of a time zone.
 	 * @return the time zone as a {@link ZoneId}
 	 * @throws BadRequestException in case of a wrongly formatted {@code timeZone} string.
 	 */
@@ -80,23 +77,5 @@ public class ControllerFunctions {
 
 	}
 
-	/**
-	 * Generates a {@link HttpException} with a valid HTTP Status Code from the given {@link WoolException}.
-	 * @param exception the {@link WoolException} that should be "wrapped" into an {@link HttpException}.
-	 * @return the {@link HttpException} object representing the error including a valid status code.
-	 */
-	public static HttpException createHttpException(WoolException exception) {
-		switch (exception.getType()) {
-			case AGENT_NOT_FOUND:
-			case DIALOGUE_NOT_FOUND:
-			case NODE_NOT_FOUND:
-			case REPLY_NOT_FOUND:
-			case NO_ACTIVE_DIALOGUE:
-				return new NotFoundException(exception.getMessage());
-			default:
-				throw new RuntimeException("Unexpected WoolAgentException: " +
-						exception.getMessage(), exception);
-		}
-	}
-
 }
+

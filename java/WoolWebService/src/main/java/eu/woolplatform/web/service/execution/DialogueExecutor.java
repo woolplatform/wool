@@ -33,10 +33,10 @@ import eu.woolplatform.wool.model.*;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerExternal;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerInternal;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -62,7 +62,6 @@ public class DialogueExecutor {
 	 *
 	 * @param dialogueDescription the dialogue description
 	 * @param dialogueDefinition the dialogue definition
-	 * @param time the time in the time zone of the user
 	 * @return the start node
 	 * @throws DatabaseException if a database error occurs
 	 * @throws IOException if a communication error occurs
@@ -70,10 +69,9 @@ public class DialogueExecutor {
 	 */
 	public ExecuteNodeResult startDialogue(
 			WoolDialogueDescription dialogueDescription,
-			WoolDialogue dialogueDefinition, DateTime time)
+			WoolDialogue dialogueDefinition)
 			throws DatabaseException, IOException, WoolException {
-		return startDialogue(dialogueDescription, dialogueDefinition, null,
-				time);
+		return startDialogue(dialogueDescription, dialogueDefinition, null);
 	}
 
 	/**
@@ -84,7 +82,6 @@ public class DialogueExecutor {
 	 * @param dialogueDescription the dialogue description
 	 * @param dialogueDefinition the dialogue definition
 	 * @param nodeId the node ID or null
-	 * @param time the time in the time zone of the user
 	 * @return the start node or specified node
 	 * @throws DatabaseException if a database error occurs
 	 * @throws IOException if a communication error occurs
@@ -92,7 +89,7 @@ public class DialogueExecutor {
 	 */
 	public ExecuteNodeResult startDialogue(
 			WoolDialogueDescription dialogueDescription,
-			WoolDialogue dialogueDefinition, String nodeId, DateTime time)
+			WoolDialogue dialogueDefinition, String nodeId)
 			throws DatabaseException, IOException, WoolException {
 		ActiveWoolDialogue dialogue = new ActiveWoolDialogue(
 				dialogueDescription, dialogueDefinition);
@@ -100,19 +97,23 @@ public class DialogueExecutor {
 
 		// Collects all the WOOL Variables needed to execute this file
 		Set<String> variablesNeeded = dialogueDefinition.getVariablesNeeded();
-		logger.info("Dialogue '"+dialogue.getDialogueName()+"' uses the following set of WOOL Variables: "+variablesNeeded);
+		logger.info("Dialogue '" + dialogue.getDialogueName() +
+				"' uses the following set of WOOL Variables: "+variablesNeeded);
 		if(!variablesNeeded.isEmpty())
 			userService.updateVariablesFromExternalService(variablesNeeded);
 
+		// The timestamp of this "start dialogue" trigger will be passed on and used for logging
+		ZonedDateTime eventTime = ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+
 		WoolNode startNode;
 		try {
-			startNode = dialogue.startDialogue(nodeId, time);
+			startNode = dialogue.startDialogue(nodeId,eventTime);
 		} catch (EvaluationException e) {
 			throw new RuntimeException("Expression evaluation error: " +
 					e.getMessage(), e);
 		}
-		LoggedDialogue loggedDialogue = new LoggedDialogue(
-				userService.getUserId(), time);
+		LoggedDialogue loggedDialogue =
+				new LoggedDialogue(userService.getWoolUser().getId(), eventTime);
 		loggedDialogue.setDialogueName(dialogueDefinition.getDialogueName());
 		loggedDialogue.setLanguage(dialogueDescription.getLanguage());
 		LoggedDialogueStoreIO.createLoggedDialogue(loggedDialogue);
@@ -141,15 +142,18 @@ public class DialogueExecutor {
 	 *
 	 * @param state the state from which the dialogue should progress
 	 * @param replyId the reply ID
-	 * @param time the time in the time zone of the user
 	 * @return the next node or null
 	 * @throws DatabaseException if a database error occurs
 	 * @throws IOException if a communication error occurs
 	 * @throws WoolException if the request is invalid
 	 */
-	public ExecuteNodeResult progressDialogue(DialogueState state, int replyId,
-			DateTime time) throws DatabaseException, IOException,
-			WoolException {
+	public ExecuteNodeResult progressDialogue(DialogueState state, int replyId)
+			throws DatabaseException, IOException, WoolException {
+
+		// Define the event time that is passed along and used for logging
+		ZonedDateTime progressDialogueEventTime =
+				ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+
 		LoggedDialogue loggedDialogue =
 				(LoggedDialogue)state.getLoggedDialogue();
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
@@ -158,10 +162,11 @@ public class DialogueExecutor {
 				"USER", loggedDialogue, dialogue.getCurrentNode().getTitle(),
 				state.getLoggedInteractionIndex(), userStatement, replyId);
 		int userActionIndex = loggedDialogue.getInteractionList().size() - 1;
+
 		// Find next WoolNode:
 		WoolNodePointer nodePointer;
 		try {
-			nodePointer = dialogue.processReplyAndGetNodePointer(replyId, time);
+			nodePointer = dialogue.processReplyAndGetNodePointer(replyId,progressDialogueEventTime);
 		} catch (EvaluationException ex) {
 			throw new RuntimeException("Expression evaluation error: " +
 					ex.getMessage(), ex);
@@ -171,7 +176,8 @@ public class DialogueExecutor {
 		if (nodePointer instanceof WoolNodePointerInternal) {
 			try {
 				nextWoolNode = dialogue.progressDialogue(
-						(WoolNodePointerInternal)nodePointer, time);
+								(WoolNodePointerInternal)nodePointer,
+								progressDialogueEventTime);
 			} catch (EvaluationException e) {
 				throw new RuntimeException("Expression evaluation error: " +
 						e.getMessage(), e);
@@ -190,12 +196,11 @@ public class DialogueExecutor {
 					(WoolNodePointerExternal)nodePointer;
 			String dialogueId = externalNodePointer.getDialogueId();
 			String nodeId = externalNodePointer.getNodeId();
-			return userService.startDialogue(dialogueId, nodeId, language,
-					time);
+			return userService.startDialogue(dialogueId, nodeId, language);
 		}
 	}
 
-	public ExecuteNodeResult backDialogue(DialogueState state, DateTime time)
+	public ExecuteNodeResult backDialogue(DialogueState state, ZonedDateTime eventTime)
 			throws WoolException {
 		LoggedDialogue loggedDialogue =
 				(LoggedDialogue)state.getLoggedDialogue();
@@ -205,7 +210,7 @@ public class DialogueExecutor {
 				state.getLoggedInteractionIndex());
 		DialogueState backState = userService.getDialogueState(loggedDialogue,
 				prevIndex);
-		return executeCurrentNode(backState, time);
+		return executeCurrentNode(backState, eventTime);
 	}
 
 	private int findPreviousAgentInteractionIndex(
@@ -220,15 +225,14 @@ public class DialogueExecutor {
 		return start;
 	}
 
-	public ExecuteNodeResult executeCurrentNode(DialogueState state,
-			DateTime time) {
+	public ExecuteNodeResult executeCurrentNode(DialogueState state, ZonedDateTime eventTime) {
 		LoggedDialogue loggedDialogue =
 				(LoggedDialogue)state.getLoggedDialogue();
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		dialogue.setWoolVariableStore(userService.getVariableStore());
 		WoolNode node = dialogue.getCurrentNode();
 		try {
-			node = dialogue.executeWoolNode(node, time);
+			node = dialogue.executeWoolNode(node,eventTime);
 		} catch (EvaluationException e) {
 			throw new RuntimeException("Expression evaluation error: " +
 					e.getMessage(), e);

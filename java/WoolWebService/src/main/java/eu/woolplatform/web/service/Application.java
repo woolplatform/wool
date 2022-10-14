@@ -25,6 +25,7 @@ import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.service.execution.DefaultUserServiceFactory;
 import eu.woolplatform.web.service.execution.UserServiceFactory;
 import eu.woolplatform.web.service.execution.UserServiceManager;
+import eu.woolplatform.web.service.model.WoolVariableStoreJSONStorageHandler;
 import eu.woolplatform.wool.parser.WoolResourceFileLoader;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
@@ -44,12 +45,11 @@ import java.net.URL;
 
 /**
  * The main entry point for the WOOL Web Service as a Spring Boot Application.
- * 
+ *
  * @author Dennis Hofs (RRD)
  * @author Harm op den Akker
  */
 
-//@SecurityScheme(name = "X-Auth-Token", scheme = "basic", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 @SpringBootApplication
 @EnableScheduling
 public class Application extends SpringBootServletInitializer implements
@@ -63,7 +63,7 @@ ApplicationListener<ApplicationEvent> {
 	 * Constructs a new application. It reads service.properties and
 	 * initializes the {@link Configuration Configuration} and the {@link
 	 * AppComponents AppComponents}.
-	 * 
+	 *
 	 * @throws Exception if the application can't be initialised
 	 */
 	public Application() throws Exception {
@@ -90,7 +90,7 @@ ApplicationListener<ApplicationEvent> {
 				logger.error("Uncaught exception: " + e.getMessage(), e)
 		);
 
-		UserServiceFactory userServiceFactory = new DefaultUserServiceFactory();
+		UserServiceFactory userServiceFactory = new DefaultUserServiceFactory(new WoolVariableStoreJSONStorageHandler(config.getDataDir()+"/variables"));
 		UserServiceFactory.setInstance(userServiceFactory);
 		userServiceManager = new UserServiceManager(
 				new WoolResourceFileLoader("dialogues"));
@@ -122,7 +122,7 @@ ApplicationListener<ApplicationEvent> {
 			logger.info("===================================================");
 		}
 	}
-	
+
 	@Override
 	protected SpringApplicationBuilder configure(
 			SpringApplicationBuilder builder) {

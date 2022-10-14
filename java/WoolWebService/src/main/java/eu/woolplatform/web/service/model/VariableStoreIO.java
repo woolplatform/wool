@@ -39,7 +39,7 @@ public class VariableStoreIO {
 
 	private static final String VARSTORE_DIR = "varstore";
 
-	public static Map<String,?> readVariables(String user)
+	public static Map<String,?> readVariablez(String user)
 			throws ParseException, IOException {
 		synchronized (LOCK) {
 			Configuration config = Configuration.getInstance();
@@ -62,10 +62,10 @@ public class VariableStoreIO {
 		}
 	}
 
-	public static void writeVariables(String user, Map<String,?> vars)
+	public static void writeVariablez(String user, Map<String,?> vars)
 			throws ParseException, IOException {
 		synchronized (LOCK) {
-			Map<String,Object> currVars = new HashMap<>(readVariables(user));
+			Map<String,Object> currVars = new HashMap<>(readVariablez(user));
 			currVars.putAll(vars);
 			String json = JsonMapper.generate(currVars);
 			Configuration config = Configuration.getInstance();

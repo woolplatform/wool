@@ -29,15 +29,12 @@ import eu.woolplatform.utils.i18n.I18nUtils;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.model.LoggedDialogue;
 import eu.woolplatform.web.service.model.LoggedDialogueStoreIO;
-import eu.woolplatform.web.service.model.VariableStoreIO;
-import eu.woolplatform.web.service.model.WoolVariableResponse;
+import eu.woolplatform.web.service.model.WoolVariableStoreJSONStorageHandler;
+import eu.woolplatform.web.service.model.WoolVariableStoreStorageHandler;
 import eu.woolplatform.wool.exception.WoolException;
-import eu.woolplatform.wool.execution.ActiveWoolDialogue;
-import eu.woolplatform.wool.execution.ExecuteNodeResult;
-import eu.woolplatform.wool.execution.WoolVariableStore;
+import eu.woolplatform.wool.execution.*;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
 import eu.woolplatform.wool.model.*;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +45,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 /**
@@ -59,10 +57,9 @@ import java.util.*;
  */
 public class UserService {
 
-	public String userId;
-	private String timeZone;
-	public UserServiceManager userServiceManager;
-	public WoolVariableStore variableStore;
+	private WoolUser woolUser;
+	private UserServiceManager userServiceManager;
+	private WoolVariableStore variableStore;
 
 	private final Logger logger;
 	private final DialogueExecutor dialogueExecutor;
@@ -74,34 +71,30 @@ public class UserService {
 	// ----- Constructors
 	
 	/**
-	 * Instantiates a {@link UserService} for a given user, identified
-	 * by the associated {@code accountId} and {@code userId}. The UserService creates a {@link WoolVariableStore} instance
+	 * Instantiates a {@link UserService} for a given {@link WoolUser}. The UserService creates a {@link WoolVariableStore} instance
 	 * and loads in all known variables for the user.
-	 * @param userId - A unique identifier of the current user this {@link UserService} is interacting with.
+	 * @param woolUser - The {@link WoolUser} for which this {@link UserService} is handling the interactions.
 	 * @param userServiceManager the server's {@link UserServiceManager} instance.
-	 * @param onVarChangeListener the {@link WoolVariableStore.OnChangeListener} to be added to the {@link WoolVariableStore}
+	 * @param onVarChangeListener the {@link WoolVariableStoreOnChangeListener} to be added to the {@link WoolVariableStore}
 	 *                            instance that this {@link UserService} creates.
 	 */
-	public UserService(String userId, UserServiceManager userServiceManager,
-			WoolVariableStore.OnChangeListener onVarChangeListener)
+	public UserService(WoolUser woolUser, UserServiceManager userServiceManager,
+			WoolVariableStoreOnChangeListener onVarChangeListener)
 			throws DatabaseException, IOException {
 
 		this.logger = AppComponents.getLogger(getClass().getSimpleName());
-		this.userId = userId;
+		this.woolUser = woolUser;
 		this.userServiceManager = userServiceManager;
-		this.variableStore = new WoolVariableStore();
 
-		Map<String, ?> vars;
+		Configuration config = AppComponents.get(Configuration.class);
+		WoolVariableStoreStorageHandler storageHandler = new WoolVariableStoreJSONStorageHandler(config.getDataDir()+"/variables");
 		try {
-			vars = VariableStoreIO.readVariables(userId);
+			this.variableStore = storageHandler.read(woolUser);
 		} catch (ParseException ex) {
 			throw new DatabaseException("Failed to read initial variables: " +
 					ex.getMessage(), ex);
 		}
 
-		Map<String,Object> varStoreMap = this.variableStore.getModifiableMap(
-				false, null);
-		varStoreMap.putAll(vars);
 		this.variableStore.addOnChangeListener(onVarChangeListener);
 		dialogueExecutor = new DialogueExecutor(this);
 
@@ -119,27 +112,11 @@ public class UserService {
 	// ----- Getters & Setters
 	
 	/**
-	 * Returns the user identifier which this {@link UserService} is serving.
-	 * @return the user identifier which this {@link UserService} is serving.
+	 * Returns the {@link WoolUser} which this {@link UserService} is serving.
+	 * @return the {@link WoolUser} which this {@link UserService} is serving.
 	 */
-	public String getUserId() {
-		return userId;
-	}
-
-	/**
-	 * Returns the latest known timezone for this user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
-	 * @return the latest known timezone for this user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
-	 */
-	public String getTimeZone() {
-		return timeZone;
-	}
-
-	/**
-	 * Sets the latest known timezone for this user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
-	 * @param timeZone the latest known timezone for this user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes).
-	 */
-	public void setTimeZone(String timeZone) {
-		this.timeZone = timeZone;
+	public WoolUser getWoolUser() {
+		return woolUser;
 	}
 
 	public WoolTranslationContext getTranslationContext() {
@@ -175,13 +152,12 @@ public class UserService {
 	 * @param dialogueId the dialogue ID
 	 * @param nodeId a node ID or null
 	 * @param language an ISO language tag
-	 * @param time the time in the time zone of the user
 	 * @return the dialogue node result with the start node or specified node
 	 */
 	public ExecuteNodeResult startDialogue(String dialogueId, String nodeId,
-										   String language, DateTime time) throws DatabaseException,
+										   String language) throws DatabaseException,
 			IOException, WoolException {
-		logger.info("User '" + getUserId() + "' is starting dialogue '" +
+		logger.info("User '" + woolUser.getId() + "' is starting dialogue '" +
 				dialogueId + "'");
 		WoolDialogueDescription dialogueDescription =
 				getDialogueDescriptionFromId(dialogueId, language);
@@ -191,7 +167,7 @@ public class UserService {
 		}
 		WoolDialogue dialogue = getDialogueDefinition(dialogueDescription);
 		return dialogueExecutor.startDialogue(dialogueDescription,
-				dialogue, nodeId, time);
+				dialogue, nodeId);
 	}
 
 	/**
@@ -214,38 +190,36 @@ public class UserService {
 	 *
 	 * @param state the state from which the dialogue should progress
 	 * @param replyId the reply ID
-	 * @param time the time in the time zone of the user
 	 * @return the next node or null
 	 * @throws DatabaseException if a database error occurs
 	 * @throws IOException if a communication error occurs
 	 * @throws WoolException if the request is invalid
 	 */
-	public ExecuteNodeResult progressDialogue(DialogueState state, int replyId,
-											  DateTime time) throws DatabaseException, IOException,
+	public ExecuteNodeResult progressDialogue(DialogueState state, int replyId) throws DatabaseException, IOException,
 			WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		String dialogueName = dialogue.getDialogueName();
 		String nodeName = dialogue.getCurrentNode().getTitle();
 		logger.info(String.format(
 				"User %s progresses dialogue with reply %s.%s.%s",
-				userId, dialogueName, nodeName, replyId));
-		return dialogueExecutor.progressDialogue(state, replyId, time);
+				woolUser.getId(), dialogueName, nodeName, replyId));
+		return dialogueExecutor.progressDialogue(state, replyId);
 	}
 
-	public ExecuteNodeResult backDialogue(DialogueState state, DateTime time)
+	public ExecuteNodeResult backDialogue(DialogueState state, ZonedDateTime eventTime)
 			throws WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		String dialogueName = dialogue.getDialogueName();
 		String nodeName = dialogue.getCurrentNode().getTitle();
 		logger.info(String.format(
 				"User %s goes back in dialogue from node %s.%s",
-				userId, dialogueName, nodeName));
-		return dialogueExecutor.backDialogue(state, time);
+				woolUser.getId(), dialogueName, nodeName));
+		return dialogueExecutor.backDialogue(state, eventTime);
 	}
 
-	public ExecuteNodeResult executeCurrentNode(DialogueState state,
-												DateTime time) throws WoolException {
-		return dialogueExecutor.executeCurrentNode(state, time);
+	public ExecuteNodeResult executeCurrentNode(DialogueState state, ZonedDateTime eventTime)
+			throws WoolException {
+		return dialogueExecutor.executeCurrentNode(state,eventTime);
 	}
 
 	/**
@@ -256,14 +230,14 @@ public class UserService {
 	 */
 	public void cancelDialogue(String loggedDialogueId)
 			throws DatabaseException, IOException {
-		logger.info("User '" + this.getUserId() + "' cancels dialogue with Id '"+loggedDialogueId+"'.");
+		logger.info("User '" + woolUser.getId() + "' cancels dialogue with Id '"+loggedDialogueId+"'.");
 		LoggedDialogue loggedDialogue =
-				LoggedDialogueStoreIO.findLoggedDialogue(userId,
+				LoggedDialogueStoreIO.findLoggedDialogue(woolUser.getId(),
 						loggedDialogueId);
 		if(loggedDialogue != null)
 			LoggedDialogueStoreIO.setDialogueCancelled(loggedDialogue);
 		else
-			logger.warn("User '" + this.getUserId() + "' attempted to cancel dialogue with Id '"+loggedDialogueId+"', but the dialogue could not be found.");
+			logger.warn("User '" + woolUser.getId() + "' attempted to cancel dialogue with Id '"+loggedDialogueId+"', but the dialogue could not be found.");
 	}
 
 	// ----- Methods (Variables):
@@ -272,12 +246,13 @@ public class UserService {
 	 * Stores the specified variables in the variable store.
 	 * @param state
 	 * @param variables the variables
-	 * @param time
+	 * @param eventTime the timestamp (in the time zone of the user) of the event that triggered
+	 *                  this change of WOOL Variables
 	 */
 	public void storeReplyInput(DialogueState state, Map<String,?> variables,
-								DateTime time) throws WoolException {
+								ZonedDateTime eventTime) throws WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
-		dialogue.storeReplyInput(variables, time);
+		dialogue.storeReplyInput(variables,eventTime);
 	}
 
 	/**
@@ -300,17 +275,15 @@ public class UserService {
 			logger.info("URL: "+config.getExternalVariableServiceURL());
 			logger.info("API Version: "+config.getExternalVariableServiceAPIVersion());
 
-			List<WoolVariableResponse> varsToUpdate = new ArrayList<>();
+			List<WoolVariable> varsToUpdate = new ArrayList<>();
 			for(String variableName : variableNames) {
-				Object variableValue = variableStore.getValue(variableName);
-				String variableValueString;
-				if(variableValue != null) {
-					logger.info("An existing value is known for variable '"+variableName+"' for User '"+userId+"': "+variableValue);
-					variableValueString = variableValue.toString();
+				WoolVariable woolVariable = variableStore.getWoolVariable(variableName);
+				if(woolVariable != null) {
+					logger.info("A WOOL Variable '"+variableName+"' exists for User '" + woolUser.getId() + "': "+woolVariable);
+					varsToUpdate.add(woolVariable);
 				} else {
-					variableValueString = "";
+					varsToUpdate.add(new WoolVariable(variableName,null,null,null));
 				}
-				varsToUpdate.add(new WoolVariableResponse(variableName,variableValueString,0l));
 			}
 
 			RestTemplate restTemplate = new RestTemplate();
@@ -323,47 +296,41 @@ public class UserService {
 					+ "/variables/retrieve-updates";
 
 			LinkedMultiValueMap<String,String> allRequestParams = new LinkedMultiValueMap<>();
-			allRequestParams.put("userId",Arrays.asList(getUserId()));
-			allRequestParams.put("timeZone",Arrays.asList(getTimeZone()));
+			allRequestParams.put("userId",Arrays.asList(woolUser.getId()));
+			allRequestParams.put("timeZone",Arrays.asList(woolUser.getTimeZone().toString()));
 
 			HttpEntity<?> entity = new HttpEntity<>(varsToUpdate, requestHeaders); // requestBody is of string type and requestHeaders is of type HttpHeaders
 			UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(retrieveUpdatesUrl) // rawValidURl = http://example.com/hotels
 					.queryParams(
 							(LinkedMultiValueMap<String, String>) allRequestParams); // The allRequestParams must have been built for all the query params
 			UriComponents uriComponents = builder.build().encode(); // encode() is to ensure that characters like {, }, are preserved and not encoded. Skip if not needed.
-			ResponseEntity<WoolVariableResponse[]> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST,
-					entity, WoolVariableResponse[].class);
+			ResponseEntity<WoolVariable[]> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST,
+					entity, WoolVariable[].class);
 
 			// If call not successful, retry once after login
 			if (response.getStatusCode() != HttpStatus.OK) {
 				userServiceManager.loginToExternalVariableService();
 
 				response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST,
-						entity, WoolVariableResponse[].class);
+						entity, WoolVariable[].class);
 
 			}
 
-			WoolVariableResponse[] woolVariableResponses = response.getBody();
+			WoolVariable[] retrievedWoolVariables = response.getBody();
 
-			if (woolVariableResponses != null) {
-				if (woolVariableResponses.length == 0) {
+			if (retrievedWoolVariables != null) {
+				if (retrievedWoolVariables.length == 0) {
 					logger.info("Received response from WOOL Variable Service: no variable updates needed.");
 				} else {
 					logger.info("Received response from WOOL Variable Service: the following variables have updated values:");
-					for (WoolVariableResponse wvr : woolVariableResponses) {
-						logger.info(wvr.toString());
-						String varName = wvr.getName();
-						String varValue = wvr.getValue();
-						Long varUpdated = wvr.getLastUpdated();
+					for (WoolVariable woolVariable : retrievedWoolVariables) {
+						logger.info(woolVariable.toString());
+						String varName = woolVariable.getName();
+						Object varValue = woolVariable.getValue();
+						ZonedDateTime varUpdated = woolVariable.getZonedUpdatedTime();
 						Object varValueObject;
-						if(varValue.equals("true")) {
-							varValueObject = Boolean.valueOf("true");
-						} else if (varValue.equals("false")) {
-							varValueObject = Boolean.valueOf("false");
-						} else
-							varValueObject = varValue;
 
-						variableStore.setValue(varName, varValueObject, true, new DateTime(varUpdated));
+						variableStore.setValue(varName, varValue, true, varUpdated);
 					}
 				}
 			}
@@ -452,7 +419,7 @@ public class UserService {
 			int loggedInteractionIndex) throws WoolException, DatabaseException,
 			IOException {
 		LoggedDialogue loggedDialogue =
-				LoggedDialogueStoreIO.findLoggedDialogue(userId,
+				LoggedDialogueStoreIO.findLoggedDialogue(woolUser.getId(),
 				loggedDialogueId);
 		if (loggedDialogue == null) {
 			throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
