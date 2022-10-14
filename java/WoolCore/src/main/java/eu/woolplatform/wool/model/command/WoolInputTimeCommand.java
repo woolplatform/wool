@@ -20,17 +20,17 @@
 package eu.woolplatform.wool.model.command;
 
 import eu.woolplatform.utils.exception.LineNumberParseException;
-import eu.woolplatform.wool.execution.WoolVariable;
-import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.utils.expressions.EvaluationException;
 import eu.woolplatform.utils.expressions.Value;
+import eu.woolplatform.wool.execution.WoolVariable;
+import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.model.WoolVariableString;
 import eu.woolplatform.wool.parser.WoolBodyToken;
-import org.joda.time.LocalTime;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -163,16 +163,17 @@ public class WoolInputTimeCommand extends WoolInputCommand {
 
 	private static WoolVariableString evaluateTime(String text)
 			throws EvaluationException {
-		if (text.toLowerCase().equals(TIME_NOW))
+		if (text.equalsIgnoreCase(TIME_NOW))
 			return new WoolVariableString(TIME_NOW);
-		DateTimeFormatter parser = ISODateTimeFormat.localTimeParser();
+		DateTimeFormatter parser = DateTimeFormatter.ISO_LOCAL_TIME;
 		LocalTime time;
 		try {
-			time = parser.parseLocalTime(text);
-		} catch (IllegalArgumentException ex) {
+			time = parser.parse(text, LocalTime::from);
+		} catch (DateTimeParseException ex) {
 			throw new EvaluationException("Invalid local time value: " + text);
 		}
-		return new WoolVariableString(time.toString("HH:mm"));
+		return new WoolVariableString(time.format(
+				DateTimeFormatter.ofPattern("HH:mm")));
 	}
 
 	@Override
