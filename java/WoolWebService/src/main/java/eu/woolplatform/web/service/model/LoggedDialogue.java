@@ -24,7 +24,6 @@ package eu.woolplatform.web.service.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import eu.woolplatform.wool.model.WoolLoggedDialogue;
 import eu.woolplatform.wool.model.WoolLoggedInteraction;
-import org.joda.time.DateTime;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;

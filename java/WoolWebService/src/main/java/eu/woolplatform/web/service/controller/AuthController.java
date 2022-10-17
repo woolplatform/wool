@@ -24,23 +24,26 @@ package eu.woolplatform.web.service.controller;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.http.URLParameters;
+import eu.woolplatform.web.service.*;
 import eu.woolplatform.web.service.controller.model.LoginParams;
+import eu.woolplatform.web.service.controller.model.LoginResult;
 import eu.woolplatform.web.service.exception.BadRequestException;
 import eu.woolplatform.web.service.exception.ErrorCode;
 import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.exception.UnauthorizedException;
-import eu.woolplatform.web.service.*;
-import eu.woolplatform.web.service.controller.model.LoginResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -117,12 +120,13 @@ public class AuthController {
 		}
 		logger.info("User {} logged in", userCredentials.getUsername());
 		Date expiration = null;
-		DateTime now = new DateTime();
+		ZonedDateTime now = ZonedDateTime.now();
 		if (loginParams.getTokenExpiration() != null) {
-			expiration = now.plusMinutes(loginParams.getTokenExpiration())
-					.toDate();
+			expiration = Date.from(now.plusMinutes(
+					loginParams.getTokenExpiration()).toInstant());
 		}
-		AuthDetails details = new AuthDetails(user, now.toDate(), expiration);
+		AuthDetails details = new AuthDetails(user, Date.from(now.toInstant()),
+				expiration);
 		String token = AuthToken.createToken(details);
 		return new LoginResult(userCredentials.getUsername(), token);
 	}

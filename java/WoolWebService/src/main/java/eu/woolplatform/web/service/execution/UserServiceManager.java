@@ -26,10 +26,10 @@ import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.UserCredentials;
-import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.UserFile;
 import eu.woolplatform.web.service.controller.model.LoginParams;
 import eu.woolplatform.web.service.controller.model.LoginResult;
+import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
 import eu.woolplatform.wool.model.WoolDialogue;
@@ -38,20 +38,15 @@ import eu.woolplatform.wool.model.WoolProject;
 import eu.woolplatform.wool.parser.WoolFileLoader;
 import eu.woolplatform.wool.parser.WoolProjectParser;
 import eu.woolplatform.wool.parser.WoolProjectParserResult;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -225,27 +220,28 @@ public class UserServiceManager {
 	 * @param errors
 	 * @return
 	 */
-	public static DateTime parseTimeParameters(String timeZone, List<HttpFieldError> errors) {
-		DateTimeZone parsedTimezone = null;
+	public static ZonedDateTime parseTimeParameters(String timeZone,
+			List<HttpFieldError> errors) {
+		ZoneId parsedTimezone = null;
 		int errorsStart = errors.size();
 
 		if (timeZone == null || timeZone.length() == 0) {
-			parsedTimezone = DateTimeZone.getDefault();
+			parsedTimezone = ZoneId.systemDefault();
 		} else {
 			try {
-				parsedTimezone = DateTimeZone.forID(timeZone);
-			} catch (IllegalArgumentException ex) {
+				parsedTimezone = ZoneId.of(timeZone);
+			} catch (DateTimeException ex) {
 				errors.add(new HttpFieldError("timeZone",
 						"Invalid value for field \"timeZone\": " + timeZone));
 			}
 		}
 
-		LocalDateTime parsedTime = new LocalDateTime(parsedTimezone);
+		LocalDateTime parsedTime = LocalDateTime.now(parsedTimezone);
 
 		if (!errors.isEmpty()) {
 			return null;
 		} else {
-			return parsedTime.toDateTime(parsedTimezone);
+			return parsedTime.atZone(parsedTimezone);
 		}
 	}
 
