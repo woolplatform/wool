@@ -47,7 +47,7 @@ extends JsonDeserializer<ZonedDateTime> {
 			throws IOException, JsonProcessingException {
 		String val = jp.readValueAs(String.class);
 		try {
-			return DateTimeUtils.parseDateTime(val, ZonedDateTime.class);
+			return DateTimeUtils.parseIsoDateTime(val, ZonedDateTime.class);
 		} catch (ParseException ex) {
 			throw new JsonParseException(jp, "Invalid ISO date/time string: " +
 					val + ": " + ex.getMessage(), jp.getTokenLocation(), ex);

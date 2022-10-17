@@ -44,7 +44,7 @@ public class MillisFromIsoDateTimeDeserializer extends JsonDeserializer<Long> {
 			throws IOException, JsonProcessingException {
 		String val = jp.readValueAs(String.class);
 		try {
-			return DateTimeUtils.parseDateTime(val, Long.class);
+			return DateTimeUtils.parseIsoDateTime(val, Long.class);
 		} catch (ParseException ex) {
 			throw new JsonParseException(jp, "Invalid ISO date/time string: " +
 					val + ": " + ex.getMessage(), jp.getTokenLocation(), ex);

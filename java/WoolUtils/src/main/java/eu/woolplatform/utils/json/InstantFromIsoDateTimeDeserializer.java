@@ -46,7 +46,7 @@ extends JsonDeserializer<Instant> {
 			throws IOException, JsonProcessingException {
 		String val = jp.readValueAs(String.class);
 		try {
-			return DateTimeUtils.parseDateTime(val, Instant.class);
+			return DateTimeUtils.parseIsoDateTime(val, Instant.class);
 		} catch (ParseException ex) {
 			throw new JsonParseException(jp, "Invalid ISO date/time string: " +
 					val + ": " + ex.getMessage(), jp.getTokenLocation(), ex);
