@@ -27,18 +27,18 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import eu.woolplatform.utils.datetime.DateTimeUtils;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 
 /**
  * This serializer can convert a date/time type to a string in format
- * yyyy-MM-dd'T'HH:mm:ss.SSSZZ. It supports the following types:
+ * yyyy-MM-dd'T'HH:mm:ss.SSSXXX. It supports the following types:
  * 
  * <p><ul>
  * <li>{@link Long Long} (timestamp in milliseconds)</li>
@@ -78,7 +78,6 @@ public class IsoDateTimeSerializer extends JsonSerializer<Object> {
 					"Can't serialize type to ISO date/time: " +
 					value.getClass().getName(), jgen);
 		}
-		jgen.writeString(dateTime.format(DateTimeFormatter.ofPattern(
-				"yyyy-MM-dd'T'HH:mm:ss.SSSXXX")));
+		jgen.writeString(dateTime.format(DateTimeUtils.ZONED_FORMAT));
 	}
 }

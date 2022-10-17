@@ -38,6 +38,38 @@ import java.util.GregorianCalendar;
  */
 public class DateTimeUtils {
 	/**
+	 * Formats a date/time as an ISO date. Example: "2022-10-17"
+	 */
+	public static final DateTimeFormatter DATE_FORMAT =
+			DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+	/**
+	 * Formats a date/time as a local ISO date/time (without timezone). Example:
+	 * "2022-10-17T16:45:23.768"
+	 */
+	public static final DateTimeFormatter LOCAL_FORMAT =
+			DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+
+	/**
+	 * Formats a date/time as an ISO date/time with timezone. Example:
+	 * "2022-10-17T16:45:23.768+01:00"
+	 */
+	public static final DateTimeFormatter ZONED_FORMAT =
+			DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
+	/**
+	 * Formats a date/time as an SQL time. Example: "16:45:23"
+	 */
+	public static final DateTimeFormatter SQL_TIME_FORMAT =
+			DateTimeFormatter.ofPattern("HH:mm:ss");
+
+	/**
+	 * Formats a date/time as an SQL date/time. Example: "2022-10-17 16:45:23"
+	 */
+	public static final DateTimeFormatter SQL_DATE_TIME_FORMAT =
+			DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+	/**
 	 * Tries to parse any date/time string and return a date/time object of the
 	 * specified class. Below is a list of supported date/time string patterns
 	 * and the respective result classes.

@@ -25,13 +25,13 @@ package eu.woolplatform.utils.schedule;
 import eu.woolplatform.utils.AppComponent;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.ReflectionUtils;
+import eu.woolplatform.utils.datetime.DateTimeUtils;
 import eu.woolplatform.utils.exception.HandledException;
 import eu.woolplatform.utils.exception.ParseException;
 import org.slf4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -93,11 +93,6 @@ public abstract class TaskScheduler {
 	private Map<String,ScheduledTaskSpec> scheduledTaskInstances =
 			new HashMap<>();
 
-	private DateTimeFormatter localFormat = DateTimeFormatter.ofPattern(
-			"yyyy-MM-dd'T'HH:mm:ss.SSS");
-	private DateTimeFormatter zonedFormat = DateTimeFormatter.ofPattern(
-			"yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-
 	private Logger logger;
 
 	public TaskScheduler() {
@@ -138,11 +133,12 @@ public abstract class TaskScheduler {
 		boolean exact = scheduleParams.isExact();
 		String time;
 		if (scheduleParams.getLocalTime() != null) {
-			time = scheduleParams.getLocalTime().format(localFormat);
+			time = scheduleParams.getLocalTime().format(
+					DateTimeUtils.LOCAL_FORMAT);
 		} else {
 			Instant instant = Instant.ofEpochMilli(scheduleParams.getUtcTime());
 			time = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault())
-					.format(zonedFormat);
+					.format(DateTimeUtils.ZONED_FORMAT);
 		}
 		return String.format("\"%s\" (%s) scheduled %s at %s",
 				taskSpec.getName(), taskSpec.getId(),
@@ -380,7 +376,8 @@ public abstract class TaskScheduler {
 				return;
 			logger.info(String.format(
 					"Schedule fixed delay task \"%s\" (%s) at %s",
-					task.getName(), taskId, time.format(zonedFormat)));
+					task.getName(), taskId,
+					time.format(DateTimeUtils.ZONED_FORMAT)));
 			ScheduleParams scheduleParams = new ScheduleParams(
 					time.toInstant().toEpochMilli(), false);
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
@@ -432,7 +429,8 @@ public abstract class TaskScheduler {
 					ZoneId.systemDefault());
 			logger.info(String.format(
 					"Start fixed delay task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId, time.format(zonedFormat)));
+					task.getName(), taskId,
+					time.format(DateTimeUtils.ZONED_FORMAT)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
@@ -483,7 +481,8 @@ public abstract class TaskScheduler {
 				return;
 			logger.info(String.format(
 					"Schedule fixed rate task \"%s\" (%s) at %s",
-					task.getName(), taskId, time.format(zonedFormat)));
+					task.getName(), taskId,
+					time.format(DateTimeUtils.ZONED_FORMAT)));
 			ScheduleParams scheduleParams = new ScheduleParams(
 					time.toInstant().toEpochMilli(), true);
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
@@ -535,7 +534,8 @@ public abstract class TaskScheduler {
 				return;
 			logger.info(String.format(
 					"Start fixed rate task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId, time.format(zonedFormat)));
+					task.getName(), taskId,
+					time.format(DateTimeUtils.ZONED_FORMAT)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
@@ -590,14 +590,16 @@ public abstract class TaskScheduler {
 					(TaskSchedule.TimeSchedule)task.getSchedule();
 			String logStr = String.format(
 					"Find next time for time schedule task \"%s\" (%s) at or after %s",
-					task.getName(), taskId, start.format(localFormat));
+					task.getName(), taskId,
+					start.format(DateTimeUtils.LOCAL_FORMAT));
 			LocalDateTime taskTime = getNextScheduledDateTime(start, schedule);
 			if (taskTime == null) {
 				logger.info(logStr + ": no next time");
 				scheduledTasks.remove(taskId);
 				return;
 			}
-			logger.info(logStr + ": " + taskTime.format(localFormat));
+			logger.info(logStr + ": " + taskTime.format(
+					DateTimeUtils.LOCAL_FORMAT));
 			ScheduleParams scheduleParams = new ScheduleParams(taskTime, true);
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
 					scheduleParams);
@@ -648,7 +650,8 @@ public abstract class TaskScheduler {
 				return;
 			logger.info(String.format(
 					"Start time schedule task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId, time.format(localFormat)));
+					task.getName(), taskId,
+					time.format(DateTimeUtils.LOCAL_FORMAT)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
@@ -808,7 +811,8 @@ public abstract class TaskScheduler {
 			LocalDateTime time = schedule.getTime();
 			logger.info(String.format(
 					"Schedule local time task \"%s\" (%s) at %s",
-					task.getName(), taskId, time.format(localFormat)));
+					task.getName(), taskId,
+					time.format(DateTimeUtils.LOCAL_FORMAT)));
 			ScheduleParams scheduleParams = new ScheduleParams(time,
 					schedule.isExact());
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
@@ -858,7 +862,8 @@ public abstract class TaskScheduler {
 			LocalDateTime time = scheduleParams.getLocalTime();
 			logger.info(String.format(
 					"Start local time task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId, time.format(localFormat)));
+					task.getName(), taskId,
+					time.format(DateTimeUtils.LOCAL_FORMAT)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
@@ -903,7 +908,8 @@ public abstract class TaskScheduler {
 			ZonedDateTime time = schedule.getTime();
 			logger.info(String.format(
 					"Schedule UTC time task \"%s\" (%s) at %s",
-					task.getName(), taskId, time.format(zonedFormat)));
+					task.getName(), taskId,
+					time.format(DateTimeUtils.ZONED_FORMAT)));
 			ScheduleParams scheduleParams = new ScheduleParams(
 					time.toInstant().toEpochMilli(), schedule.isExact());
 			ScheduledTaskSpec taskSpec = new ScheduledTaskSpec(taskId, task,
@@ -953,7 +959,8 @@ public abstract class TaskScheduler {
 					scheduleParams.getUtcTime()), ZoneId.systemDefault());
 			logger.info(String.format(
 					"Start UTC time task \"%s\" (%s) scheduled at %s",
-					task.getName(), taskId, time.format(zonedFormat)));
+					task.getName(), taskId,
+					time.format(DateTimeUtils.ZONED_FORMAT)));
 			runningTasks.put(taskId, task);
 		}
 		Throwable exception = null;
