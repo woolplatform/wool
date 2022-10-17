@@ -20,10 +20,6 @@ repositories {
 dependencies {
 	api "eu.woolplatform:wool-utils:2.4.0" // Use the maven central distribution of WOOL Utils.
 	// api project(':WoolUtils')           // Use the local WOOL Utils project source.
-	api 'org.slf4j:slf4j-api:1.7.36'
-	api 'com.fasterxml.jackson.core:jackson-core:2.13.4'
-	api 'com.fasterxml.jackson.core:jackson-annotations:2.13.4'
-	api 'com.fasterxml.jackson.core:jackson-databind:2.13.4'
 	api 'com.fasterxml.jackson.module:jackson-modules-java8:2.13.4'
 	testImplementation 'junit:junit:4.13.2'
 }
