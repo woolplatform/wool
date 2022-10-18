@@ -138,6 +138,30 @@ public class WoolVariableStore {
 	}
 
 	/**
+	 * Returns the value of the variable identified by the given {@code name}.
+	 * If no such variable is known in this {@link WoolVariableStore}, then this
+	 * method returns null.
+	 *
+	 * <p>Note: if this method returns null, it can mean that the variable does
+	 * not exist, or that the variable has value {@code null}. If you need to
+	 * distinguish these two cases, you should call {@link
+	 * #getWoolVariable(String) getWoolVariable()} </p>
+	 *
+	 * @param variableName the name of the variable to retrieve.
+	 * @return the value of the variable, null if the variable does not exist
+	 * or the variable value is null
+	 */
+	public Object getValue(String variableName) {
+		WoolVariable variable;
+		synchronized (woolVariables) {
+			variable = woolVariables.get(variableName);
+		}
+		if (variable == null)
+			return null;
+		return variable.getValue();
+	}
+
+	/**
 	 * Returns the {@link WoolUser} associated with this {@link WoolVariableStore}.
 	 * @return the {@link WoolUser} associated with this {@link WoolVariableStore}.
 	 */
