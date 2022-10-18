@@ -1,30 +1,28 @@
 /*
- * Copyright 2019-2022 WOOL Foundation.
+ * Copyright 2019-2022 WOOL Foundation - Licensed under the MIT License:
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package eu.woolplatform.web.varservice.controller;
 
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.varservice.ProtocolVersion;
 import eu.woolplatform.web.varservice.QueryRunner;
-import eu.woolplatform.web.varservice.controller.model.WoolVariablePrimitive;
+import eu.woolplatform.web.varservice.controller.model.WoolVariableResult;
 import eu.woolplatform.web.varservice.exception.BadRequestException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -83,10 +81,10 @@ public class VariablesController {
 					" in the request, and the lastUpdated time set to the current UTC time in epoch seconds.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful operation",
-					content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariablePrimitive.class)))) })
+					content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableResult.class)))) })
 	@RequestMapping(value="/retrieve-updates", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
-	public List<WoolVariablePrimitive> retrieveUpdates (
+	public List<WoolVariableResult> retrieveUpdates (
 			HttpServletRequest request,
 			HttpServletResponse response,
 
@@ -103,25 +101,25 @@ public class VariablesController {
 			String timeZone,
 
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
-					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariablePrimitive.class))))
-			@RequestBody List<WoolVariablePrimitive> woolVariables) throws Exception {
+					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableResult.class))))
+			@RequestBody List<WoolVariableResult> woolVariableResults) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
 		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
 		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId + "&timeZone=" + timeZone + " with the following variables:");
-		for(WoolVariablePrimitive woolVariableParam : woolVariables) {
-			logger.info(woolVariableParam.toString());
+		for(WoolVariableResult woolVariableResultParam : woolVariableResults) {
+			logger.info(woolVariableResultParam.toString());
 		}
 
 		if(userId.equals("")) {
 			return QueryRunner.runQuery(
-				(version, user) -> executeRetrieveUpdates(user, timeZone, woolVariables),
+				(version, user) -> executeRetrieveUpdates(user, timeZone, woolVariableResults),
 				versionName, request, response, userId);
 		} else {
 			return QueryRunner.runQuery(
-				(version, user) -> executeRetrieveUpdates(userId, timeZone, woolVariables),
+				(version, user) -> executeRetrieveUpdates(userId, timeZone, woolVariableResults),
 				versionName, request, response, userId);
 		}
 	}
@@ -136,34 +134,34 @@ public class VariablesController {
 	 *
 	 * @param userId the {@code String} identifier of the user who's variable updates are requested.
 	 * @param timeZone the time zone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
-	 * @param params the {@code List} of {@link WoolVariablePrimitive}s for which it should be verified if an update is needed.
-	 * @return a {@code List} of {@link WoolVariablePrimitive}s with each of the parameters for which an updated value has been found
+	 * @param params the {@code List} of {@link WoolVariableResult}s for which it should be verified if an update is needed.
+	 * @return a {@code List} of {@link WoolVariableResult}s with each of the parameters for which an updated value has been found
 	 * (note that this may be an empty list).
 	 */
-	private List<WoolVariablePrimitive> executeRetrieveUpdates (String userId, String timeZone, List<WoolVariablePrimitive> params) throws BadRequestException {
+	private List<WoolVariableResult> executeRetrieveUpdates (String userId, String timeZone, List<WoolVariableResult> params) throws BadRequestException {
 
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
 
-		List<WoolVariablePrimitive> result = new ArrayList<>();
+		List<WoolVariableResult> result = new ArrayList<>();
 
 		Random random = new Random();
 
-		for (WoolVariablePrimitive param : params) {
+		for (WoolVariableResult param : params) {
 
-			if(param.getLastUpdatedTime() != null && param.getLastUpdatedTimeZone() != null) {
+			if(param.getUpdatedTime() != null && param.getUpdatedTimeZone() != null) {
 				ZonedDateTime paramZonedDateTime =
 						ZonedDateTime.ofInstant(
 								Instant.ofEpochMilli(
-										param.getLastUpdatedTime()),
-								ControllerFunctions.parseTimeZone(param.getLastUpdatedTimeZone()));
+										param.getUpdatedTime()),
+								ControllerFunctions.parseTimeZone(param.getUpdatedTimeZone()));
 
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss Z");
 				String readableTimeString = paramZonedDateTime.format(formatter);
 				logger.info("The WOOL Variable '"+param.getName()+"' " +
 						"with value '"+param.getValue()+"' " +
-						"was last updated at '"+param.getLastUpdatedTime()+"', " +
+						"was last updated at '"+param.getUpdatedTime()+"', " +
 						"which was '"+readableTimeString+"' " +
-						"in '"+param.getLastUpdatedTimeZone()+"'.");
+						"in '"+param.getUpdatedTimeZone()+"'.");
 			} else {
 				logger.info("The WOOL Variable '"+param.getName()+"' " +
 						"with value '"+param.getValue()+"' " +
@@ -171,7 +169,7 @@ public class VariablesController {
 			}
 
 			if(random.nextBoolean()) { // With 50% chance, return the variable as if it has been updated
-				WoolVariablePrimitive newParam = new WoolVariablePrimitive(
+				WoolVariableResult newParam = new WoolVariableResult(
 						param.getName(),
 						param.getValue(),
 						Instant.now().toEpochMilli(),
@@ -219,11 +217,11 @@ public class VariablesController {
 			content = @Content(
 				array = @ArraySchema(
 					schema = @Schema(
-						implementation = WoolVariablePrimitive.class)
+						implementation = WoolVariableResult.class)
 				)
 			)
 		)
-		@RequestBody List<WoolVariablePrimitive> woolVariables
+		@RequestBody List<WoolVariableResult> woolVariableResults
 	) throws BadRequestException {
 
 		// If no explicit protocol version is provided, assume the latest version
@@ -231,14 +229,14 @@ public class VariablesController {
 
 		// Log this call to the service log
 		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId + "&timeZone=" + timeZone + " with the following variables:");
-		for(WoolVariablePrimitive woolVariableParam : woolVariables) {
-			logger.info(woolVariableParam.toString());
+		for(WoolVariableResult woolVariableResultParam : woolVariableResults) {
+			logger.info(woolVariableResultParam.toString());
 		}
 
 		// Parse the provided time zone string to make sure it is correct (value is otherwise not used in this dummy service)
 		ControllerFunctions.parseTimeZone(timeZone);
 
-		return executeNotifyUpdated(userId, timeZone, woolVariables);
+		return executeNotifyUpdated(userId, timeZone, woolVariableResults);
 	}
 
 	/**
@@ -249,11 +247,11 @@ public class VariablesController {
 	 *
 	 * @param userId the {@code String} identifier of the user for whom variable updates are available.
 	 * @param timeZone the timeZone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
-	 * @param params the {@code List} of {@link WoolVariablePrimitive}s that were updated and may need to be
+	 * @param params the {@code List} of {@link WoolVariableResult}s that were updated and may need to be
 	 *               processed in the external service.
 	 * @return a {@link ResponseEntity} to indicate whether the update was executed successfully.
 	 */
-	private ResponseEntity<?> executeNotifyUpdated(String userId, String timeZone, List<WoolVariablePrimitive> params) {
+	private ResponseEntity<?> executeNotifyUpdated(String userId, String timeZone, List<WoolVariableResult> params) {
 		return new ResponseEntity<ResponseEntity<?>>(HttpStatus.OK);
 	}
 
