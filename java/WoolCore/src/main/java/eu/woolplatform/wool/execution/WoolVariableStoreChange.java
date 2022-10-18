@@ -89,7 +89,7 @@ public abstract class WoolVariableStoreChange {
 		 * have been added in this {@link WoolVariableStoreChange}.
 		 * @return the added WOOL Variables.
 		 */
-		public Map<String,Object> getAddedVariables() {
+		public Map<String,Object> getVariables() {
 			return addedVariables;
 		}
 
@@ -134,7 +134,7 @@ public abstract class WoolVariableStoreChange {
 		 * Returns the collection of variable names that are associated with this {@link Remove} {@link WoolVariableStoreChange}.
 		 * @return the collection of variable names of variables that have been removed.
 		 */
-		public Collection<String> getRemovedVariableNames() {
+		public Collection<String> getVariableNames() {
 			return removedVariableNames;
 		}
 
