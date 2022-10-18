@@ -37,6 +37,10 @@ import org.springframework.context.annotation.Configuration;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * A collection of various Beans used to configure various aspects of the OpenAPI 3.0 documentation
+ * and the automatically generated Swagger pages.
+ */
 @Configuration
 @OpenAPIDefinition
 public class OpenApiSwaggerConfig {
@@ -44,12 +48,17 @@ public class OpenApiSwaggerConfig {
 	private static final Object LOCK = new Object();
 	private static boolean customizedPaths = false;
 
+	/**
+	 * Automatic configuration of various OpenAPI parameters.
+	 * @return an {@link OpenAPI} object.
+	 */
 	@Bean
 	public OpenAPI woolOpenAPI() {
 		OpenAPI openAPI = new OpenAPI();
 
 		// Add a Server + Version for each supported ProtocolVersion
-		// Make sure the latest version is added first, so it is the one automatically selected in Swagger
+		// Make sure the latest version is added first, so it is the one automatically selected in
+		// the Swagger Server selection drop-down menu
 		ProtocolVersion[] allVersions = ProtocolVersion.values();
 		for(int i=allVersions.length-1; i>=0; i--) {
 			Server server = new Server();
@@ -57,6 +66,7 @@ public class OpenApiSwaggerConfig {
 			openAPI.addServersItem(server);
 		}
 
+		// Add the security scheme
 		openAPI.components(new Components().addSecuritySchemes("X-Auth-Token",
 				new SecurityScheme()
 						.name("X-Auth-Token")
@@ -66,15 +76,18 @@ public class OpenApiSwaggerConfig {
 
 		));
 
+		// Add API documentation
 		openAPI.info(
-				new Info()
-						.title("WOOL External Variable Service Dummy API")
-						.description("The WOOL External Variable Service Dummy API can be used to test the integration " +
-								"of a WOOL Web Service with an external variable service that is used to provide up-to-date " +
-								"information on user's WOOL Variable data.")
-						.version("v1.0.0")
-						.contact(new Contact().email("info@woolplatform.eu").name("WOOL Platform Support"))
-						.license(new License().name("MIT").url("https://opensource.org/licenses/MIT")));
+			new Info()
+				.title("WOOL External Variable Service Dummy API")
+				.description("The WOOL External Variable Service Dummy API can be used to test " +
+						"the integration of a WOOL Web Service with an external variable service " +
+						"that is used to provide up-to-date information on user's WOOL Variable " +
+						"data. Any real implementation of an 'External Variable Service' should " +
+						"provide the same API and behaviour as this service.")
+				.version("v"+ProtocolVersion.getLatestVersion().versionName())
+				.contact(new Contact().email("info@woolplatform.eu").name("WOOL Platform Support"))
+				.license(new License().name("MIT").url("https://opensource.org/licenses/MIT")));
 
 		return openAPI;
 	}

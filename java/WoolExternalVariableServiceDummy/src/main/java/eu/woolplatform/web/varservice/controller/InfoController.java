@@ -20,16 +20,14 @@
 package eu.woolplatform.web.varservice.controller;
 
 import eu.woolplatform.utils.AppComponents;
-import eu.woolplatform.web.varservice.Application;
 import eu.woolplatform.web.varservice.Configuration;
 import eu.woolplatform.web.varservice.ProtocolVersion;
 import eu.woolplatform.web.varservice.ServiceContext;
-import eu.woolplatform.web.varservice.controller.model.ServiceInfo;
+import eu.woolplatform.web.varservice.controller.schema.ServiceInfoPayload;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -47,7 +45,7 @@ public class InfoController {
 					" <li>serviceVersion - software version of the service</li></ul>")
 
 	@GetMapping("/all")
-	public ServiceInfo all(
+	public ServiceInfoPayload all(
 		@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 		@PathVariable(value = "version")
 		String versionName
@@ -59,7 +57,7 @@ public class InfoController {
 		// Log this call to the service log
 		logger.info("/v"+ versionName+"/info/all");
 
-		return new ServiceInfo(Configuration.getInstance().get(Configuration.BUILD_TIME),
+		return new ServiceInfoPayload(Configuration.getInstance().get(Configuration.BUILD_TIME),
 				ServiceContext.getCurrentVersion(),
 				Configuration.getInstance().get(Configuration.VERSION));
 	}

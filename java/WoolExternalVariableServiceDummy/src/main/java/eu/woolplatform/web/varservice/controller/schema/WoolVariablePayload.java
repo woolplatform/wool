@@ -17,17 +17,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package eu.woolplatform.web.varservice.controller.model;
+package eu.woolplatform.web.varservice.controller.schema;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * A {@link WoolVariableResult} represents a WOOL Variable that is returned as the result of an api-
- * call to the web service.
+ * A {@link WoolVariablePayload} represents a WOOL Variable that is returned as the result of an
+ * api-call to the web service.
  *
  * @author Harm op den Akker
  */
-public class WoolVariableResult {
+public class WoolVariablePayload {
 
 	@Schema(description = "Name of the WOOL Variable",
 			example = "woolVariableName",
@@ -55,21 +55,22 @@ public class WoolVariableResult {
 	// --------------------------------------------------------
 
 	/**
-	 * Creates an instance of an empty {@link WoolVariableResult} (this constructor is used for
+	 * Creates an instance of an empty {@link WoolVariablePayload} (this constructor is used for
 	 * serialization/deserialization purposes).
 	 */
-	public WoolVariableResult() { }
+	public WoolVariablePayload() { }
 
 	/**
-	 * Creates an instance of a {@link WoolVariableResult}
+	 * Creates an instance of a {@link WoolVariablePayload}
 	 * @param name the name of the WOOL Variable that is represented by this
-	 * 			   {@link WoolVariableResult}
+	 * 			   {@link WoolVariablePayload}
 	 * @param value the value of the WOOL Variable as an {@link Object}
 	 * @param updatedTime the UTC timestamp of when this WOOL Variable was last updated
 	 * @param updatedTimeZone the time zone (as IANA String, e.g. "Europe/Lisbon") in which this
 	 *                        wool variable was last updated.
 	 */
-	public WoolVariableResult(String name, Object value, Long updatedTime, String updatedTimeZone) {
+	public WoolVariablePayload(String name, Object value,
+							   Long updatedTime, String updatedTimeZone) {
 		this.name = name;
 		this.value = value;
 		this.updatedTime = updatedTime;
@@ -81,32 +82,32 @@ public class WoolVariableResult {
 	// -----------------------------------------------------------
 
 	/**
-	 * Returns the name of this {@link WoolVariableResult}.
-	 * @return the name of this {@link WoolVariableResult}.
+	 * Returns the name of this {@link WoolVariablePayload}.
+	 * @return the name of this {@link WoolVariablePayload}.
 	 */
 	public String getName() {
 		return name;
 	}
 
 	/**
-	 * Sets the name of this {@link WoolVariableResult}.
-	 * @param name name of this {@link WoolVariableResult}.
+	 * Sets the name of this {@link WoolVariablePayload}.
+	 * @param name name of this {@link WoolVariablePayload}.
 	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
 	/**
-	 * Returns the value of this {@link WoolVariableResult}.
-	 * @return the value of this {@link WoolVariableResult}.
+	 * Returns the value of this {@link WoolVariablePayload}.
+	 * @return the value of this {@link WoolVariablePayload}.
 	 */
 	public Object getValue() {
 		return value;
 	}
 
 	/**
-	 * Sets the value of this {@link WoolVariableResult}.
-	 * @param value the value of this {@link WoolVariableResult}.
+	 * Sets the value of this {@link WoolVariablePayload}.
+	 * @param value the value of this {@link WoolVariablePayload}.
 	 */
 	public void setValue(Object value) {
 		this.value = value;
@@ -155,7 +156,7 @@ public class WoolVariableResult {
 
 	@Override
 	public String toString() {
-		return "WoolVariableResult{" +
+		return "WoolVariablePayload{" +
 				"name='" + name + "'" +
 				", value='" + value + "'" +
 				", updatedTime='" + updatedTime + "'" +

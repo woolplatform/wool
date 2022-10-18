@@ -22,7 +22,7 @@ package eu.woolplatform.web.varservice.controller;
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.varservice.ProtocolVersion;
 import eu.woolplatform.web.varservice.QueryRunner;
-import eu.woolplatform.web.varservice.controller.model.WoolVariableResult;
+import eu.woolplatform.web.varservice.controller.schema.WoolVariablePayload;
 import eu.woolplatform.web.varservice.exception.BadRequestException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -81,10 +81,10 @@ public class VariablesController {
 					" in the request, and the lastUpdated time set to the current UTC time in epoch seconds.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successful operation",
-					content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableResult.class)))) })
+					content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariablePayload.class)))) })
 	@RequestMapping(value="/retrieve-updates", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
-	public List<WoolVariableResult> retrieveUpdates (
+	public List<WoolVariablePayload> retrieveUpdates (
 			HttpServletRequest request,
 			HttpServletResponse response,
 
@@ -101,15 +101,15 @@ public class VariablesController {
 			String timeZone,
 
 			@Parameter(description = "List of WOOL Variables for which to check for updates.",
-					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariableResult.class))))
-			@RequestBody List<WoolVariableResult> woolVariableResults) throws Exception {
+					required=true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = WoolVariablePayload.class))))
+			@RequestBody List<WoolVariablePayload> woolVariableResults) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
 		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
 		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId + "&timeZone=" + timeZone + " with the following variables:");
-		for(WoolVariableResult woolVariableResultParam : woolVariableResults) {
+		for(WoolVariablePayload woolVariableResultParam : woolVariableResults) {
 			logger.info(woolVariableResultParam.toString());
 		}
 
@@ -134,19 +134,19 @@ public class VariablesController {
 	 *
 	 * @param userId the {@code String} identifier of the user who's variable updates are requested.
 	 * @param timeZone the time zone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
-	 * @param params the {@code List} of {@link WoolVariableResult}s for which it should be verified if an update is needed.
-	 * @return a {@code List} of {@link WoolVariableResult}s with each of the parameters for which an updated value has been found
+	 * @param params the {@code List} of {@link WoolVariablePayload}s for which it should be verified if an update is needed.
+	 * @return a {@code List} of {@link WoolVariablePayload}s with each of the parameters for which an updated value has been found
 	 * (note that this may be an empty list).
 	 */
-	private List<WoolVariableResult> executeRetrieveUpdates (String userId, String timeZone, List<WoolVariableResult> params) throws BadRequestException {
+	private List<WoolVariablePayload> executeRetrieveUpdates (String userId, String timeZone, List<WoolVariablePayload> params) throws BadRequestException {
 
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
 
-		List<WoolVariableResult> result = new ArrayList<>();
+		List<WoolVariablePayload> result = new ArrayList<>();
 
 		Random random = new Random();
 
-		for (WoolVariableResult param : params) {
+		for (WoolVariablePayload param : params) {
 
 			if(param.getUpdatedTime() != null && param.getUpdatedTimeZone() != null) {
 				ZonedDateTime paramZonedDateTime =
@@ -169,7 +169,7 @@ public class VariablesController {
 			}
 
 			if(random.nextBoolean()) { // With 50% chance, return the variable as if it has been updated
-				WoolVariableResult newParam = new WoolVariableResult(
+				WoolVariablePayload newParam = new WoolVariablePayload(
 						param.getName(),
 						param.getValue(),
 						Instant.now().toEpochMilli(),
@@ -217,11 +217,11 @@ public class VariablesController {
 			content = @Content(
 				array = @ArraySchema(
 					schema = @Schema(
-						implementation = WoolVariableResult.class)
+						implementation = WoolVariablePayload.class)
 				)
 			)
 		)
-		@RequestBody List<WoolVariableResult> woolVariableResults
+		@RequestBody List<WoolVariablePayload> woolVariableResults
 	) throws BadRequestException {
 
 		// If no explicit protocol version is provided, assume the latest version
@@ -229,7 +229,7 @@ public class VariablesController {
 
 		// Log this call to the service log
 		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId + "&timeZone=" + timeZone + " with the following variables:");
-		for(WoolVariableResult woolVariableResultParam : woolVariableResults) {
+		for(WoolVariablePayload woolVariableResultParam : woolVariableResults) {
 			logger.info(woolVariableResultParam.toString());
 		}
 
@@ -247,11 +247,11 @@ public class VariablesController {
 	 *
 	 * @param userId the {@code String} identifier of the user for whom variable updates are available.
 	 * @param timeZone the timeZone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA Codes)
-	 * @param params the {@code List} of {@link WoolVariableResult}s that were updated and may need to be
+	 * @param params the {@code List} of {@link WoolVariablePayload}s that were updated and may need to be
 	 *               processed in the external service.
 	 * @return a {@link ResponseEntity} to indicate whether the update was executed successfully.
 	 */
-	private ResponseEntity<?> executeNotifyUpdated(String userId, String timeZone, List<WoolVariableResult> params) {
+	private ResponseEntity<?> executeNotifyUpdated(String userId, String timeZone, List<WoolVariablePayload> params) {
 		return new ResponseEntity<ResponseEntity<?>>(HttpStatus.OK);
 	}
 

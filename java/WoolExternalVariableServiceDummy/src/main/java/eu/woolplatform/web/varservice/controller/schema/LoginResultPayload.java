@@ -17,29 +17,54 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package eu.woolplatform.web.varservice.controller.model;
+package eu.woolplatform.web.varservice.controller.schema;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-public class LoginResult {
+/**
+ * A {@link LoginResultPayload} is returned by the /auth/login end-point as handled by the
+ * {@link eu.woolplatform.web.varservice.controller.AuthController} in case of a successful
+ * login and contains the username and JSON Web Token, , which can be serialized /
+ * deserialized to the following JSON Format:
+ * <pre>
+ * {
+ *   "user": "user",
+ *   "token": "See https://jwt.io/"
+ * }
+ * </pre>
+ */
+public class LoginResultPayload {
 
 	@Schema(description = "Username associated with this authentication token",
 			example = "user")
 	private String user;
 
-	@Schema(description = "The JSON Web Token associated to the given user",
-			example = "JWT")
+	@Schema(description = "The JSON Web Token that was generated for the user",
+			example = "See https://jwt.io/")
 	private String token;
 
-	public LoginResult(String user, String token) {
+	/**
+	 * Creates an instance of a {@link LoginResultPayload} with a given {@code user} and {@token}.
+	 * @param user the username of the user that performed a successful login.
+	 * @param token the JSON Web Token generated for the user as a {@link String}.
+	 */
+	public LoginResultPayload(String user, String token) {
 		this.user = user;
 		this.token = token;
 	}
 
+	/**
+	 * Returns the username of the user that performed a successful login.
+	 * @return the username of the user that performed a successful login.
+	 */
 	public String getUser() {
 		return user;
 	}
 
+	/**
+	 * Returns the JSON Web Token generated for the user as a {@link String}.
+	 * @return the JSON Web Token generated for the user as a {@link String}.
+	 */
 	public String getToken() {
 		return token;
 	}

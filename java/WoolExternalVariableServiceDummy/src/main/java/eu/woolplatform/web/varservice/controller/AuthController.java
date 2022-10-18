@@ -23,8 +23,8 @@ import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.http.URLParameters;
 import eu.woolplatform.web.varservice.*;
-import eu.woolplatform.web.varservice.controller.model.LoginParams;
-import eu.woolplatform.web.varservice.controller.model.LoginResult;
+import eu.woolplatform.web.varservice.controller.schema.LoginParametersPayload;
+import eu.woolplatform.web.varservice.controller.schema.LoginResultPayload;
 import eu.woolplatform.web.varservice.exception.BadRequestException;
 import eu.woolplatform.web.varservice.exception.ErrorCode;
 import eu.woolplatform.web.varservice.exception.HttpFieldError;
@@ -57,7 +57,7 @@ public class AuthController {
 					"token that does not expire, either provide '0' or 'never' as the value for '*tokenExpiration*'.")
 	@RequestMapping(value="/login", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
-	public LoginResult login(
+	public LoginResultPayload login(
 			HttpServletRequest request,
 			HttpServletResponse response,
 
@@ -66,31 +66,31 @@ public class AuthController {
 			String versionName,
 
 			@RequestBody
-			LoginParams loginParams) throws Exception {
+			LoginParametersPayload loginParametersPayload) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
 		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
-		if(loginParams != null) {
-			logger.info("POST /v" + versionName + "/auth/login for user '" + loginParams.getUser() + "'.");
+		if(loginParametersPayload != null) {
+			logger.info("POST /v" + versionName + "/auth/login for user '" + loginParametersPayload.getUser() + "'.");
 		} else {
 			logger.info("POST /v" + versionName + "/auth/login with empty login parameters.");
 		}
 
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(
-					(version, user) -> doLogin(request, loginParams),
+					(version, user) -> doLogin(request, loginParametersPayload),
 					versionName, null, response, "");
 		}
 	}
 
-	private LoginResult doLogin(HttpServletRequest request,
-			LoginParams loginParams) throws Exception {
+	private LoginResultPayload doLogin(HttpServletRequest request,
+									   LoginParametersPayload loginParametersPayload) throws Exception {
 		validateForbiddenQueryParams(request, "user", "password");
-		String user = loginParams.getUser();
-		String password = loginParams.getPassword();
-		Integer tokenExpiration = loginParams.getTokenExpiration();
+		String user = loginParametersPayload.getUser();
+		String password = loginParametersPayload.getPassword();
+		Integer tokenExpiration = loginParametersPayload.getTokenExpiration();
 		List<HttpFieldError> fieldErrors = new ArrayList<>();
 		if (user == null || user.length() == 0) {
 			fieldErrors.add(new HttpFieldError("user",
@@ -125,13 +125,13 @@ public class AuthController {
 		logger.info("User {} logged in", credentials.getUsername());
 		Date expiration = null;
 		DateTime now = new DateTime();
-		if (loginParams.getTokenExpiration() != null) {
-			expiration = now.plusMinutes(loginParams.getTokenExpiration())
+		if (loginParametersPayload.getTokenExpiration() != null) {
+			expiration = now.plusMinutes(loginParametersPayload.getTokenExpiration())
 					.toDate();
 		}
 		AuthDetails details = new AuthDetails(user, now.toDate(), expiration);
 		String token = AuthToken.createToken(details);
-		return new LoginResult(credentials.getUsername(), token);
+		return new LoginResultPayload(credentials.getUsername(), token);
 	}
 
 	private void validateForbiddenQueryParams(HttpServletRequest request,
