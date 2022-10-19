@@ -27,6 +27,7 @@ import eu.woolplatform.utils.exception.ParseException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -75,6 +76,88 @@ public class DateTimeUtils {
 	 */
 	public static final DateTimeFormatter SQL_DATE_TIME_FORMAT =
 			DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+	/**
+	 * Returns the current date/time with a precision of milliseconds. This
+	 * means that the remainder of the nanoseconds is set to 0. This method uses
+	 * the system default timezone.
+	 *
+	 * <p>Since the ISO date/time format also has a precision of milliseconds,
+	 * you can write the date/time to an ISO date/time string and parse it back
+	 * and expect the same date/time as the original value. Using this method
+	 * can also prevent bugs after migrating from joda-time to java.time,
+	 * because joda-time also used a precision of milliseconds.</p>
+	 *
+	 * @return the current date/time with a precision of milliseconds, in the
+	 * system default timezone
+	 */
+	public static ZonedDateTime nowMs() {
+		ZonedDateTime now = DateTimeUtils.nowMs();
+		return now.with(ChronoField.MILLI_OF_SECOND, now.get(
+				ChronoField.MILLI_OF_SECOND));
+	}
+
+	/**
+	 * Returns the current date/time with a precision of milliseconds. This
+	 * means that the remainder of the nanoseconds is set to 0. The result is
+	 * in the specified timezone.
+	 *
+	 * <p>Since the ISO date/time format also has a precision of milliseconds,
+	 * you can write the date/time to an ISO date/time string and parse it back
+	 * and expect the same date/time as the original value. Using this method
+	 * can also prevent bugs after migrating from joda-time to java.time,
+	 * because joda-time also used a precision of milliseconds.</p>
+	 *
+	 * @param tz the timezone
+	 * @return the current date/time with a precision of milliseconds, in the
+	 * specified timezone
+	 */
+	public static ZonedDateTime nowMs(ZoneId tz) {
+		ZonedDateTime now = DateTimeUtils.nowMs(tz);
+		return now.with(ChronoField.MILLI_OF_SECOND, now.get(
+				ChronoField.MILLI_OF_SECOND));
+	}
+
+	/**
+	 * Returns the current date/time with a precision of milliseconds. This
+	 * means that the remainder of the nanoseconds is set to 0. This method uses
+	 * the system default timezone.
+	 *
+	 * <p>Since the ISO date/time format also has a precision of milliseconds,
+	 * you can write the date/time to an ISO date/time string and parse it back
+	 * and expect the same date/time as the original value. Using this method
+	 * can also prevent bugs after migrating from joda-time to java.time,
+	 * because joda-time also used a precision of milliseconds.</p>
+	 *
+	 * @return the current date/time with a precision of milliseconds, in the
+	 * system default timezone
+	 */
+	public static LocalDateTime nowLocalMs() {
+		LocalDateTime now = DateTimeUtils.nowLocalMs();
+		return now.with(ChronoField.MILLI_OF_SECOND, now.get(
+				ChronoField.MILLI_OF_SECOND));
+	}
+
+	/**
+	 * Returns the current date/time with a precision of milliseconds. This
+	 * means that the remainder of the nanoseconds is set to 0. This method uses
+	 * the system default timezone. The result is in the specified timezone.
+	 *
+	 * <p>Since the ISO date/time format also has a precision of milliseconds,
+	 * you can write the date/time to an ISO date/time string and parse it back
+	 * and expect the same date/time as the original value. Using this method
+	 * can also prevent bugs after migrating from joda-time to java.time,
+	 * because joda-time also used a precision of milliseconds.</p>
+	 *
+	 * @param tz the timezone
+	 * @return the current date/time with a precision of milliseconds, in the
+	 * specified timezone
+	 */
+	public static LocalDateTime nowLocalMs(ZoneId tz) {
+		LocalDateTime now = DateTimeUtils.nowLocalMs(tz);
+		return now.with(ChronoField.MILLI_OF_SECOND, now.get(
+				ChronoField.MILLI_OF_SECOND));
+	}
 
 	/**
 	 * Tries to parse any date/time string and return a date/time object of the

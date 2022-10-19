@@ -192,7 +192,7 @@ public abstract class TaskScheduler {
 		synchronized (lock) {
 			task.setId(taskId);
 			scheduledTasks.put(taskId, task);
-			ZonedDateTime now = ZonedDateTime.now();
+			ZonedDateTime now = DateTimeUtils.nowMs();
 			TaskSchedule schedule = task.getSchedule();
 			if (schedule instanceof TaskSchedule.Immediate) {
 				startImmediate(context, task, now);
@@ -442,7 +442,7 @@ public abstract class TaskScheduler {
 		synchronized (lock) {
 			if (!scheduledTasks.containsKey(taskId))
 				return;
-			now = ZonedDateTime.now();
+			now = DateTimeUtils.nowMs();
 			runningTasks.remove(taskId);
 			if (exception == null) {
 				logger.info(String.format(
@@ -674,7 +674,7 @@ public abstract class TaskScheduler {
 						task.getName(), taskId) + ": " + exception.getMessage(),
 						exception);
 			}
-			LocalDateTime start = LocalDateTime.now();
+			LocalDateTime start = DateTimeUtils.nowLocalMs();
 			if (!start.isAfter(time))
 				start = time.plus(1, ChronoUnit.MILLIS);
 			final LocalDateTime finalStart = start;
@@ -994,7 +994,7 @@ public abstract class TaskScheduler {
 	 */
 	public void onTriggerTask(Object context, ScheduledTaskSpec taskSpec) {
 		synchronized (lock) {
-			ZonedDateTime now = ZonedDateTime.now();
+			ZonedDateTime now = DateTimeUtils.nowMs();
 			String taskId = taskSpec.getId();
 			ScheduledTaskSpec scheduledSpec = scheduledTaskInstances.get(
 					taskId);

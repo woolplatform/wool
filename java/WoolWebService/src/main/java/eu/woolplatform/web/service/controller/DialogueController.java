@@ -271,7 +271,7 @@ public class DialogueController {
 			UserService userService = application.getServiceManager()
 					.getActiveUserService(woolUserId);
 
-			ZonedDateTime eventTime = ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+			ZonedDateTime eventTime = DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
@@ -358,7 +358,7 @@ public class DialogueController {
 
 		// Determine the event timestamp
 		ZonedDateTime continueDialogueEventTime =
-				ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+				DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
 		LoggedDialogue currDlg =
 				LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId,
@@ -514,7 +514,7 @@ public class DialogueController {
 
 			// Determine the event time stamp
 			ZonedDateTime backDialogueEventTime =
-					ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+					DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);

@@ -120,7 +120,7 @@ public class AuthController {
 		}
 		logger.info("User {} logged in", userCredentials.getUsername());
 		Date expiration = null;
-		ZonedDateTime now = ZonedDateTime.now();
+		ZonedDateTime now = DateTimeUtils.nowMs();
 		if (loginParams.getTokenExpiration() != null) {
 			expiration = Date.from(now.plusMinutes(
 					loginParams.getTokenExpiration()).toInstant());

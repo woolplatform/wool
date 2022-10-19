@@ -236,7 +236,7 @@ public class UserServiceManager {
 			}
 		}
 
-		LocalDateTime parsedTime = LocalDateTime.now(parsedTimezone);
+		LocalDateTime parsedTime = DateTimeUtils.nowLocalMs(parsedTimezone);
 
 		if (!errors.isEmpty()) {
 			return null;

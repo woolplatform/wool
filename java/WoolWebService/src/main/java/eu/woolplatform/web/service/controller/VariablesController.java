@@ -217,7 +217,7 @@ public class VariablesController {
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
 
-		ZonedDateTime updatedTime = ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+		ZonedDateTime updatedTime = DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
 		userService.getVariableStore().setValue(name, value, true, updatedTime);
 		return null;
@@ -299,7 +299,7 @@ public class VariablesController {
 					entry.getKey(),
 					entry.getValue(),
 					true,
-					ZonedDateTime.now(userService.getWoolUser().getTimeZone()));
+					DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone()));
 		}
 
 		return null;

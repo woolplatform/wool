@@ -103,7 +103,7 @@ public class DialogueExecutor {
 			userService.updateVariablesFromExternalService(variablesNeeded);
 
 		// The timestamp of this "start dialogue" trigger will be passed on and used for logging
-		ZonedDateTime eventTime = ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+		ZonedDateTime eventTime = DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
 		WoolNode startNode;
 		try {
@@ -152,7 +152,7 @@ public class DialogueExecutor {
 
 		// Define the event time that is passed along and used for logging
 		ZonedDateTime progressDialogueEventTime =
-				ZonedDateTime.now(userService.getWoolUser().getTimeZone());
+				DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
 		LoggedDialogue loggedDialogue =
 				(LoggedDialogue)state.getLoggedDialogue();

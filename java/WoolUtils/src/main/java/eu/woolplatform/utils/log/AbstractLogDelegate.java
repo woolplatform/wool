@@ -292,7 +292,7 @@ public abstract class AbstractLogDelegate implements LogDelegate {
 	public int println(int priority, String tag, String msg) {
 		if (!isLoggable(tag, priority))
 			return 0;
-		ZonedDateTime time = ZonedDateTime.now();
+		ZonedDateTime time = DateTimeUtils.nowMs();
 		String taggedMsg = LogLineTagger.tagLines(priority, tag, time, msg);
 		synchronized (lock) {
 			int result = printTaggedMessage(priority, tag, taggedMsg);
