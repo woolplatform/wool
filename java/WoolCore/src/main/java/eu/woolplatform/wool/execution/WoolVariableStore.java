@@ -172,7 +172,7 @@ public class WoolVariableStore {
 	/**
 	 * Returns a set of all the names of {@link WoolVariable}s contained in this {@link WoolVariableStore}.
 	 *
-	 * @return
+	 * @return a set of all the names of {@link WoolVariable}s contained in this {@link WoolVariableStore}.
 	 */
 	public Set<String> getWoolVariableNames() {
 		return woolVariables.keySet();
@@ -279,11 +279,11 @@ public class WoolVariableStore {
 	 * the resulting map are observable by the {@link WoolVariableStoreOnChangeListener}s that are registered
 	 * to listen to this {@link WoolVariableStore}.
 	 *
-	 * This "modifiable map" is used in the execution of WOOL Dialogues containing WOOL Variables, as the implementation
-	 * relies on the {@link eu.woolplatform.utils.expressions.Expression} interface.
+	 * <p>This "modifiable map" is used in the execution of WOOL Dialogues containing WOOL Variables, as the implementation
+	 * relies on the {@link eu.woolplatform.utils.expressions.Expression} interface.</p>
 	 *
-	 * In other words, if you are thinking "Man, I wish WoolVariableStore was just a simple mapping of variable names to values",
-	 * use this method, and you can pretend that that is the case.
+	 * <p>In other words, if you are thinking "Man, I wish WoolVariableStore was just a simple mapping of variable names to values",
+	 * use this method, and you can pretend that that is the case.</p>
 	 *
 	 * If {@code notifyObservers} is {@code true}, then any action that modifies the content of this {@link Map}
 	 * will result in all listeners being notified.
