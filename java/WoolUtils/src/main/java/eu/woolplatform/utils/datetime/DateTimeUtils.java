@@ -64,6 +64,13 @@ public class DateTimeUtils {
 			DateTimeFormatter.ofPattern("HH:mm:ss");
 
 	/**
+	 * Formats a date/time as an ISO time with milliseconds. Example:
+	 * "16:45:23.768"
+	 */
+	public static final DateTimeFormatter ISO_TIME_MS_FORMAT =
+			DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+
+	/**
 	 * Formats a date/time as an SQL date/time. Example: "2022-10-17 16:45:23"
 	 */
 	public static final DateTimeFormatter SQL_DATE_TIME_FORMAT =
