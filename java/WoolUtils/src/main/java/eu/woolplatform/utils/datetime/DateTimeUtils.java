@@ -92,7 +92,7 @@ public class DateTimeUtils {
 	 * system default timezone
 	 */
 	public static ZonedDateTime nowMs() {
-		ZonedDateTime now = DateTimeUtils.nowMs();
+		ZonedDateTime now = ZonedDateTime.now();
 		return now.with(ChronoField.MILLI_OF_SECOND, now.get(
 				ChronoField.MILLI_OF_SECOND));
 	}
@@ -113,7 +113,7 @@ public class DateTimeUtils {
 	 * specified timezone
 	 */
 	public static ZonedDateTime nowMs(ZoneId tz) {
-		ZonedDateTime now = DateTimeUtils.nowMs(tz);
+		ZonedDateTime now = ZonedDateTime.now(tz);
 		return now.with(ChronoField.MILLI_OF_SECOND, now.get(
 				ChronoField.MILLI_OF_SECOND));
 	}
@@ -133,7 +133,7 @@ public class DateTimeUtils {
 	 * system default timezone
 	 */
 	public static LocalDateTime nowLocalMs() {
-		LocalDateTime now = DateTimeUtils.nowLocalMs();
+		LocalDateTime now = LocalDateTime.now();
 		return now.with(ChronoField.MILLI_OF_SECOND, now.get(
 				ChronoField.MILLI_OF_SECOND));
 	}
@@ -154,7 +154,7 @@ public class DateTimeUtils {
 	 * specified timezone
 	 */
 	public static LocalDateTime nowLocalMs(ZoneId tz) {
-		LocalDateTime now = DateTimeUtils.nowLocalMs(tz);
+		LocalDateTime now = LocalDateTime.now(tz);
 		return now.with(ChronoField.MILLI_OF_SECOND, now.get(
 				ChronoField.MILLI_OF_SECOND));
 	}
