@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * A {@link LoginResultPayload} is returned by the /auth/login end-point as handled by the
  * {@link eu.woolplatform.web.varservice.controller.AuthController} in case of a successful
- * login and contains the username and JSON Web Token, , which can be serialized /
+ * login and contains the username and JSON Web Token, which can be serialized /
  * deserialized to the following JSON Format:
  * <pre>
  * {

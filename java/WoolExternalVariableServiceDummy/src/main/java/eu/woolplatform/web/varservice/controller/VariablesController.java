@@ -85,10 +85,10 @@ public class VariablesController {
 			"current UTC time in epoch seconds.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200",
-				description = "Successful operation",
-				content = @Content(
-						array = @ArraySchema(
-							schema = @Schema(implementation = WoolVariablePayload.class)))) })
+			description = "Successful operation",
+			content = @Content(
+				array = @ArraySchema(
+					schema = @Schema(implementation = WoolVariablePayload.class)))) })
 	@RequestMapping(value="/retrieve-updates", method= RequestMethod.POST, consumes={
 			MediaType.APPLICATION_JSON_VALUE })
 	public List<WoolVariablePayload> retrieveUpdates (
@@ -112,7 +112,7 @@ public class VariablesController {
 					content = @Content(
 						array = @ArraySchema(
 							schema = @Schema(implementation = WoolVariablePayload.class))))
-			@RequestBody List<WoolVariablePayload> woolVariableResults) throws Exception {
+			@RequestBody List<WoolVariablePayload> woolVariables) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
 		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
@@ -120,18 +120,18 @@ public class VariablesController {
 		// Log this call to the service log
 		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId +
 				"&timeZone=" + timeZone + " with the following variables:");
-		for(WoolVariablePayload woolVariableResultParam : woolVariableResults) {
+		for(WoolVariablePayload woolVariableResultParam : woolVariables) {
 			logger.info(woolVariableResultParam.toString());
 		}
 
 		// Execute either for the provided userId or for the currently logged in user
 		if(userId.equals("")) {
 			return QueryRunner.runQuery(
-				(version, user) -> executeRetrieveUpdates(user, timeZone, woolVariableResults),
+				(version, user) -> executeRetrieveUpdates(user, timeZone, woolVariables),
 				versionName, request, response, userId);
 		} else {
 			return QueryRunner.runQuery(
-				(version, user) -> executeRetrieveUpdates(userId, timeZone, woolVariableResults),
+				(version, user) -> executeRetrieveUpdates(userId, timeZone, woolVariables),
 				versionName, request, response, userId);
 		}
 	}
@@ -242,7 +242,7 @@ public class VariablesController {
 				)
 			)
 		)
-		@RequestBody List<WoolVariablePayload> woolVariableResults
+		@RequestBody List<WoolVariablePayload> woolVariables
 	) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
@@ -251,18 +251,19 @@ public class VariablesController {
 		// Log this call to the service log
 		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId +
 				"&timeZone=" + timeZone + " with the following variables:");
-		for(WoolVariablePayload woolVariableResultParam : woolVariableResults) {
+		for(WoolVariablePayload woolVariableResultParam : woolVariables) {
 			logger.info(woolVariableResultParam.toString());
 		}
 
 		// Execute either for the provided userId or for the currently logged-in user
+		// TODO: Not correct, an error should be thrown on an empty userId
 		if(userId.equals("")) {
 			return QueryRunner.runQuery(
-				(version, user) -> executeNotifyUpdated(user, timeZone, woolVariableResults),
+				(version, user) -> executeNotifyUpdated(user, timeZone, woolVariables),
 				versionName, request, response, userId);
 		} else {
 			return QueryRunner.runQuery(
-				(version, user) -> executeNotifyUpdated(userId, timeZone, woolVariableResults),
+				(version, user) -> executeNotifyUpdated(userId, timeZone, woolVariables),
 				versionName, request, response, userId);
 		}
 

@@ -67,18 +67,15 @@ public class InfoController {
 		// Log this call to the service log
 		logger.info("/v"+ versionName+"/info/all");
 
+		// Construct the string that indicates the service's uptime
 		Long launchedTime = application.getLaunchedTime();
 		Long currentTime = Instant.now().toEpochMilli();
 		long upTimeMillis = currentTime - launchedTime;
-
 		long days = TimeUnit.MILLISECONDS.toDays(upTimeMillis);
 		upTimeMillis = upTimeMillis - (days * 86400000);
-
 		long hours = TimeUnit.MILLISECONDS.toHours(upTimeMillis);
 		upTimeMillis = upTimeMillis - (hours * 3600000);
-
 		long minutes = TimeUnit.MILLISECONDS.toMinutes(upTimeMillis);
-
 		String upTimeString = "" + days + "d " + hours + "h " + minutes + "m";
 
 		return new ServiceInfoPayload(
