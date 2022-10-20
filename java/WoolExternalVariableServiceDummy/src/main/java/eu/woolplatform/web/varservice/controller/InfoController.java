@@ -32,17 +32,18 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/v{version}/info")
-@Tag(name = "3. Information", description = "End-points that provide information about the running service")
+@Tag(name = "3. Information",
+	 description = "End-points that provide information about the running service")
 public class InfoController {
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	@Operation(summary = "Retrieve a set of metadata parameters about the running service",
-			description = "This end-point may be called without authentication and will return 3 variables" +
-					" that describe the current version of the service:" +
-					" <ul><li>build - Date & Time when the service was built</li>" +
-					" <li>protocolVersion - latest supported API Protocol version</li>" +
-					" <li>serviceVersion - software version of the service</li></ul>")
+		description = "This end-point may be called without authentication and will return 3 " +
+			"parameters that describe the current version of the service:" +
+			" <ul><li>build - Date & Time when the service was built</li>" +
+			" <li>protocolVersion - latest supported API Protocol version</li>" +
+			" <li>serviceVersion - software version of the service</li></ul>")
 
 	@GetMapping("/all")
 	public ServiceInfoPayload all(

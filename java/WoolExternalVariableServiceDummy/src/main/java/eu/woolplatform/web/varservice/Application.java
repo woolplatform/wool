@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 
 import java.net.URL;
+import java.time.Instant;
 
 /**
  * The main entry point for the External Variable Service Dummy as a Spring Boot Application.
@@ -49,7 +50,8 @@ import java.net.URL;
 public class Application extends SpringBootServletInitializer implements
 ApplicationListener<ApplicationEvent> {
 
-	private final Logger logger = AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
+	private final Logger logger =
+			AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
 	private final Configuration config;
 
 	/**

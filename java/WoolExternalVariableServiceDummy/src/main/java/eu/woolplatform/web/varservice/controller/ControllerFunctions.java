@@ -31,6 +31,8 @@ import java.util.List;
 /**
  * The {@link ControllerFunctions} class offers a set of public, static methods
  * that can be used by the service's various REST controllers.
+ *
+ * @author Harm op den Akker
  */
 public class ControllerFunctions {
 
@@ -39,9 +41,9 @@ public class ControllerFunctions {
 	// -------------------------------------- //
 
 	/**
-	 * Parses a given String into a {@link ZoneId} time zone object. The given {@code timeZone} String
-	 * should be formatted according to the rules defined in {@link ZoneId#of(String)}}. When given an
-	 * empty string, or {@code null}, this method returns the default time zone as given by
+	 * Parses a given String into a {@link ZoneId} time zone object. The given {@code timeZone}
+	 * String should be formatted according to the rules defined in {@link ZoneId#of(String)}}. When
+	 * given an empty string, or {@code null}, this method returns the default time zone as given by
 	 * {@link ZoneId#systemDefault()}.
 	 * @param timeZone a String representation of a time zone.
 	 * @return the time zone as a {@link ZoneId}
@@ -61,10 +63,12 @@ public class ControllerFunctions {
 			result = ZoneId.of(timeZone);
 		} catch (ZoneRulesException zoneRulesException) {
 			errors.add(new HttpFieldError("timeZone",
-					"Invalid value for field \"timeZone\": " + timeZone + " (zone not recognized)."));
+				"Invalid value for field \"timeZone\": " +
+						timeZone + " (zone not recognized)."));
 		} catch(DateTimeException dateTimeException) {
 			errors.add(new HttpFieldError("timeZone",
-					"Invalid value for field \"timeZone\": " + timeZone + " (format incorrect)."));
+				"Invalid value for field \"timeZone\": " +
+						timeZone + " (format incorrect)."));
 		}
 
 		if(!errors.isEmpty()) {
@@ -76,4 +80,3 @@ public class ControllerFunctions {
 	}
 
 }
-

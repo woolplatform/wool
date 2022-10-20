@@ -68,12 +68,18 @@ public class QueryRunner {
 			String user = null;
 			if (request != null)
 				user = validateToken(request);
-			if(woolUserId.equals("") // If the request was made for "this" (authenticated) user
-				|| (woolUserId.equals(user)) // If the request was made for a specific woolUserId that happens to be "this" (authenticated) user
-				|| UserFile.findUser(user).getRole().equals(UserCredentials.USER_ROLE_ADMIN)) { // If "this" user is an admin
+			// If the request was made for "this" (authenticated) user
+			// OR If the request was made for a specific woolUserId that happens to be "this"
+			//   (authenticated) user
+			// OR If "this" user is an admin
+			if(woolUserId.equals("")
+				|| (woolUserId.equals(user)) //
+				|| UserFile.findUser(user).getRole().equals(UserCredentials.USER_ROLE_ADMIN)) {
 				return query.runQuery(version, user);
 			} else {
-				throw new UnauthorizedException("Attempting to run query for woolUserId '"+woolUserId+"', but currently logged in user '"+user+"' is not an admin.");
+				throw new UnauthorizedException("Attempting to run query for woolUserId '" +
+						woolUserId + "', but currently logged in user '" +
+						user + "' is not an admin.");
 			}
 		} catch (UnauthorizedException ex) {
 			response.addHeader("WWW-Authenticate", "None");
