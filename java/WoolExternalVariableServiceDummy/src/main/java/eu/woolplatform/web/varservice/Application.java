@@ -33,9 +33,6 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.SpringVersion;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.ClassUtils;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 
 import java.net.URL;
 import java.time.Instant;
@@ -53,6 +50,12 @@ ApplicationListener<ApplicationEvent> {
 	private final Logger logger =
 			AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
 	private final Configuration config;
+
+	private final Long launchedTime = Instant.now().toEpochMilli();
+
+	// --------------------------------------------------------
+	// -------------------- Constructor(s) --------------------
+	// --------------------------------------------------------
 
 	/**
 	 * Constructs a new application. It reads service.properties and
@@ -84,6 +87,22 @@ ApplicationListener<ApplicationEvent> {
 				logger.error("Uncaught exception: " + e.getMessage(), e)
 		);
 	}
+
+	// -----------------------------------------------------------
+	// -------------------- Getters & Setters --------------------
+	// -----------------------------------------------------------
+
+	/**
+	 * Return the UTC timestamp of when this service was first launched.
+	 * @return the UTC timestamp of when this service was first launched.
+	 */
+	public Long getLaunchedTime() {
+		return launchedTime;
+	}
+
+	// -------------------------------------------------------
+	// -------------------- Other Methods --------------------
+	// -------------------------------------------------------
 	
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
