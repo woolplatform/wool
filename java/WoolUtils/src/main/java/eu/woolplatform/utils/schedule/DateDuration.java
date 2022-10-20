@@ -93,9 +93,9 @@ public class DateDuration {
 	/**
 	 * Returns this date duration as a {@link Period Period}.
 	 * 
-	 * @return the readable period
+	 * @return the period
 	 */
-	public Period toReadablePeriod() {
+	public Period toPeriod() {
 		if (unit == DateUnit.DAY)
 			return Period.ofDays(count);
 		else if (unit == DateUnit.WEEK)
