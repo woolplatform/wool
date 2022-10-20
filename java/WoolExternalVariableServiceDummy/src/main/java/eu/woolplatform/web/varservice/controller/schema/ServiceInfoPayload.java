@@ -41,6 +41,10 @@ public class ServiceInfoPayload {
 			example = "1.0.0")
 	private String serviceVersion;
 
+	@Schema(description = "The time how long the service has been running",
+			example = "1d 12h 34m")
+	private String upTime;
+
 	// --------------------------------------------------------
 	// -------------------- Constructor(s) --------------------
 	// --------------------------------------------------------
@@ -57,11 +61,14 @@ public class ServiceInfoPayload {
 	 * @param build the date and time when this service was built as a {@link String}.
 	 * @param protocolVersion the latest supported API protocol version as a {@link String}.
 	 * @param serviceVersion the software version of the service as a {@link String}.
+	 * @param upTime the time for how long the service has been running as a String (Xd Yh Zm)
 	 */
-	public ServiceInfoPayload(String build, String protocolVersion, String serviceVersion) {
+	public ServiceInfoPayload(String build, String protocolVersion, String serviceVersion,
+							  String upTime) {
 		this.build = build;
 		this.protocolVersion = protocolVersion;
 		this.serviceVersion = serviceVersion;
+		this.upTime = upTime;
 	}
 
 	// -----------------------------------------------------------
@@ -114,5 +121,22 @@ public class ServiceInfoPayload {
 	 */
 	public void setServiceVersion(String serviceVersion) {
 		this.serviceVersion = serviceVersion;
+	}
+
+	/**
+	 * Returns a string representation of how long this service has been running (e.g. Xd Yh Zm).
+	 * @return a string representation of how long this service has been running (e.g. Xd Yh Zm).
+	 */
+	public String getUpTime() {
+		return upTime;
+	}
+
+	/**
+	 * Sets a string representation of how long this service has been running (e.g. Xd Yh Zm).
+	 * @param upTime a string representation of how long this service has been running
+	 *               (e.g. Xd Yh Zm).
+	 */
+	public void setUpTime(String upTime) {
+		this.upTime = upTime;
 	}
 }

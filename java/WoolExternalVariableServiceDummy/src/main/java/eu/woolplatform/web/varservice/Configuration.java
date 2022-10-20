@@ -81,6 +81,7 @@ public class Configuration extends LinkedHashMap<String,String> {
 	 */
 	public void loadProperties(URL url) throws IOException {
 		Properties props = new Properties();
+		if(url == null) throw new IOException("Cannot load properties file from null.");
 		try (Reader reader = new InputStreamReader(url.openStream(),
 				StandardCharsets.UTF_8)) {
 			props.load(reader);
