@@ -24,6 +24,8 @@ package eu.woolplatform.web.service;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
@@ -34,21 +36,29 @@ import org.springdoc.core.customizers.OpenApiCustomiser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Comparator;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Configuration
 @OpenAPIDefinition
 public class OpenApiSwaggerConfig {
 
+	private static final Object LOCK = new Object();
+	private static boolean customizedPaths = false;
+
 	@Bean
 	public OpenAPI woolOpenAPI() {
 		OpenAPI openAPI = new OpenAPI();
 
-		// Add the base URL without version
-		Server server = new Server();
-		server.url(ServiceContext.getBaseUrl());
-		openAPI.addServersItem(server);
+		// Add a Server + Version for each supported ProtocolVersion
+		// Make sure the latest version is added first, so it is the one automatically selected in
+		// the Swagger Server selection drop-down menu
+		ProtocolVersion[] allVersions = ProtocolVersion.values();
+		for(int i=allVersions.length-1; i>=0; i--) {
+			Server server = new Server();
+			server.url(ServiceContext.getBaseUrl()+"/v"+allVersions[i].versionName());
+			openAPI.addServersItem(server);
+		}
 
 		openAPI.components(new Components().addSecuritySchemes("X-Auth-Token",
 				new SecurityScheme()
@@ -80,6 +90,38 @@ public class OpenApiSwaggerConfig {
 				.stream()
 				.sorted(Comparator.comparing(tag -> StringUtils.stripAccents(tag.getName())))
 				.collect(Collectors.toList()));
+	}
+
+	@Bean
+	public OpenApiCustomiser openApiCustomiser() {
+		return this::customiseApi;
+	}
+
+	private void customiseApi(OpenAPI api) {
+		transformPaths(api.getPaths());
+	}
+
+	private void transformPaths(Paths paths) {
+		synchronized (LOCK) {
+			if (customizedPaths)
+				return;
+			customizedPaths = true;
+			List<String> keys = new ArrayList<>(paths.keySet());
+			String versionPath = "/v{version}";
+			Map<String, PathItem> unorderedMap = new HashMap<>();
+			for (String key : keys) {
+				PathItem item = paths.remove(key);
+				if (!key.startsWith(versionPath))
+					continue;
+				String operationPath = key.substring(versionPath.length());
+				unorderedMap.put(operationPath, item);
+			}
+			List<String> orderedKeys = new ArrayList<>(unorderedMap.keySet());
+			orderedKeys.sort(null);
+			for (String key : orderedKeys) {
+				paths.put(key, unorderedMap.get(key));
+			}
+		}
 	}
 
 }

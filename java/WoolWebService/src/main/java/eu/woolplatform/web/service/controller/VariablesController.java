@@ -51,7 +51,7 @@ import java.util.*;
 @RestController
 @SecurityRequirement(name = "X-Auth-Token")
 @Tag(name = "3. Variables", description = "End-points for retrieving or setting WOOL Variables")
-@RequestMapping("/variables")
+@RequestMapping("/v{version}/variables")
 public class VariablesController {
 
 	@Autowired
@@ -74,6 +74,10 @@ public class VariablesController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 
+			@Parameter(hidden = true)
+			@PathVariable(value = "version")
+			String versionName,
+
 			@Parameter(description = "A space-separated list of WOOL variable names, or leave empty to retrieve all known variables")
 			@RequestParam(value="variableNames", required=false)
 			String variableNames,
@@ -82,11 +86,13 @@ public class VariablesController {
 			@RequestParam(value="woolUserId", required=false)
 			String woolUserId) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "GET /variables/get-variables?names=" + variableNames;
+		String logInfo = "GET /v" + versionName + "/variables/get-variables?names=" + variableNames;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		logger.info(logInfo);
 
@@ -164,6 +170,10 @@ public class VariablesController {
 		HttpServletRequest request,
 		HttpServletResponse response,
 
+		@Parameter(hidden = true)
+		@PathVariable(value = "version")
+		String versionName,
+
 		@Parameter(description = "The name of the WOOL Variable to set")
 		@RequestParam(value="name")
 		String name,
@@ -177,11 +187,13 @@ public class VariablesController {
 		String woolUserId
 	) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "POST /variables/set-variable?name=" + name;
+		String logInfo = "POST /v" + versionName + "/variables/set-variable?name=" + name;
 		if(!(value == null) && (!value.equals(""))) logInfo += "&value="+value;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		logger.info(logInfo);
@@ -237,6 +249,10 @@ public class VariablesController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 
+			@Parameter(hidden = true)
+			@PathVariable(value = "version")
+			String versionName,
+
 			@Parameter(description = "The user for which to set the wool variables (leave empty if setting for the currently authenticated user)")
 			@RequestParam(value="woolUserId",required=false)
 			String woolUserId,
@@ -249,11 +265,13 @@ public class VariablesController {
 			@RequestBody
 			Map<String,Object> woolVariables) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "POST /variables/set-variables";
+		String logInfo = "POST /v" + versionName + "/variables/set-variables";
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "?woolUserId="+woolUserId;
 		logger.info(logInfo);
 

@@ -33,14 +33,12 @@ import eu.woolplatform.web.service.exception.ErrorCode;
 import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.exception.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -51,13 +49,14 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/v{version}/auth")
 @Tag(name = "1. Authentication", description = "End-points related to Authentication.")
 public class AuthController {
 	@Autowired
 	Application application;
 
 	private static final Object AUTH_LOCK = new Object();
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	@Operation(summary = "Obtain an authentication token by logging in",
 			description = "Log in to the service by providing a username, password and indicating the desired " +
@@ -68,11 +67,26 @@ public class AuthController {
 	public LoginResult login(
 			HttpServletRequest request,
 			HttpServletResponse response,
+
+			@Parameter(hidden = true)
+			@PathVariable(value = "version")
+			String versionName,
+
 			@RequestBody
 			LoginParams loginParams) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
+
+		// Log this call to the service log
+		if(loginParams != null) {
+			logger.info("POST /v" + versionName + "/auth/login for user '" +
+					loginParams.getUser() + "'.");
+		} else {
+			logger.info("POST /v" + versionName + "/auth/login with empty login parameters.");
+		}
 
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(

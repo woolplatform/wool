@@ -51,10 +51,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -73,7 +70,7 @@ import java.util.Map;
  */
 @RestController
 @SecurityRequirement(name = "X-Auth-Token")
-@RequestMapping("/dialogue")
+@RequestMapping("/v{version}/dialogue")
 @Tag(name = "2. Dialogue", description = "End-points for starting and controlling the lifecycle of remotely executed dialogues")
 public class DialogueController {
 
@@ -98,6 +95,10 @@ public class DialogueController {
 		HttpServletRequest request,
 		HttpServletResponse response,
 
+		@Parameter(hidden = true)
+		@PathVariable(value = "version")
+		String versionName,
+
 		@Parameter(description = "Name of the WOOL Dialogue to start (excluding .wool)")
 		@RequestParam(value="dialogueName")
 		String dialogueName,
@@ -115,11 +116,13 @@ public class DialogueController {
 		String woolUserId
 	) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "POST /dialogue/start?dialogueName=" + dialogueName + "&language=" + language;
+		String logInfo = "POST /v" + versionName + "/dialogue/start?dialogueName=" + dialogueName + "&language=" + language;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		if(!timeZone.equals("")) logInfo += "&timeZone=" + timeZone;
 		logger.info(logInfo);
@@ -196,6 +199,10 @@ public class DialogueController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 
+			@Parameter(hidden = true)
+			@PathVariable(value = "version")
+			String versionName,
+
 			@Parameter(description = "The identifier of the (in-progress) dialogue to progress")
 			@RequestParam(value="loggedDialogueId")
 			String loggedDialogueId,
@@ -213,11 +220,13 @@ public class DialogueController {
 			String woolUserId
 	) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "POST /dialogue/progress?replyId=" + replyId;
+		String logInfo = "POST /v" + versionName + "/dialogue/progress?replyId=" + replyId;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		logger.info(logInfo);
 
@@ -305,6 +314,10 @@ public class DialogueController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 
+			@Parameter(hidden = true)
+			@PathVariable(value = "version")
+			String versionName,
+
 			@Parameter(description = "Name of the WOOL Dialogue to continue (excluding .wool)")
 			@RequestParam(value="dialogueName")
 			String dialogueName,
@@ -318,11 +331,13 @@ public class DialogueController {
 			String woolUserId
 	) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "POST /dialogue/continue?dialogueName=" + dialogueName + "&timeZone=" + timeZone;
+		String logInfo = "POST /v" + versionName + "/dialogue/continue?dialogueName=" + dialogueName + "&timeZone=" + timeZone;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		logger.info(logInfo);
 
@@ -402,6 +417,10 @@ public class DialogueController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 
+			@Parameter(hidden = true)
+			@PathVariable(value = "version")
+			String versionName,
+
 			@Parameter(description = "The identifier of the (in-progress) dialogue to progress")
 			@RequestParam(value="loggedDialogueId")
 			String loggedDialogueId,
@@ -410,11 +429,13 @@ public class DialogueController {
 			@RequestParam(value="woolUserId", required=false)
 			String woolUserId) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "POST /dialogue/cancel?loggedDialogueId=" + loggedDialogueId;
+		String logInfo = "POST /v" + versionName + "/dialogue/cancel?loggedDialogueId=" + loggedDialogueId;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		logger.info(logInfo);
 
@@ -461,6 +482,10 @@ public class DialogueController {
 		HttpServletRequest request,
 		HttpServletResponse response,
 
+		@Parameter(hidden = true)
+		@PathVariable(value = "version")
+		String versionName,
+
 		@Parameter(description = "The identifier of the (in-progress) dialogue to take a step back in")
 		@RequestParam(value="loggedDialogueId")
 		String loggedDialogueId,
@@ -474,11 +499,13 @@ public class DialogueController {
 		String woolUserId
 	) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "POST /dialogue/back?loggedDialogueId=" + loggedDialogueId + "&loggedInteractionIndex=" + loggedInteractionIndex;
+		String logInfo = "POST /v" + versionName + "/dialogue/back?loggedDialogueId=" + loggedDialogueId + "&loggedInteractionIndex=" + loggedInteractionIndex;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		logger.info(logInfo);
 
@@ -542,16 +569,22 @@ public class DialogueController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 
+			@Parameter(hidden = true)
+			@PathVariable(value = "version")
+			String versionName,
+
 			@Parameter(description = "The user for which to retrieve the latest ongoing dialogue information (leave empty if retrieving for the currently authenticated user)")
 			@RequestParam(value="woolUserId", required=false, defaultValue="")
 			String woolUserId
 	) throws Exception {
 
-		// Versioning is removed for the time being, assume the latest version
-		String versionName = ProtocolVersion.getLatestVersion().versionName();
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "GET /dialogue/get-ongoing";
+		String logInfo = "GET /v" + versionName + "/dialogue/get-ongoing";
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "?woolUserId="+woolUserId;
 		logger.info(logInfo);
 

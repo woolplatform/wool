@@ -23,10 +23,12 @@ package eu.woolplatform.web.service.controller;
 
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.service.Application;
+import eu.woolplatform.web.service.ProtocolVersion;
 import eu.woolplatform.web.service.ServiceContext;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.controller.model.ServiceInfo;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +36,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Tag(name = "4. Information", description = "End-points that provide information about the running service")
-@RequestMapping("/info")
+@RequestMapping("/v{version}/info")
 public class InfoController {
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
@@ -46,10 +48,19 @@ public class InfoController {
 					" <li>protocolVersion - latest supported API Protocol version</li>" +
 					" <li>serviceVersion - software version of the service</li></ul>")
 	@GetMapping("/all")
-	public ServiceInfo all() {
+	public ServiceInfo all(
+			@Parameter(hidden = true)
+			@PathVariable(value = "version")
+			String versionName
+	) {
+
+		// If no versionName is provided, or versionName is empty, assume the latest version
+		if (versionName == null || versionName.equals("")) {
+			versionName = ProtocolVersion.getLatestVersion().versionName();
+		}
 
 		// Log this call to the service log
-		String logInfo = "GET /info/all";
+		String logInfo = "GET /v"+versionName+"/info/all";
 		logger.info(logInfo);
 
 		return new ServiceInfo(Configuration.getInstance().get(Configuration.BUILD_TIME),
