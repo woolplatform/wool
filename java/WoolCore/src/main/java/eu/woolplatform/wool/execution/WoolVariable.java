@@ -21,6 +21,7 @@ package eu.woolplatform.wool.execution;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -36,9 +37,15 @@ public class WoolVariable {
 
 	// ----- Constructors
 
-	public WoolVariable() { }
-
-	public WoolVariable(String name, Object value, Long updatedTime, String updatedTimeZone) {
+	public WoolVariable(
+			@JsonProperty("name")
+			String name,
+			@JsonProperty("value")
+			Object value,
+			@JsonProperty("updatedTime")
+			Long updatedTime,
+			@JsonProperty("updatedTimeZone")
+			String updatedTimeZone) {
 		this.name = name;
 		this.value = value;
 		this.updatedTime = updatedTime;
@@ -64,27 +71,11 @@ public class WoolVariable {
 	}
 
 	/**
-	 * Sets the name of the WOOL Variable.
-	 * @param name the name of the WOOL Variable.
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	/**
 	 * Returns the value of the WOOL Variable as an {@link Object}.
 	 * @return the value of the WOOL Variable as an {@link Object}.
 	 */
 	public Object getValue() {
 		return value;
-	}
-
-	/**
-	 * Sets the value of the WOOL Variable as an {@link Object}.
-	 * @param value the value of the WOOL Variable as an {@link Object}.
-	 */
-	public void setValue(Object value) {
-		this.value = value;
 	}
 
 	/**
@@ -95,20 +86,8 @@ public class WoolVariable {
 		return updatedTime;
 	}
 
-	/**
-	 * Sets the timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
-	 * @param updatedTime the timestamp of when this WOOL Variable was last updated (as epoch time in milliseconds).
-	 */
-	public void setUpdatedTime(Long updatedTime) {
-		this.updatedTime = updatedTime;
-	}
-
 	public String getUpdatedTimeZone() {
 		return updatedTimeZone;
-	}
-
-	public void setUpdatedTimeZone(String updatedTimeZone) {
-		this.updatedTimeZone = updatedTimeZone;
 	}
 
 	// ---------- Convenience
