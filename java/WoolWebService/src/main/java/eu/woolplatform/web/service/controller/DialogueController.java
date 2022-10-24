@@ -31,7 +31,7 @@ import eu.woolplatform.utils.json.JsonMapper;
 import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.ProtocolVersion;
 import eu.woolplatform.web.service.QueryRunner;
-import eu.woolplatform.web.service.controller.model.DialogueMetadata;
+import eu.woolplatform.web.service.controller.schema.OngoingDialoguePayload;
 import eu.woolplatform.web.service.exception.BadRequestException;
 import eu.woolplatform.web.service.exception.HttpException;
 import eu.woolplatform.web.service.execution.UserService;
@@ -565,7 +565,7 @@ public class DialogueController {
 					"that dialogue (the last time since either the user or the agent said something). If this wasn't too long ago, you may decide" +
 					"to continue the conversation by passing the dialogue name to the /dialogues/continue-dialogue/ end-point. ")
 	@RequestMapping(value="/get-ongoing", method=RequestMethod.GET)
-	public NullableResponse<DialogueMetadata> getOngoingDialogue(
+	public NullableResponse<OngoingDialoguePayload> getOngoingDialogue(
 			HttpServletRequest request,
 			HttpServletResponse response,
 
@@ -603,11 +603,11 @@ public class DialogueController {
 	 * Processes a call to the /dialogue/get-ongoing end-point.
 	 * @param woolUserId the user for which to retrieve the latest ongoing dialogue information (leave empty
 	 *                      if retrieving for the currently authenticated user).
-	 * @return a {@link NullableResponse} containing either a {@link DialogueMetadata} object or {@code null}.
+	 * @return a {@link NullableResponse} containing either a {@link OngoingDialoguePayload} object or {@code null}.
 	 * @throws DatabaseException in case of an error retrieving logged dialogues from the database.
 	 * @throws IOException in case of any network error.
 	 */
-	private NullableResponse<DialogueMetadata> doGetOngoingDialogue(String woolUserId)
+	private NullableResponse<OngoingDialoguePayload> doGetOngoingDialogue(String woolUserId)
 			throws DatabaseException, IOException {
 
 		LoggedDialogue latestOngoingDialogue =
@@ -617,8 +617,8 @@ public class DialogueController {
 			String dialogueName = latestOngoingDialogue.getDialogueName();
 			long latestInteractionTimestamp = latestOngoingDialogue.getLatestInteractionTimestamp();
 			long secondsSinceLastEngagement = (long) Math.floor((System.currentTimeMillis() - latestInteractionTimestamp) / 1000.0);
-			DialogueMetadata dialogueMetadata = new DialogueMetadata(dialogueName, secondsSinceLastEngagement);
-			return new NullableResponse<>(dialogueMetadata);
+			OngoingDialoguePayload ongoingDialoguePayload = new OngoingDialoguePayload(dialogueName, secondsSinceLastEngagement);
+			return new NullableResponse<>(ongoingDialoguePayload);
 		} else {
 			return new NullableResponse<>(null);
 		}

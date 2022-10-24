@@ -28,8 +28,8 @@ import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.UserCredentials;
 import eu.woolplatform.web.service.UserFile;
-import eu.woolplatform.web.service.controller.model.LoginParams;
-import eu.woolplatform.web.service.controller.model.LoginResult;
+import eu.woolplatform.web.service.controller.schema.LoginParametersPayload;
+import eu.woolplatform.web.service.controller.schema.LoginResultPayload;
 import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
@@ -268,18 +268,18 @@ public class UserServiceManager {
 
 		RestTemplate restTemplate = new RestTemplate();
 
-		LoginParams loginParams = new LoginParams();
-		loginParams.setUser(config.getExternalVariableServiceUsername());
-		loginParams.setPassword(config.getExternalVariableServicePassword());
-		loginParams.setTokenExpiration(null);
-		HttpEntity request = new HttpEntity(loginParams, headers);
+		LoginParametersPayload loginParametersPayload = new LoginParametersPayload();
+		loginParametersPayload.setUser(config.getExternalVariableServiceUsername());
+		loginParametersPayload.setPassword(config.getExternalVariableServicePassword());
+		loginParametersPayload.setTokenExpiration(null);
+		HttpEntity request = new HttpEntity(loginParametersPayload, headers);
 
-		ResponseEntity<LoginResult> response = restTemplate.postForEntity(
-				loginUrl, request, LoginResult.class);
+		ResponseEntity<LoginResultPayload> response = restTemplate.postForEntity(
+				loginUrl, request, LoginResultPayload.class);
 
 		if (response.getStatusCode() == HttpStatus.OK) {
-			LoginResult loginResult = response.getBody();
-			this.setExternVariableServiceAPIToken(loginResult.getToken());
+			LoginResultPayload loginResultPayload = response.getBody();
+			this.setExternVariableServiceAPIToken(loginResultPayload.getToken());
 			logger.info("User '"+config.getExternalVariableServiceUsername()+"' logged in successfully to external variable service.");
 		} else {
 			logger.info("Login failed: " + response.getStatusCode());

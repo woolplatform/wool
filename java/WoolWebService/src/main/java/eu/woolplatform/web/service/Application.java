@@ -42,6 +42,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.ClassUtils;
 
 import java.net.URL;
+import java.time.Instant;
 
 /**
  * The main entry point for the WOOL Web Service as a Spring Boot Application.
@@ -58,6 +59,7 @@ ApplicationListener<ApplicationEvent> {
 	private final Logger logger = AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
 	private final Configuration config;
 	private final UserServiceManager userServiceManager;
+	private final Long launchedTime = Instant.now().toEpochMilli();
 
 	/**
 	 * Constructs a new application. It reads service.properties and
@@ -94,6 +96,18 @@ ApplicationListener<ApplicationEvent> {
 		UserServiceFactory.setInstance(userServiceFactory);
 		userServiceManager = new UserServiceManager(
 				new WoolResourceFileLoader("dialogues"));
+	}
+
+	// -----------------------------------------------------------
+	// -------------------- Getters & Setters --------------------
+	// -----------------------------------------------------------
+
+	/**
+	 * Return the UTC timestamp of when this service was first launched.
+	 * @return the UTC timestamp of when this service was first launched.
+	 */
+	public Long getLaunchedTime() {
+		return launchedTime;
 	}
 
 	public UserServiceManager getServiceManager() {
