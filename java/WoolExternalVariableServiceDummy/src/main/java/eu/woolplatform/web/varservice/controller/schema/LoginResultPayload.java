@@ -29,9 +29,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * <pre>
  * {
  *   "user": "user",
- *   "token": "See https://jwt.io/"
+ *   "token": "See <a href="https://jwt.io/">jwt.io</a>"
  * }
  * </pre>
+ *
+ * @author Harm op den Akker
  */
 public class LoginResultPayload {
 
@@ -43,8 +45,18 @@ public class LoginResultPayload {
 			example = "See https://jwt.io/")
 	private String token;
 
+	// --------------------------------------------------------
+	// -------------------- Constructor(s) --------------------
+	// --------------------------------------------------------
+
 	/**
-	 * Creates an instance of a {@link LoginResultPayload} with a given {@code user} and {@token}.
+	 * Creates an empty instance of a {@link LoginResultPayload}.
+	 */
+	public LoginResultPayload() { }
+
+	/**
+	 * Creates an instance of a {@link LoginResultPayload} with a given {@code user} and
+	 * {@code token}.
 	 * @param user the username of the user that performed a successful login.
 	 * @param token the JSON Web Token generated for the user as a {@link String}.
 	 */
@@ -52,6 +64,10 @@ public class LoginResultPayload {
 		this.user = user;
 		this.token = token;
 	}
+
+	// -------------------------------------------------------------
+	// -------------------- Getters and Setters --------------------
+	// -------------------------------------------------------------
 
 	/**
 	 * Returns the username of the user that performed a successful login.
@@ -62,10 +78,26 @@ public class LoginResultPayload {
 	}
 
 	/**
+	 * Sets the username of the user that performed a successful login.
+	 * @param user the username of the user that performed a successful login.
+	 */
+	public void setUser(String user) {
+		this.user = user;
+	}
+
+	/**
 	 * Returns the JSON Web Token generated for the user as a {@link String}.
 	 * @return the JSON Web Token generated for the user as a {@link String}.
 	 */
 	public String getToken() {
 		return token;
+	}
+
+	/**
+	 * Sets the JSON Web Token generated for the user as a {@link String}.
+	 * @param token the JSON Web Token generated for the user as a {@link String}.
+	 */
+	public void setToken(String token) {
+		this.token = token;
 	}
 }
