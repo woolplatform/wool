@@ -28,9 +28,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * This exception results in an HTTP response with status 400 Bad Request. The
- * exception message (default "Bad Request") will be written to the response.
- * It is handled by the {@link ErrorController ErrorController}.
+ * This exception results in an HTTP response with status 400 Bad Request. The exception message
+ * (default "Bad Request") will be written to the response. It is handled by the
+ * {@link ErrorController ErrorController}.
  * 
  * @author Dennis Hofs (RRD)
  */

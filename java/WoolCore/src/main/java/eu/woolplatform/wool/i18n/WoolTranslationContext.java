@@ -22,37 +22,107 @@ package eu.woolplatform.wool.i18n;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * A {@link WoolTranslationContext} describes relevant parameters defining the context in which
+ * dialogue statements should be translated from source- to target languages.
+ *
+ * <p>This currently holds the genders, as either {@link Gender#MALE} or {@link Gender#FEMALE},
+ * of the user (the person interacting with the dialogue) and the various possible "agents" involved
+ * in the dialogue.</p>
+ *
+ * <p>This information is relevant as in some languages, speaker- or addressee gender may affect the
+ * translation, and different variations may be provided in the translation script.</p>
+ *
+ * @author Dennis Hofs
+ * @author Harm op den Akker
+ */
 public class WoolTranslationContext {
+
 	public enum Gender {
 		MALE,
 		FEMALE
 	}
 
 	private Gender defaultAgentGender = Gender.MALE;
-	private Map<String, Gender> agentGenders = new LinkedHashMap<>();
 	private Gender userGender = Gender.MALE;
+	private Map<String, Gender> agentGenders = new LinkedHashMap<>();
 
+
+	// --------------------------------------------------------
+	// -------------------- Constructor(s) --------------------
+	// --------------------------------------------------------
+
+	/**
+	 * Creates an empty instance of a {@link WoolTranslationContext}.
+	 */
+	public WoolTranslationContext() { }
+
+	/**
+	 * Creates an instance of a {@link WoolTranslationContext} with a given {@code userGender} and
+	 * a mapping of {@code agentGenders}.
+	 * @param userGender the {@link Gender} of the user (person interacting with the dialogues).
+	 * @param agentGenders a mapping of agent-names to {@link Gender}s, specifying the genders of
+	 *                     the agents involved in a dialogue or dialogue set.
+	 */
+	public WoolTranslationContext(Gender userGender, Map<String, Gender> agentGenders) {
+		this.userGender = userGender;
+		this.agentGenders = agentGenders;
+	}
+
+	// -----------------------------------------------------------
+	// -------------------- Getters & Setters --------------------
+	// -----------------------------------------------------------
+
+	/**
+	 * Returns the default {@link Gender} that is defined for the agent, if no specific gender is
+	 * given.
+	 * @return the default {@link Gender} of the agent.
+	 */
 	public Gender getDefaultAgentGender() {
 		return defaultAgentGender;
 	}
 
+	/**
+	 * Sets the {@link Gender} that is assumed for agents if no specific gender is given in
+	 * {@link WoolTranslationContext#getAgentGenders()}.
+	 * @param defaultAgentGender the default {@link Gender} for agents.
+	 */
 	public void setDefaultAgentGender(Gender defaultAgentGender) {
 		this.defaultAgentGender = defaultAgentGender;
 	}
 
-	public Map<String, Gender> getAgentGenders() {
-		return agentGenders;
-	}
-
-	public void setAgentGenders(Map<String, Gender> agentGenders) {
-		this.agentGenders = agentGenders;
-	}
-
+	/**
+	 * Returns the set {@link Gender} of the user, or {@link Gender#MALE} if none is specifically
+	 * set.
+ 	 * @return the {@link Gender} of the user.
+	 */
 	public Gender getUserGender() {
 		return userGender;
 	}
 
+	/**
+	 * Sets the {@link Gender} of the user.
+	 * @param userGender the {@link Gender} of the user.
+	 */
 	public void setUserGender(Gender userGender) {
 		this.userGender = userGender;
+	}
+
+	/**
+	 * Returns a mapping of agent-names to {@link Gender}s, specifying the genders of the agents
+	 * involved in a dialogue or dialogue set.
+	 * @return the mapping of agent-names to {@link Gender}.
+	 */
+	public Map<String, Gender> getAgentGenders() {
+		return agentGenders;
+	}
+
+	/**
+	 * Sets the mapping of agent-names to {@link Gender}s, specifying the genders of the agents
+	 * involved in a dialogue or dialogue set.
+	 * @param agentGenders the mapping of agent-names to {@link Gender}.
+	 */
+	public void setAgentGenders(Map<String, Gender> agentGenders) {
+		this.agentGenders = agentGenders;
 	}
 }

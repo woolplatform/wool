@@ -23,9 +23,9 @@ import eu.woolplatform.web.service.controller.ErrorController;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Base class for exceptions that result in a HTTP error response. Subclasses
- * should be annotated with {@link ResponseStatus ResponseStatus}. They are
- * handled by {@link ErrorController ErrorController}.
+ * Base class for exceptions that result in a HTTP error response. Subclasses should be annotated
+ * with {@link ResponseStatus ResponseStatus}. They are handled by
+ * {@link ErrorController ErrorController}.
  * 
  * @author Dennis Hofs (RRD)
  */

@@ -25,9 +25,9 @@ import java.util.List;
 import eu.woolplatform.utils.json.JsonObject;
 
 /**
- * A HTTP error can be included as a JSON string in the content of an HTTP error
- * response. It has an optional error code. The core error codes are defined as
- * constants in {@link ErrorCode ErrorCode}.
+ * An HTTP error can be included as a JSON string in the content of an HTTP error response. It has
+ * an optional error code. The core error codes are defined as constants in
+ * {@link ErrorCode ErrorCode}.
  * 
  * @author Dennis Hofs (RRD)
  */

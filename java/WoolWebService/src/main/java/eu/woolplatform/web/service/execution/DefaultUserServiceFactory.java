@@ -19,22 +19,38 @@
 
 package eu.woolplatform.web.service.execution;
 
-import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
 import eu.woolplatform.web.service.storage.WoolVariableStoreStorageHandler;
 import eu.woolplatform.wool.execution.WoolUser;
-import eu.woolplatform.wool.execution.WoolVariableStore;
-import org.slf4j.Logger;
 
 import java.io.IOException;
 
+/**
+ * The implementation of {@link UserServiceFactory} as used in the WOOL Web Service.
+ */
 public class DefaultUserServiceFactory extends UserServiceFactory {
 
-	private WoolVariableStoreStorageHandler storageHandler;
+	private final WoolVariableStoreStorageHandler storageHandler;
 
+	// --------------------------------------------------------
+	// -------------------- Constructor(s) --------------------
+	// --------------------------------------------------------
+
+	/**
+	 * Creates an instance of a {@link DefaultUserServiceFactory} with a given
+	 * {@link WoolVariableStoreStorageHandler} that is used to read and write wool variables to
+	 * persistent storage.
+	 * @param storageHandler the {@link WoolVariableStoreStorageHandler} that is passed on to the
+	 *                       {@link UserService} for reading and writing WOOL variables to
+	 *                       persistent storage.
+	 */
 	public DefaultUserServiceFactory(WoolVariableStoreStorageHandler storageHandler) {
 		this.storageHandler = storageHandler;
 	}
+
+	// -------------------------------------------------------------------
+	// -------------------- Interface Implementations --------------------
+	// -------------------------------------------------------------------
 
 	@Override
 	public UserService createUserService(String userId,
@@ -46,13 +62,4 @@ public class DefaultUserServiceFactory extends UserServiceFactory {
 				storageHandler);
 	}
 
-	private void onVariableStoreChanges(String userId, WoolVariableStore varStore) {
-		Logger logger = AppComponents.getLogger(getClass().getSimpleName());
-		try {
-			storageHandler.write(varStore);
-		} catch (IOException ex) {
-			logger.error("Failed to write variable store changes: " +
-					ex.getMessage(), ex);
-		}
-	}
 }

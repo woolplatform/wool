@@ -302,15 +302,16 @@ public class DialogueController {
 
 			ZonedDateTime eventTime = DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
+			// If variable data has been received in the progress call, update the values in the
+			// WOOL Variable Store
+			if (!variables.isEmpty()) userService.storeReplyInput(variables,eventTime);
+
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
-			if (!variables.isEmpty())
-				userService.storeReplyInput(state, variables,eventTime);
 			ExecuteNodeResult nextNode = userService.progressDialogue(state, replyId);
 			if (nextNode == null)
 				return new NullableResponse<>(null);
-			DialogueMessage reply = DialogueMessageFactory.generateDialogueMessage(
-					nextNode);
+			DialogueMessage reply = DialogueMessageFactory.generateDialogueMessage(nextNode);
 			return new NullableResponse<>(reply);
 		} catch (WoolException e) {
 			throw ControllerFunctions.createHttpException(e);

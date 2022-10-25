@@ -25,8 +25,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import eu.woolplatform.web.service.controller.ErrorController;
 
 /**
- * This exception results in a HTTP response with status 401 Unauthorized. The
- * exception message (default "Unauthorized") will be written to the response.
+ * This exception results in an HTTP response with status 401 Unauthorized. The exception message
+ * (default "Unauthorized") will be written to the response.
  * It is handled by the {@link ErrorController ErrorController}.
  * 
  * @author Dennis Hofs (RRD)

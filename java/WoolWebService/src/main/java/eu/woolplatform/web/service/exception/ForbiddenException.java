@@ -24,8 +24,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * This exception results in an HTTP response with status 403 Forbidden. The
- * exception message (default "Forbidden") will be written to the response.
+ * This exception results in an HTTP response with status 403 Forbidden. The exception message
+ * (default "Forbidden") will be written to the response.
  * It is handled by the {@link ErrorController ErrorController}.
  * 
  * @author Dennis Hofs (RRD)

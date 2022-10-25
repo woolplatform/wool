@@ -31,8 +31,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class LoggedDialogue implements WoolLoggedDialogue {
 
-	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
-
 	private String id;
 	private String user;
 	private String localTime;
@@ -58,6 +56,7 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 		this.user = user;
 		this.utcTime = dialogueStartTime.toInstant().toEpochMilli();
 		this.timezone = dialogueStartTime.getZone().toString();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 		this.localTime = dialogueStartTime.format(formatter);
 	}
 

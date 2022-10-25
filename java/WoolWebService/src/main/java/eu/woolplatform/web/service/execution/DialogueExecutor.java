@@ -40,8 +40,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A {@link DialogueExecutor} holds a set of functions for executing WOOL
- * Dialogue for a given {@link UserService}.
+ * A {@link DialogueExecutor} holds a set of functions for executing WOOL Dialogue for a given
+ * {@link UserService}.
  * 
  * @author Tessa Beinema
  * @author Harm op den Akker
@@ -51,9 +51,21 @@ public class DialogueExecutor {
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 	protected UserService userService;
 
+	// --------------------------------------------------------
+	// -------------------- Constructor(s) --------------------
+	// --------------------------------------------------------
+
+	/**
+	 * Creates an instance of a {@link DialogueExecutor} for a given {@code userService}.
+	 * @param userService the {@link UserService} for which dialogues can be executed.
+	 */
 	public DialogueExecutor(UserService userService) {
 		this.userService = userService;
 	}
+
+	// -------------------------------------------------------
+	// -------------------- Other Methods --------------------
+	// -------------------------------------------------------
 
 	/**
 	 * Starts the dialogue for the specified dialogue definition. It starts at

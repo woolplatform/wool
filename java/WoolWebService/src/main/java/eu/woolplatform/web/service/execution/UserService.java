@@ -47,34 +47,39 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 /**
- * A {@link UserService} is a service class that handles all communication with the WOOL
- * Web Service for a specific User (identified by a {@code userId}).
+ * A {@link UserService} is a service class that handles all communication with the WOOL Web Service
+ * for a specific {@link WoolUser}.
  * 
  * @author Harm op den Akker
  * @author Tessa Beinema
  */
 public class UserService {
 
-	private WoolUser woolUser;
-	private UserServiceManager userServiceManager;
-	private WoolVariableStore variableStore;
-
+	private final WoolUser woolUser;
+	private final UserServiceManager userServiceManager;
+	private final WoolVariableStore variableStore;
 	private final Logger logger;
 	private final DialogueExecutor dialogueExecutor;
+
 	private WoolTranslationContext translationContext = null;
 
 	// dialogueLanguageMap: map from dialogue name -> language -> dialogue description
-	protected Map<String, Map<String,WoolDialogueDescription>> dialogueLanguageMap = new LinkedHashMap<>();
+	protected Map<String, Map<String,WoolDialogueDescription>> dialogueLanguageMap =
+			new LinkedHashMap<>();
 
-	// ----- Constructors
+	// --------------------------------------------------------
+	// -------------------- Constructor(s) --------------------
+	// --------------------------------------------------------
 	
 	/**
-	 * Instantiates a {@link UserService} for a given {@link WoolUser}. The UserService creates a {@link WoolVariableStore} instance
-	 * and loads in all known variables for the user.
-	 * @param woolUser - The {@link WoolUser} for which this {@link UserService} is handling the interactions.
+	 * Instantiates a {@link UserService} for a given {@link WoolUser}. The UserService creates a
+	 * {@link WoolVariableStore} instance and loads in all known variables for the user.
+	 * @param woolUser The {@link WoolUser} for which this {@link UserService} is handling the
+	 *                 interactions.
 	 * @param userServiceManager the server's {@link UserServiceManager} instance.
-	 * @param onVarChangeListener the {@link WoolVariableStoreOnChangeListener} to be added to the {@link WoolVariableStore}
-	 *                            instance that this {@link UserService} creates.
+	 * @param onVarChangeListener the {@link WoolVariableStoreOnChangeListener} that will be added
+	 *                            to the {@link WoolVariableStore} instance that this
+	 *                            {@link UserService} creates.
 	 */
 	public UserService(WoolUser woolUser, UserServiceManager userServiceManager,
 			WoolVariableStoreOnChangeListener onVarChangeListener)
@@ -85,20 +90,21 @@ public class UserService {
 		this.userServiceManager = userServiceManager;
 
 		Configuration config = AppComponents.get(Configuration.class);
-		WoolVariableStoreStorageHandler storageHandler = new WoolVariableStoreJSONStorageHandler(config.getDataDir()+"/variables");
+		WoolVariableStoreStorageHandler storageHandler =
+				new WoolVariableStoreJSONStorageHandler(config.getDataDir() +
+						"/variables");
 		try {
 			this.variableStore = storageHandler.read(woolUser);
 		} catch (ParseException ex) {
-			throw new DatabaseException("Failed to read initial variables: " +
-					ex.getMessage(), ex);
+			throw new DatabaseException("Failed to read initial variables for user '"
+					+ woolUser.getId() + "': " + ex.getMessage(), ex);
 		}
 
 		this.variableStore.addOnChangeListener(onVarChangeListener);
 		dialogueExecutor = new DialogueExecutor(this);
 
 		// create dialogueLanguageMap
-		List<WoolDialogueDescription> dialogues =
-				userServiceManager.getDialogueDescriptions();
+		List<WoolDialogueDescription> dialogues = userServiceManager.getDialogueDescriptions();
 		for (WoolDialogueDescription dialogue : dialogues) {
 			String name = dialogue.getDialogueName();
 			Map<String, WoolDialogueDescription> langMap =
@@ -107,7 +113,9 @@ public class UserService {
 		}
 	}
 
-	// ----- Getters & Setters
+	// -----------------------------------------------------------
+	// -------------------- Getters & Setters --------------------
+	// -----------------------------------------------------------
 	
 	/**
 	 * Returns the {@link WoolUser} which this {@link UserService} is serving.
@@ -117,33 +125,52 @@ public class UserService {
 		return woolUser;
 	}
 
+	/**
+	 * Returns the {@link WoolTranslationContext} describing the relevant contextual parameters
+	 * needed to select the right translations.
+	 * @return the {@link WoolTranslationContext}.
+	 */
 	public WoolTranslationContext getTranslationContext() {
 		return translationContext;
 	}
 
+	/**
+	 * Sets the {@link WoolTranslationContext} describing the relevant contextual parameters
+	 * needed to select the right translations.
+	 * @param translationContext the {@link WoolTranslationContext}.
+	 */
 	public void setTranslationContext(WoolTranslationContext translationContext) {
 		this.translationContext = translationContext;
 	}
 	
 	/**
-	 * Returns the application's {@link UserServiceManager} that is governing this {@link UserService}.
-	 * @return the application's {@link UserServiceManager} that is governing this {@link UserService}.
+	 * Returns the application's {@link UserServiceManager} that is governing this
+	 * {@link UserService}.
+	 * @return the application's {@link UserServiceManager} that is governing this
+	 *         {@link UserService}.
 	 */
 	public UserServiceManager getServiceManager() {
 		return userServiceManager;
 	}
 
+	/**
+	 * Returns the {@link WoolVariableStore} for the {@link WoolUser} governed by this
+	 * {@link UserService}.
+	 * @return the {@link WoolVariableStore} for the {@link WoolUser} governed by this
+	 *         {@link UserService}.
+	 */
 	public WoolVariableStore getVariableStore() {
 		return this.variableStore;
 	}
 
-	// ----- Methods (Dialogue Execution)
+	// ---------------------------------------------------------------------------
+	// -------------------- Other Methods: Dialogue Execution --------------------
+	// ---------------------------------------------------------------------------
 
 	/**
-	 * Starts a dialogue with the given {@code dialogueId} and preferred
-	 * language, returning the first step of the dialogue. If you specify a
-	 * {@code nodeId}, it will start at that node. Otherwise, it starts at the
-	 * Start node.
+	 * Starts a dialogue with the given {@code dialogueId} and preferred language, returning the
+	 * first step of the dialogue. If you specify a {@code nodeId}, it will start at that node.
+	 * Otherwise, it starts at the "Start" node.
 	 *
 	 * <p>You can specify an ISO language tag such as "en-US".</p>
 	 *
@@ -193,7 +220,8 @@ public class UserService {
 	 * @throws IOException if a communication error occurs
 	 * @throws WoolException if the request is invalid
 	 */
-	public ExecuteNodeResult progressDialogue(DialogueState state, int replyId) throws DatabaseException, IOException,
+	public ExecuteNodeResult progressDialogue(DialogueState state, int replyId)
+			throws DatabaseException, IOException,
 			WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		String dialogueName = dialogue.getDialogueName();
@@ -228,37 +256,41 @@ public class UserService {
 	 */
 	public void cancelDialogue(String loggedDialogueId)
 			throws DatabaseException, IOException {
-		logger.info("User '" + woolUser.getId() + "' cancels dialogue with Id '"+loggedDialogueId+"'.");
+		logger.info("User '" + woolUser.getId() + "' cancels dialogue with Id '"
+				+ loggedDialogueId + "'.");
 		LoggedDialogue loggedDialogue =
 				LoggedDialogueStoreIO.findLoggedDialogue(woolUser.getId(),
 						loggedDialogueId);
 		if(loggedDialogue != null)
 			LoggedDialogueStoreIO.setDialogueCancelled(loggedDialogue);
 		else
-			logger.warn("User '" + woolUser.getId() + "' attempted to cancel dialogue with Id '"+loggedDialogueId+"', but the dialogue could not be found.");
+			logger.warn("User '" + woolUser.getId() + "' attempted to cancel dialogue with Id '"
+					+ loggedDialogueId + "', but no such dialogue could be found.");
 	}
 
-	// ----- Methods (Variables):
+	// --------------------------------------------------------------------------
+	// -------------------- Other Methods: Variable Handling --------------------
+	// --------------------------------------------------------------------------
 
 	/**
-	 * Stores the specified variables in the variable store.
-	 * @param state
-	 * @param variables the variables
+	 * Stores a given set of variables that have been set as part of a user's reply in a dialogue in
+	 * the variable store.
+	 * @param variables the set of variables
 	 * @param eventTime the timestamp (in the time zone of the user) of the event that triggered
 	 *                  this change of WOOL Variables
 	 */
-	public void storeReplyInput(DialogueState state, Map<String,?> variables,
-								ZonedDateTime eventTime) throws WoolException {
-		ActiveWoolDialogue dialogue = state.getActiveDialogue();
-		dialogue.storeReplyInput(variables,eventTime);
+	public void storeReplyInput(Map<String,?> variables, ZonedDateTime eventTime)
+			throws WoolException {
+		variableStore.addAll(variables,true,eventTime);
 	}
+
 
 	/**
 	 * This function ensures that for all WOOL Variables in the given {@link Set}, of
 	 * {@code variableNames} an up-to-date value is loaded into the {@link WoolVariableStore}
-	 * for this user represented by this {@link UserService} through an external WOOL Variable Service
-	 * if, and only if one has been configured. If {@code config.getExternalVariableServiceEnabled() == false}
-	 * this method will cause no changes to occur.
+	 * for this user represented by this {@link UserService} through an external WOOL Variable
+	 * Service if, and only if one has been configured. If {@code
+	 * config.getExternalVariableServiceEnabled() == false} this method will cause no changes to occur.
 	 * @param variableNames the set of WOOL Variables that need to have their values updated.
 	 */
 	public void updateVariablesFromExternalService(Set<String> variableNames) {
@@ -266,9 +298,7 @@ public class UserService {
 
 		Configuration config = AppComponents.get(Configuration.class);
 
-		if(!config.getExternalVariableServiceEnabled()) {
-			logger.info("No external WOOL Variable Service has been configured, no variables have been updated.");
-		} else {
+		if(config.getExternalVariableServiceEnabled()) {
 			logger.info("An external WOOL Variable Service is configured to be enabled, with parameters:");
 			logger.info("URL: "+config.getExternalVariableServiceURL());
 			logger.info("API Version: "+config.getExternalVariableServiceAPIVersion());
@@ -332,6 +362,9 @@ public class UserService {
 					}
 				}
 			}
+		} else {
+			logger.info("No external WOOL Variable Service has been configured, no variables " +
+				"have been updated.");
 		}
 	}
 
