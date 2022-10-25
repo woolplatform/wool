@@ -17,7 +17,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package eu.woolplatform.web.service.model;
+package eu.woolplatform.web.service.storage;
 
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.wool.execution.WoolUser;

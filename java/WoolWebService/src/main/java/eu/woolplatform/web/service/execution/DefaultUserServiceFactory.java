@@ -21,9 +21,7 @@ package eu.woolplatform.web.service.execution;
 
 import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.DatabaseException;
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.web.service.model.VariableStoreIO;
-import eu.woolplatform.web.service.model.WoolVariableStoreStorageHandler;
+import eu.woolplatform.web.service.storage.WoolVariableStoreStorageHandler;
 import eu.woolplatform.wool.execution.WoolUser;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import org.slf4j.Logger;
