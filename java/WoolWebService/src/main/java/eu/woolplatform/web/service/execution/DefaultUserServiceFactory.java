@@ -44,9 +44,10 @@ public class DefaultUserServiceFactory extends UserServiceFactory {
 	public UserService createUserService(String userId,
 			UserServiceManager userServiceManager)
 			throws DatabaseException, IOException {
-		return new UserService(new WoolUser(userId), userServiceManager,
-				(varStore, changes) -> onVariableStoreChanges(userId,
-						varStore));
+		return new UserService(
+				new WoolUser(userId),
+				userServiceManager,
+				storageHandler);
 	}
 
 	private void onVariableStoreChanges(String userId, WoolVariableStore varStore) {

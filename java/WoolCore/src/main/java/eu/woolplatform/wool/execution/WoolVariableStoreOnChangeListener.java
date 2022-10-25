@@ -23,8 +23,8 @@ import java.util.List;
 
 /**
  * Interface for listeners that can be registered at a {@link WoolVariableStore}. Whenever the
- * WOOL Variable Store object is changed, that listener's {@link WoolVariableStoreOnChangeListener#onChange(WoolVariableStore,List<WoolVariableStoreChange>)}
- * method will be called.
+ * WOOL Variable Store object is changed, that listener's {@link WoolVariableStoreOnChangeListener
+ * #onChange(WoolVariableStore,List<WoolVariableStoreChange>)} method will be called.
  *
  * @author Dennis Hofs
  * @author Harm op den Akker

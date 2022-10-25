@@ -24,10 +24,11 @@ package eu.woolplatform.web.service.model;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.wool.execution.WoolUser;
 import eu.woolplatform.wool.execution.WoolVariableStore;
+import eu.woolplatform.wool.execution.WoolVariableStoreOnChangeListener;
 
 import java.io.IOException;
 
-public interface WoolVariableStoreStorageHandler {
+public interface WoolVariableStoreStorageHandler extends WoolVariableStoreOnChangeListener {
 
     WoolVariableStore read(WoolUser woolUser) throws IOException, ParseException;
 

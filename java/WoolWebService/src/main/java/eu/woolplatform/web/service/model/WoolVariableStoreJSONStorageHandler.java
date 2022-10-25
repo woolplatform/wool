@@ -27,25 +27,27 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.io.FileUtils;
 import eu.woolplatform.utils.json.JsonMapper;
 import eu.woolplatform.web.service.Configuration;
-import eu.woolplatform.wool.execution.WoolUser;
-import eu.woolplatform.wool.execution.WoolVariable;
-import eu.woolplatform.wool.execution.WoolVariableStore;
+import eu.woolplatform.wool.execution.*;
+import org.slf4j.Logger;
+import org.springframework.util.ClassUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * A {@link WoolVariableStoreJSONStorageHandler} can manage reading and writing
- * {@link eu.woolplatform.wool.execution.WoolVariableStore}s to and from JSON file representations. You can instantiate
- * an instance of a {@link WoolVariableStoreJSONStorageHandler} by providing a root dataDirectory. The storage handler
- * will assume/create a single {username}.json file for every WOOL User that will contain a JSON representation of the
- * WOOL Variable Store.
+ * {@link eu.woolplatform.wool.execution.WoolVariableStore}s to and from JSON file representations.
+ * You can instantiate an instance of a {@link WoolVariableStoreJSONStorageHandler} by providing a
+ * root dataDirectory. The storage handler will assume/create a single {username}.json file for
+ * every WOOL User that will contain a JSON representation of the WOOL Variable Store.
  *
  * @author Harm op den Akker
  */
@@ -53,6 +55,8 @@ public class WoolVariableStoreJSONStorageHandler implements WoolVariableStoreSto
 
     private String dataDirectory;
     private static final Object LOCK = new Object();
+    private final Logger logger =
+            AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
 
     public WoolVariableStoreJSONStorageHandler(String dataDirectory) {
         this.dataDirectory = dataDirectory;
@@ -85,14 +89,28 @@ public class WoolVariableStoreJSONStorageHandler implements WoolVariableStoreSto
         synchronized (LOCK) {
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
-            objectMapper.configure(SerializationFeature.WRITE_DATES_WITH_CONTEXT_TIME_ZONE, true);
+            objectMapper.configure(SerializationFeature.WRITE_DATES_WITH_CONTEXT_TIME_ZONE,
+                    true);
 
             File dataDir = new File(dataDirectory);
             FileUtils.mkdir(dataDir);
-            File dataFile = new File(dataDir, woolVariableStore.getWoolUser().getId() + ".json");
+            File dataFile = new File(dataDir,
+                    woolVariableStore.getWoolUser().getId() + ".json");
 
-            // Write the WoolVariableStore only as a list of WoolVariables (for easier deserialization).
+            // Write the WoolVariableStore only as a list of WoolVariables
+            // (for easier deserialization).
             objectMapper.writeValue(dataFile,woolVariableStore.getWoolVariables());
+        }
+    }
+
+    @Override
+    public void onChange(WoolVariableStore woolVariableStore,
+                         List<WoolVariableStoreChange> changes) {
+        try {
+            write(woolVariableStore);
+        } catch(IOException e) {
+            logger.error("Failed to write variable store changes: " +
+                    e.getMessage(), e);
         }
     }
 }
