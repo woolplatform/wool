@@ -172,7 +172,8 @@ public class ActiveWoolDialogue {
 			throws EvaluationException {
 		WoolReply selectedWoolReply = currentNode.getBody().findReplyById(replyId);
 		Map<String,Object> variableMap =
-				woolVariableStore.getModifiableMap(true, eventTime);
+				woolVariableStore.getModifiableMap(true, eventTime,
+						WoolVariableStoreChange.Source.WOOL_SCRIPT);
 		for (WoolCommand command : selectedWoolReply.getCommands()) {
 			if (command instanceof WoolSetCommand) {
 				WoolSetCommand setCommand = (WoolSetCommand)command;
@@ -215,9 +216,13 @@ public class ActiveWoolDialogue {
 	 * @param eventTime the time (in the time zone of the user) of the event that triggered this
 	 *                  change in WOOL Variables.
 	 * @param variables the variables
+	 * // TODO: It's not exactly clear how this method is supposed to be used. The assumption is now
+	 *                  that this method stores a set of variables that are the direct result from
+	 *                  a user input reply and therefore the chosen INPUT_REPLY source is used.
 	 */
 	public void storeReplyInput(Map<String,?> variables, ZonedDateTime eventTime) {
-		woolVariableStore.addAll(variables,true,eventTime);
+		woolVariableStore.addAll(variables,true,eventTime,
+				WoolVariableStoreChange.Source.INPUT_REPLY);
 	}
 
 	/**
@@ -277,7 +282,8 @@ public class ActiveWoolDialogue {
 		processedNode.setHeader(woolNode.getHeader());
 		WoolNodeBody processedBody = new WoolNodeBody();
 		Map<String,Object> variables =
-				woolVariableStore.getModifiableMap(true, eventTime);
+				woolVariableStore.getModifiableMap(true, eventTime,
+						WoolVariableStoreChange.Source.WOOL_SCRIPT);
 		woolNode.getBody().execute(variables, true, processedBody);
 		processedNode.setBody(processedBody);
 		return processedNode;

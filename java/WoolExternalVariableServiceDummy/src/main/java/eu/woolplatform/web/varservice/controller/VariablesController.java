@@ -249,7 +249,7 @@ public class VariablesController {
 		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
-		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId +
+		logger.info("POST /v"+versionName+"/variables/notify-updated?userId=" + userId +
 				"&timeZone=" + timeZone + " with the following variables:");
 		for(WoolVariablePayload woolVariableResultParam : woolVariables) {
 			logger.info(woolVariableResultParam.toString());

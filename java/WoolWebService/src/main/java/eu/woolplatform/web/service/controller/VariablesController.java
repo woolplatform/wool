@@ -31,6 +31,7 @@ import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.execution.UserService;
 import eu.woolplatform.wool.execution.WoolVariable;
 import eu.woolplatform.wool.execution.WoolVariableStore;
+import eu.woolplatform.wool.execution.WoolVariableStoreChange;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -44,6 +45,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -186,7 +188,12 @@ public class VariablesController {
 		@Parameter(description = "The user for which to set the wool variable (leave empty if " +
 				"setting for the currently authenticated user)")
 		@RequestParam(value="woolUserId",required=false,defaultValue="")
-		String woolUserId
+		String woolUserId,
+
+		@Parameter(description = "The current time zone of the WOOL user (as IANA, e.g. " +
+				"'Europe/Lisbon')")
+		@RequestParam(value="timeZone")
+		String timeZone
 	) throws Exception {
 
 		// If no versionName is provided, or versionName is empty, assume the latest version
@@ -197,16 +204,18 @@ public class VariablesController {
 		// Log this call to the service log
 		String logInfo = "POST /v" + versionName + "/variables/set-variable?name=" + name;
 		if(!(value == null) && (!value.equals(""))) logInfo += "&value="+value;
-		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
+		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="
+				+ woolUserId;
+		if(!(timeZone == null)) logInfo += "&timeZone=" + timeZone;
 		logger.info(logInfo);
 
 		if(woolUserId == null || woolUserId.equals("")) {
 			QueryRunner.runQuery((version, user) ->
-				doSetVariable(user, name, value),
+				doSetVariable(user, name, value, timeZone),
 				versionName, request, response, woolUserId, application);
 		} else {
 			QueryRunner.runQuery((version, user) ->
-				doSetVariable(woolUserId, name, value),
+				doSetVariable(woolUserId, name, value, timeZone),
 				versionName, request, response, woolUserId, application);
 		}
 	}
@@ -222,7 +231,8 @@ public class VariablesController {
 	 * @throws Exception in case of an invalid variable name, invalid timezone, or an error
 	 * 					 accessing the variable store.
 	 */
-	private Object doSetVariable(String woolUserId, String name, String value) throws Exception {
+	private Object doSetVariable(String woolUserId, String name, String value,
+								 String timeZoneString) throws Exception {
 		List<HttpFieldError> errors = new ArrayList<>();
 
 		if (!name.matches("[A-Za-z]\\w*")) {
@@ -231,12 +241,24 @@ public class VariablesController {
 			throw BadRequestException.withInvalidInput(errors);
 		}
 
-		UserService userService = application.getServiceManager()
-				.getActiveUserService(woolUserId);
+		// Update the WOOL User's time zone with the latest given value
+		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZoneString);
+		UserService userService = application.getServiceManager().getActiveUserService(woolUserId);
+		userService.getWoolUser().setTimeZone(timeZoneId);
 
-		ZonedDateTime updatedTime = DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
+		ZonedDateTime eventTime = DateTimeUtils.nowMs(timeZoneId);
 
-		userService.getVariableStore().setValue(name, value, true, updatedTime);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy - HH:mm:ss Z");
+
+		if(value == null) {
+			logger.info("Received request to remove WOOL Variable '" + name + "' at eventTime '" +
+					eventTime.format(formatter) + "' in time zone '" + timeZoneString + "'");
+			userService.getVariableStore().removeByName(name,true,
+					eventTime,WoolVariableStoreChange.Source.WEB_SERVICE);
+		} else {
+			userService.getVariableStore().setValue(name, value, true, eventTime,
+					WoolVariableStoreChange.Source.WEB_SERVICE);
+		}
 		return null;
 	}
 
@@ -327,7 +349,8 @@ public class VariablesController {
 					entry.getKey(),
 					entry.getValue(),
 					true,
-					DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone()));
+					DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone()),
+					WoolVariableStoreChange.Source.WEB_SERVICE);
 		}
 
 		return null;
