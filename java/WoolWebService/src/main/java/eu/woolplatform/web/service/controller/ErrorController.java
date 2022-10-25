@@ -35,23 +35,20 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * This controller handles all errors in the application. It looks at the
- * request attributes for a status code, error message and exception. It
- * distinguishes the following cases:
+ * This controller handles all errors in the application. It looks at the request attributes for a
+ * status code, error message and exception. It distinguishes the following cases:
  * 
  * <p><ul>
- * <li>The request has no exception. It sets the status code and returns the
- * error message or an empty string.</li>
- * <li>The exception has a {@link ResponseStatus ResponseStatus} annotation,
- * such as a {@link HttpException HttpException}. It sets the status code and
- * returns the exception message.</li>
- * <li>The exception is a {@link ServletException ServletException}, which is
- * usually the result of Spring validation. It sets the status code and
- * returns the error message.</li>
- * <li>Any other exception. It logs the exception, sets the status code to
- * 500 Internal Server Error and returns "Internal Server Error". This means
- * that any details about the exception, which may contain sensitive
- * information, are hidden for the client.</li>
+ * <li>The request has no exception. It sets the status code and returns the error message or an
+ * empty string.</li>
+ * <li>The exception has a {@link ResponseStatus ResponseStatus} annotation, such as a
+ * {@link HttpException HttpException}. It sets the status code and returns the exception message.
+ * </li>
+ * <li>The exception is a {@link ServletException ServletException}, which is usually the result of
+ * Spring validation. It sets the status code and returns the error message.</li>
+ * <li>Any other exception. It logs the exception, sets the status code to 500 Internal Server Error
+ * and returns "Internal Server Error". This means that any details about the exception, which may
+ * contain sensitive information, are hidden for the client.</li>
  * </ul></p>
  * 
  * @author Dennis Hofs (RRD)

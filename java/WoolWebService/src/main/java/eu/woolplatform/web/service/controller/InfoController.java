@@ -36,7 +36,8 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 @RestController
-@Tag(name = "4. Information", description = "End-points that provide information about the running service")
+@Tag(name = "4. Information", description = "End-points that provide information about the " +
+		"running service")
 @RequestMapping("/v{version}/info")
 public class InfoController {
 
@@ -46,11 +47,13 @@ public class InfoController {
 	Application application;
 
 	@Operation(summary = "Retrieve a set of metadata parameters about the running service",
-			description = "This end-point may be called without authentication and will return 3 variables" +
-					" that describe the current version of the service:" +
-					" <ul><li>build - Date & Time when the service was built</li>" +
-					" <li>protocolVersion - latest supported API Protocol version</li>" +
-					" <li>serviceVersion - software version of the service</li></ul>")
+		description = "This end-point may be called without authentication and will return 4 " +
+			"variables that describe the current version of the service:" +
+			" <ul><li>build - Date & Time when the service was built</li>" +
+			" <li>protocolVersion - latest supported API Protocol version</li>" +
+			" <li>serviceVersion - software version of the service</li>" +
+			" <li>upTime - string showing days, hours and minutes since the service was launched " +
+			"</li></ul>")
 	@GetMapping("/all")
 	public ServiceInfoPayload all(
 			@Parameter(hidden = true)

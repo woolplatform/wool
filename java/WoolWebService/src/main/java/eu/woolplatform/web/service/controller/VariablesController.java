@@ -63,10 +63,10 @@ public class VariablesController {
 
 	@Operation(
 		summary = "Retrieve all- or a subset of WOOL variables for a given user",
-		description = "Use this end-point to get the latest known WOOL Variables values for a given user " +
-				"(either the currently logged in user, or the one provided through the end-point). Either provide " +
-				"a list of variable names for which to retrieve its values, or leave this empty to retrieve all known " +
-				"WOOL Variable data.")
+		description = "Use this end-point to get the latest known WOOL Variables values for a " +
+			"given user (either the currently logged in user, or the one provided through the " +
+			"end-point). Either provide a list of variable names for which to retrieve its " +
+			"values, or leave this empty to retrieve all known WOOL Variable data.")
 	@RequestMapping(value="/get-variables", method=RequestMethod.GET)
 	public Map<String,Object> getVariables(
 			HttpServletRequest request,
@@ -76,11 +76,13 @@ public class VariablesController {
 			@PathVariable(value = "version")
 			String versionName,
 
-			@Parameter(description = "A space-separated list of WOOL variable names, or leave empty to retrieve all known variables")
+			@Parameter(description = "A space-separated list of WOOL variable names, or leave " +
+					"empty to retrieve all known variables")
 			@RequestParam(value="variableNames", required=false)
 			String variableNames,
 
-			@Parameter(description = "The user for which to request wool variable info (leave empty if executing for the currently authenticated user)")
+			@Parameter(description = "The user for which to request wool variable info (leave " +
+					"empty if executing for the currently authenticated user)")
 			@RequestParam(value="woolUserId", required=false)
 			String woolUserId) throws Exception {
 
@@ -111,7 +113,7 @@ public class VariablesController {
 	/**
 	 * For the given {@code woolUserId} returns a mapping from names to value of WOOL Variables for
 	 * those variables provided in the given {@code variableNames} string. The {@code variableNames}
-	 * string should be a 'space-separated' list of WOOL Variable names (e.g. "variable1
+	 * string should be a 'space-separated' list of valid WOOL Variable names (e.g. "variable1
 	 * variable_two variable-three").
 	 *
 	 * @param woolUserId the WOOL user for which to retrieve variable data.
@@ -161,8 +163,8 @@ public class VariablesController {
 
 	@Operation(
 		summary = "Set the value of a single WOOL Variable for a given user",
-		description = "Use this end-point to get set a WOOL Variable to a specific value (or to remove the " +
-				"stored value by setting it to the empty string.")
+		description = "Use this end-point to get set a WOOL Variable to a specific value (or to " +
+				"remove the stored value by setting it to the empty string.")
 	@RequestMapping(value="/set-variable", method=RequestMethod.POST)
 	public void setVariable(
 		HttpServletRequest request,
@@ -176,11 +178,13 @@ public class VariablesController {
 		@RequestParam(value="name")
 		String name,
 
-		@Parameter(description = "The value for the WOOL Variable (or leave empty to erase the WOOL variable)")
+		@Parameter(description = "The value for the WOOL Variable (or leave empty to erase the " +
+				"WOOL variable)")
 		@RequestParam(value="value", required=false)
 		String value,
 
-		@Parameter(description = "The user for which to set the wool variable (leave empty if setting for the currently authenticated user)")
+		@Parameter(description = "The user for which to set the wool variable (leave empty if " +
+				"setting for the currently authenticated user)")
 		@RequestParam(value="woolUserId",required=false,defaultValue="")
 		String woolUserId
 	) throws Exception {
@@ -208,13 +212,15 @@ public class VariablesController {
 	}
 
 	/**
-	 * Sets a WOOL Variable defined by the given {@code name} to the given {@code value} for the specified
-	 * {@code woolUserid} in the given {@code timeZone}.
+	 * Sets a WOOL Variable defined by the given {@code name} to the given {@code value} for the
+	 * specified {@code woolUserid} in the given {@code timeZone}.
 	 * @param woolUserId the {@link String} identifier of the user for whom to set the variable.
 	 * @param name the name of the WOOL Variable
-	 * @param value the value for the WOOL Variable (or {@code null} in case the variable should be reset).
+	 * @param value the value for the WOOL Variable (or {@code null} in case the variable should be
+	 *              reset).
 	 * @return {@code null}
-	 * @throws Exception in case of an invalid variable name, invalid timezone, or an error accessing the variable store.
+	 * @throws Exception in case of an invalid variable name, invalid timezone, or an error
+	 * 					 accessing the variable store.
 	 */
 	private Object doSetVariable(String woolUserId, String name, String value) throws Exception {
 		List<HttpFieldError> errors = new ArrayList<>();
@@ -240,8 +246,8 @@ public class VariablesController {
 
 	@Operation(
 		summary = "Set the value of one or multiple WOOL Variable for a given user",
-		description = "Use this end-point to get set one or many WOOL Variables to their given values (or to remove the " +
-				"stored value by setting it to the empty string.")
+		description = "Use this end-point to get set one or many WOOL Variables to their given " +
+				"values (or to remove the stored value by setting it to the empty string.")
 	@RequestMapping(value="/set-variables", method=RequestMethod.POST)
 	public void setVariables(
 			HttpServletRequest request,
@@ -251,11 +257,13 @@ public class VariablesController {
 			@PathVariable(value = "version")
 			String versionName,
 
-			@Parameter(description = "The user for which to set the wool variables (leave empty if setting for the currently authenticated user)")
+			@Parameter(description = "The user for which to set the wool variables (leave empty " +
+					"if setting for the currently authenticated user)")
 			@RequestParam(value="woolUserId",required=false)
 			String woolUserId,
 
-			@Parameter(description = "The current time zone of the WOOL user (as IANA, e.g. 'Europe/Lisbon')")
+			@Parameter(description = "The current time zone of the WOOL user (as IANA, e.g. " +
+					"'Europe/Lisbon')")
 			@RequestParam(value="timeZone")
 			String timeZone,
 
@@ -277,17 +285,20 @@ public class VariablesController {
 			QueryRunner.runQuery((version, user) -> doSetVariables(user, woolVariables, timeZone),
 				versionName, request, response, woolUserId, application);
 		} else {
-			QueryRunner.runQuery((version, user) -> doSetVariables(woolUserId, woolVariables, timeZone),
+			QueryRunner.runQuery((version, user) ->
+							doSetVariables(woolUserId, woolVariables, timeZone),
 				versionName, request, response, woolUserId, application);
 		}
 	}
 
 	/**
-	 * Sets the WOOL Variables in the given {@code woolVariables} map for the given {@code woolUserId}.
+	 * Sets the WOOL Variables in the given {@code woolVariables} map for the given
+	 * {@code woolUserId}.
 	 * @param woolUserId the {@link String} identifier of the user for whom to set the variables.
 	 * @param woolVariables a mapping of WOOL Variable names to value.
 	 * @return {@code null}
-	 * @throws Exception in case of an invalid variable name, or an error writing variables to the database.
+	 * @throws Exception in case of an invalid variable name, or an error writing variables to the
+	 * 					 database.
 	 */
 	private Object doSetVariables(String woolUserId, Map<String,Object> woolVariables,
 								  String timeZoneString) throws Exception {

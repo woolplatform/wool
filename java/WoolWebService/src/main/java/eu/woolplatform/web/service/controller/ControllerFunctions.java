@@ -42,10 +42,10 @@ public class ControllerFunctions {
 	// -------------------------------------- //
 
 	/**
-	 * Parses a given String into a {@link ZoneId} time zone object. The given {@code timeZone} String
-	 * should be formatted according to the rules defined in {@link ZoneId#of(String)}}. When given an
-	 * empty string, or {@code null}, this method returns the default time zone as given by
-	 * {@link ZoneId#systemDefault()}.
+	 * Parses a given String into a {@link ZoneId} time zone object. The given {@code timeZone}
+	 * String should be formatted according to the rules defined in {@link ZoneId#of(String)}}.
+	 * When given an empty string, or {@code null}, this method returns the default time zone as
+	 * given by {@link ZoneId#systemDefault()}.
  	 * @param timeZone a String representation of a time zone.
 	 * @return the time zone as a {@link ZoneId}
 	 * @throws BadRequestException in case of a wrongly formatted {@code timeZone} string.
@@ -64,10 +64,12 @@ public class ControllerFunctions {
 			result = ZoneId.of(timeZone);
 		} catch (ZoneRulesException zoneRulesException) {
 			errors.add(new HttpFieldError("timeZone",
-					"Invalid value for field \"timeZone\": " + timeZone + " (zone not recognized)."));
+					"Invalid value for field \"timeZone\": "
+							+ timeZone + " (zone not recognized)."));
 		} catch(DateTimeException dateTimeException) {
 			errors.add(new HttpFieldError("timeZone",
-					"Invalid value for field \"timeZone\": " + timeZone + " (format incorrect)."));
+					"Invalid value for field \"timeZone\": "
+							+ timeZone + " (format incorrect)."));
 		}
 
 		if(!errors.isEmpty()) {
@@ -79,9 +81,12 @@ public class ControllerFunctions {
 	}
 
 	/**
-	 * Generates a {@link HttpException} with a valid HTTP Status Code from the given {@link WoolException}.
-	 * @param exception the {@link WoolException} that should be "wrapped" into an {@link HttpException}.
-	 * @return the {@link HttpException} object representing the error including a valid status code.
+	 * Generates a {@link HttpException} with a valid HTTP Status Code from the given
+	 * {@link WoolException}.
+	 * @param exception the {@link WoolException} that should be "wrapped" into an
+	 * 					{@link HttpException}.
+	 * @return the {@link HttpException} object representing the error including a valid status
+	 * 		   code.
 	 */
 	public static HttpException createHttpException(WoolException exception) {
 		switch (exception.getType()) {
