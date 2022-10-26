@@ -65,7 +65,9 @@ public class VariablesController {
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
-	// ----- END-POINT: "retrieve-updates"
+	// -----------------------------------------------------------------------
+	// -------------------- END-POINT: "retrieve-updates" --------------------
+	// -----------------------------------------------------------------------
 
 	@Operation(summary = "Retrieve updates for a given list of WOOL Variables",
 		description = "The use case for this end-point is as follows. Before executing a WOOL " +
@@ -201,7 +203,9 @@ public class VariablesController {
 		return result;
 	}
 
-	// ----- END-POINT: "notify-updated"
+	// ---------------------------------------------------------------------
+	// -------------------- END-POINT: "notify-updated" --------------------
+	// ---------------------------------------------------------------------
 
 	@Operation(summary = "Inform that the given list of WOOL Variables have been updated",
 		description = "With this end-point you can inform this WOOL External Variable Service " +
@@ -284,6 +288,79 @@ public class VariablesController {
 	 */
 	private ResponseEntity<?> executeNotifyUpdated(String userId, String timeZone,
 												   List<WoolVariablePayload> params)
+			throws BadRequestException {
+
+		// Parse the timeZone String into a ZoneId to verify it was given in the right format
+		ControllerFunctions.parseTimeZone(timeZone);
+
+		return new ResponseEntity<ResponseEntity<?>>(HttpStatus.OK);
+	}
+
+	// ---------------------------------------------------------------------
+	// -------------------- END-POINT: "notify-cleared" --------------------
+	// ---------------------------------------------------------------------
+
+	@Operation(summary = "Inform that the WOOL Variable store has been completed cleared",
+		description = "With this end-point you can inform this WOOL External Variable Service " +
+			"that a full clear of the WOOL Variable Store has occurred for a particular user" +
+			"<br/><br/>You must pass along the current timezone of the user (client) so that " +
+			"certain time sensitive variables may be correctly set according to the timezone of " +
+			"the user." +
+			"<br/><br/>In this dummy implementation, the service will do nothing and will simply " +
+			"return a status 200 (OK).")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successful operation") })
+	@RequestMapping(value="/notify-cleared", method= RequestMethod.POST)
+	public ResponseEntity<?> notifyCleared(
+			HttpServletRequest request,
+			HttpServletResponse response,
+
+			@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
+			@PathVariable(value = "version")
+			String versionName,
+
+			@Parameter(description = "The userId of the WOOL user")
+			@RequestParam(value="userId")
+			String userId,
+
+			@Parameter(description = "The current time zone of the WOOL user")
+			@RequestParam(value="timeZone")
+			String timeZone
+	) throws Exception {
+
+		// If no explicit protocol version is provided, assume the latest version
+		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+
+		// Log this call to the service log
+		logger.info("POST /v"+versionName+"/variables/notify-cleared?userId=" + userId +
+				"&timeZone=" + timeZone);
+
+		// Execute either for the provided userId or for the currently logged-in user
+		// TODO: Not correct, an error should be thrown on an empty userId
+		if(userId.equals("")) {
+			return QueryRunner.runQuery(
+					(version, user) -> executeNotifyCleared(user, timeZone),
+					versionName, request, response, userId);
+		} else {
+			return QueryRunner.runQuery(
+					(version, user) -> executeNotifyCleared(userId, timeZone),
+					versionName, request, response, userId);
+		}
+
+	}
+
+	/**
+	 * This method performs the Dummy implementation for receiving the notification that a WOOL
+	 * Variable store has been completely cleared. As this is a dummy implementation and there is no
+	 * real external service, the implementation is simply to return "OK", without doing anything.
+	 *
+	 * @param userId the {@code String} identifier of the user for whom variable updates are
+	 *               available.
+	 * @param timeZone the timeZone of the user as one of {@code TimeZone.getAvailableIDs()} (IANA
+	 *                 Codes)
+	 * @return a {@link ResponseEntity} to indicate whether the update was executed successfully.
+	 */
+	private ResponseEntity<?> executeNotifyCleared(String userId, String timeZone)
 			throws BadRequestException {
 
 		// Parse the timeZone String into a ZoneId to verify it was given in the right format

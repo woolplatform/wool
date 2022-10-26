@@ -20,7 +20,6 @@
 package eu.woolplatform.web.service.storage;
 
 import eu.woolplatform.utils.AppComponents;
-import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.execution.UserServiceManager;
 import eu.woolplatform.wool.execution.WoolVariable;
@@ -28,7 +27,6 @@ import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.execution.WoolVariableStoreChange;
 import eu.woolplatform.wool.execution.WoolVariableStoreOnChangeListener;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -36,10 +34,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class ExternalVariableServiceUpdater implements WoolVariableStoreOnChangeListener {
 
@@ -55,6 +50,13 @@ public class ExternalVariableServiceUpdater implements WoolVariableStoreOnChange
 	@Override
 	public void onChange(WoolVariableStore woolVariableStore,
 						 List<WoolVariableStoreChange> changes) {
+
+		String userId = woolVariableStore.getWoolUser().getId();
+		String userTimeZoneString
+				= woolVariableStore.getWoolUser().getTimeZone().toString();
+
+		List<WoolVariable> variablesToUpdate = new ArrayList<>();
+
 		for(WoolVariableStoreChange change : changes) {
 			WoolVariableStoreChange.Source source = change.getSource();
 
@@ -64,73 +66,104 @@ public class ExternalVariableServiceUpdater implements WoolVariableStoreOnChange
 
 				if(config.getExternalVariableServiceEnabled()) {
 					logger.info("An external WOOL Variable Service is configured to be enabled, " +
-							"with parameters:");
+						"with parameters:");
 					logger.info("URL: " + config.getExternalVariableServiceURL());
 					logger.info("API Version: " + config.getExternalVariableServiceAPIVersion());
 
-					String userId = woolVariableStore.getWoolUser().getId();
-					String userTimeZoneString
-							= woolVariableStore.getWoolUser().getTimeZone().toString();
-
-					List<WoolVariable> variablesToUpdate = new ArrayList<>();
-
 					if(change instanceof WoolVariableStoreChange.Clear) {
-						// Well...
-						// Todo: Implement
+						RestTemplate restTemplate = new RestTemplate();
+						HttpHeaders requestHeaders = new HttpHeaders();
+						requestHeaders.set("X-Auth-Token",
+							userServiceManager.getExternalVariableServiceAPIToken());
+
+						String notifyClearedUrl = config.getExternalVariableServiceURL()
+							+ "/v" + config.getExternalVariableServiceAPIVersion()
+							+ "/variables/notify-cleared";
+
+						LinkedMultiValueMap<String, String> allRequestParams =
+							new LinkedMultiValueMap<>();
+						allRequestParams.put("userId", Arrays.asList(userId));
+						allRequestParams.put("timeZone", Arrays.asList(userTimeZoneString));
+
+						HttpEntity<?> entity = new HttpEntity<>(requestHeaders);
+						UriComponentsBuilder builder =
+							UriComponentsBuilder.fromUriString(notifyClearedUrl)
+								.queryParams(
+									(LinkedMultiValueMap<String, String>) allRequestParams);
+						UriComponents uriComponents = builder.build().encode();
+
+						// Todo: check if we need to do something with the 200 OK response
+						ResponseEntity<Object> response = restTemplate.exchange(
+							uriComponents.toUri(),
+							HttpMethod.POST,
+							entity,
+							Object.class);
 
 					} else if (change instanceof WoolVariableStoreChange.Remove) {
 						Collection<String> variableNames
-								= ((WoolVariableStoreChange.Remove) change).getVariableNames();
+							= ((WoolVariableStoreChange.Remove) change).getVariableNames();
 
 						for (String variableName : variableNames) {
 							long updatedTime = change.getTime().toEpochSecond() * 1000;
 
 							variablesToUpdate.add(
-									new WoolVariable(
-											variableName,
-											null,
-											updatedTime,
-											userTimeZoneString));
+								new WoolVariable(
+									variableName,
+									null,
+									updatedTime,
+									userTimeZoneString));
 						}
 					} else if (change instanceof WoolVariableStoreChange.Put) {
-						// Todo: implement
-					}
+						Map<String,Object> changedVariables
+							= ((WoolVariableStoreChange.Put) change).getVariables();
 
-					// Perform the actual REST call
-					if(variablesToUpdate.size() > 0) {
+						long updatedTime = change.getTime().toEpochSecond() * 1000;
 
-						RestTemplate restTemplate = new RestTemplate();
-						HttpHeaders requestHeaders = new HttpHeaders();
-						requestHeaders.setContentType(MediaType.valueOf("application/json"));
-						requestHeaders.set("X-Auth-Token",
-								userServiceManager.getExternalVariableServiceAPIToken());
-
-						String notifyUpdatesUrl = config.getExternalVariableServiceURL()
-								+ "/v" + config.getExternalVariableServiceAPIVersion()
-								+ "/variables/notify-updated";
-
-						LinkedMultiValueMap<String, String> allRequestParams =
-								new LinkedMultiValueMap<>();
-						allRequestParams.put("userId", Arrays.asList(userId));
-						allRequestParams.put("timeZone", Arrays.asList(userTimeZoneString));
-
-						HttpEntity<?> entity = new HttpEntity<>(variablesToUpdate, requestHeaders);
-						UriComponentsBuilder builder =
-								UriComponentsBuilder.fromUriString(notifyUpdatesUrl)
-										.queryParams(
-												(LinkedMultiValueMap<String, String>) allRequestParams);
-						UriComponents uriComponents = builder.build().encode();
-
-						// Todo: check if we need to do something with the 200 OK response
-						ResponseEntity<Object> response = restTemplate.exchange(
-								uriComponents.toUri(),
-								HttpMethod.POST,
-								entity,
-								Object.class);
+						for(String variableName : changedVariables.keySet()) {
+							Object variableValue = changedVariables.get(variableName);
+							variablesToUpdate.add(
+								new WoolVariable(
+									variableName,
+									null,
+									updatedTime,
+									userTimeZoneString));
+						}
 					}
 				}
-
 			}
+		}
+
+		// Perform the actual REST call
+		if(variablesToUpdate.size() > 0) {
+
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders requestHeaders = new HttpHeaders();
+			requestHeaders.setContentType(MediaType.valueOf("application/json"));
+			requestHeaders.set("X-Auth-Token",
+					userServiceManager.getExternalVariableServiceAPIToken());
+
+			String notifyUpdatesUrl = config.getExternalVariableServiceURL()
+					+ "/v" + config.getExternalVariableServiceAPIVersion()
+					+ "/variables/notify-updated";
+
+			LinkedMultiValueMap<String, String> allRequestParams =
+					new LinkedMultiValueMap<>();
+			allRequestParams.put("userId", Arrays.asList(userId));
+			allRequestParams.put("timeZone", Arrays.asList(userTimeZoneString));
+
+			HttpEntity<?> entity = new HttpEntity<>(variablesToUpdate, requestHeaders);
+			UriComponentsBuilder builder =
+					UriComponentsBuilder.fromUriString(notifyUpdatesUrl)
+							.queryParams(
+									(LinkedMultiValueMap<String, String>) allRequestParams);
+			UriComponents uriComponents = builder.build().encode();
+
+			// Todo: check if we need to do something with the 200 OK response
+			ResponseEntity<Object> response = restTemplate.exchange(
+					uriComponents.toUri(),
+					HttpMethod.POST,
+					entity,
+					Object.class);
 		}
 	}
 }
