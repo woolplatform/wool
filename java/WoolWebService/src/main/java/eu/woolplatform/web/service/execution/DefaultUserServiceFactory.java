@@ -20,8 +20,10 @@
 package eu.woolplatform.web.service.execution;
 
 import eu.woolplatform.utils.exception.DatabaseException;
+import eu.woolplatform.web.service.storage.ExternalVariableServiceUpdater;
 import eu.woolplatform.web.service.storage.WoolVariableStoreStorageHandler;
 import eu.woolplatform.wool.execution.WoolUser;
+import eu.woolplatform.wool.execution.WoolVariableStoreOnChangeListener;
 
 import java.io.IOException;
 
@@ -59,7 +61,8 @@ public class DefaultUserServiceFactory extends UserServiceFactory {
 		return new UserService(
 				new WoolUser(userId),
 				userServiceManager,
-				storageHandler);
+				storageHandler,
+				new ExternalVariableServiceUpdater(userServiceManager));
 	}
 
 }

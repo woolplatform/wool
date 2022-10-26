@@ -25,10 +25,7 @@ import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.i18n.I18nLanguageFinder;
 import eu.woolplatform.utils.i18n.I18nUtils;
 import eu.woolplatform.web.service.Configuration;
-import eu.woolplatform.web.service.storage.LoggedDialogue;
-import eu.woolplatform.web.service.storage.LoggedDialogueStoreIO;
-import eu.woolplatform.web.service.storage.WoolVariableStoreJSONStorageHandler;
-import eu.woolplatform.web.service.storage.WoolVariableStoreStorageHandler;
+import eu.woolplatform.web.service.storage.*;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.execution.*;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
@@ -80,9 +77,14 @@ public class UserService {
 	 * @param onVarChangeListener the {@link WoolVariableStoreOnChangeListener} that will be added
 	 *                            to the {@link WoolVariableStore} instance that this
 	 *                            {@link UserService} creates.
+	 * @param externalVariableServiceUpdater a {@link WoolVariableStoreOnChangeListener} that
+	 *                                       listens to updates on the WOOL Variable store and
+	 *                                       notifies the external variable service if the changes
+	 *                                       made did not come from that service in the first place.
 	 */
 	public UserService(WoolUser woolUser, UserServiceManager userServiceManager,
-			WoolVariableStoreOnChangeListener onVarChangeListener)
+					   WoolVariableStoreOnChangeListener onVarChangeListener,
+					   ExternalVariableServiceUpdater externalVariableServiceUpdater)
 			throws DatabaseException, IOException {
 
 		this.logger = AppComponents.getLogger(getClass().getSimpleName());
@@ -101,6 +103,9 @@ public class UserService {
 		}
 
 		this.variableStore.addOnChangeListener(onVarChangeListener);
+		if(config.getExternalVariableServiceEnabled()) {
+			this.variableStore.addOnChangeListener(externalVariableServiceUpdater);
+		}
 		dialogueExecutor = new DialogueExecutor(this);
 
 		// create dialogueLanguageMap
@@ -281,7 +286,8 @@ public class UserService {
 	 */
 	public void storeReplyInput(Map<String,?> variables, ZonedDateTime eventTime)
 			throws WoolException {
-		variableStore.addAll(variables,true,eventTime);
+		variableStore.addAll(variables,true,eventTime,
+				WoolVariableStoreChange.Source.INPUT_REPLY);
 	}
 
 
@@ -358,7 +364,8 @@ public class UserService {
 						ZonedDateTime varUpdated = woolVariable.getZonedUpdatedTime();
 						Object varValueObject;
 
-						variableStore.setValue(varName, varValue, true, varUpdated);
+						variableStore.setValue(varName, varValue, true, varUpdated,
+								WoolVariableStoreChange.Source.EXTERNAL_VARIABLE_SERVICE);
 					}
 				}
 			}

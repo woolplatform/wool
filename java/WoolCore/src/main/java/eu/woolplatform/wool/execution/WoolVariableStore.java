@@ -36,7 +36,7 @@ public class WoolVariableStore {
 	// The WOOL user associated with this WoolVariableStore
 	private WoolUser woolUser;
 
-	// Contains the list of all WoolVariableChangeListeners that need to be notified in case of updates
+	// Contains the list of all WoolVariableChangeListeners that need to be notified for updates
 	private final List<WoolVariableStoreOnChangeListener> onChangeListeners = new ArrayList<>();
 
 	// --------------------------------------------------------
@@ -44,7 +44,8 @@ public class WoolVariableStore {
 	// --------------------------------------------------------
 
 	/**
-	 * Creates an instance of a new {@link WoolVariableStore} for a user in the given {@code timeZone}.
+	 * Creates an instance of a new {@link WoolVariableStore} for a user in the given
+	 * {@code timeZone}.
 	 * @param woolUser the {@link WoolUser} associated with this {@link WoolVariableStore}.
 	 */
 	public WoolVariableStore(WoolUser woolUser) {
@@ -83,7 +84,8 @@ public class WoolVariableStore {
 	 *
 	 * @param listener a {@link WoolVariableStoreOnChangeListener} that was previously registered
 	 *                 to listen for changes.
-	 * @return {@code true} if the given {@link WoolVariableStoreOnChangeListener} was removed, or {@code false}
+	 * @return {@code true} if the given {@link WoolVariableStoreOnChangeListener} was removed, or
+	 *         {@code false} otherwise.
 	 * if it was not registered as a listener to begin with.
 	 */
 	public boolean removeOnChangeListener(WoolVariableStoreOnChangeListener listener) {
@@ -97,8 +99,8 @@ public class WoolVariableStore {
 	 * {@link WoolVariableStore} of one or more changes as represented by the list of
 	 * {@link WoolVariableStoreChange} {@code changes}.
 	 *
-	 * @param changes one or multiple {@link WoolVariableStoreChange}s representing a modification to
-	 *                this {@link WoolVariableStore}.
+	 * @param changes one or multiple {@link WoolVariableStoreChange}s representing a modification
+	 *                to this {@link WoolVariableStore}.
 	 */
 	private void notifyOnChange(WoolVariableStoreChange... changes) {
 		List<WoolVariableStoreOnChangeListener> listeners;
@@ -170,9 +172,11 @@ public class WoolVariableStore {
 	}
 
 	/**
-	 * Returns a set of all the names of {@link WoolVariable}s contained in this {@link WoolVariableStore}.
+	 * Returns a set of all the names of {@link WoolVariable}s contained in this
+	 * {@link WoolVariableStore}.
 	 *
-	 * @return a set of all the names of {@link WoolVariable}s contained in this {@link WoolVariableStore}.
+	 * @return a set of all the names of {@link WoolVariable}s contained in this
+	 * {@link WoolVariableStore}.
 	 */
 	public Set<String> getWoolVariableNames() {
 		return woolVariables.keySet();
@@ -184,44 +188,82 @@ public class WoolVariableStore {
 		return nameList;
 	}
 
-	// ----- Modification Methods
+	// --------------------------------------------------------------
+	// -------------------- Modification Methods --------------------
+	// --------------------------------------------------------------
 
 	/**
 	 * Stores the given {@code value} under the given variable-{@code name} in this
 	 * {@link WoolVariableStore} and sets the updatedTime to {@code updatedTime}.
 	 *
-	 * @param name            the name of the variable to store.
-	 * @param value           the value of the variable to store.
+	 * @param name the name of the variable to store.
+	 * @param value the value of the variable to store.
 	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
 	 *                        notified about this update.
-	 * @param updatedTime     the time (in the time zone of the user) of the event that triggered the update of
-	 * 	                      this variable
+	 * @param eventTime the time (in the time zone of the user) of the event that triggered the
+	 *                  update of this variable.
 	 */
 	public void setValue(String name, Object value, boolean notifyObservers,
-						 ZonedDateTime updatedTime) {
-		synchronized (woolVariables) {
-			WoolVariable woolVariable = new WoolVariable(name, value, updatedTime);
-			woolVariables.put(name,woolVariable);
-			if (notifyObservers) {
-				notifyOnChange(new WoolVariableStoreChange.Put(woolVariable, updatedTime));
-			}
-		}
-
+						 ZonedDateTime eventTime) {
+		setValue(name,value,notifyObservers,eventTime,WoolVariableStoreChange.Source.UNKNOWN);
 	}
 
 	/**
-	 * Remove the {@link WoolVariable} with the given {@code name} from this {@link WoolVariableStore}. This method
-	 * returns the {@link WoolVariable} object that has been deleted, or {@code null} if the element to be deleted was
-	 * not found.
+	 * Stores the given {@code value} under the given variable-{@code name} in this
+	 * {@link WoolVariableStore} and sets the updatedTime to {@code updatedTime}.
 	 *
-	 * @param name            the name of the {@link WoolVariable} to remove.
+	 * @param name the name of the variable to store.
+	 * @param value the value of the variable to store.
 	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
 	 *                        notified about this update.
-	 * @param updatedTime     the time (in the time zone of the user) of the event that triggered the removal of
-	 *                        this variable
+	 * @param eventTime the time (in the time zone of the user) of the event that triggered the
+	 *                  update of this variable.
+	 * @param source the source of the update to this {@link WoolVariableStore}.
+	 */
+	public void setValue(String name, Object value, boolean notifyObservers,
+						 ZonedDateTime eventTime, WoolVariableStoreChange.Source source) {
+		synchronized (woolVariables) {
+			WoolVariable woolVariable = new WoolVariable(name, value, eventTime);
+			woolVariables.put(name,woolVariable);
+			if (notifyObservers) {
+				notifyOnChange(new WoolVariableStoreChange.Put(woolVariable, eventTime, source));
+			}
+		}
+	}
+
+	/**
+	 * Remove the {@link WoolVariable} with the given {@code name} from this
+	 * {@link WoolVariableStore}. This method returns the {@link WoolVariable} object that has been
+	 * deleted, or {@code null} if the element to be deleted was not found.
+	 *
+	 * @param name the name of the {@link WoolVariable} to remove.
+	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
+	 *                        notified about this update.
+	 * @param eventTime the time (in the time zone of the user) of the event that triggered the
+	 *                  removal of this variable
 	 * @return the {@link WoolVariable} that was removed, or {@code null}.
 	 */
-	public WoolVariable removeByName(String name, boolean notifyObservers, ZonedDateTime updatedTime) {
+	public WoolVariable removeByName(String name, boolean notifyObservers,
+									 ZonedDateTime eventTime) {
+		return removeByName(name,notifyObservers,eventTime,WoolVariableStoreChange.Source.UNKNOWN);
+	}
+
+	/**
+	 * Remove the {@link WoolVariable} with the given {@code name} from this
+	 * {@link WoolVariableStore}. This method returns the {@link WoolVariable} object that has been
+	 * deleted, or {@code null} if the element to be deleted was not found.
+	 *
+	 * @param name the name of the {@link WoolVariable} to remove.
+	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
+	 *                        notified about this update.
+	 * @param eventTime the time (in the time zone of the user) of the event that triggered the
+	 *                  removal of this variable
+	 * @param source the source of the update to this {@link WoolVariableStore}.
+	 * @return the {@link WoolVariable} that was removed, or {@code null}.
+	 */
+	public WoolVariable removeByName(String name, boolean notifyObservers,
+									 ZonedDateTime eventTime,
+									 WoolVariableStoreChange.Source source) {
 		WoolVariable result;
 		synchronized (woolVariables) {
 			result = woolVariables.remove(name);
@@ -230,23 +272,40 @@ public class WoolVariableStore {
 			return null;
 		} else {
 			if(notifyObservers) {
-				notifyOnChange(new WoolVariableStoreChange.Remove(name, updatedTime));
+				notifyOnChange(new WoolVariableStoreChange.Remove(name, eventTime, source));
 			}
 			return result;
 		}
 	}
 
 	/**
-	 * Adds all the entries in the {@code variablesToAdd}-map as {@link WoolVariable}s to this {@link WoolVariableStore}. The
-	 * {@code variablesToAdd}-map is treated as a mapping from variable names ({@link String}s) to variable values ({@link Object}s).
-	 * @param variablesToAdd  the {@link Map} of name-value pairs to add as {@link WoolVariable}s.
+	 * Adds all the entries in the {@code variablesToAdd}-map as {@link WoolVariable}s to this
+	 * {@link WoolVariableStore}. The {@code variablesToAdd}-map is treated as a mapping from
+	 * variable names ({@link String}s) to variable values ({@link Object}s).
+	 * @param variablesToAdd the {@link Map} of name-value pairs to add as {@link WoolVariable}s.
 	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
 	 *                        notified about this update.
-	 * @param eventTime       the time of the event that triggered the addition of these variables (in the time zone of the user)
+	 * @param eventTime the time of the event that triggered the addition of these variables
+	 *                  (in the time zone of the user)
 	 */
 	public void addAll(Map<? extends String, ?> variablesToAdd, boolean notifyObservers,
 					   ZonedDateTime eventTime) {
+		addAll(variablesToAdd,notifyObservers,eventTime,WoolVariableStoreChange.Source.UNKNOWN);
+	}
 
+	/**
+	 * Adds all the entries in the {@code variablesToAdd}-map as {@link WoolVariable}s to this
+	 * {@link WoolVariableStore}. The {@code variablesToAdd}-map is treated as a mapping from
+	 * variable names ({@link String}s) to variable values ({@link Object}s).
+	 * @param variablesToAdd the {@link Map} of name-value pairs to add as {@link WoolVariable}s.
+	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be
+	 *                        notified about this update.
+	 * @param eventTime the time of the event that triggered the addition of these variables
+	 *                  (in the time zone of the user)
+	 * @param source the source of the update to this {@link WoolVariableStore}.
+	 */
+	public void addAll(Map<? extends String, ?> variablesToAdd, boolean notifyObservers,
+					   ZonedDateTime eventTime, WoolVariableStoreChange.Source source) {
 		List<WoolVariable> woolVariablesToAdd = new ArrayList<>();
 
 		for (Map.Entry<? extends String, ?> entry : variablesToAdd.entrySet()) {
@@ -263,37 +322,61 @@ public class WoolVariableStore {
 		}
 
 		if (notifyObservers) {
-			notifyOnChange(new WoolVariableStoreChange.Put(woolVariablesToAdd, eventTime));
+			notifyOnChange(new WoolVariableStoreChange.Put(woolVariablesToAdd, eventTime, source));
 		}
 	}
 
+	/**
+	 * Sets the {@link WoolUser} for this {@link WoolVariableStore}.
+	 * @param woolUser the {@link WoolUser} for this {@link WoolVariableStore}.
+	 */
 	public void setWoolUser(WoolUser woolUser) {
 		this.woolUser = woolUser;
 	}
 
 	/**
-	 * Returns a modifiable mapping of {@link String}s to {@link Object}s that is linked to the contents
-	 * of this {@link WoolVariableStore}. The {@link Object} values in this map are the values of the stored {@link WoolVariable}s,
-	 * so not the {@link WoolVariable}s themselves! This {@code Map<String,Object>} can be used as a regular map,
-	 * but is actually a specific implementation for this variable store. All basic map operations on
-	 * the resulting map are observable by the {@link WoolVariableStoreOnChangeListener}s that are registered
-	 * to listen to this {@link WoolVariableStore}.
+	 * Returns a modifiable mapping of {@link String}s to {@link Object}s that is linked to the
+	 * contents of this {@link WoolVariableStore}. The {@link Object} values in this map are the
+	 * values of the stored {@link WoolVariable}s, so not the {@link WoolVariable}s themselves!
+	 * This {@code Map<String,Object>} can be used as a regular map, but is actually a specific
+	 * implementation for this variable store. All basic map operations on the resulting map are
+	 * observable by the {@link WoolVariableStoreOnChangeListener}s that are registered to listen to
+	 * this {@link WoolVariableStore}.
 	 *
-	 * <p>This "modifiable map" is used in the execution of WOOL Dialogues containing WOOL Variables, as the implementation
-	 * relies on the {@link eu.woolplatform.utils.expressions.Expression} interface.</p>
+	 * <p>This "modifiable map" is used in the execution of WOOL Dialogues containing WOOL
+	 * Variables, as the implementation relies on the
+	 * {@link eu.woolplatform.utils.expressions.Expression} interface.</p>
 	 *
-	 * <p>In other words, if you are thinking "Man, I wish WoolVariableStore was just a simple mapping of variable names to values",
-	 * use this method, and you can pretend that that is the case.</p>
+	 * <p>In other words, if you are thinking "Man, I wish WoolVariableStore was just a simple
+	 * mapping of variable names to values", use this method, and you can pretend that that is the
+	 * case.</p>
 	 *
-	 * If {@code notifyObservers} is {@code true}, then any action that modifies the content of this {@link Map}
-	 * will result in all listeners being notified.
+	 * If {@code notifyObservers} is {@code true}, then any action that modifies the content of this
+	 * {@link Map} will result in all listeners being notified.
 	 *
-	 * @param notifyObservers 	true if observers of this {@link WoolVariableStore} should
-	 *                          be notified about updates to the Map.
+	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be notified
+	 *                        about updates to the Map.
+	 * @param eventTime the time of the event that is causing the changes to this
+	 *                  {@link WoolVariableStore} in the time zone of the user.
 	 * @return the modifiable map
 	 */
 	public Map<String, Object> getModifiableMap(boolean notifyObservers, ZonedDateTime eventTime) {
-		return new WoolVariableMap(notifyObservers, eventTime);
+		return new WoolVariableMap(notifyObservers, eventTime,
+				WoolVariableStoreChange.Source.UNKNOWN);
+	}
+
+	/**
+	 * See {@link #getModifiableMap(boolean, ZonedDateTime)}.
+	 * @param notifyObservers true if observers of this {@link WoolVariableStore} should be notified
+	 *                        about updates to the Map.
+	 * @param eventTime the time of the event that is causing the changes to this
+	 * 	                {@link WoolVariableStore} in the time zone of the user.
+	 * @param source the source of the changes to this {@link WoolVariableStore}.
+	 * @return the modifiable map
+	 */
+	public Map<String, Object> getModifiableMap(boolean notifyObservers, ZonedDateTime eventTime,
+												WoolVariableStoreChange.Source source) {
+		return new WoolVariableMap(notifyObservers, eventTime, source);
 	}
 
 	/**
@@ -305,6 +388,7 @@ public class WoolVariableStore {
 
 		private final boolean notifyObservers;
 		private final ZonedDateTime eventTime;
+		private final WoolVariableStoreChange.Source source;
 
 		// --------------------------------------------------------
 		// -------------------- Constructor(s) --------------------
@@ -318,9 +402,11 @@ public class WoolVariableStore {
 		 * @param eventTime the timestamp that is passed along to all changes that are made in this
 		 *                  {@link WoolVariableMap}.
 		 */
-		public WoolVariableMap(boolean notifyObservers, ZonedDateTime eventTime) {
+		public WoolVariableMap(boolean notifyObservers, ZonedDateTime eventTime,
+							   WoolVariableStoreChange.Source source) {
 			this.notifyObservers = notifyObservers;
 			this.eventTime = eventTime;
+			this.source = source;
 		}
 
 		// --------------------------------------------------------------
@@ -330,20 +416,20 @@ public class WoolVariableStore {
 		@Override
 		public Object put(String key, Object value) {
 			Object result = get(key);
-			setValue(key, value, notifyObservers, eventTime);
+			setValue(key, value, notifyObservers, eventTime, source);
 			return result;
 		}
 
 		@Override
 		public Object remove(Object key) {
-			WoolVariable result = removeByName((String)key, notifyObservers, eventTime);
+			WoolVariable result = removeByName((String)key, notifyObservers, eventTime, source);
 			if(result != null) return result.getValue();
 			else return null;
 		}
 
 		@Override
 		public void putAll(Map<? extends String, ?> variablesToAdd) {
-			addAll(variablesToAdd,notifyObservers,eventTime);
+			addAll(variablesToAdd,notifyObservers,eventTime, source);
 		}
 
 		@Override
@@ -352,7 +438,7 @@ public class WoolVariableStore {
 				woolVariables.clear();
 			}
 			if (notifyObservers)
-				notifyOnChange(new WoolVariableStoreChange.Clear(eventTime));
+				notifyOnChange(new WoolVariableStoreChange.Clear(eventTime, source));
 		}
 
 		// -----------------------------------------------------------

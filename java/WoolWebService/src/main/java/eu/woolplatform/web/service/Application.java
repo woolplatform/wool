@@ -23,6 +23,7 @@ import eu.woolplatform.utils.AppComponents;
 import eu.woolplatform.web.service.execution.DefaultUserServiceFactory;
 import eu.woolplatform.web.service.execution.UserServiceFactory;
 import eu.woolplatform.web.service.execution.UserServiceManager;
+import eu.woolplatform.web.service.storage.ExternalVariableServiceUpdater;
 import eu.woolplatform.web.service.storage.WoolVariableStoreJSONStorageHandler;
 import eu.woolplatform.wool.parser.WoolResourceFileLoader;
 import org.slf4j.Logger;
@@ -91,8 +92,10 @@ ApplicationListener<ApplicationEvent> {
 				logger.error("Uncaught exception: " + e.getMessage(), e)
 		);
 
-		UserServiceFactory userServiceFactory = new DefaultUserServiceFactory(new WoolVariableStoreJSONStorageHandler(config.getDataDir()+"/variables"));
+		UserServiceFactory userServiceFactory = new DefaultUserServiceFactory(
+			new WoolVariableStoreJSONStorageHandler(config.getDataDir()+"/variables"));
 		UserServiceFactory.setInstance(userServiceFactory);
+
 		userServiceManager = new UserServiceManager(
 				new WoolResourceFileLoader("dialogues"));
 	}
