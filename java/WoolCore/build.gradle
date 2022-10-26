@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'eu.woolplatform'
-version = '2.4.1'
+version = '2.4.2'
 sourceCompatibility = 11
 targetCompatibility = 11
 archivesBaseName = 'wool-core'
@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-	api "eu.woolplatform:wool-utils:2.4.1" // Use the maven central distribution of WOOL Utils.
+	api "eu.woolplatform:wool-utils:2.4.2" // Use the maven central distribution of WOOL Utils.
 	// api project(':WoolUtils')           // Use the local WOOL Utils project source.
 	api 'com.fasterxml.jackson.module:jackson-modules-java8:2.13.4'
 	testImplementation 'junit:junit:4.13.2'
