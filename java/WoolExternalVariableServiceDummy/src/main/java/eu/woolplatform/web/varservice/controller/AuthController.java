@@ -32,13 +32,13 @@ import eu.woolplatform.web.varservice.exception.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -126,13 +126,14 @@ public class AuthController {
 					invalidError);
 		}
 		logger.info("User {} logged in", credentials.getUsername());
-		Date expiration = null;
-		DateTime now = new DateTime();
+
+		Instant expiration = null;
+		Instant now = Instant.now();
+
 		if (loginParametersPayload.getTokenExpiration() != null) {
-			expiration = now.plusMinutes(loginParametersPayload.getTokenExpiration())
-					.toDate();
+			expiration = now.plusSeconds((loginParametersPayload.getTokenExpiration() * 60));
 		}
-		AuthDetails details = new AuthDetails(user, now.toDate(), expiration);
+		AuthDetails details = new AuthDetails(user, Date.from(now), Date.from(expiration));
 		String token = AuthToken.createToken(details);
 		return new LoginResultPayload(credentials.getUsername(), token);
 	}

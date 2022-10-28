@@ -27,8 +27,7 @@ dependencies {
 
 	// WoolUtils is our own Open Source library of utility features
 	// https://mvnrepository.com/artifact/eu.woolplatform/wool-utils
-	// Use the maven central distribution of WOOL Utils.
-	implementation 'eu.woolplatform:wool-utils:2.3.2' // Use the maven central distribution of WOOL Utils.
+	implementation 'eu.woolplatform:wool-utils:2.4.1' // Use the maven central distribution of WOOL Utils.
 	// implementation project(':WoolUtils')           // Use the local WOOL Utils project source.
 
 	// The Jackson Java8 Module is used to serialize/deserialize ZonedDateTime objects
