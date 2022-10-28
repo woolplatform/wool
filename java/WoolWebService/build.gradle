@@ -28,35 +28,34 @@ configurations {
 }
 
 dependencies {
-	implementation project(':WoolCore')	// Use the local WOOL Core project source, AND:
-	// implementation project(':WoolUtils') // Also include WOOL Utils from project source, OR:
+	// implementation project(':WoolCore')	// Use the local WOOL Core project source, AND:
 
 	// https://mvnrepository.com/artifact/eu.woolplatform/wool-core
-	// implementation group: 'eu.woolplatform', name: 'wool-core', version: '2.3.2'	// Use the maven central distribution of WOOL Core.
+	implementation 'eu.woolplatform:wool-core:2.4.1' // Use the maven central distribution of WOOL Core.
 
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
-	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+	implementation 'io.jsonwebtoken:jjwt:0.9.1'
 
 	// https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
-	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.4.0-b180830.0359'
+	implementation 'javax.xml.bind:jaxb-api:2.4.0-b180830.0359'
 
 	// https://mvnrepository.com/artifact/org.springframework/spring-context-support
-	implementation group: 'org.springframework', name: 'spring-context-support', version: '5.3.20'
+	implementation 'org.springframework:spring-context-support:5.3.20'
 
 	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.4.13'
+	implementation 'org.springframework.boot:spring-boot-starter-web:2.4.13'
 
 	// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
-	implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.9'
+	implementation 'org.springdoc:springdoc-openapi-ui:1.6.9'
 
 	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-tomcat
-	providedRuntime group: 'org.springframework.boot', name: 'spring-boot-starter-tomcat', version: '2.4.13'
+	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat:2.4.13'
 
 	// https://mvnrepository.com/artifact/org.codehaus.cargo/cargo-core
-	cargo group: 'org.codehaus.cargo', name: 'cargo-core', version: '1.9.12'
+	cargo 'org.codehaus.cargo:cargo-core:1.9.12'
 
 	// https://mvnrepository.com/artifact/org.codehaus.cargo/cargo-ant
-	cargo group: 'org.codehaus.cargo', name: 'cargo-ant', version: '1.9.12'
+	cargo 'org.codehaus.cargo:cargo-ant:1.9.12'
 }
 
 def cargoTomcatDeployPath = project.hasProperty('tomcatDeployPath') ? tomcatDeployPath : ''
