@@ -91,9 +91,11 @@ public class AuthController {
 									   LoginParametersPayload loginParametersPayload)
 			throws Exception {
 		validateForbiddenQueryParams(request, "user", "password");
+
 		String user = loginParametersPayload.getUser();
 		String password = loginParametersPayload.getPassword();
 		Integer tokenExpiration = loginParametersPayload.getTokenExpiration();
+
 		List<HttpFieldError> fieldErrors = new ArrayList<>();
 		if (user == null || user.length() == 0) {
 			fieldErrors.add(new HttpFieldError("user",
@@ -127,13 +129,17 @@ public class AuthController {
 		}
 		logger.info("User {} logged in", credentials.getUsername());
 
-		Instant expiration = null;
 		Instant now = Instant.now();
 
+		AuthDetails details;
+
 		if (loginParametersPayload.getTokenExpiration() != null) {
-			expiration = now.plusSeconds((loginParametersPayload.getTokenExpiration() * 60));
+			Instant expiration = now.plusSeconds((loginParametersPayload.getTokenExpiration() * 60));
+			details = new AuthDetails(user, Date.from(now), Date.from(expiration));
+		} else {
+			details = new AuthDetails(user, Date.from(now), null);
 		}
-		AuthDetails details = new AuthDetails(user, Date.from(now), Date.from(expiration));
+
 		String token = AuthToken.createToken(details);
 		return new LoginResultPayload(credentials.getUsername(), token);
 	}
