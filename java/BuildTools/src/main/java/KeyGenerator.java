@@ -26,16 +26,16 @@ public class KeyGenerator {
 		for (int i = 0; i < repeat; i++) {
 			switch (type) {
 				case TYPE_PASSWORD:
-					result[i] = generatePassword();
+					result[i] = generatePassword(size);
 					break;
 				case TYPE_ALPHANUM_PASSWORD:
-					result[i] = generateAlphanumPassword();
+					result[i] = generateAlphanumPassword(size);
 					break;
 				case TYPE_SECURE_PASSWORD:
-					result[i] = generateSecurePassword();
+					result[i] = generateSecurePassword(size);
 					break;
 				case TYPE_PHPMYADMIN_BLOWFISH:
-					result[i] = generatePhpMyAdminBlowfish();
+					result[i] = generatePhpMyAdminBlowfish(size);
 					break;
 				case TYPE_BASE64:
 					result[i] = generateBase64Key(size);
@@ -48,22 +48,30 @@ public class KeyGenerator {
 		return result;
 	}
 	
-	private static String generatePassword() {
+	private static String generatePassword(Integer size) {
+		if (size == null)
+			size = 9;
 		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < 9; i++) {
+		for (int i = 0; i < size; i++) {
 			String chars = i % 2 == 0 ? CONSONANTS : VOWELS;
 			builder.append(chars.charAt(random.nextInt(chars.length())));
 		}
 		return builder.toString();
 	}
 	
-	private static String generateAlphanumPassword() {
+	private static String generateAlphanumPassword(Integer size) {
+		if (size == null)
+			size = 12;
+		float lowerBoundF = size / 2.0f;
+		int lowerBound = (int)Math.ceil(lowerBoundF);
+		float upperBoundF = lowerBoundF + size / 4.0f;
+		int upperBound = (int)Math.ceil(upperBoundF);
 		StringBuilder chars = new StringBuilder();
-		for (int i = 0; i < 12; i++) {
+		for (int i = 0; i < size; i++) {
 			char c;
-			if (i < 6)
+			if (i < lowerBound)
 				c = (char)('a' + random.nextInt(26));
-			else if (i < 9)
+			else if (i < upperBound)
 				c = (char)('A' + random.nextInt(26));
 			else
 				c = (char)('0' + random.nextInt(10));
@@ -78,15 +86,23 @@ public class KeyGenerator {
 		return result.toString();
 	}
 	
-	private static String generateSecurePassword() {
+	private static String generateSecurePassword(Integer size) {
+		if (size == null)
+			size = 12;
+		float lowerBoundF = size / 3.0f;
+		int lowerBound = (int)Math.ceil(lowerBoundF);
+		float upperBoundF = lowerBoundF + size / 4.0f;
+		int upperBound = (int)Math.ceil(upperBoundF);
+		float digitBoundF = upperBoundF + size / 4.0f;
+		int digitBound = (int)Math.ceil(digitBoundF);
 		StringBuilder chars = new StringBuilder();
-		for (int i = 0; i < 12; i++) {
+		for (int i = 0; i < size; i++) {
 			char c;
-			if (i < 4)
+			if (i < lowerBound)
 				c = (char)('a' + random.nextInt(26));
-			else if (i < 7)
+			else if (i < upperBound)
 				c = (char)('A' + random.nextInt(26));
-			else if (i < 10)
+			else if (i < digitBound)
 				c = (char)('0' + random.nextInt(10));
 			else
 				c = SPECIALS.charAt(random.nextInt(SPECIALS.length()));
@@ -101,7 +117,7 @@ public class KeyGenerator {
 		return result.toString();
 	}
 	
-	private static String generatePhpMyAdminBlowfish() {
+	private static String generatePhpMyAdminBlowfish(Integer size) {
 		StringBuilder chars = new StringBuilder();
 		for (int i = 33; i < 127; i++) {
 			char c = (char)i;
@@ -109,7 +125,9 @@ public class KeyGenerator {
 				chars.append(c);
 		}
 		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < 40; i++) {
+		if (size == null)
+			size = 32;
+		for (int i = 0; i < size; i++) {
 			char c = chars.charAt(random.nextInt(chars.length()));
 			builder.append(c);
 		}
@@ -155,20 +173,31 @@ public class KeyGenerator {
 			out.println("Usage: java KeyGenerator ARGS");
 			out.println();
 			out.println("Arguments:");
+			out.println();
 			out.println("(-type | --type | -t | --t) TYPE");
 			out.println("    Optional: Type of key to generate.");
 			out.println("    - password (default): friendly password with lower-case vowels and");
-			out.println("          consonants");
+			out.println("        consonants");
+			out.println("        --size: number of characters, default 9");
+			out.println();
 			out.println("    - alphanum_password: password with alphanumeric characters");
+			out.println("        --size: number of characters, default 12");
+			out.println();
 			out.println("    - secure_password: password with alphanumeric and special characters");
-			out.println("    - phpmyadmin_blowfish");
-			out.println("    - base64: Base64 key with 256 bits. You may change the size with");
-			out.println("          argument --size");
+			out.println("        --size: number of characters, default 12");
+			out.println();
+			out.println("    - phpmyadmin_blowfish:");
+			out.println("        --size: number of characters, default 32");
+			out.println();
+			out.println("    - base64: Base64 key");
+			out.println("        --size: number of bits, default 256");
+			out.println();
 			out.println("(-size | --size | -s | --s) SIZE");
-			out.println("    Optional: Size of the key to generate. This depends on the type:");
-			out.println("    - base64: size in bits (default 256)");
+			out.println("    Optional: Size of the key to generate. This depends on the type.");
+			out.println();
 			out.println("(-n | --n) NUMBER");
 			out.println("    Optional: Number of keys to generate. Default: 1.");
+			out.println();
 			out.println("(-help | --help | -h | --h)");
 			out.println("    Print this usage.");
 		}
@@ -180,7 +209,7 @@ public class KeyGenerator {
 		int i = 0;
 		while (i < args.length) {
 			String arg = args[i++];
-			if (!arg.matches("--?[a-zA-Z]")) {
+			if (!arg.matches("--?[a-zA-Z]+")) {
 				exitUsage(1);
 				return;
 			}
