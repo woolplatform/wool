@@ -29,14 +29,13 @@ import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import org.apache.commons.codec.binary.Base64;
 
 /**
  * Helper methods for OAuth.
@@ -162,9 +161,7 @@ public class OAuthUtils {
 		try {
 			mac = Mac.getInstance("HmacSHA1");
 			mac.init(key);
-		} catch (NoSuchAlgorithmException ex) {
-			exception = ex;
-		} catch (InvalidKeyException ex) {
+		} catch (NoSuchAlgorithmException | InvalidKeyException ex) {
 			exception = ex;
 		}
 		if (exception != null) {
@@ -172,7 +169,7 @@ public class OAuthUtils {
 					exception.getMessage(), exception);
 		}
 		byte[] bs = mac.doFinal(text.getBytes());
-		return new String(Base64.encodeBase64(bs));
+		return Base64.getEncoder().encodeToString(bs);
 	}
 
 	/**
