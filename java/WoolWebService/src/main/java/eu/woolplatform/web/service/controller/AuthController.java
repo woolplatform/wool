@@ -85,6 +85,7 @@ public class AuthController {
 					loginParametersPayload.getUser() + "'.");
 		} else {
 			logger.info("POST /v" + versionName + "/auth/login with empty login parameters.");
+			throw new BadRequestException("Missing login parameters in request body");
 		}
 
 		synchronized (AUTH_LOCK) {
@@ -134,15 +135,20 @@ public class AuthController {
 					invalidError);
 		}
 		logger.info("User {} logged in", userCredentials.getUsername());
+
 		Date expiration = null;
+
 		ZonedDateTime now = DateTimeUtils.nowMs();
+
 		if (loginParametersPayload.getTokenExpiration() != null) {
 			expiration = Date.from(now.plusMinutes(
 					loginParametersPayload.getTokenExpiration()).toInstant());
 		}
+
 		AuthDetails details = new AuthDetails(user, Date.from(now.toInstant()),
 				expiration);
 		String token = AuthToken.createToken(details);
+
 		return new LoginResultPayload(userCredentials.getUsername(), token);
 	}
 
@@ -156,8 +162,6 @@ public class AuthController {
 		} catch (ParseException ex) {
 			throw new BadRequestException(ex.getMessage());
 		}
-		if (params == null)
-			return;
 		for (String name : paramNames) {
 			if (params.containsKey(name)) {
 				throw new BadRequestException(

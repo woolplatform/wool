@@ -20,6 +20,7 @@
 package eu.woolplatform.web.varservice.controller;
 
 import eu.woolplatform.utils.AppComponents;
+import eu.woolplatform.utils.datetime.DateTimeUtils;
 import eu.woolplatform.utils.exception.ParseException;
 import eu.woolplatform.utils.http.URLParameters;
 import eu.woolplatform.web.varservice.*;
@@ -38,7 +39,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -78,6 +79,7 @@ public class AuthController {
 					loginParametersPayload.getUser() + "'.");
 		} else {
 			logger.info("POST /v" + versionName + "/auth/login with empty login parameters.");
+			throw new BadRequestException("Missing login parameters in request body");
 		}
 
 		synchronized (AUTH_LOCK) {
@@ -129,18 +131,19 @@ public class AuthController {
 		}
 		logger.info("User {} logged in", credentials.getUsername());
 
-		Instant now = Instant.now();
+		Date expiration = null;
 
-		AuthDetails details;
+		ZonedDateTime now = DateTimeUtils.nowMs();
 
 		if (loginParametersPayload.getTokenExpiration() != null) {
-			Instant expiration = now.plusSeconds((loginParametersPayload.getTokenExpiration() * 60));
-			details = new AuthDetails(user, Date.from(now), Date.from(expiration));
-		} else {
-			details = new AuthDetails(user, Date.from(now), null);
+			expiration = Date.from(now.plusMinutes(
+					loginParametersPayload.getTokenExpiration()).toInstant());
 		}
 
+		AuthDetails details = new AuthDetails(user, Date.from(now.toInstant()),
+				expiration);
 		String token = AuthToken.createToken(details);
+
 		return new LoginResultPayload(credentials.getUsername(), token);
 	}
 
