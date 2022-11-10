@@ -26,7 +26,7 @@
     "build2": "electron-builder"
   },
   "devDependencies": {
-    "electron": "^17.1.1",
+    "electron": "^18.3.7",
     "electron-builder": "^23.0.3",
 	"cli-truncate": "2.1.0",
     "electron-packager": "^15.2.0",
