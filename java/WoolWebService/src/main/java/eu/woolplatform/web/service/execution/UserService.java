@@ -329,6 +329,8 @@ public class UserService {
 					+ "/v"+config.getExternalVariableServiceAPIVersion()
 					+ "/variables/retrieve-updates";
 
+			logger.info("RetrieveUpdatesURL: "+retrieveUpdatesUrl);
+
 			LinkedMultiValueMap<String,String> allRequestParams = new LinkedMultiValueMap<>();
 			allRequestParams.put("userId",Arrays.asList(woolUser.getId()));
 			allRequestParams.put("timeZone",Arrays.asList(woolUser.getTimeZone().toString()));
@@ -338,19 +340,27 @@ public class UserService {
 					.queryParams(
 							(LinkedMultiValueMap<String, String>) allRequestParams); // The allRequestParams must have been built for all the query params
 			UriComponents uriComponents = builder.build().encode(); // encode() is to ensure that characters like {, }, are preserved and not encoded. Skip if not needed.
-			ResponseEntity<WoolVariable[]> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST,
-					entity, WoolVariable[].class);
 
-			// If call not successful, retry once after login
-			if (response.getStatusCode() != HttpStatus.OK) {
-				userServiceManager.loginToExternalVariableService();
-
+			WoolVariable[] retrievedWoolVariables = null;
+			ResponseEntity<WoolVariable[]> response = null;
+			try {
 				response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST,
 						entity, WoolVariable[].class);
 
+				// If call not successful, retry once after login
+				if (response.getStatusCode() != HttpStatus.OK) {
+					userServiceManager.loginToExternalVariableService();
+
+					response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST,
+							entity, WoolVariable[].class);
+
+				}
+			} catch (Exception e) {
+				logger.error("Critical Error retrieving updates for WOOL Variables. " +
+						"Continuing operation while assuming no updates were needed.",e);
 			}
 
-			WoolVariable[] retrievedWoolVariables = response.getBody();
+			if(response != null) retrievedWoolVariables = response.getBody();
 
 			if (retrievedWoolVariables != null) {
 				if (retrievedWoolVariables.length == 0) {
