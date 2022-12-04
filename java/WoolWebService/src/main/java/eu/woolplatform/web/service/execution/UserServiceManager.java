@@ -110,11 +110,15 @@ public class UserServiceManager {
 		}
 
 		// login to external variable service
-		try {
-			this.loginToExternalVariableService();
-		} catch (Exception e) {
-			logger.info(e.toString());
-			throw new RuntimeException(e);
+		Configuration config = AppComponents.get(Configuration.class);
+		if(config.getExternalVariableServiceEnabled()) {
+			try {
+				this.loginToExternalVariableService();
+			} catch (
+					Exception e) {
+				logger.info(e.toString());
+				throw new RuntimeException(e);
+			}
 		}
 	}
 	
