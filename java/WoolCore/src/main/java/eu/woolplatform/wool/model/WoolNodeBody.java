@@ -19,7 +19,7 @@
 
 package eu.woolplatform.wool.model;
 
-import eu.woolplatform.utils.expressions.EvaluationException;
+import nl.rrd.utils.expressions.EvaluationException;
 import eu.woolplatform.wool.model.command.*;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointerExternal;

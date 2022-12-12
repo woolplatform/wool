@@ -19,9 +19,9 @@
 
 package eu.woolplatform.wool.model.command;
 
-import eu.woolplatform.utils.exception.LineNumberParseException;
-import eu.woolplatform.utils.expressions.EvaluationException;
-import eu.woolplatform.utils.expressions.Value;
+import nl.rrd.utils.exception.LineNumberParseException;
+import nl.rrd.utils.expressions.EvaluationException;
+import nl.rrd.utils.expressions.Value;
 import eu.woolplatform.wool.execution.WoolVariable;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.model.WoolNodeBody;

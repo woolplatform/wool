@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import eu.woolplatform.utils.expressions.EvaluationException;
+import nl.rrd.utils.expressions.EvaluationException;
 import eu.woolplatform.wool.model.command.WoolActionCommand;
 import eu.woolplatform.wool.model.command.WoolCommand;
 import eu.woolplatform.wool.model.command.WoolInputCommand;

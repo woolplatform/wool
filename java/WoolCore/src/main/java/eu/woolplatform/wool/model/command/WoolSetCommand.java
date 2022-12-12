@@ -24,11 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import eu.woolplatform.utils.CurrentIterator;
-import eu.woolplatform.utils.exception.LineNumberParseException;
-import eu.woolplatform.utils.expressions.EvaluationException;
-import eu.woolplatform.utils.expressions.Expression;
-import eu.woolplatform.utils.expressions.types.AssignExpression;
+import nl.rrd.utils.CurrentIterator;
+import nl.rrd.utils.exception.LineNumberParseException;
+import nl.rrd.utils.expressions.EvaluationException;
+import nl.rrd.utils.expressions.Expression;
+import nl.rrd.utils.expressions.types.AssignExpression;
 import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.model.WoolReply;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;

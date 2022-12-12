@@ -19,7 +19,7 @@
 
 package eu.woolplatform.wool.model.nodepointer;
 
-import eu.woolplatform.utils.exception.ParseException;
+import nl.rrd.utils.exception.ParseException;
 import eu.woolplatform.wool.model.WoolDialogue;
 import eu.woolplatform.wool.model.WoolReply;
 

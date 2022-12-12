@@ -19,9 +19,9 @@
 
 package eu.woolplatform.wool.model.language;
 
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
-import eu.woolplatform.utils.xml.SimpleSAXHandler;
+import nl.rrd.utils.exception.ParseException;
+import nl.rrd.utils.xml.AbstractSimpleSAXHandler;
+import nl.rrd.utils.xml.SimpleSAXHandler;
 import org.xml.sax.Attributes;
 
 import java.util.List;

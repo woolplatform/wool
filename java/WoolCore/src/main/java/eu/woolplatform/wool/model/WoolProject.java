@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import eu.woolplatform.utils.i18n.I18nLanguageFinder;
+import nl.rrd.utils.i18n.I18nLanguageFinder;
 import eu.woolplatform.wool.i18n.WoolContextTranslation;
 import eu.woolplatform.wool.i18n.WoolTranslatable;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;

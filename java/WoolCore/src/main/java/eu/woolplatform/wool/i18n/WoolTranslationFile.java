@@ -81,7 +81,7 @@ public class WoolTranslationFile {
 	}
 
 	/**
-	 * Writes this {@link WoolTranslationFile} to a file, specified by {@link this.getFileName()}
+	 * Writes this {@link WoolTranslationFile} to a file, specified by {@link #getFileName()}
 	 * in the given {@code directory}.
 	 * @param directory the directory in which to store the .json file output
 	 * @throws IOException in case the given directory is not a directory, or another file writing

@@ -19,10 +19,10 @@
 
 package eu.woolplatform.wool.model;
 
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
-import eu.woolplatform.utils.xml.SimpleSAXHandler;
-import eu.woolplatform.utils.xml.XMLWriter;
+import nl.rrd.utils.exception.ParseException;
+import nl.rrd.utils.xml.AbstractSimpleSAXHandler;
+import nl.rrd.utils.xml.SimpleSAXHandler;
+import nl.rrd.utils.xml.XMLWriter;
 import eu.woolplatform.wool.exception.WoolDuplicateLanguageCodeException;
 import eu.woolplatform.wool.exception.WoolUnknownLanguageCodeException;
 import eu.woolplatform.wool.model.language.WoolLanguage;

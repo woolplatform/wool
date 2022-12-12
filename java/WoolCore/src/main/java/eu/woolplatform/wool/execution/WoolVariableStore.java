@@ -345,7 +345,7 @@ public class WoolVariableStore {
 	 *
 	 * <p>This "modifiable map" is used in the execution of WOOL Dialogues containing WOOL
 	 * Variables, as the implementation relies on the
-	 * {@link eu.woolplatform.utils.expressions.Expression} interface.</p>
+	 * {@link nl.rrd.utils.expressions.Expression} interface.</p>
 	 *
 	 * <p>In other words, if you are thinking "Man, I wish WoolVariableStore was just a simple
 	 * mapping of variable names to values", use this method, and you can pretend that that is the

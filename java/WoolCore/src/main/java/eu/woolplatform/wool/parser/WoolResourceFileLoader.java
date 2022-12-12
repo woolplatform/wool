@@ -20,9 +20,9 @@
 package eu.woolplatform.wool.parser;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.utils.io.FileUtils;
-import eu.woolplatform.utils.json.JsonMapper;
+import nl.rrd.utils.exception.ParseException;
+import nl.rrd.utils.io.FileUtils;
+import nl.rrd.utils.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.InputStream;

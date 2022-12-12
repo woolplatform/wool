@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import eu.woolplatform.utils.expressions.Value;
+import nl.rrd.utils.expressions.Value;
 
 /**
  * This class represents a text with possible variables. It is modelled as a

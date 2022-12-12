@@ -16,8 +16,6 @@ include 'api'
 include 'services:webservice'
 */
 
-include ':BuildTools'
-include ':WoolUtils'
 include ':WoolCore'
 include ':WoolWebService'
 include ':WoolExternalVariableServiceDummy'

@@ -19,13 +19,13 @@
 
 package eu.woolplatform.wool.model.command;
 
-import eu.woolplatform.utils.CurrentIterator;
-import eu.woolplatform.utils.exception.LineNumberParseException;
-import eu.woolplatform.utils.expressions.Expression;
-import eu.woolplatform.utils.expressions.ExpressionParser;
-import eu.woolplatform.utils.expressions.Token;
-import eu.woolplatform.utils.expressions.Tokenizer;
-import eu.woolplatform.utils.io.LineColumnNumberReader;
+import nl.rrd.utils.CurrentIterator;
+import nl.rrd.utils.exception.LineNumberParseException;
+import nl.rrd.utils.expressions.Expression;
+import nl.rrd.utils.expressions.ExpressionParser;
+import nl.rrd.utils.expressions.Token;
+import nl.rrd.utils.expressions.Tokenizer;
+import nl.rrd.utils.io.LineColumnNumberReader;
 import eu.woolplatform.wool.parser.WoolBodyToken;
 
 import java.io.IOException;

@@ -19,8 +19,8 @@
 
 package eu.woolplatform.wool.exception;
 
-import eu.woolplatform.utils.exception.LineNumberParseException;
-import eu.woolplatform.utils.exception.ParseException;
+import nl.rrd.utils.exception.LineNumberParseException;
+import nl.rrd.utils.exception.ParseException;
 
 /**
  * This exception indicates a parse error within a node.

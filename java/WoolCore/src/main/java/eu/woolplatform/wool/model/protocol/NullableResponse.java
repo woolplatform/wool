@@ -19,7 +19,7 @@
 
 package eu.woolplatform.wool.model.protocol;
 
-import eu.woolplatform.utils.json.JsonObject;
+import nl.rrd.utils.json.JsonObject;
 
 /**
  * This class is used when a web service wants to return a value or null. This

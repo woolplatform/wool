@@ -19,8 +19,8 @@
 
 package eu.woolplatform.wool.parser;
 
-import eu.woolplatform.utils.CurrentIterator;
-import eu.woolplatform.utils.exception.LineNumberParseException;
+import nl.rrd.utils.CurrentIterator;
+import nl.rrd.utils.exception.LineNumberParseException;
 import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.model.WoolReply;
 import eu.woolplatform.wool.model.WoolVariableString;

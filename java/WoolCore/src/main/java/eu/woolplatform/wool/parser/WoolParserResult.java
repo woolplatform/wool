@@ -19,7 +19,7 @@
 
 package eu.woolplatform.wool.parser;
 
-import eu.woolplatform.utils.exception.ParseException;
+import nl.rrd.utils.exception.ParseException;
 import eu.woolplatform.wool.model.WoolDialogue;
 import java.util.ArrayList;
 import java.util.List;

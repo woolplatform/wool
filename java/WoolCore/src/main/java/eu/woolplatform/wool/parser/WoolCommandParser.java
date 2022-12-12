@@ -21,8 +21,8 @@ package eu.woolplatform.wool.parser;
 
 import java.util.List;
 
-import eu.woolplatform.utils.CurrentIterator;
-import eu.woolplatform.utils.exception.LineNumberParseException;
+import nl.rrd.utils.CurrentIterator;
+import nl.rrd.utils.exception.LineNumberParseException;
 import eu.woolplatform.wool.model.command.*;
 
 public class WoolCommandParser {

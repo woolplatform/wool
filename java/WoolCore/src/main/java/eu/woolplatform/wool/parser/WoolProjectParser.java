@@ -31,8 +31,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.utils.i18n.I18nLanguageFinder;
+import nl.rrd.utils.exception.ParseException;
+import nl.rrd.utils.i18n.I18nLanguageFinder;
 import eu.woolplatform.wool.i18n.WoolContextTranslation;
 import eu.woolplatform.wool.i18n.WoolTranslatable;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;

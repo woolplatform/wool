@@ -23,8 +23,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import eu.woolplatform.utils.CurrentIterator;
-import eu.woolplatform.utils.exception.LineNumberParseException;
+import nl.rrd.utils.CurrentIterator;
+import nl.rrd.utils.exception.LineNumberParseException;
 import eu.woolplatform.wool.model.WoolVariableString;
 import eu.woolplatform.wool.parser.WoolBodyToken;
 

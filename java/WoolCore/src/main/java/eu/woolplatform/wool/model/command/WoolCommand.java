@@ -22,7 +22,7 @@ package eu.woolplatform.wool.model.command;
 import java.util.Map;
 import java.util.Set;
 
-import eu.woolplatform.utils.expressions.EvaluationException;
+import nl.rrd.utils.expressions.EvaluationException;
 import eu.woolplatform.wool.model.WoolNodeBody;
 import eu.woolplatform.wool.model.WoolReply;
 import eu.woolplatform.wool.model.nodepointer.WoolNodePointer;

@@ -19,7 +19,7 @@
 
 package eu.woolplatform.wool.model.command;
 
-import eu.woolplatform.utils.exception.LineNumberParseException;
+import nl.rrd.utils.exception.LineNumberParseException;
 import eu.woolplatform.wool.parser.WoolBodyToken;
 
 import java.util.Map;

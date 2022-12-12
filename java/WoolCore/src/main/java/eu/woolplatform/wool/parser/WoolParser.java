@@ -19,9 +19,9 @@
 
 package eu.woolplatform.wool.parser;
 
-import eu.woolplatform.utils.exception.LineNumberParseException;
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.utils.io.LineColumnNumberReader;
+import nl.rrd.utils.exception.LineNumberParseException;
+import nl.rrd.utils.exception.ParseException;
+import nl.rrd.utils.io.LineColumnNumberReader;
 import eu.woolplatform.wool.exception.WoolNodeParseException;
 import eu.woolplatform.wool.model.WoolDialogue;
 import eu.woolplatform.wool.model.WoolNode;

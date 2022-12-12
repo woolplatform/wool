@@ -19,8 +19,8 @@
 
 package eu.woolplatform.wool.parser;
 
-import eu.woolplatform.utils.CurrentIterator;
-import eu.woolplatform.utils.DataFormatter;
+import nl.rrd.utils.CurrentIterator;
+import nl.rrd.utils.DataFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
