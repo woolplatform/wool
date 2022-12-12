@@ -19,7 +19,7 @@
 
 package eu.woolplatform.web.service.exception;
 
-import eu.woolplatform.utils.json.JsonObject;
+import nl.rrd.utils.json.JsonObject;
 
 /**
  * This class defines an error in the user input for a specified field.

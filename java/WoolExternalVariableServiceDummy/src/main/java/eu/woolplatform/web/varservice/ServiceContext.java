@@ -19,9 +19,9 @@
 
 package eu.woolplatform.web.varservice;
 
-import eu.woolplatform.utils.AppComponents;
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.utils.http.HttpURL;
+import nl.rrd.utils.AppComponents;
+import nl.rrd.utils.exception.ParseException;
+import nl.rrd.utils.http.HttpURL;
 
 public class ServiceContext {
 	/**

@@ -19,7 +19,7 @@
 
 package eu.woolplatform.web.service.execution;
 
-import eu.woolplatform.utils.exception.DatabaseException;
+import nl.rrd.utils.exception.DatabaseException;
 import eu.woolplatform.web.service.storage.ExternalVariableServiceUpdater;
 import eu.woolplatform.web.service.storage.WoolVariableStoreStorageHandler;
 import eu.woolplatform.wool.execution.WoolUser;

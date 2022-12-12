@@ -31,7 +31,7 @@ dependencies {
 	// implementation project(':WoolCore')	// Use the local WOOL Core project source, AND:
 
 	// https://mvnrepository.com/artifact/eu.woolplatform/wool-core
-	implementation 'eu.woolplatform:wool-core:2.4.2' // Use the maven central distribution of WOOL Core.
+	implementation 'eu.woolplatform:wool-core:2.5.0' // Use the maven central distribution of WOOL Core.
 
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
 	implementation 'io.jsonwebtoken:jjwt:0.9.1'

@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
-import eu.woolplatform.utils.AppComponent;
+import nl.rrd.utils.AppComponent;
 
 /**
  * Configuration of the WOOL Web Service. This is initialized from resources

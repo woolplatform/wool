@@ -19,7 +19,7 @@
 
 package eu.woolplatform.web.service;
 
-import eu.woolplatform.utils.AppComponents;
+import nl.rrd.utils.AppComponents;
 import eu.woolplatform.web.service.exception.*;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

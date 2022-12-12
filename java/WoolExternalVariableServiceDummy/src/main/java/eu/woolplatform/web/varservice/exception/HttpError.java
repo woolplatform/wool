@@ -22,7 +22,7 @@ package eu.woolplatform.web.varservice.exception;
 import java.util.ArrayList;
 import java.util.List;
 
-import eu.woolplatform.utils.json.JsonObject;
+import nl.rrd.utils.json.JsonObject;
 
 /**
  * A HTTP error can be included as a JSON string in the content of a HTTP error

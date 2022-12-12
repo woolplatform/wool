@@ -19,10 +19,10 @@
 
 package eu.woolplatform.web.service;
 
-import eu.woolplatform.utils.AppComponents;
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.utils.xml.AbstractSimpleSAXHandler;
-import eu.woolplatform.utils.xml.SimpleSAXParser;
+import nl.rrd.utils.AppComponents;
+import nl.rrd.utils.exception.ParseException;
+import nl.rrd.utils.xml.AbstractSimpleSAXHandler;
+import nl.rrd.utils.xml.SimpleSAXParser;
 import org.slf4j.Logger;
 import org.xml.sax.Attributes;
 

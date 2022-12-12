@@ -19,10 +19,10 @@
 
 package eu.woolplatform.web.varservice.controller;
 
-import eu.woolplatform.utils.AppComponents;
-import eu.woolplatform.utils.datetime.DateTimeUtils;
-import eu.woolplatform.utils.exception.ParseException;
-import eu.woolplatform.utils.http.URLParameters;
+import nl.rrd.utils.AppComponents;
+import nl.rrd.utils.datetime.DateTimeUtils;
+import nl.rrd.utils.exception.ParseException;
+import nl.rrd.utils.http.URLParameters;
 import eu.woolplatform.web.varservice.*;
 import eu.woolplatform.web.varservice.controller.schema.LoginParametersPayload;
 import eu.woolplatform.web.varservice.controller.schema.LoginResultPayload;

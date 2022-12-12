@@ -20,7 +20,7 @@
 package eu.woolplatform.web.service.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import eu.woolplatform.utils.AppComponents;
+import nl.rrd.utils.AppComponents;
 import eu.woolplatform.web.service.exception.HttpException;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.slf4j.Logger;

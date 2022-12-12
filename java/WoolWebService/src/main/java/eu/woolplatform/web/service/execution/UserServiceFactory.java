@@ -19,7 +19,7 @@
 
 package eu.woolplatform.web.service.execution;
 
-import eu.woolplatform.utils.exception.DatabaseException;
+import nl.rrd.utils.exception.DatabaseException;
 import eu.woolplatform.wool.model.WoolProject;
 
 import java.io.IOException;

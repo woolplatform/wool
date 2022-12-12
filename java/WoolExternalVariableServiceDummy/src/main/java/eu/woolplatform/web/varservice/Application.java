@@ -19,7 +19,7 @@
 
 package eu.woolplatform.web.varservice;
 
-import eu.woolplatform.utils.AppComponents;
+import nl.rrd.utils.AppComponents;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

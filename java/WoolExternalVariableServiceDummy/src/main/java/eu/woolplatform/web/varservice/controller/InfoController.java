@@ -19,7 +19,7 @@
 
 package eu.woolplatform.web.varservice.controller;
 
-import eu.woolplatform.utils.AppComponents;
+import nl.rrd.utils.AppComponents;
 import eu.woolplatform.web.varservice.Application;
 import eu.woolplatform.web.varservice.Configuration;
 import eu.woolplatform.web.varservice.ProtocolVersion;

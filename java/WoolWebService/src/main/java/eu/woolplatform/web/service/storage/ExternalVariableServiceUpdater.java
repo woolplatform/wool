@@ -19,7 +19,7 @@
 
 package eu.woolplatform.web.service.storage;
 
-import eu.woolplatform.utils.AppComponents;
+import nl.rrd.utils.AppComponents;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.execution.UserServiceManager;
 import eu.woolplatform.wool.execution.WoolVariable;

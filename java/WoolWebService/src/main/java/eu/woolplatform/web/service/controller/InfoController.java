@@ -19,7 +19,7 @@
 
 package eu.woolplatform.web.service.controller;
 
-import eu.woolplatform.utils.AppComponents;
+import nl.rrd.utils.AppComponents;
 import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.ProtocolVersion;
 import eu.woolplatform.web.service.ServiceContext;

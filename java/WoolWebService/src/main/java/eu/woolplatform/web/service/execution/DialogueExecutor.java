@@ -19,10 +19,10 @@
 
 package eu.woolplatform.web.service.execution;
 
-import eu.woolplatform.utils.AppComponents;
-import eu.woolplatform.utils.datetime.DateTimeUtils;
-import eu.woolplatform.utils.exception.DatabaseException;
-import eu.woolplatform.utils.expressions.EvaluationException;
+import nl.rrd.utils.AppComponents;
+import nl.rrd.utils.datetime.DateTimeUtils;
+import nl.rrd.utils.exception.DatabaseException;
+import nl.rrd.utils.expressions.EvaluationException;
 import eu.woolplatform.web.service.storage.LoggedDialogue;
 import eu.woolplatform.web.service.storage.LoggedDialogueStoreIO;
 import eu.woolplatform.wool.exception.WoolException;

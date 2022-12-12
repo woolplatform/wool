@@ -19,7 +19,7 @@
 
 package eu.woolplatform.web.service.storage;
 
-import eu.woolplatform.utils.exception.ParseException;
+import nl.rrd.utils.exception.ParseException;
 import eu.woolplatform.wool.execution.WoolUser;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.execution.WoolVariableStoreOnChangeListener;
