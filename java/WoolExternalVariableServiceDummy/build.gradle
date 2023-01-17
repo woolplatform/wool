@@ -24,7 +24,6 @@ configurations {
 
 dependencies {
 
-
 	// RRDUtils is our own Open Source library of utility features
 	// https://mvnrepository.com/artifact/nl.rrd/rrd-utils
 	implementation 'nl.rrd:rrd-utils:3.0.0'
