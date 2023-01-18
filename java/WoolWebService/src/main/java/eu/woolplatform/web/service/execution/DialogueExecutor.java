@@ -68,21 +68,22 @@ public class DialogueExecutor {
 	// -------------------------------------------------------
 
 	/**
-	 * Starts the dialogue for the specified dialogue definition. It starts at
-	 * the start node.
+	 * Starts the dialogue for the specified dialogue definition at the default start node
+	 * ('Start').
 	 *
-	 * @param dialogueDescription the dialogue description
-	 * @param dialogueDefinition the dialogue definition
-	 * @return the start node
-	 * @throws DatabaseException if a database error occurs
-	 * @throws IOException if a communication error occurs
-	 * @throws WoolException if the request is invalid
+	 * @param dialogueDescription the dialogue description.
+	 * @param dialogueDefinition the dialogue definition.
+	 * @param sessionId an optional externally provided id to be added to the logs (or
+	 *                    {@code null}).
+	 * @return the start node.
+	 * @throws DatabaseException if a database error occurs.
+	 * @throws IOException if a communication error occurs.
+	 * @throws WoolException if the request is invalid.
 	 */
-	public ExecuteNodeResult startDialogue(
-			WoolDialogueDescription dialogueDescription,
-			WoolDialogue dialogueDefinition)
-			throws DatabaseException, IOException, WoolException {
-		return startDialogue(dialogueDescription, dialogueDefinition, null);
+	public ExecuteNodeResult startDialogue(WoolDialogueDescription dialogueDescription,
+			WoolDialogue dialogueDefinition, String sessionId)
+			throws IOException, DatabaseException, WoolException {
+		return startDialogue(dialogueDescription, dialogueDefinition, null, sessionId);
 	}
 
 	/**
@@ -90,17 +91,18 @@ public class DialogueExecutor {
 	 * a node ID, it will start at that node. Otherwise, it starts at the start
 	 * node.
 	 *
-	 * @param dialogueDescription the dialogue description
-	 * @param dialogueDefinition the dialogue definition
-	 * @param nodeId the node ID or null
-	 * @return the start node or specified node
-	 * @throws DatabaseException if a database error occurs
-	 * @throws IOException if a communication error occurs
-	 * @throws WoolException if the request is invalid
+	 * @param dialogueDescription the dialogue description.
+	 * @param dialogueDefinition the dialogue definition.
+	 * @param nodeId the node ID or {@code null}.
+	 * @param sessionId an optional externally provided id to be added to the logs (or
+	 *                    {@code null}).
+	 * @return the start node or specified node.
+	 * @throws DatabaseException if a database error occurs.
+	 * @throws IOException if a communication error occurs.
+	 * @throws WoolException if the request is invalid.
 	 */
-	public ExecuteNodeResult startDialogue(
-			WoolDialogueDescription dialogueDescription,
-			WoolDialogue dialogueDefinition, String nodeId)
+	public ExecuteNodeResult startDialogue(WoolDialogueDescription dialogueDescription,
+			WoolDialogue dialogueDefinition, String nodeId, String sessionId)
 			throws DatabaseException, IOException, WoolException {
 		ActiveWoolDialogue dialogue = new ActiveWoolDialogue(
 				dialogueDescription, dialogueDefinition);
@@ -124,7 +126,7 @@ public class DialogueExecutor {
 					e.getMessage(), e);
 		}
 		LoggedDialogue loggedDialogue =
-				new LoggedDialogue(userService.getWoolUser().getId(), eventTime);
+				new LoggedDialogue(userService.getWoolUser().getId(), eventTime, sessionId);
 		loggedDialogue.setDialogueName(dialogueDefinition.getDialogueName());
 		loggedDialogue.setLanguage(dialogueDescription.getLanguage());
 		LoggedDialogueStoreIO.createLoggedDialogue(loggedDialogue);
@@ -207,7 +209,8 @@ public class DialogueExecutor {
 					(WoolNodePointerExternal)nodePointer;
 			String dialogueId = externalNodePointer.getDialogueId();
 			String nodeId = externalNodePointer.getNodeId();
-			return userService.startDialogue(dialogueId, nodeId, language);
+			return userService.startDialogue(dialogueId, nodeId, language,
+					loggedDialogue.getSessionId());
 		}
 	}
 
