@@ -182,13 +182,14 @@ public class UserService {
 	 * @param dialogueId the dialogue ID
 	 * @param nodeId a node ID or null
 	 * @param language an ISO language tag
+	 * @param sessionId an (optional) identifier that should be added to the logging of dialogues
+	 *                  for this started dialogue session (may be {@code null}).
 	 * @return the dialogue node result with the start node or specified node
 	 */
-	public ExecuteNodeResult startDialogue(String dialogueId, String nodeId,
-										   String language) throws DatabaseException,
-			IOException, WoolException {
-		logger.info("User '" + woolUser.getId() + "' is starting dialogue '" +
-				dialogueId + "'");
+	public ExecuteNodeResult startDialogue(String dialogueId, String nodeId, String language,
+										   String sessionId)
+			throws DatabaseException, IOException, WoolException {
+		logger.info("User '" + woolUser.getId() + "' is starting dialogue '" + dialogueId + "'");
 		WoolDialogueDescription dialogueDescription =
 				getDialogueDescriptionFromId(dialogueId, language);
 		if (dialogueDescription == null) {
@@ -196,8 +197,7 @@ public class UserService {
 					"Dialogue not found: " + dialogueId);
 		}
 		WoolDialogue dialogue = getDialogueDefinition(dialogueDescription);
-		return dialogueExecutor.startDialogue(dialogueDescription,
-				dialogue, nodeId);
+		return dialogueExecutor.startDialogue(dialogueDescription, dialogue, nodeId, sessionId);
 	}
 
 	/**

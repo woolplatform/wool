@@ -19,6 +19,7 @@
 
 package eu.woolplatform.web.service.storage;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import eu.woolplatform.wool.model.WoolLoggedDialogue;
 import eu.woolplatform.wool.model.WoolLoggedInteraction;
@@ -32,6 +33,7 @@ import java.util.List;
 public class LoggedDialogue implements WoolLoggedDialogue {
 
 	private String id;
+	private String sessionId;
 	private String user;
 	private String localTime;
 	private long utcTime;
@@ -49,15 +51,18 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 	 * Constructs a new instance at the specified time. It should define the
 	 * local time and location-based time zone (not an offset).
 	 *
-	 * @param user the user ID
+	 * @param user the identifier of the user for which the dialogue is being logged.
 	 * @param dialogueStartTime the time that this dialogue started in the time zone of the user.
+	 * @param sessionId an optional externally provided id to be added to the logs (or
+	 *                    {@code null}).
 	 */
-	public LoggedDialogue(String user, ZonedDateTime dialogueStartTime) {
+	public LoggedDialogue(String user, ZonedDateTime dialogueStartTime, String sessionId) {
 		this.user = user;
 		this.utcTime = dialogueStartTime.toInstant().toEpochMilli();
 		this.timezone = dialogueStartTime.getZone().toString();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 		this.localTime = dialogueStartTime.format(formatter);
+		this.sessionId = sessionId;
 	}
 
 	@Override
@@ -68,6 +73,23 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 	@Override
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	/**
+	 * Returns the optional custom logging identifier, or {@code null} if none is set.
+	 * @return the optional custom logging identifier, or {@code null} if none is set.
+	 */
+	public String getSessionId() {
+		return sessionId;
+	}
+
+	/**
+	 * Sets an optional custom logging identifier that may be used to cross-reference WOOL Web
+	 * Service dialogue logs for a session with logs from an external system.
+	 * @param sessionId an optional custom logging identifier.
+	 */
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
 	}
 
 	@Override
@@ -165,6 +187,7 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 	 * {@link LoggedDialogue}.
 	 * @return the timestamp of the latest step in this {@link LoggedDialogue}.
 	 */
+	@JsonIgnore
 	public long getLatestInteractionTimestamp() {
 		if(interactionList.size() == 0) return this.getUtcTime();
 		else {

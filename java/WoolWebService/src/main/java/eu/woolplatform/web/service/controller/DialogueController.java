@@ -116,8 +116,13 @@ public class DialogueController {
 
 		@Parameter(description = "The user for which to execute the dialogue (leave empty if " +
 				"executing for the currently authenticated user)")
-		@RequestParam(value="woolUserId", required=false)
-		String woolUserId
+		@RequestParam(value="woolUserId", required = false)
+		String woolUserId,
+
+		@Parameter(description = "An optional identifier that is attached to the dialogue logs, " +
+				"allowing this dialogue session to be cross-referenced with external logs")
+		@RequestParam(value="sessionId", required = false)
+		String sessionId
 	) throws Exception {
 
 		// If no versionName is provided, or versionName is empty, assume the latest version
@@ -126,21 +131,21 @@ public class DialogueController {
 		}
 
 		// Log this call to the service log
-		String logInfo = "POST /v" + versionName + "/dialogue/start?dialogueName="
-				+ dialogueName + "&language=" + language;
-		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
-		if(!timeZone.equals("")) logInfo += "&timeZone=" + timeZone;
+		String logInfo = "POST /v" + versionName + "/dialogue/start?dialogueName=" + dialogueName +
+				"&language=" + language + "&timeZone=" + timeZone;
+		if(woolUserId != null && !woolUserId.equals("")) logInfo += "&woolUserId=" + woolUserId;
+		if(sessionId != null && !sessionId.equals("")) logInfo += "&sessionId=" + sessionId;
 		logger.info(logInfo);
 
 		if(woolUserId == null || woolUserId.equals("")) {
 			return QueryRunner.runQuery(
 					(version, user) -> doStartDialogue(user, dialogueName,
-							language, timeZone),
+							language, timeZone, sessionId),
 					versionName, request, response, woolUserId, application);
 		} else {
 			return QueryRunner.runQuery(
 					(version, user) -> doStartDialogue(woolUserId, dialogueName,
-							language, timeZone),
+							language, timeZone, sessionId),
 					versionName, request, response, woolUserId, application);
 		}
 	}
@@ -152,21 +157,23 @@ public class DialogueController {
 	 * @param language the language in which to start the dialogue
 	 * @param timeZone the timeZone of the client as one of {@code TimeZone.getAvailableIDs()}
 	 *                 (IANA Codes)
+	 * @param sessionId the (optional) identifier that should be added to the logging of dialogues
+	 *                    for this started dialogue session (may be {@code null}).
 	 * @return the {@link DialogueMessage} that represents the start node of the dialogue.
 	 * @throws HttpException in case of an error in the dialogue execution.
 	 * @throws DatabaseException in case of an error in retrieving the current active user.
 	 * @throws IOException in case of any network error.
 	 */
-	private DialogueMessage doStartDialogue(
-			String woolUserId, String dialogueName, String language,
-			String timeZone) throws HttpException, IOException, DatabaseException {
+	private DialogueMessage doStartDialogue(String woolUserId, String dialogueName, String language,
+			String timeZone, String sessionId)
+			throws HttpException, IOException, DatabaseException {
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
 		UserService userService = application.getServiceManager()
 				.getActiveUserService(woolUserId);
 		userService.getWoolUser().setTimeZone(timeZoneId);
 		ExecuteNodeResult node;
 		try {
-			node = userService.startDialogue(dialogueName, null, language);
+			node = userService.startDialogue(dialogueName, null, language, sessionId);
 			return DialogueMessageFactory.generateDialogueMessage(node);
 		} catch (WoolException e) {
 			throw ControllerFunctions.createHttpException(e);
