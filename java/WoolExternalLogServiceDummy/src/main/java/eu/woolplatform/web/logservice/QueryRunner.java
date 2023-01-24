@@ -47,8 +47,6 @@ public class QueryRunner {
 	 * @param request the HTTP request or null
 	 * @param response the HTTP response (to add header WWW-Authenticate in
 	 *                 case of 401 Unauthorized)
-	 * @param woolUserId the "wool user" for which this query should be run, or ""
-	 *                   if this should be for the currently authenticated user
 	 * @return the query result
 	 * @throws HttpException if the query should return an HTTP error status
 	 * @throws Exception if an unexpected error occurs. This results in HTTP
@@ -56,7 +54,7 @@ public class QueryRunner {
 	 */
 	public static <T> T runQuery(AuthQuery<T> query,
 			String versionName, HttpServletRequest request,
-			HttpServletResponse response, String woolUserId) throws HttpException, Exception {
+			HttpServletResponse response) throws HttpException, Exception {
 		ProtocolVersion version;
 		try {
 			version = ProtocolVersion.forVersionName(versionName);
@@ -68,18 +66,11 @@ public class QueryRunner {
 			String user = null;
 			if (request != null)
 				user = validateToken(request);
-			// If the request was made for "this" (authenticated) user
-			// OR If the request was made for a specific woolUserId that happens to be "this"
-			//   (authenticated) user
-			// OR If "this" user is an admin
-			if(woolUserId.equals("")
-				|| (woolUserId.equals(user)) //
-				|| UserFile.findUser(user).getRole().equals(UserCredentials.USER_ROLE_ADMIN)) {
+
+			if(UserFile.findUser(user).getRole().equals(UserCredentials.USER_ROLE_ADMIN)) {
 				return query.runQuery(version, user);
 			} else {
-				throw new UnauthorizedException("Attempting to run query for woolUserId '" +
-						woolUserId + "', but currently logged in user '" +
-						user + "' is not an admin.");
+				throw new UnauthorizedException("Insufficient privileges.");
 			}
 		} catch (UnauthorizedException ex) {
 			response.addHeader("WWW-Authenticate", "None");

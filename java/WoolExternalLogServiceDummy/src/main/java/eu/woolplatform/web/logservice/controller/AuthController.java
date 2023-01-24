@@ -85,7 +85,7 @@ public class AuthController {
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(
 					(version, user) -> doLogin(request, loginParametersPayload),
-					versionName, null, response, "");
+					versionName, null, response);
 		}
 	}
 
