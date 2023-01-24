@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<users>
+	<user username="user@example.com" password="p4ssw0rd" role="user" />
+	<user username="admin@example.com" password="super-secure-password-123" role="admin" />
+</users>

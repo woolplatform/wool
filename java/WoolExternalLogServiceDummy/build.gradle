@@ -1,0 +1,158 @@
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+}
+
+plugins {
+	id 'war'
+	id 'eclipse-wtp'
+	id 'org.springframework.boot' version '2.7.0'
+	id 'com.bmuschko.cargo' version '2.9.0'
+	id 'org.hidetake.ssh' version '2.9.0'
+}
+
+group = 'eu.woolplatform'
+version = '1.0.0' // run updateVersion after changing this property
+sourceCompatibility = 11
+targetCompatibility = 11
+archivesBaseName = 'wool-externalvariableservice'
+
+configurations {
+	providedRuntime
+}
+
+dependencies {
+
+	// RRDUtils is our own Open Source library of utility features
+	// https://mvnrepository.com/artifact/nl.rrd/rrd-utils
+	implementation 'nl.rrd:rrd-utils:3.0.0'
+
+	// The Jackson Java8 Module is used to serialize/deserialize ZonedDateTime objects
+	// https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-modules-java8
+	implementation 'com.fasterxml.jackson.module:jackson-modules-java8:2.13.4'
+
+	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
+	implementation 'io.jsonwebtoken:jjwt:0.9.1'
+
+	// https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
+	implementation 'javax.xml.bind:jaxb-api:2.4.0-b180830.0359'
+
+	// https://mvnrepository.com/artifact/org.springframework/spring-context-support
+	implementation 'org.springframework:spring-context-support:5.3.20'
+
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
+	implementation 'org.springframework.boot:spring-boot-starter-web:2.4.13'
+
+	// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
+	implementation 'org.springdoc:springdoc-openapi-ui:1.6.9'
+
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-tomcat
+	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat:2.4.13'
+
+	// https://mvnrepository.com/artifact/org.codehaus.cargo/cargo-core
+	cargo 'org.codehaus.cargo:cargo-core:1.9.12'
+
+	// https://mvnrepository.com/artifact/org.codehaus.cargo/cargo-ant
+	cargo 'org.codehaus.cargo:cargo-ant:1.9.12'
+}
+
+def cargoTomcatDeployPath = project.hasProperty('tomcatDeployPath') ? tomcatDeployPath : ''
+def cargoRemoteTomcatHost = project.hasProperty('remoteTomcatHost') ? remoteTomcatHost : ''
+def cargoRemoteTomcatUser = project.hasProperty('remoteTomcatUser') ? remoteTomcatUser : ''
+def cargoRemoteTomcatPassword = project.hasProperty('remoteTomcatPassword') ? remoteTomcatPassword : ''
+def cargoRemoteTomcatPort = project.hasProperty('remoteTomcatPort') ? remoteTomcatPort : 0
+
+cargo {
+	containerId = 'tomcat8x'
+
+	deployable {
+		context = cargoTomcatDeployPath
+	}
+	
+	remote {
+		hostname = cargoRemoteTomcatHost
+		username = cargoRemoteTomcatUser
+		password = cargoRemoteTomcatPassword
+	}
+}
+
+tasks.matching({ it.name =~ /cargo.*Remote/ }).each() {
+	it.port = cargoRemoteTomcatPort.toInteger()
+}
+
+task updateConfig {
+	group = "configuration"
+	description = "Generates an updated version of service.properties that includes values from 'gradle.properties' starting with 'woolconfig'."
+
+	doLast() {
+		Properties props = new Properties()
+		def propPrefix = 'woolconfig'
+		project.properties.each { key, value ->
+			if (!key.startsWith(propPrefix))
+				return
+			key = key.substring(propPrefix.length())
+			key = key[0].toLowerCase() + key.substring(1)
+			props[key] = value
+		}
+
+		// Add the current time as buildTime property
+		props['buildTime'] = new Date().format("MM/dd/yyyy HH:mm:ss")
+
+		def resDir = file('src/main/resources')
+		resDir.mkdirs()
+		def out = new File(resDir, 'service.properties')
+		out.withWriter('UTF-8') {
+			props.store(it, 'DO NOT EDIT, generated with gradlew updateConfig')
+		}
+	}
+}
+
+task updateVersion {
+	group = 'versioning'
+	description = 'Writes the current version to files containing the version number.'
+
+	doLast() {
+		ant.replaceregexp(file: 'src/main/webapp/WEB-INF/web.xml',
+			match: "<display-name>WOOL External Variable Service Dummy .+</display-name>",
+			replace: "<display-name>WOOL External Variable Service Dummy ${version}</display-name>")
+		ant.replaceregexp(file: 'src/main/resources/deployment.properties',
+			match: "version=.+",
+			replace: "version=${version}")
+	}
+}
+
+task checkResources {
+	group = 'build'
+	description = 'Checks if required resource files exist and are up-to-date.'
+	
+	dependsOn updateConfig
+}
+
+test {
+	testLogging.showStandardStreams = true
+}
+
+gradle.taskGraph.whenReady {
+	tasks.withType(Test) {
+		def props = new Properties()
+		def propsFile = file('gradle.test.properties')
+		if (propsFile.exists()) {
+			propsFile.withReader('UTF-8') {
+				props.load(it)
+			}
+			props.each { key, value ->
+				systemProperty key, value
+			}
+		}
+	}
+}
+
+javadoc {
+	options {
+		links 'https://docs.oracle.com/javase/10/docs/api/'
+		addStringOption('Xdoclint:all,-html', '-quiet')
+	}
+}
+
+processResources.dependsOn checkResources
