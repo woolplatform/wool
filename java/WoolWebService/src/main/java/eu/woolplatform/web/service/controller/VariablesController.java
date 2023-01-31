@@ -19,8 +19,6 @@
 
 package eu.woolplatform.web.service.controller;
 
-import nl.rrd.utils.AppComponents;
-import nl.rrd.utils.datetime.DateTimeUtils;
 import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.ProtocolVersion;
 import eu.woolplatform.web.service.QueryRunner;
@@ -29,20 +27,20 @@ import eu.woolplatform.web.service.exception.ErrorCode;
 import eu.woolplatform.web.service.exception.HttpError;
 import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.web.service.execution.UserService;
-import eu.woolplatform.wool.execution.WoolVariable;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.execution.WoolVariableStoreChange;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import nl.rrd.utils.AppComponents;
+import nl.rrd.utils.datetime.DateTimeUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -50,8 +48,8 @@ import java.util.*;
 
 @RestController
 @SecurityRequirement(name = "X-Auth-Token")
+@RequestMapping(value = {"/v{version}/variables", "/variables"})
 @Tag(name = "3. Variables", description = "End-points for retrieving or setting WOOL Variables")
-@RequestMapping("/v{version}/variables")
 public class VariablesController {
 
 	@Autowired
@@ -76,7 +74,7 @@ public class VariablesController {
 
 			@Parameter(hidden = true)
 			@PathVariable(value = "version")
-			String versionName,
+			String version,
 
 			@Parameter(description = "A space-separated list of WOOL variable names, or leave " +
 					"empty to retrieve all known variables")
@@ -89,12 +87,12 @@ public class VariablesController {
 			String woolUserId) throws Exception {
 
 		// If no versionName is provided, or versionName is empty, assume the latest version
-		if (versionName == null || versionName.equals("")) {
-			versionName = ProtocolVersion.getLatestVersion().versionName();
+		if (version == null || version.equals("")) {
+			version = ProtocolVersion.getLatestVersion().versionName();
 		}
 
 		// Log this call to the service log
-		String logInfo = "GET /v" + versionName + "/variables/get-variables?names=" + variableNames;
+		String logInfo = "GET /v" + version + "/variables/get-variables?names=" + variableNames;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		logger.info(logInfo);
 
@@ -103,12 +101,12 @@ public class VariablesController {
 
 		if(woolUserId == null || woolUserId.equals("")) {
 			return QueryRunner.runQuery(
-				(version, user) -> doGetVariables(user, variableNameList),
-				versionName, request, response, woolUserId, application);
+				(protocolVersion, user) -> doGetVariables(user, variableNameList),
+				version, request, response, woolUserId, application);
 		} else {
 			return QueryRunner.runQuery(
-				(version, user) -> doGetVariables(woolUserId, variableNameList),
-				versionName, request, response, woolUserId, application);
+				(protocolVersion, user) -> doGetVariables(woolUserId, variableNameList),
+				version, request, response, woolUserId, application);
 		}
 	}
 
@@ -174,7 +172,7 @@ public class VariablesController {
 
 		@Parameter(hidden = true)
 		@PathVariable(value = "version")
-		String versionName,
+		String version,
 
 		@Parameter(description = "The name of the WOOL Variable to set")
 		@RequestParam(value="name")
@@ -197,12 +195,12 @@ public class VariablesController {
 	) throws Exception {
 
 		// If no versionName is provided, or versionName is empty, assume the latest version
-		if (versionName == null || versionName.equals("")) {
-			versionName = ProtocolVersion.getLatestVersion().versionName();
+		if (version == null || version.equals("")) {
+			version = ProtocolVersion.getLatestVersion().versionName();
 		}
 
 		// Log this call to the service log
-		String logInfo = "POST /v" + versionName + "/variables/set-variable?name=" + name;
+		String logInfo = "POST /v" + version + "/variables/set-variable?name=" + name;
 		if(!(value == null) && (!value.equals(""))) logInfo += "&value="+value;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="
 				+ woolUserId;
@@ -210,13 +208,13 @@ public class VariablesController {
 		logger.info(logInfo);
 
 		if(woolUserId == null || woolUserId.equals("")) {
-			QueryRunner.runQuery((version, user) ->
+			QueryRunner.runQuery((protocolVersion, user) ->
 				doSetVariable(user, name, value, timeZone),
-				versionName, request, response, woolUserId, application);
+				version, request, response, woolUserId, application);
 		} else {
-			QueryRunner.runQuery((version, user) ->
+			QueryRunner.runQuery((protocolVersion, user) ->
 				doSetVariable(woolUserId, name, value, timeZone),
-				versionName, request, response, woolUserId, application);
+				version, request, response, woolUserId, application);
 		}
 	}
 
@@ -277,7 +275,7 @@ public class VariablesController {
 
 			@Parameter(hidden = true)
 			@PathVariable(value = "version")
-			String versionName,
+			String version,
 
 			@Parameter(description = "The user for which to set the wool variables (leave empty " +
 					"if setting for the currently authenticated user)")
@@ -294,22 +292,22 @@ public class VariablesController {
 			Map<String,Object> woolVariables) throws Exception {
 
 		// If no versionName is provided, or versionName is empty, assume the latest version
-		if (versionName == null || versionName.equals("")) {
-			versionName = ProtocolVersion.getLatestVersion().versionName();
+		if (version == null || version.equals("")) {
+			version = ProtocolVersion.getLatestVersion().versionName();
 		}
 
 		// Log this call to the service log
-		String logInfo = "POST /v" + versionName + "/variables/set-variables";
+		String logInfo = "POST /v" + version + "/variables/set-variables";
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "?woolUserId="+woolUserId;
 		logger.info(logInfo);
 
 		if(woolUserId == null || woolUserId.equals("")) {
-			QueryRunner.runQuery((version, user) -> doSetVariables(user, woolVariables, timeZone),
-				versionName, request, response, woolUserId, application);
+			QueryRunner.runQuery((protocolVersion, user) -> doSetVariables(user, woolVariables, timeZone),
+				version, request, response, woolUserId, application);
 		} else {
-			QueryRunner.runQuery((version, user) ->
+			QueryRunner.runQuery((protocolVersion, user) ->
 							doSetVariables(woolUserId, woolVariables, timeZone),
-				versionName, request, response, woolUserId, application);
+				version, request, response, woolUserId, application);
 		}
 	}
 

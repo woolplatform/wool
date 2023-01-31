@@ -23,7 +23,10 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.apache.tomcat.util.codec.binary.Base64;
+
+import java.security.Key;
 
 /**
  * This class can create or parse a signed Base64 JWT token string. This is
@@ -48,7 +51,7 @@ public class AuthToken {
 				.setIssuedAt(details.getIssuedAt())
 				.setExpiration(details.getExpiration());
 		return Jwts.builder().setClaims(claims)
-			.signWith(SignatureAlgorithm.HS512, getSecretKey())
+			.signWith(getSecretKey(),SignatureAlgorithm.HS512)
 			.compact();
 	}
 	
@@ -62,8 +65,10 @@ public class AuthToken {
 	 * @throws JwtException if the token can't be parsed
 	 */
 	public static AuthDetails parseToken(String token) throws JwtException {
-		Claims claims = Jwts.parser().setSigningKey(getSecretKey())
-				.parseClaimsJws(token).getBody();
+
+		Claims claims = Jwts.parserBuilder().
+				setSigningKey(getSecretKey()).build().parseClaimsJws(token).getBody();
+
 		return new AuthDetails(claims.getSubject(), claims.getIssuedAt(),
 				claims.getExpiration());
 	}
@@ -74,9 +79,9 @@ public class AuthToken {
 	 * 
 	 * @return the secret key
 	 */
-	private static byte[] getSecretKey() {
+	private static Key getSecretKey() {
 		String base64Key = Configuration.getInstance().get(
 				Configuration.JWT_SECRET_KEY);
-		return Base64.decodeBase64(base64Key);
+		return Keys.hmacShaKeyFor(Base64.decodeBase64(base64Key));
 	}
 }

@@ -30,9 +30,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * This controller handles all errors in the application. It looks at the request attributes for a
@@ -64,14 +64,14 @@ public class ErrorController implements org.springframework.boot.web.servlet.err
 	public Object error(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
 		int statusCode = (Integer)request.getAttribute(
-				"javax.servlet.error.status_code");
+				"jakarta.servlet.error.status_code");
 		Object obj = request.getAttribute(
 				"org.springframework.web.servlet.DispatcherServlet.EXCEPTION");
 		Throwable exception = null;
 		if (obj instanceof Throwable)
 			exception = (Throwable)obj;
 		String message = (String)request.getAttribute(
-				"javax.servlet.error.message");
+				"jakarta.servlet.error.message");
 		if (message == null)
 			message = "";
 		if (exception == null) {
