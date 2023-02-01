@@ -65,7 +65,6 @@ public class AuthToken {
 	 * @throws JwtException if the token can't be parsed
 	 */
 	public static AuthDetails parseToken(String token) throws JwtException {
-
 		Claims claims = Jwts.parserBuilder().
 				setSigningKey(getSecretKey()).build().parseClaimsJws(token).getBody();
 

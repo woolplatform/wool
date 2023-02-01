@@ -59,6 +59,7 @@ public class OpenApiSwaggerConfig {
 			openAPI.addServersItem(server);
 		}
 
+		// Finally, add the base server path (without version)
 		Server server = new Server();
 		server.url(ServiceContext.getBaseUrl());
 		openAPI.addServersItem(server);

@@ -58,7 +58,7 @@ public class InfoController {
 	@Parameter(name = "version", hidden = true)
 	@GetMapping("/all")
 	public ServiceInfoPayload all(
-			@Parameter(description = "API Version", hidden = true)
+			@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 			@PathVariable(value = "version")
 			String version
 	) {

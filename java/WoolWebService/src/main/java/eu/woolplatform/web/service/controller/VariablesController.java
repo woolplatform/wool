@@ -72,7 +72,7 @@ public class VariablesController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 
-			@Parameter(hidden = true)
+			@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 			@PathVariable(value = "version")
 			String version,
 
@@ -170,7 +170,7 @@ public class VariablesController {
 		HttpServletRequest request,
 		HttpServletResponse response,
 
-		@Parameter(hidden = true)
+		@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 		@PathVariable(value = "version")
 		String version,
 
@@ -273,7 +273,7 @@ public class VariablesController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 
-			@Parameter(hidden = true)
+			@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 			@PathVariable(value = "version")
 			String version,
 
