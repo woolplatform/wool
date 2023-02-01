@@ -36,7 +36,7 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 @RestController
-@RequestMapping("/v{version}/info")
+@RequestMapping(value = {"/v{version}/info", "/info"})
 @Tag(name = "3. Information",
 	 description = "End-points that provide information about the running service")
 public class InfoController {
@@ -58,14 +58,14 @@ public class InfoController {
 	public ServiceInfoPayload all(
 		@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 		@PathVariable(value = "version")
-		String versionName
+		String version
 	) {
 
 		// If no explicit protocol version is provided, assume the latest version
-		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+		if(version == null) version = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
-		logger.info("/v"+ versionName+"/info/all");
+		logger.info("/v"+ version+"/info/all");
 
 		// Construct the string that indicates the service's uptime
 		Long launchedTime = application.getLaunchedTime();

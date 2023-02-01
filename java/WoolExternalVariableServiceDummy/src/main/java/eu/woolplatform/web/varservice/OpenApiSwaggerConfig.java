@@ -29,13 +29,14 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
-import org.apache.commons.lang3.StringUtils;
-import org.springdoc.core.customizers.OpenApiCustomiser;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A collection of various Beans used to configure various aspects of the OpenAPI 3.0 documentation
@@ -66,6 +67,11 @@ public class OpenApiSwaggerConfig {
 			openAPI.addServersItem(server);
 		}
 
+		// Finally, add the base server path (without version)
+		Server server = new Server();
+		server.url(ServiceContext.getBaseUrl());
+		openAPI.addServersItem(server);
+
 		// Add the security scheme
 		openAPI.components(new Components().addSecuritySchemes("X-Auth-Token",
 				new SecurityScheme()
@@ -92,21 +98,14 @@ public class OpenApiSwaggerConfig {
 		return openAPI;
 	}
 
-	/**
-	 * A Bean to set the order of the display of Controllers in Swagger.
-	 * @return The {@link OpenApiCustomiser} object.
-	 */
 	@Bean
-	public OpenApiCustomiser sortTagsAlphabetically() {
-		return openApi -> openApi.setTags(openApi.getTags()
-				.stream()
-				.sorted(Comparator.comparing(tag -> StringUtils.stripAccents(tag.getName())))
-				.collect(Collectors.toList()));
-	}
-
-	@Bean
-	public OpenApiCustomiser openApiCustomiser() {
-		return this::customiseApi;
+	public GroupedOpenApi withoutVersioning() {
+		return GroupedOpenApi.builder().group("API End-Points without Versioning")
+			.pathsToExclude("/v{version}/info/*",
+				"/v{version}/variables/*",
+				"/v{version}/auth/*")
+			//.pathsToExclude("/v{version}/**") <-- This must be a bug, because it doesn't let /variables/ come through
+			.build();
 	}
 
 	private void customiseApi(OpenAPI api) {

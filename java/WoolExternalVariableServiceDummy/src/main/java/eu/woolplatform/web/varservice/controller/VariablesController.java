@@ -39,8 +39,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -58,7 +58,7 @@ import java.util.Random;
  */
 @RestController
 @SecurityRequirement(name = "X-Auth-Token")
-@RequestMapping("/v{version}/variables")
+@RequestMapping(value = {"/v{version}/variables", "/variables"})
 @Tag(name = "2. Variables",
 	 description = "End-points for retrieving variables from- and sending to the service")
 public class VariablesController {
@@ -99,7 +99,7 @@ public class VariablesController {
 
 			@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 			@PathVariable(value = "version")
-			String versionName,
+			String version,
 
 			@Parameter(description = "The userId of the WOOL user")
 			@RequestParam(value="userId")
@@ -117,10 +117,10 @@ public class VariablesController {
 			@RequestBody List<WoolVariablePayload> woolVariables) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
-		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+		if(version == null) version = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
-		logger.info("POST /v"+versionName+"/variables/retrieve-updates?userId=" + userId +
+		logger.info("POST /v"+version+"/variables/retrieve-updates?userId=" + userId +
 				"&timeZone=" + timeZone + " with the following variables:");
 		for(WoolVariablePayload woolVariableResultParam : woolVariables) {
 			logger.info(woolVariableResultParam.toString());
@@ -129,12 +129,12 @@ public class VariablesController {
 		// Execute either for the provided userId or for the currently logged in user
 		if(userId.equals("")) {
 			return QueryRunner.runQuery(
-				(version, user) -> executeRetrieveUpdates(user, timeZone, woolVariables),
-				versionName, request, response, userId);
+				(protocolVersion, user) -> executeRetrieveUpdates(user, timeZone, woolVariables),
+				version, request, response, userId);
 		} else {
 			return QueryRunner.runQuery(
-				(version, user) -> executeRetrieveUpdates(userId, timeZone, woolVariables),
-				versionName, request, response, userId);
+				(protocolVersion, user) -> executeRetrieveUpdates(userId, timeZone, woolVariables),
+				version, request, response, userId);
 		}
 	}
 
@@ -226,7 +226,7 @@ public class VariablesController {
 
 		@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 		@PathVariable(value = "version")
-		String versionName,
+		String version,
 
 		@Parameter(description = "The userId of the WOOL user")
 		@RequestParam(value="userId")
@@ -250,10 +250,10 @@ public class VariablesController {
 	) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
-		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+		if(version == null) version = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
-		logger.info("POST /v"+versionName+"/variables/notify-updated?userId=" + userId +
+		logger.info("POST /v"+version+"/variables/notify-updated?userId=" + userId +
 				"&timeZone=" + timeZone + " with the following variables:");
 		for(WoolVariablePayload woolVariableResultParam : woolVariables) {
 			logger.info(woolVariableResultParam.toString());
@@ -263,12 +263,12 @@ public class VariablesController {
 		// TODO: Not correct, an error should be thrown on an empty userId
 		if(userId.equals("")) {
 			return QueryRunner.runQuery(
-				(version, user) -> executeNotifyUpdated(user, timeZone, woolVariables),
-				versionName, request, response, userId);
+				(protocolVersion, user) -> executeNotifyUpdated(user, timeZone, woolVariables),
+				version, request, response, userId);
 		} else {
 			return QueryRunner.runQuery(
-				(version, user) -> executeNotifyUpdated(userId, timeZone, woolVariables),
-				versionName, request, response, userId);
+				(protocolVersion, user) -> executeNotifyUpdated(userId, timeZone, woolVariables),
+				version, request, response, userId);
 		}
 
 	}
@@ -317,7 +317,7 @@ public class VariablesController {
 
 			@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 			@PathVariable(value = "version")
-			String versionName,
+			String version,
 
 			@Parameter(description = "The userId of the WOOL user")
 			@RequestParam(value="userId")
@@ -329,22 +329,22 @@ public class VariablesController {
 	) throws Exception {
 
 		// If no explicit protocol version is provided, assume the latest version
-		if(versionName == null) versionName = ProtocolVersion.getLatestVersion().versionName();
+		if(version == null) version = ProtocolVersion.getLatestVersion().versionName();
 
 		// Log this call to the service log
-		logger.info("POST /v"+versionName+"/variables/notify-cleared?userId=" + userId +
+		logger.info("POST /v"+version+"/variables/notify-cleared?userId=" + userId +
 				"&timeZone=" + timeZone);
 
 		// Execute either for the provided userId or for the currently logged-in user
 		// TODO: Not correct, an error should be thrown on an empty userId
 		if(userId.equals("")) {
 			return QueryRunner.runQuery(
-					(version, user) -> executeNotifyCleared(user, timeZone),
-					versionName, request, response, userId);
+					(protocolVersion, user) -> executeNotifyCleared(user, timeZone),
+					version, request, response, userId);
 		} else {
 			return QueryRunner.runQuery(
-					(version, user) -> executeNotifyCleared(userId, timeZone),
-					versionName, request, response, userId);
+					(protocolVersion, user) -> executeNotifyCleared(userId, timeZone),
+					version, request, response, userId);
 		}
 
 	}
