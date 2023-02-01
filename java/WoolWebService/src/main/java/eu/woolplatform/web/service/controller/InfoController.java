@@ -33,12 +33,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @RestController
 @Tag(name = "4. Information", description = "End-points that provide information about the " +
 		"running service")
-@RequestMapping("/v{version}/info")
+@RequestMapping(value = {"/v{version}/info", "/info"})
 public class InfoController {
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
@@ -54,20 +55,21 @@ public class InfoController {
 			" <li>serviceVersion - software version of the service</li>" +
 			" <li>upTime - string showing days, hours and minutes since the service was launched " +
 			"</li></ul>")
+	@Parameter(name = "version", hidden = true)
 	@GetMapping("/all")
 	public ServiceInfoPayload all(
-			@Parameter(hidden = true)
+			@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 			@PathVariable(value = "version")
-			String versionName
+			String version
 	) {
 
 		// If no versionName is provided, or versionName is empty, assume the latest version
-		if (versionName == null || versionName.equals("")) {
-			versionName = ProtocolVersion.getLatestVersion().versionName();
+		if (version == null || String.valueOf(version).equals("")) {
+			version = ProtocolVersion.getLatestVersion().versionName();
 		}
 
 		// Log this call to the service log
-		logger.info("GET /v"+versionName+"/info/all");
+		logger.info("GET /v"+version+"/info/all");
 
 		// Construct the string that indicates the service's uptime
 		Long launchedTime = application.getLaunchedTime();

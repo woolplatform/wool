@@ -38,8 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/v{version}/auth")
+@RequestMapping(value = {"/v{version}/auth", "/auth"})
 @Tag(name = "1. Authentication", description = "End-points related to Authentication.")
 public class AuthController {
 	@Autowired
@@ -67,31 +67,31 @@ public class AuthController {
 			HttpServletRequest request,
 			HttpServletResponse response,
 
-			@Parameter(hidden = true)
+			@Parameter(hidden = true, description = "API Version to use, e.g. '1'")
 			@PathVariable(value = "version")
-			String versionName,
+			String version,
 
 			@RequestBody
 			LoginParametersPayload loginParametersPayload) throws Exception {
 
 		// If no versionName is provided, or versionName is empty, assume the latest version
-		if (versionName == null || versionName.equals("")) {
-			versionName = ProtocolVersion.getLatestVersion().versionName();
+		if (version == null || version.equals("")) {
+			version = ProtocolVersion.getLatestVersion().versionName();
 		}
 
 		// Log this call to the service log
 		if(loginParametersPayload != null) {
-			logger.info("POST /v" + versionName + "/auth/login for user '" +
+			logger.info("POST /v" + version + "/auth/login for user '" +
 					loginParametersPayload.getUser() + "'.");
 		} else {
-			logger.info("POST /v" + versionName + "/auth/login with empty login parameters.");
+			logger.info("POST /v" + version + "/auth/login with empty login parameters.");
 			throw new BadRequestException("Missing login parameters in request body");
 		}
 
 		synchronized (AUTH_LOCK) {
 			return QueryRunner.runQuery(
-					(version, user) -> doLogin(request, loginParametersPayload),
-					versionName, null, response, "", application);
+					(protocolVersion, user) -> doLogin(request, loginParametersPayload),
+					version, null, response, "", application);
 		}
 	}
 
