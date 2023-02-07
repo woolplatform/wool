@@ -85,7 +85,7 @@ public class AuthController {
 					loginParametersPayload.getUser() + "'.");
 		} else {
 			logger.info("POST /v" + version + "/auth/login with empty login parameters.");
-			throw new BadRequestException("Missing login parameters in request body");
+			throw new BadRequestException("Missing login parameters in request body.");
 		}
 
 		synchronized (AUTH_LOCK) {
@@ -165,7 +165,7 @@ public class AuthController {
 		for (String name : paramNames) {
 			if (params.containsKey(name)) {
 				throw new BadRequestException(
-					"Query parameters not accepted, parameters must be set in the request body");
+					"Query parameters not accepted, parameters must be set in the request body.");
 			}
 		}
 	}

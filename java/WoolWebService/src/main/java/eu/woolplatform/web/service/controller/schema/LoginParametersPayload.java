@@ -55,16 +55,16 @@ import java.io.IOException;
 public class LoginParametersPayload extends JsonObject {
 
 	@Schema(description = "Username of the person or entity logging in",
-			example = "user", required = true)
+			example = "user")
 	private String user = null;
 
 	@Schema(description = "Password for the given user",
-			example = "password", required = true)
+			example = "password")
 	private String password = null;
 
 	@Schema(description = "Number of minutes (>=0) after which the authentication token should " +
 			"expire, or 'never'",
-			example = "0", required = true)
+			example = "0")
 	private Integer tokenExpiration = 0;
 
 	// --------------------------------------------------------
@@ -180,7 +180,7 @@ public class LoginParametersPayload extends JsonObject {
 			if (s.equalsIgnoreCase("never"))
 				return null;
 			try {
-				Integer value = Integer.parseInt(s);
+				int value = Integer.parseInt(s);
 				if(value == 0) return null;
 				else return Integer.parseInt(s);
 			} catch (NumberFormatException ex) {

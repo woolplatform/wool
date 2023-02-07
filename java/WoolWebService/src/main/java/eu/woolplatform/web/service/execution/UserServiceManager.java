@@ -19,16 +19,11 @@
 
 package eu.woolplatform.web.service.execution;
 
-import nl.rrd.utils.AppComponents;
-import nl.rrd.utils.datetime.DateTimeUtils;
-import nl.rrd.utils.exception.DatabaseException;
-import nl.rrd.utils.exception.ParseException;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.UserCredentials;
 import eu.woolplatform.web.service.UserFile;
 import eu.woolplatform.web.service.controller.schema.LoginParametersPayload;
 import eu.woolplatform.web.service.controller.schema.LoginResultPayload;
-import eu.woolplatform.web.service.exception.HttpFieldError;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
 import eu.woolplatform.wool.model.WoolDialogue;
@@ -37,15 +32,14 @@ import eu.woolplatform.wool.model.WoolProject;
 import eu.woolplatform.wool.parser.WoolFileLoader;
 import eu.woolplatform.wool.parser.WoolProjectParser;
 import eu.woolplatform.wool.parser.WoolProjectParserResult;
+import nl.rrd.utils.AppComponents;
+import nl.rrd.utils.exception.DatabaseException;
+import nl.rrd.utils.exception.ParseException;
 import org.slf4j.Logger;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.time.DateTimeException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,9 +54,9 @@ import java.util.List;
 public class UserServiceManager {
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
-	private WoolProject woolProject;
-	private List<UserService> activeUserServices = new ArrayList<>();
-	private List<UserCredentials> userCredentials;
+	private final WoolProject woolProject;
+	private final List<UserService> activeUserServices = new ArrayList<>();
+	private final List<UserCredentials> userCredentials;
 	private String externalVariableServiceAPIToken;
 
 	// ----- Constructors
@@ -102,10 +96,7 @@ public class UserServiceManager {
 		// Read all UserCredentials from users.xml
 		try {
 			userCredentials = UserFile.read();
-		} catch (
-				ParseException e) {
-			throw new RuntimeException(e);
-		} catch (IOException e) {
+		} catch (ParseException | IOException e) {
 			throw new RuntimeException(e);
 		}
 
@@ -158,7 +149,7 @@ public class UserServiceManager {
 	 * @param userId the identifier of the specific user that is interacting with the {@link UserService}.
 	 * @return an {@link UserService} object that can handle the communication with the user.
 	 */
-	public UserService getActiveUserService(String userId) throws DatabaseException, IOException {
+	public UserService getActiveUserService(String userId) throws DatabaseException {
 		
 		for(UserService userService : activeUserServices) {
 			if(userService.getWoolUser().getId().equals(userId)) {
@@ -197,55 +188,23 @@ public class UserServiceManager {
 	
 	// ---------- Dialogue Management:
 
-	public WoolDialogue getDialogueDefinition(WoolDialogueDescription descr,
+	public WoolDialogue getDialogueDefinition(WoolDialogueDescription woolDialogueDescription,
 			WoolTranslationContext translationContext) throws WoolException {
 		WoolDialogue dlg;
 		if (translationContext == null)
-			dlg = woolProject.getDialogues().get(descr);
+			dlg = woolProject.getDialogues().get(woolDialogueDescription);
 		else
-			dlg = woolProject.getTranslatedDialogue(descr, translationContext);
+			dlg = woolProject.getTranslatedDialogue(woolDialogueDescription, translationContext);
 		if (dlg != null)
 			return dlg;
 		throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
-				"Pre-loaded dialogue not found for dialogue '" + descr.getDialogueName() +
-				"' in language '"+descr.getLanguage() + "'.");
+			"Pre-loaded dialogue not found for dialogue '" +
+					woolDialogueDescription.getDialogueName() + "' in language '" +
+					woolDialogueDescription.getLanguage() + "'.");
 	}
 	
 	public List<WoolDialogueDescription> getAvailableDialogues() {
-		List<WoolDialogueDescription> result = new ArrayList<>();
-		result.addAll(woolProject.getDialogues().keySet());
-		return result;
-	}
-
-	/**
-	 *
-	 * @param timeZone one of {@code DateTimeZone.getAvailableIDs()} (e.g. "Europe/Lisbon").
-	 * @param errors
-	 * @return
-	 */
-	public static ZonedDateTime parseTimeParameters(String timeZone,
-			List<HttpFieldError> errors) {
-		ZoneId parsedTimezone = null;
-		int errorsStart = errors.size();
-
-		if (timeZone == null || timeZone.length() == 0) {
-			parsedTimezone = ZoneId.systemDefault();
-		} else {
-			try {
-				parsedTimezone = ZoneId.of(timeZone);
-			} catch (DateTimeException ex) {
-				errors.add(new HttpFieldError("timeZone",
-						"Invalid value for field \"timeZone\": " + timeZone));
-			}
-		}
-
-		LocalDateTime parsedTime = DateTimeUtils.nowLocalMs(parsedTimezone);
-
-		if (!errors.isEmpty()) {
-			return null;
-		} else {
-			return parsedTime.atZone(parsedTimezone);
-		}
+		return new ArrayList<>(woolProject.getDialogues().keySet());
 	}
 
 	public String getExternalVariableServiceAPIToken() {
@@ -274,15 +233,22 @@ public class UserServiceManager {
 		loginParametersPayload.setUser(config.getExternalVariableServiceUsername());
 		loginParametersPayload.setPassword(config.getExternalVariableServicePassword());
 		loginParametersPayload.setTokenExpiration(null);
-		HttpEntity request = new HttpEntity(loginParametersPayload, headers);
+		HttpEntity<LoginParametersPayload> request =
+				new HttpEntity<>(loginParametersPayload, headers);
 
 		ResponseEntity<LoginResultPayload> response = restTemplate.postForEntity(
 				loginUrl, request, LoginResultPayload.class);
 
 		if (response.getStatusCode() == HttpStatus.OK) {
 			LoginResultPayload loginResultPayload = response.getBody();
-			this.setExternVariableServiceAPIToken(loginResultPayload.getToken());
-			logger.info("User '"+config.getExternalVariableServiceUsername()+"' logged in successfully to external variable service.");
+			if(loginResultPayload != null) {
+				this.setExternVariableServiceAPIToken(loginResultPayload.getToken());
+				logger.info("User '"+config.getExternalVariableServiceUsername()+"' " +
+						"logged in successfully to external variable service.");
+			} else {
+				logger.error("Login to External Variable Service failed with status code: "
+						+ response.getStatusCode());
+			}
 		} else {
 			logger.info("Login failed: " + response.getStatusCode());
 		}

@@ -81,10 +81,9 @@ public class ErrorController implements org.springframework.boot.web.servlet.err
 		}
 		ResponseStatus status = exception.getClass().getAnnotation(
 				ResponseStatus.class);
-		if (status != null && exception instanceof HttpException) {
-			HttpException httpEx = (HttpException)exception;
+		if (status != null && exception instanceof HttpException httpException) {
 			response.setStatus(status.value().value());
-			return httpEx.getError();
+			return httpException.getError();
 		} else if (status != null) {
 			response.setStatus(status.value().value());
 			return exception.getMessage();

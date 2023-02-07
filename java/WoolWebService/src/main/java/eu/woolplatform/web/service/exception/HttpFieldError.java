@@ -33,8 +33,7 @@ public class HttpFieldError extends JsonObject {
 	/**
 	 * Constructs a new empty field error.
 	 */
-	public HttpFieldError() {
-	}
+	public HttpFieldError() { }
 	
 	/**
 	 * Constructs a new HTTP field error without an error code and message.

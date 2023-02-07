@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -64,7 +63,7 @@ public class InfoController {
 	) {
 
 		// If no versionName is provided, or versionName is empty, assume the latest version
-		if (version == null || String.valueOf(version).equals("")) {
+		if (version == null || version.equals("")) {
 			version = ProtocolVersion.getLatestVersion().versionName();
 		}
 

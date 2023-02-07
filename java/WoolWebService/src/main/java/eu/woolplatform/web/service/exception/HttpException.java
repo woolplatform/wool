@@ -22,17 +22,21 @@ package eu.woolplatform.web.service.exception;
 import eu.woolplatform.web.service.controller.ErrorController;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.Serial;
+
 /**
- * Base class for exceptions that result in a HTTP error response. Subclasses should be annotated
+ * Base class for exceptions that result in an HTTP error response. Subclasses should be annotated
  * with {@link ResponseStatus ResponseStatus}. They are handled by
  * {@link ErrorController ErrorController}.
  * 
  * @author Dennis Hofs (RRD)
  */
 public abstract class HttpException extends Exception {
+
+	@Serial
 	private static final long serialVersionUID = 1L;
 	
-	private HttpError error;
+	private final HttpError error;
 
 	/**
 	 * Constructs a new HTTP exception with default error code 0.
@@ -84,19 +88,19 @@ public abstract class HttpException extends Exception {
 	 * @return the HTTP exception
 	 */
 	public static HttpException forStatus(int statusCode, HttpError error) {
-		switch (statusCode) {
-		case 400:
-			return new BadRequestException(error);
-		case 401:
-			return new UnauthorizedException(error);
-		case 403:
-			return new ForbiddenException(error);
-		case 404:
-			return new NotFoundException(error);
-		case 501:
-			return new NotImplementedException(error);
-		default:
-			return new InternalServerErrorException(error);
-		}
+		return switch (statusCode) {
+			case 400 ->
+					new BadRequestException(error);
+			case 401 ->
+					new UnauthorizedException(error);
+			case 403 ->
+					new ForbiddenException(error);
+			case 404 ->
+					new NotFoundException(error);
+			case 501 ->
+					new NotImplementedException(error);
+			default ->
+					new InternalServerErrorException(error);
+		};
 	}
 }

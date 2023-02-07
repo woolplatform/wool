@@ -23,6 +23,8 @@ import eu.woolplatform.web.service.controller.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.Serial;
+
 /**
  * This exception results in an HTTP response with status 500 Internal Server Error. The exception
  * message (default "Internal Server Error") will be written to the response. It is handled by the
@@ -32,6 +34,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  */
 @ResponseStatus(value=HttpStatus.INTERNAL_SERVER_ERROR)
 public class InternalServerErrorException extends HttpException {
+
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	public InternalServerErrorException() {

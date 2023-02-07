@@ -89,17 +89,13 @@ public class ControllerFunctions {
 	 * 		   code.
 	 */
 	public static HttpException createHttpException(WoolException exception) {
-		switch (exception.getType()) {
-			case AGENT_NOT_FOUND:
-			case DIALOGUE_NOT_FOUND:
-			case NODE_NOT_FOUND:
-			case REPLY_NOT_FOUND:
-			case NO_ACTIVE_DIALOGUE:
-				return new NotFoundException(exception.getMessage());
-			default:
-				throw new RuntimeException("Unexpected WoolAgentException: " +
-						exception.getMessage(), exception);
-		}
+		return switch (exception.getType()) {
+			case AGENT_NOT_FOUND, DIALOGUE_NOT_FOUND, NODE_NOT_FOUND, REPLY_NOT_FOUND, NO_ACTIVE_DIALOGUE ->
+					new NotFoundException(exception.getMessage());
+			default ->
+					throw new RuntimeException("Unexpected WoolAgentException: " +
+							exception.getMessage(), exception);
+		};
 	}
 
 }

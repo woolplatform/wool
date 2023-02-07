@@ -23,6 +23,7 @@ import eu.woolplatform.web.service.controller.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,6 +37,8 @@ import java.util.List;
  */
 @ResponseStatus(value=HttpStatus.BAD_REQUEST)
 public class BadRequestException extends HttpException {
+
+	@Serial
 	private static final long serialVersionUID = 1L;
 	
 	public BadRequestException() {

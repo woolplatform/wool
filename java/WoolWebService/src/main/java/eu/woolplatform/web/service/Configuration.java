@@ -22,6 +22,7 @@ package eu.woolplatform.web.service;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.Serial;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
@@ -40,6 +41,8 @@ import nl.rrd.utils.AppComponent;
  */
 @AppComponent
 public class Configuration extends LinkedHashMap<String,String> {
+
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	public static final String VERSION = "version";

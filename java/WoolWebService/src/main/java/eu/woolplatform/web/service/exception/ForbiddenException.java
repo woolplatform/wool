@@ -23,6 +23,8 @@ import eu.woolplatform.web.service.controller.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.Serial;
+
 /**
  * This exception results in an HTTP response with status 403 Forbidden. The exception message
  * (default "Forbidden") will be written to the response.
@@ -32,6 +34,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  */
 @ResponseStatus(value=HttpStatus.FORBIDDEN)
 public class ForbiddenException extends HttpException {
+
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	public ForbiddenException() {

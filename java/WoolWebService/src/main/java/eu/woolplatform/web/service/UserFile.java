@@ -61,39 +61,35 @@ public class UserFile {
 
 	private static class XMLHandler extends
 			AbstractSimpleSAXHandler<List<UserCredentials>> {
-		private List<UserCredentials> users = new ArrayList<>();
+		private final List<UserCredentials> users = new ArrayList<>();
 
 		@Override
-		public void startElement(String name, Attributes atts,
-				List<String> parents) throws ParseException {
+		public void startElement(String name, Attributes attributes, List<String> parents)
+				throws ParseException {
 			if (parents.size() == 0) {
 				if (!name.equals("users")) {
-					throw new ParseException(
-							"Expected element \"users\", found: " + name);
+					throw new ParseException("Expected element \"users\", found: " + name);
 				}
 			} else if (parents.size() == 1) {
 				if (!name.equals("user")) {
-					throw new ParseException(
-							"Expected element \"user\", found: " + name);
+					throw new ParseException("Expected element \"user\", found: " + name);
 				}
-				startUser(atts);
+				startUser(attributes);
 			}
 		}
 
-		private void startUser(Attributes atts) throws ParseException {
-			String username = readAttribute(atts, "username").trim();
+		private void startUser(Attributes attributes) throws ParseException {
+			String username = readAttribute(attributes, "username").trim();
 			if (username.length() == 0) {
-				throw new ParseException(
-						"Empty value in attribute \"username\"");
+				throw new ParseException("Empty value in attribute \"username\"");
 			}
-			String password = readAttribute(atts, "password");
+			String password = readAttribute(attributes, "password");
 			if (password.length() == 0) {
-				throw new ParseException(
-						"Empty value in attribute \"password\"");
+				throw new ParseException("Empty value in attribute \"password\"");
 			}
 			String role;
 			try {
-				role = readAttribute(atts, "role");
+				role = readAttribute(attributes, "role");
 
 				if (!(role.equalsIgnoreCase(UserCredentials.USER_ROLE_USER) ||
 						role.equalsIgnoreCase(UserCredentials.USER_ROLE_ADMIN))) {
@@ -110,13 +106,11 @@ public class UserFile {
 		}
 
 		@Override
-		public void endElement(String name, List<String> parents)
-				throws ParseException {
+		public void endElement(String name, List<String> parents) {
 		}
 
 		@Override
-		public void characters(String ch, List<String> parents)
-				throws ParseException {
+		public void characters(String ch, List<String> parents) {
 		}
 
 		@Override

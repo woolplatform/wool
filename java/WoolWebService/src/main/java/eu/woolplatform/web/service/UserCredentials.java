@@ -24,9 +24,9 @@ public class UserCredentials {
 	public static final String USER_ROLE_USER = "user";
 	public static final String USER_ROLE_ADMIN = "admin";
 
-	private String username;
-	private String password;
-	private String role;
+	private final String username;
+	private final String password;
+	private final String role;
 
 	public UserCredentials(String username, String password, String role) {
 		this.username = username;

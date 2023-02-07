@@ -19,11 +19,10 @@
 
 package eu.woolplatform.web.service.execution;
 
-import nl.rrd.utils.exception.DatabaseException;
 import eu.woolplatform.web.service.storage.ExternalVariableServiceUpdater;
 import eu.woolplatform.web.service.storage.WoolVariableStoreStorageHandler;
 import eu.woolplatform.wool.execution.WoolUser;
-import eu.woolplatform.wool.execution.WoolVariableStoreOnChangeListener;
+import nl.rrd.utils.exception.DatabaseException;
 
 import java.io.IOException;
 

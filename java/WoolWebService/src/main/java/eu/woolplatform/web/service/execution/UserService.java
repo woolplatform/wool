@@ -332,13 +332,13 @@ public class UserService {
 			logger.info("RetrieveUpdatesURL: "+retrieveUpdatesUrl);
 
 			LinkedMultiValueMap<String,String> allRequestParams = new LinkedMultiValueMap<>();
-			allRequestParams.put("userId",Arrays.asList(woolUser.getId()));
-			allRequestParams.put("timeZone",Arrays.asList(woolUser.getTimeZone().toString()));
+			allRequestParams.put("userId", Collections.singletonList(woolUser.getId()));
+			allRequestParams.put("timeZone", Collections.singletonList(woolUser.getTimeZone().toString()));
 
 			HttpEntity<?> entity = new HttpEntity<>(varsToUpdate, requestHeaders); // requestBody is of string type and requestHeaders is of type HttpHeaders
 			UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(retrieveUpdatesUrl) // rawValidURl = http://example.com/hotels
 					.queryParams(
-							(LinkedMultiValueMap<String, String>) allRequestParams); // The allRequestParams must have been built for all the query params
+							allRequestParams); // The allRequestParams must have been built for all the query params
 			UriComponents uriComponents = builder.build().encode(); // encode() is to ensure that characters like {, }, are preserved and not encoded. Skip if not needed.
 
 			WoolVariable[] retrievedWoolVariables = null;

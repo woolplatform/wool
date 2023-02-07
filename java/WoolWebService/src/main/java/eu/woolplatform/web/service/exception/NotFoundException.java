@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import eu.woolplatform.web.service.controller.ErrorController;
 
+import java.io.Serial;
+
 /**
  * This exception results in a HTTP response with status 404 Not Found. The exception message
  * (default "Not Found") will be written to the response.
@@ -33,6 +35,8 @@ import eu.woolplatform.web.service.controller.ErrorController;
  */
 @ResponseStatus(value=HttpStatus.NOT_FOUND)
 public class NotFoundException extends HttpException {
+
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	public NotFoundException() {

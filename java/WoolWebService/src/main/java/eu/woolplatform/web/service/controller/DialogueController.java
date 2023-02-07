@@ -249,7 +249,9 @@ public class DialogueController {
 		}
 
 		// Log this call to the service log
-		String logInfo = "POST /v" + version + "/dialogue/progress?replyId=" + replyId;
+		String logInfo = "POST /v" + version + "/dialogue/progress?loggedDialogueId="
+				+ loggedDialogueId + "&loggedInteractionIndex=" + loggedInteractionIndex
+				+ "&replyId=" + replyId;
 		if(!(woolUserId == null) && (!woolUserId.equals(""))) logInfo += "&woolUserId="+woolUserId;
 		logger.info(logInfo);
 
