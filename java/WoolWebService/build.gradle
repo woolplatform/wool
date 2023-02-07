@@ -50,6 +50,14 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 
+	// Used for the Azure Data Lake Integration
+
+		// https://mvnrepository.com/artifact/com.azure/azure-sdk-bom
+		implementation 'com.azure:azure-sdk-bom:1.2.8'
+
+		// https://mvnrepository.com/artifact/com.azure/azure-storage-file-datalake
+		implementation 'com.azure:azure-storage-file-datalake:12.13.2'
+
 	// https://mvnrepository.com/artifact/org.codehaus.cargo/cargo-core
 	cargo 'org.codehaus.cargo:cargo-core:1.10.4'
 

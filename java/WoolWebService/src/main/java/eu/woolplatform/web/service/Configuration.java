@@ -55,6 +55,10 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public static final String EXTERNAL_VARIABLE_SERVICE_API_VERSION = "externalVariableServiceAPIVersion";
 	public static final String EXTERNAL_VARIABLE_SERVICE_USERNAME = "externalVariableServiceUsername";
 	public static final String EXTERNAL_VARIABLE_SERVICE_PASSWORD = "externalVariableServicePassword";
+	public static final String AZURE_STORAGE_ACCOUNT_URL = "azureStorageAccountUrl";
+	public static final String AZURE_SAS_TOKEN = "azureSASToken";
+	public static final String AZURE_FILE_SYSTEM_NAME = "azureFileSystemName";
+	public static final String AZURE_STORAGE_DIRECTORY = "azureStorageDirectory";
 
 	private static final Object LOCK = new Object();
 	private static Configuration instance = null;
@@ -180,6 +184,54 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public String getBuildTime() {
 		if(containsKey(BUILD_TIME)) {
 			String returnValue = get(BUILD_TIME);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	/**
+	 * Returns the Azure Storage Account URL, or an empty {@link String} if not configured.
+	 * @return the Azure Storage Account URL, or an empty {@link String} if not configured.
+	 */
+	public String getAzureStorageAccountUrl() {
+		if(containsKey(AZURE_STORAGE_ACCOUNT_URL)) {
+			String returnValue = get(AZURE_STORAGE_ACCOUNT_URL);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	/**
+	 * Returns the Azure SAS Token, or an empty {@link String} if not configured.
+	 * @return the Azure SAS Token, or an empty {@link String} if not configured.
+	 */
+	public String getAzureSASToken() {
+		if(containsKey(AZURE_SAS_TOKEN)) {
+			String returnValue = get(AZURE_SAS_TOKEN);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	/**
+	 * Returns the Azure File System Name, or an empty {@link String} if not configured.
+	 * @return the Azure File System Name, or an empty {@link String} if not configured.
+	 */
+	public String getAzureFileSystemName() {
+		if(containsKey(AZURE_FILE_SYSTEM_NAME)) {
+			String returnValue = get(AZURE_FILE_SYSTEM_NAME);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	/**
+	 * Returns the Azure Storage Directory, or an empty {@link String} if not configured.
+	 * @return the Azure Storage Directory, or an empty {@link String} if not configured.
+	 */
+	public String getAzureStorageDirectory() {
+		if(containsKey(AZURE_STORAGE_DIRECTORY)) {
+			String returnValue = get(AZURE_STORAGE_DIRECTORY);
 			if(returnValue != null) return returnValue;
 		}
 		return "";
