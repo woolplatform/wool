@@ -68,47 +68,31 @@ public class DialogueExecutor {
 	// -------------------------------------------------------
 
 	/**
-	 * Starts the dialogue for the specified dialogue definition at the default start node
-	 * ('Start').
-	 *
-	 * @param dialogueDescription the dialogue description.
-	 * @param dialogueDefinition the dialogue definition.
-	 * @param sessionId an optional externally provided id to be added to the logs (or
-	 *                    {@code null}).
-	 * @return the start node.
-	 * @throws DatabaseException if a database error occurs.
-	 * @throws IOException if a communication error occurs.
-	 * @throws WoolException if the request is invalid.
-	 */
-	public ExecuteNodeResult startDialogue(WoolDialogueDescription dialogueDescription,
-			WoolDialogue dialogueDefinition, String sessionId)
-			throws IOException, DatabaseException, WoolException {
-		return startDialogue(dialogueDescription, dialogueDefinition, null, sessionId);
-	}
-
-	/**
-	 * Starts the dialogue for the specified dialogue definition. If you specify
-	 * a node ID, it will start at that node. Otherwise, it starts at the start
-	 * node.
+	 * Starts the dialogue for the specified dialogue definition. If you specify a node ID, it will
+	 * start at that node. Otherwise, it starts at the "Start" node.
 	 *
 	 * @param dialogueDescription the dialogue description.
 	 * @param dialogueDefinition the dialogue definition.
 	 * @param nodeId the node ID or {@code null}.
-	 * @param sessionId an optional externally provided id to be added to the logs (or
-	 *                    {@code null}).
+	 * @param sessionId the unique session identifier to be added to the logs.
+	 * @param newSession true if this is a completely new dialogue session, false if this is a
+	 *                   continuation of an ongoing session, starting a new .wool script
 	 * @return the start node or specified node.
 	 * @throws DatabaseException if a database error occurs.
 	 * @throws IOException if a communication error occurs.
 	 * @throws WoolException if the request is invalid.
 	 */
 	public ExecuteNodeResult startDialogue(WoolDialogueDescription dialogueDescription,
-			WoolDialogue dialogueDefinition, String nodeId, String sessionId)
+			WoolDialogue dialogueDefinition, String nodeId, String sessionId,
+										   boolean newSession)
 			throws DatabaseException, IOException, WoolException {
-		ActiveWoolDialogue dialogue = new ActiveWoolDialogue(
-				dialogueDescription, dialogueDefinition);
+
+		ActiveWoolDialogue dialogue = new ActiveWoolDialogue(dialogueDescription,
+				dialogueDefinition);
 		dialogue.setWoolVariableStore(userService.getVariableStore());
 
-		// Collects all the WOOL Variables needed to execute this file
+		// Collects all the WOOL Variables needed to execute this file and update from an external
+		// variable service (if enabled).
 		Set<String> variablesNeeded = dialogueDefinition.getVariablesNeeded();
 		logger.info("Dialogue '" + dialogue.getDialogueName() +
 				"' uses the following set of WOOL Variables: "+variablesNeeded);
@@ -122,38 +106,37 @@ public class DialogueExecutor {
 		try {
 			startNode = dialogue.startDialogue(nodeId,eventTime);
 		} catch (EvaluationException e) {
-			throw new RuntimeException("Expression evaluation error: " +
-					e.getMessage(), e);
+			throw new RuntimeException("Expression evaluation error: " + e.getMessage(), e);
 		}
-		LoggedDialogue loggedDialogue =
-				new LoggedDialogue(userService.getWoolUser().getId(), eventTime, sessionId);
-		loggedDialogue.setDialogueName(dialogueDefinition.getDialogueName());
-		loggedDialogue.setLanguage(dialogueDescription.getLanguage());
-		LoggedDialogueStoreIO.createLoggedDialogue(loggedDialogue);
-		executeNextNode(startNode, loggedDialogue, -1);
+
+		LoggedDialogue loggedDialogue = new LoggedDialogue(userService.getWoolUser().getId(), eventTime,
+					sessionId);
+			loggedDialogue.setDialogueName(dialogueDefinition.getDialogueName());
+			loggedDialogue.setLanguage(dialogueDescription.getLanguage());
+			LoggedDialogueStoreIO.createLoggedDialogue(loggedDialogue);
+
+		logWoolNode(startNode, loggedDialogue, -1);
 		return new ExecuteNodeResult(dialogueDefinition, startNode,
 				loggedDialogue, loggedDialogue.getInteractionList().size() - 1);
 	}
 	
 	/**
-	 * Continues the dialogue after the user selected the specified reply. This
-	 * method stores the reply as a user action in the database, and it performs
-	 * any "set" actions associated with the reply. Then it determines the next
-	 * node, if any.
+	 * Continues the dialogue after the user selected the specified reply. This method stores the
+	 * reply as a user action in the database, and it performs any "set" actions associated with the
+	 * reply. Then it determines the next node, if any.
 	 * 
-	 * <p>If there is no next node, this method will complete the current
-	 * dialogue, and this method returns null.</p>
+	 * <p>If there is no next node, this method will complete the current dialogue, and this method
+	 * returns null.</p>
 	 * 
-	 * <p>If the reply points to another dialogue, this method will complete the
-	 * current dialogue and start the other dialogue.</p>
+	 * <p>If the reply points to another dialogue, this method will complete the current dialogue
+	 * and start the other dialogue.</p>
 	 * 
-	 * <p>For the returned node, this method executes the agent statement and
-	 * reply statements using the variable store. It executes ("if" and "set")
-	 * commands and resolves variables. The returned node contains any content
-	 * that should be sent to the client. This content can be text or client
-	 * commands, with all variables resolved.</p>
+	 * <p>For the returned node, this method executes the agent statement and reply statements using
+	 * the variable store. It executes ("if" and "set") commands and resolves variables. The
+	 * returned node contains any content that should be sent to the client. This content can be
+	 * text or client commands, with all variables resolved.</p>
 	 *
-	 * @param state the state from which the dialogue should progress
+	 * @param state a collection of objects defining the state of the currently ongoing dialogue.
 	 * @param replyId the reply ID
 	 * @return the next node or null
 	 * @throws DatabaseException if a database error occurs
@@ -167,8 +150,7 @@ public class DialogueExecutor {
 		ZonedDateTime progressDialogueEventTime =
 				DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
-		LoggedDialogue loggedDialogue =
-				(LoggedDialogue)state.getLoggedDialogue();
+		LoggedDialogue loggedDialogue = (LoggedDialogue)state.getLoggedDialogue();
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		String userStatement = dialogue.getUserStatementFromReplyId(replyId);
 		LoggedDialogueStoreIO.addLoggedUserInteraction(System.currentTimeMillis(),
@@ -181,45 +163,47 @@ public class DialogueExecutor {
 		try {
 			nodePointer = dialogue.processReplyAndGetNodePointer(replyId,progressDialogueEventTime);
 		} catch (EvaluationException ex) {
-			throw new RuntimeException("Expression evaluation error: " +
-					ex.getMessage(), ex);
+			throw new RuntimeException("Expression evaluation error: " + ex.getMessage(), ex);
 		}
 		WoolDialogue dialogueDefinition = state.getDialogueDefinition();
 		WoolNode nextWoolNode;
 		if (nodePointer instanceof WoolNodePointerInternal) {
 			try {
-				nextWoolNode = dialogue.progressDialogue(
-								(WoolNodePointerInternal)nodePointer,
+				nextWoolNode = dialogue.progressDialogue((WoolNodePointerInternal)nodePointer,
 								progressDialogueEventTime);
 			} catch (EvaluationException e) {
-				throw new RuntimeException("Expression evaluation error: " +
-						e.getMessage(), e);
+				throw new RuntimeException("Expression evaluation error: " + e.getMessage(), e);
 			}
-			executeNextNode(nextWoolNode, loggedDialogue, userActionIndex);
+			logWoolNode(nextWoolNode, loggedDialogue, userActionIndex);
 			if (nextWoolNode == null)
 				return null;
-			return new ExecuteNodeResult(dialogueDefinition, nextWoolNode,
-					loggedDialogue,
+			return new ExecuteNodeResult(dialogueDefinition, nextWoolNode, loggedDialogue,
 					loggedDialogue.getInteractionList().size() - 1);
-		}
-		else {
+
+		} else { // The dialogue continues with a pointer to another .wool script
 			LoggedDialogueStoreIO.setDialogueCompleted(loggedDialogue);
 			String language = dialogue.getDialogueDescription().getLanguage();
-			WoolNodePointerExternal externalNodePointer =
-					(WoolNodePointerExternal)nodePointer;
+			WoolNodePointerExternal externalNodePointer = (WoolNodePointerExternal)nodePointer;
 			String dialogueId = externalNodePointer.getDialogueId();
 			String nodeId = externalNodePointer.getNodeId();
-			return userService.startDialogue(dialogueId, nodeId, language,
-					loggedDialogue.getSessionId());
+
+			WoolDialogueDescription dialogueDescription =
+					userService.getDialogueDescriptionFromId(dialogueId, language);
+			if (dialogueDescription == null) {
+				throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
+						"Dialogue not found: " + dialogueId);
+			}
+			WoolDialogue newDialogue = userService.getDialogueDefinition(dialogueDescription);
+
+			return this.startDialogue(dialogueDescription, newDialogue, nodeId,
+					loggedDialogue.getSessionId(), false);
 		}
 	}
 
 	public ExecuteNodeResult backDialogue(DialogueState state, ZonedDateTime eventTime)
 			throws WoolException {
-		LoggedDialogue loggedDialogue =
-				(LoggedDialogue)state.getLoggedDialogue();
-		List<WoolLoggedInteraction> interactions =
-				loggedDialogue.getInteractionList();
+		LoggedDialogue loggedDialogue = (LoggedDialogue)state.getLoggedDialogue();
+		List<WoolLoggedInteraction> interactions = loggedDialogue.getInteractionList();
 		int prevIndex = findPreviousAgentInteractionIndex(interactions,
 				state.getLoggedInteractionIndex());
 		DialogueState backState = userService.getDialogueState(loggedDialogue,
@@ -227,8 +211,8 @@ public class DialogueExecutor {
 		return executeCurrentNode(backState, eventTime);
 	}
 
-	private int findPreviousAgentInteractionIndex(
-			List<WoolLoggedInteraction> interactions, int start) {
+	private int findPreviousAgentInteractionIndex(List<WoolLoggedInteraction> interactions,
+												  int start) {
 		WoolLoggedInteraction interaction = interactions.get(start);
 		while (interaction.getPreviousIndex() != -1) {
 			int index = interaction.getPreviousIndex();
@@ -240,16 +224,14 @@ public class DialogueExecutor {
 	}
 
 	public ExecuteNodeResult executeCurrentNode(DialogueState state, ZonedDateTime eventTime) {
-		LoggedDialogue loggedDialogue =
-				(LoggedDialogue)state.getLoggedDialogue();
+		LoggedDialogue loggedDialogue = (LoggedDialogue)state.getLoggedDialogue();
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		dialogue.setWoolVariableStore(userService.getVariableStore());
 		WoolNode node = dialogue.getCurrentNode();
 		try {
 			node = dialogue.executeWoolNode(node,eventTime);
 		} catch (EvaluationException e) {
-			throw new RuntimeException("Expression evaluation error: " +
-					e.getMessage(), e);
+			throw new RuntimeException("Expression evaluation error: " + e.getMessage(), e);
 		}
 		return new ExecuteNodeResult(state.getDialogueDefinition(),
 				node, loggedDialogue, state.getLoggedInteractionIndex());
@@ -266,32 +248,31 @@ public class DialogueExecutor {
 	 * <p>If the node is null or it has no replies, the dialogue is
 	 * completed.</p>
 	 * 
-	 * @param node the current node or null
+	 * @param woolNode the current node or null
 	 * @throws DatabaseException if a database error occurs
 	 * @throws IOException if a communication error occurs
 	 */
-	private void executeNextNode(WoolNode node, LoggedDialogue loggedDialogue,
-			int previousIndex)
+	private void logWoolNode(WoolNode woolNode, LoggedDialogue loggedDialogue, int previousIndex)
 			throws DatabaseException, IOException {
-		if (node != null) {
+
+		if (woolNode != null) {
+			StringBuilder agentStatement = new StringBuilder();
+			for (WoolNodeBody.Segment segment : woolNode.getBody().getSegments()) {
+				agentStatement.append(segment.toString());
+			}
+			String loggableAgentStatement = agentStatement.toString();
+
 			LoggedDialogueStoreIO.addLoggedAgentInteraction(
 					System.currentTimeMillis(),
-					node.getHeader().getSpeaker(),
+					woolNode.getHeader().getSpeaker(),
 					loggedDialogue,
-					node.getTitle(),
+					woolNode.getTitle(),
 					previousIndex,
-					createLoggableStatementFromNode(node));
+					loggableAgentStatement);
 		}
-		if (node == null || node.getBody().getReplies().isEmpty()) {
+		if (woolNode == null || woolNode.getBody().getReplies().isEmpty()) {
 			LoggedDialogueStoreIO.setDialogueCompleted(loggedDialogue);
 		}
 	}
 
-	private String createLoggableStatementFromNode(WoolNode woolNode) {
-		StringBuilder agentStatement = new StringBuilder();
-		for (WoolNodeBody.Segment segment : woolNode.getBody().getSegments()) {
-			agentStatement.append(segment.toString());
-		}
-		return agentStatement.toString();
-	}
 }

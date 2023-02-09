@@ -59,6 +59,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Controller for the /dialogue/... end-points of the WOOL Web Service.
@@ -168,12 +169,27 @@ public class DialogueController {
 			String timeZone, String sessionId)
 			throws HttpException, IOException, DatabaseException {
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
-		UserService userService = application.getServiceManager()
-				.getActiveUserService(woolUserId);
+		UserService userService = application.getServiceManager().getActiveUserService(woolUserId);
 		userService.getWoolUser().setTimeZone(timeZoneId);
-		ExecuteNodeResult node;
+
+		// If no sessionId was provided, generate a unique one now
+		if(sessionId == null || sessionId == "") {
+			sessionId = UUID.randomUUID().toString().toLowerCase();
+			while(userService.existsSessionId(sessionId)) {
+				sessionId = UUID.randomUUID().toString().toLowerCase();
+			}
+
+		// If a sessionId was provided, check its uniqueness (for this user), or generate error
+		} else {
+			if(userService.existsSessionId(sessionId)) {
+				throw new BadRequestException("The provided sessionId is already in use. When " +
+					"starting a new dialogue session with a predefined sessionId, this " +
+					"identifier has to be unique for this user ('"+woolUserId+"'.");
+			}
+		}
+
 		try {
-			node = userService.startDialogue(dialogueName, null, language, sessionId);
+			ExecuteNodeResult node = userService.startDialogueSession(dialogueName, null, language, sessionId);
 			return DialogueMessageFactory.generateDialogueMessage(node);
 		} catch (WoolException e) {
 			throw ControllerFunctions.createHttpException(e);
@@ -317,7 +333,7 @@ public class DialogueController {
 
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
-			ExecuteNodeResult nextNode = userService.progressDialogue(state, replyId);
+			ExecuteNodeResult nextNode = userService.progressDialogueSession(state, replyId);
 			if (nextNode == null)
 				return new NullableResponse<>(null);
 			DialogueMessage reply = DialogueMessageFactory.generateDialogueMessage(nextNode);
@@ -397,22 +413,21 @@ public class DialogueController {
 	 *                           database.
 	 * @throws IOException in case of a file io error.
 	 */
-	private NullableResponse<DialogueMessage> doContinueDialogue(
-			String woolUserId, String dialogueName, String timeZone)
+	private NullableResponse<DialogueMessage> doContinueDialogue(String woolUserId,
+																 String dialogueName,
+																 String timeZone)
 			throws HttpException, DatabaseException, IOException {
 
 		// Update/set the WOOL User's timezone to the given value
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
-		UserService userService = application.getServiceManager()
-				.getActiveUserService(woolUserId);
+		UserService userService = application.getServiceManager().getActiveUserService(woolUserId);
 		userService.getWoolUser().setTimeZone(timeZoneId);
 
 		// Determine the event timestamp
 		ZonedDateTime continueDialogueEventTime =
 				DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
-		LoggedDialogue currDlg =
-				LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId,
+		LoggedDialogue currDlg = LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId,
 						dialogueName);
 		WoolLoggedInteraction lastInteraction = null;
 		if (currDlg != null && !currDlg.getInteractionList().isEmpty()) {
@@ -426,7 +441,7 @@ public class DialogueController {
 			try {
 				DialogueState state = userService.getDialogueState(currDlg,
 						currDlg.getInteractionList().size() - 1);
-				node = userService.executeCurrentNode(state,continueDialogueEventTime);
+				node = userService.continueDialogueSession(state,continueDialogueEventTime);
 			} catch (WoolException ex) {
 				throw ControllerFunctions.createHttpException(ex);
 			}
@@ -483,8 +498,8 @@ public class DialogueController {
 			QueryRunner.runQuery((protocolVersion, user) -> doCancelDialogue(user, loggedDialogueId),
 					version, request, response, woolUserId, application);
 		} else {
-			QueryRunner.runQuery((protocolVersion, user) -> doCancelDialogue(woolUserId, loggedDialogueId),
-					version, request, response, woolUserId, application);
+			QueryRunner.runQuery((protocolVersion, user) -> doCancelDialogue(woolUserId,
+							loggedDialogueId), version, request, response, woolUserId, application);
 		}
 	}
 
@@ -500,7 +515,7 @@ public class DialogueController {
 	private Object doCancelDialogue(String woolUserId, String loggedDialogueId)
 			throws DatabaseException, IOException {
 		application.getServiceManager().getActiveUserService(woolUserId)
-				.cancelDialogue(loggedDialogueId);
+				.cancelDialogueSession(loggedDialogueId);
 		return null;
 	}
 
@@ -598,7 +613,8 @@ public class DialogueController {
 
 			DialogueState state = userService.getDialogueState(loggedDialogueId,
 					loggedInteractionIndex);
-			ExecuteNodeResult prevNode = userService.backDialogue(state, backDialogueEventTime);
+			ExecuteNodeResult prevNode = userService.revertDialogueSession(state,
+					backDialogueEventTime);
 			return DialogueMessageFactory.generateDialogueMessage(prevNode);
 		} catch (WoolException e) {
 			throw ControllerFunctions.createHttpException(e);

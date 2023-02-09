@@ -150,9 +150,8 @@ public class LoggedDialogueStoreIO {
 		return result;
 	}
 
-	private static List<LoggedDialogue> readListWith(
-			LoggedDialogue loggedDialogue) throws DatabaseException,
-			IOException {
+	private static List<LoggedDialogue> readListWith(LoggedDialogue loggedDialogue)
+			throws DatabaseException, IOException {
 		List<LoggedDialogue> dialogues = read(loggedDialogue.getUser());
 		dialogues.removeIf(dialogue -> dialogue.getId().equals(
 				loggedDialogue.getId()));
@@ -161,8 +160,7 @@ public class LoggedDialogueStoreIO {
 		return dialogues;
 	}
 
-	private static void save(String user, List<LoggedDialogue> dialogues)
-			throws IOException {
+	private static void save(String user, List<LoggedDialogue> dialogues) throws IOException {
 		synchronized (LOCK) {
 			String json = JsonMapper.generate(dialogues);
 			Configuration config = Configuration.getInstance();
@@ -174,8 +172,7 @@ public class LoggedDialogueStoreIO {
 		}
 	}
 
-	private static void save(LoggedDialogue dialogue) throws DatabaseException,
-			IOException {
+	private static void save(LoggedDialogue dialogue) throws DatabaseException, IOException {
 		synchronized (LOCK) {
 			List<LoggedDialogue> dialogues = readListWith(dialogue);
 			save(dialogue.getUser(), dialogues);

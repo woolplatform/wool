@@ -64,6 +64,10 @@ public class UserService {
 	protected Map<String, Map<String,WoolDialogueDescription>> dialogueLanguageMap =
 			new LinkedHashMap<>();
 
+	// Each UserService has their own instance of a Dialogue Logger that can be used
+	// to log all dialogue interactions for this user.
+	private final DialogueLogger dialogueLogger;
+
 	// --------------------------------------------------------
 	// -------------------- Constructor(s) --------------------
 	// --------------------------------------------------------
@@ -90,6 +94,7 @@ public class UserService {
 		this.logger = AppComponents.getLogger(getClass().getSimpleName());
 		this.woolUser = woolUser;
 		this.userServiceManager = userServiceManager;
+		this.dialogueLogger = new DialogueLogger(woolUser);
 
 		Configuration config = AppComponents.get(Configuration.class);
 		WoolVariableStoreStorageHandler storageHandler =
@@ -173,50 +178,62 @@ public class UserService {
 	// ---------------------------------------------------------------------------
 
 	/**
-	 * Starts a dialogue with the given {@code dialogueId} and preferred language, returning the
-	 * first step of the dialogue. If you specify a {@code nodeId}, it will start at that node.
+	 * Starts a dialogue session with the given {@code dialogueId} and preferred language, returning
+	 * the first step of the dialogue. If you specify a {@code nodeId}, it will start at that node.
 	 * Otherwise, it starts at the "Start" node.
 	 *
-	 * <p>You can specify an ISO language tag such as "en-US".</p>
+	 * This method is called as a result of a user action (i.e. a call to the /dialogue/start end-
+	 * point).
+	 *
+	 * <p>You can specify an ISO language tag such as "en-US" or "en".</p>
 	 *
 	 * @param dialogueId the dialogue ID
 	 * @param nodeId a node ID or null
 	 * @param language an ISO language tag
-	 * @param sessionId an (optional) identifier that should be added to the logging of dialogues
-	 *                  for this started dialogue session (may be {@code null}).
+	 * @param sessionId the unique identifier that should be added to the logging of dialogues
+	 *                  for this started dialogue session.
 	 * @return the dialogue node result with the start node or specified node
 	 */
-	public ExecuteNodeResult startDialogue(String dialogueId, String nodeId, String language,
-										   String sessionId)
+	public ExecuteNodeResult startDialogueSession(String dialogueId, String nodeId, String language,
+												  String sessionId)
 			throws DatabaseException, IOException, WoolException {
+
+		// This should not happen as this method should only be called by
+		// DialogueController.doStartDialogue() that already ensures a unique sessionId
+		if(existsSessionId(sessionId))
+			throw new DatabaseException("The provided sessionId for a new dialogue session is " +
+					"already in use.");
+
 		logger.info("User '" + woolUser.getId() + "' is starting dialogue '" + dialogueId + "'");
+
 		WoolDialogueDescription dialogueDescription =
 				getDialogueDescriptionFromId(dialogueId, language);
+
 		if (dialogueDescription == null) {
 			throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
 					"Dialogue not found: " + dialogueId);
 		}
 		WoolDialogue dialogue = getDialogueDefinition(dialogueDescription);
-		return dialogueExecutor.startDialogue(dialogueDescription, dialogue, nodeId, sessionId);
+
+		return dialogueExecutor.startDialogue(dialogueDescription, dialogue, nodeId, sessionId,
+				true);
 	}
 
 	/**
-	 * Continues the dialogue after the user selected the specified reply. This
-	 * method stores the reply as a user action in the database, and it performs
-	 * any "set" actions associated with the reply. Then it determines the next
-	 * node, if any.
+	 * Continues the dialogue session after the user selected the specified reply. This method
+	 * stores the reply as a user action in the database, and it performs any "set" actions
+	 * associated with the reply. Then it determines the next node, if any.
 	 *
-	 * <p>If there is no next node, this method will complete the current
-	 * dialogue, and this method returns null.</p>
+	 * <p>If there is no next node, this method will complete the current dialogue, and this method
+	 * returns null.</p>
 	 *
-	 * <p>If the reply points to another dialogue, this method will complete the
-	 * current dialogue and start the other dialogue.</p>
+	 * <p>If the reply points to another dialogue, this method will complete the current dialogue
+	 * and start the other dialogue.</p>
 	 *
-	 * <p>For the returned node, this method executes the agent statement and
-	 * reply statements using the variable store. It executes ("if" and "set")
-	 * commands and resolves variables. The returned node contains any content
-	 * that should be sent to the client. This content can be text or client
-	 * commands, with all variables resolved.</p>
+	 * <p>For the returned node, this method executes the agent statement and reply statements using
+	 * the variable store. It executes ("if" and "set") commands and resolves variables. The
+	 * returned node contains any content that should be sent to the client. This content can be
+	 * text or client commands, with all variables resolved.</p>
 	 *
 	 * @param state the state from which the dialogue should progress
 	 * @param replyId the reply ID
@@ -225,9 +242,8 @@ public class UserService {
 	 * @throws IOException if a communication error occurs
 	 * @throws WoolException if the request is invalid
 	 */
-	public ExecuteNodeResult progressDialogue(DialogueState state, int replyId)
-			throws DatabaseException, IOException,
-			WoolException {
+	public ExecuteNodeResult progressDialogueSession(DialogueState state, int replyId)
+			throws DatabaseException, IOException, WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		String dialogueName = dialogue.getDialogueName();
 		String nodeName = dialogue.getCurrentNode().getTitle();
@@ -237,7 +253,7 @@ public class UserService {
 		return dialogueExecutor.progressDialogue(state, replyId);
 	}
 
-	public ExecuteNodeResult backDialogue(DialogueState state, ZonedDateTime eventTime)
+	public ExecuteNodeResult revertDialogueSession(DialogueState state, ZonedDateTime eventTime)
 			throws WoolException {
 		ActiveWoolDialogue dialogue = state.getActiveDialogue();
 		String dialogueName = dialogue.getDialogueName();
@@ -248,8 +264,8 @@ public class UserService {
 		return dialogueExecutor.backDialogue(state, eventTime);
 	}
 
-	public ExecuteNodeResult executeCurrentNode(DialogueState state, ZonedDateTime eventTime)
-			throws WoolException {
+	public ExecuteNodeResult continueDialogueSession(DialogueState state, ZonedDateTime eventTime)
+		throws WoolException {
 		return dialogueExecutor.executeCurrentNode(state,eventTime);
 	}
 
@@ -259,7 +275,7 @@ public class UserService {
 	 * @throws DatabaseException if a database error occurs
 	 * @throws IOException if a communication error occurs
 	 */
-	public void cancelDialogue(String loggedDialogueId)
+	public void cancelDialogueSession(String loggedDialogueId)
 			throws DatabaseException, IOException {
 		logger.info("User '" + woolUser.getId() + "' cancels dialogue with Id '"
 				+ loggedDialogueId + "'.");
@@ -510,5 +526,17 @@ public class UserService {
 		activeDialogue.setCurrentNode(node);
 		return new DialogueState(dialogueDescription, dialogueDefinition,
 				loggedDialogue, loggedInteractionIndex, activeDialogue);
+	}
+
+	/**
+	 * Checks whether a given {@code sessionId} exists for this user, and returns {@code true} if it
+	 * does, or {@code false} if not.
+	 * @param sessionId the sessionId {@link String} for which to check.
+	 * @return {@code true} if the sessionId is already in use, false otherwise.
+	 */
+	public boolean existsSessionId(String sessionId) {
+		//TODO: Implement.
+
+		return false;
 	}
 }
