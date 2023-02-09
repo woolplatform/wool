@@ -189,7 +189,7 @@ public class DialogueController {
 		}
 
 		try {
-			ExecuteNodeResult node = userService.startDialogueSession(dialogueName, null, language, sessionId);
+			ExecuteNodeResult node = userService.startDialogueSession(dialogueName, null, language, sessionId, System.currentTimeMillis());
 			return DialogueMessageFactory.generateDialogueMessage(node);
 		} catch (WoolException e) {
 			throw ControllerFunctions.createHttpException(e);

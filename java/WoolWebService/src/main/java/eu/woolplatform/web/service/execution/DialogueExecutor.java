@@ -75,8 +75,7 @@ public class DialogueExecutor {
 	 * @param dialogueDefinition the dialogue definition.
 	 * @param nodeId the node ID or {@code null}.
 	 * @param sessionId the unique session identifier to be added to the logs.
-	 * @param newSession true if this is a completely new dialogue session, false if this is a
-	 *                   continuation of an ongoing session, starting a new .wool script
+	 * @param sessionStartTime the utc timestamp of when this session was started.
 	 * @return the start node or specified node.
 	 * @throws DatabaseException if a database error occurs.
 	 * @throws IOException if a communication error occurs.
@@ -84,7 +83,7 @@ public class DialogueExecutor {
 	 */
 	public ExecuteNodeResult startDialogue(WoolDialogueDescription dialogueDescription,
 			WoolDialogue dialogueDefinition, String nodeId, String sessionId,
-										   boolean newSession)
+										   long sessionStartTime)
 			throws DatabaseException, IOException, WoolException {
 
 		ActiveWoolDialogue dialogue = new ActiveWoolDialogue(dialogueDescription,
@@ -109,8 +108,7 @@ public class DialogueExecutor {
 			throw new RuntimeException("Expression evaluation error: " + e.getMessage(), e);
 		}
 
-		LoggedDialogue loggedDialogue = new LoggedDialogue(userService.getWoolUser().getId(), eventTime,
-					sessionId);
+		LoggedDialogue loggedDialogue = new LoggedDialogue(userService.getWoolUser().getId(), eventTime, sessionId, sessionStartTime);
 			loggedDialogue.setDialogueName(dialogueDefinition.getDialogueName());
 			loggedDialogue.setLanguage(dialogueDescription.getLanguage());
 			LoggedDialogueStoreIO.createLoggedDialogue(loggedDialogue);
@@ -196,7 +194,7 @@ public class DialogueExecutor {
 			WoolDialogue newDialogue = userService.getDialogueDefinition(dialogueDescription);
 
 			return this.startDialogue(dialogueDescription, newDialogue, nodeId,
-					loggedDialogue.getSessionId(), false);
+					loggedDialogue.getSessionId(), loggedDialogue.getSessionStartTime());
 		}
 	}
 

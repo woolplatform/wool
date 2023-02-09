@@ -34,6 +34,7 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 
 	private String id;
 	private String sessionId;
+	private long sessionStartTime;
 	private String user;
 	private String localTime;
 	private long utcTime;
@@ -56,13 +57,15 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 	 * @param sessionId an optional externally provided id to be added to the logs (or
 	 *                    {@code null}).
 	 */
-	public LoggedDialogue(String user, ZonedDateTime dialogueStartTime, String sessionId) {
+	public LoggedDialogue(String user, ZonedDateTime dialogueStartTime, String sessionId,
+						  long sessionStartTime) {
 		this.user = user;
 		this.utcTime = dialogueStartTime.toInstant().toEpochMilli();
 		this.timezone = dialogueStartTime.getZone().toString();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 		this.localTime = dialogueStartTime.format(formatter);
 		this.sessionId = sessionId;
+		this.sessionStartTime = sessionStartTime;
 	}
 
 	@Override
@@ -90,6 +93,14 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 	 */
 	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
+	}
+
+	public long getSessionStartTime() {
+		return sessionStartTime;
+	}
+
+	public void setSessionStartTime(long sessionStartTime) {
+		this.sessionStartTime = sessionStartTime;
 	}
 
 	@Override

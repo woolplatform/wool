@@ -192,10 +192,11 @@ public class UserService {
 	 * @param language an ISO language tag
 	 * @param sessionId the unique identifier that should be added to the logging of dialogues
 	 *                  for this started dialogue session.
+	 * @param sessionStartTime the utc timestamp for when this dialogue session started.
 	 * @return the dialogue node result with the start node or specified node
 	 */
 	public ExecuteNodeResult startDialogueSession(String dialogueId, String nodeId, String language,
-												  String sessionId)
+												  String sessionId, long sessionStartTime)
 			throws DatabaseException, IOException, WoolException {
 
 		// This should not happen as this method should only be called by
@@ -216,7 +217,7 @@ public class UserService {
 		WoolDialogue dialogue = getDialogueDefinition(dialogueDescription);
 
 		return dialogueExecutor.startDialogue(dialogueDescription, dialogue, nodeId, sessionId,
-				true);
+				sessionStartTime);
 	}
 
 	/**
