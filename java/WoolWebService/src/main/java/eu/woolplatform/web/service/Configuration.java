@@ -45,6 +45,7 @@ public class Configuration extends LinkedHashMap<String,String> {
 	@Serial
 	private static final long serialVersionUID = 1L;
 
+	// Known property keys
 	public static final String VERSION = "version";
 	public static final String BUILD_TIME = "buildTime";
 	public static final String BASE_URL = "baseUrl";
@@ -59,6 +60,14 @@ public class Configuration extends LinkedHashMap<String,String> {
 	public static final String AZURE_SAS_TOKEN = "azureSASToken";
 	public static final String AZURE_FILE_SYSTEM_NAME = "azureFileSystemName";
 	public static final String AZURE_STORAGE_DIRECTORY = "azureStorageDirectory";
+	public static final String AZURE_DATA_LAKE_ENABLED = "azureDataLakeEnabled";
+	public static final String AZURE_DATA_LAKE_ACCOUNT_NAME = "azureDataLakeAccountName";
+	public static final String AZURE_DATA_LAKE_ACCOUNT_KEY = "azureDataLakeAccountKey";
+
+	// Hardcoded parameters
+	public static final String DIRECTORY_NAME_LOGS = "logs";
+	public static final String DIRECTORY_NAME_DIALOGUES = "dialogues";
+	public static final String DIRECTORY_NAME_VARIABLES = "variables";
 
 	private static final Object LOCK = new Object();
 	private static Configuration instance = null;
@@ -124,13 +133,14 @@ public class Configuration extends LinkedHashMap<String,String> {
 	 * @return whether an "External WOOL Variable Service" has been configured to be used.
 	 */
 	public boolean getExternalVariableServiceEnabled() {
-		if(get(EXTERNAL_VARIABLE_SERVICE_ENABLED) == null) return false;
-		else return Boolean.parseBoolean(get(EXTERNAL_VARIABLE_SERVICE_ENABLED));
+		return Boolean.parseBoolean(get(EXTERNAL_VARIABLE_SERVICE_ENABLED));
 	}
 
 	/**
-	 * Returns the URL of the External Variable Service, or an empty string if incorrectly configured.
-	 * @return the URL of the External Variable Service, or an empty string if incorrectly configured.
+	 * Returns the URL of the External Variable Service, or an empty string if incorrectly
+	 * configured.
+	 * @return the URL of the External Variable Service, or an empty string if incorrectly
+	 *         configured.
 	 */
 	public String getExternalVariableServiceURL() {
 		if(containsKey(EXTERNAL_VARIABLE_SERVICE_URL)) {
@@ -141,8 +151,10 @@ public class Configuration extends LinkedHashMap<String,String> {
 	}
 
 	/**
-	 * Returns the API Version of the External Variable Service as a String, or an empty string if incorrectly configured.
-	 * @return the API Version of the External Variable Service as a String, or an empty string if incorrectly configured.
+	 * Returns the API Version of the External Variable Service as a String, or an empty string if
+	 * incorrectly configured.
+	 * @return the API Version of the External Variable Service as a String, or an empty string if
+	 *         incorrectly configured.
 	 */
 	public String getExternalVariableServiceAPIVersion() {
 		if(containsKey(EXTERNAL_VARIABLE_SERVICE_API_VERSION)) {
@@ -153,8 +165,10 @@ public class Configuration extends LinkedHashMap<String,String> {
 	}
 
 	/**
-	 * Returns the username for the External Variable Service as a String, or an empty string if incorrectly configured.
-	 * @return the username for the External Variable Service as a String, or an empty string if incorrectly configured.
+	 * Returns the username for the External Variable Service as a String, or an empty string if
+	 * incorrectly configured.
+	 * @return the username for the External Variable Service as a String, or an empty string if
+	 *         incorrectly configured.
 	 */
 	public String getExternalVariableServiceUsername() {
 		if(containsKey(EXTERNAL_VARIABLE_SERVICE_USERNAME)) {
@@ -165,8 +179,10 @@ public class Configuration extends LinkedHashMap<String,String> {
 	}
 
 	/**
-	 * Returns the password for the External Variable Service as a String, or an empty string if incorrectly configured.
-	 * @return the password for the External Variable Service as a String, or an empty string if incorrectly configured.
+	 * Returns the password for the External Variable Service as a String, or an empty string if
+	 * incorrectly configured.
+	 * @return the password for the External Variable Service as a String, or an empty string if
+	 *         incorrectly configured.
 	 */
 	public String getExternalVariableServicePassword() {
 		if(containsKey(EXTERNAL_VARIABLE_SERVICE_PASSWORD)) {
@@ -187,6 +203,14 @@ public class Configuration extends LinkedHashMap<String,String> {
 			if(returnValue != null) return returnValue;
 		}
 		return "";
+	}
+
+	/**
+	 * Returns whether the Azure Data Lake is enabled.
+	 * @return {@code true} if the Azure Data Lake is enabled, {@code false} otherwise.
+	 */
+	public boolean getAzureDataLakeEnabled() {
+		return Boolean.parseBoolean(get(AZURE_DATA_LAKE_ENABLED));
 	}
 
 	/**
@@ -235,5 +259,41 @@ public class Configuration extends LinkedHashMap<String,String> {
 			if(returnValue != null) return returnValue;
 		}
 		return "";
+	}
+
+	/**
+	 * Returns the Azure Data Lake Account Name, or an empty {@link String} if not configured.
+	 * @return the Azure Data Lake Account Name, or an empty {@link String} if not configured.
+	 */
+	public String getAzureDataLakeAccountName() {
+		if(containsKey(AZURE_DATA_LAKE_ACCOUNT_NAME)) {
+			String returnValue = get(AZURE_DATA_LAKE_ACCOUNT_NAME);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	/**
+	 * Returns the Azure Data Lake Account Key, or an empty {@link String} if not configured.
+	 * @return the Azure Data Lake Account Key, or an empty {@link String} if not configured.
+	 */
+	public String getAzureDataLakeAccountKey() {
+		if(containsKey(AZURE_DATA_LAKE_ACCOUNT_KEY)) {
+			String returnValue = get(AZURE_DATA_LAKE_ACCOUNT_KEY);
+			if(returnValue != null) return returnValue;
+		}
+		return "";
+	}
+
+	public String getDirectoryNameLogs() {
+		return DIRECTORY_NAME_LOGS;
+	}
+
+	public String getDirectoryNameDialogues() {
+		return DIRECTORY_NAME_DIALOGUES;
+	}
+
+	public String getDirectoryNameVariables() {
+		return DIRECTORY_NAME_VARIABLES;
 	}
 }

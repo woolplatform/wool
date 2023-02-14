@@ -20,12 +20,6 @@
 package eu.woolplatform.web.service.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import nl.rrd.utils.AppComponents;
-import nl.rrd.utils.datetime.DateTimeUtils;
-import nl.rrd.utils.exception.DatabaseException;
-import nl.rrd.utils.exception.ParseException;
-import nl.rrd.utils.io.FileUtils;
-import nl.rrd.utils.json.JsonMapper;
 import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.ProtocolVersion;
 import eu.woolplatform.web.service.QueryRunner;
@@ -34,7 +28,6 @@ import eu.woolplatform.web.service.exception.BadRequestException;
 import eu.woolplatform.web.service.exception.HttpException;
 import eu.woolplatform.web.service.execution.UserService;
 import eu.woolplatform.web.service.storage.LoggedDialogue;
-import eu.woolplatform.web.service.storage.LoggedDialogueStoreIO;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.execution.ExecuteNodeResult;
 import eu.woolplatform.wool.model.DialogueState;
@@ -47,12 +40,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import nl.rrd.utils.AppComponents;
+import nl.rrd.utils.datetime.DateTimeUtils;
+import nl.rrd.utils.exception.DatabaseException;
+import nl.rrd.utils.exception.ParseException;
+import nl.rrd.utils.io.FileUtils;
+import nl.rrd.utils.json.JsonMapper;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.ZoneId;
@@ -173,7 +172,7 @@ public class DialogueController {
 		userService.getWoolUser().setTimeZone(timeZoneId);
 
 		// If no sessionId was provided, generate a unique one now
-		if(sessionId == null || sessionId == "") {
+		if(sessionId == null || sessionId.equals("")) {
 			sessionId = UUID.randomUUID().toString().toLowerCase();
 			while(userService.existsSessionId(sessionId)) {
 				sessionId = UUID.randomUUID().toString().toLowerCase();
@@ -427,20 +426,20 @@ public class DialogueController {
 		ZonedDateTime continueDialogueEventTime =
 				DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
 
-		LoggedDialogue currDlg = LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId,
-						dialogueName);
+		LoggedDialogue currentDialogue = userService.getLoggedDialogueStore().
+				findLatestOngoingDialogue(dialogueName);
 		WoolLoggedInteraction lastInteraction = null;
-		if (currDlg != null && !currDlg.getInteractionList().isEmpty()) {
-			lastInteraction = currDlg.getInteractionList().get(
-					currDlg.getInteractionList().size() - 1);
+		if (currentDialogue != null && !currentDialogue.getInteractionList().isEmpty()) {
+			lastInteraction = currentDialogue.getInteractionList().get(
+					currentDialogue.getInteractionList().size() - 1);
 		}
 
 		if (lastInteraction != null && lastInteraction.getMessageSource() ==
 				WoolMessageSource.AGENT) {
 			ExecuteNodeResult node;
 			try {
-				DialogueState state = userService.getDialogueState(currDlg,
-						currDlg.getInteractionList().size() - 1);
+				DialogueState state = userService.getDialogueState(currentDialogue,
+						currentDialogue.getInteractionList().size() - 1);
 				node = userService.continueDialogueSession(state,continueDialogueEventTime);
 			} catch (WoolException ex) {
 				throw ControllerFunctions.createHttpException(ex);
@@ -684,8 +683,11 @@ public class DialogueController {
 	private NullableResponse<OngoingDialoguePayload> doGetOngoingDialogue(String woolUserId)
 			throws DatabaseException, IOException {
 
+		UserService userService = application.getServiceManager()
+				.getActiveUserService(woolUserId);
+
 		LoggedDialogue latestOngoingDialogue =
-				LoggedDialogueStoreIO.findLatestOngoingDialogue(woolUserId);
+				userService.getLoggedDialogueStore().findLatestOngoingDialogue(woolUserId);
 
 		if(latestOngoingDialogue != null) {
 			String dialogueName = latestOngoingDialogue.getDialogueName();

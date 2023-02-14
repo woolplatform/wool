@@ -55,7 +55,8 @@ public class UserService {
 	private final WoolUser woolUser;
 	private final UserServiceManager userServiceManager;
 	private final WoolVariableStore variableStore;
-	private final Logger logger;
+	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+	private final LoggedDialogueStore loggedDialogueStore;
 	private final DialogueExecutor dialogueExecutor;
 
 	private WoolTranslationContext translationContext = null;
@@ -63,10 +64,6 @@ public class UserService {
 	// dialogueLanguageMap: map from dialogue name -> language -> dialogue description
 	protected Map<String, Map<String,WoolDialogueDescription>> dialogueLanguageMap =
 			new LinkedHashMap<>();
-
-	// Each UserService has their own instance of a Dialogue Logger that can be used
-	// to log all dialogue interactions for this user.
-	private final DialogueLogger dialogueLogger;
 
 	// --------------------------------------------------------
 	// -------------------- Constructor(s) --------------------
@@ -91,10 +88,8 @@ public class UserService {
 					   ExternalVariableServiceUpdater externalVariableServiceUpdater)
 			throws DatabaseException, IOException {
 
-		this.logger = AppComponents.getLogger(getClass().getSimpleName());
 		this.woolUser = woolUser;
 		this.userServiceManager = userServiceManager;
-		this.dialogueLogger = new DialogueLogger(woolUser);
 
 		Configuration config = AppComponents.get(Configuration.class);
 		WoolVariableStoreStorageHandler storageHandler =
@@ -111,7 +106,11 @@ public class UserService {
 		if(config.getExternalVariableServiceEnabled()) {
 			this.variableStore.addOnChangeListener(externalVariableServiceUpdater);
 		}
+
 		dialogueExecutor = new DialogueExecutor(this);
+
+		loggedDialogueStore = new LoggedDialogueStore(woolUser,config.getDataDir() +
+				"/dialogues");
 
 		// create dialogueLanguageMap
 		List<WoolDialogueDescription> dialogues = userServiceManager.getDialogueDescriptions();
@@ -171,6 +170,14 @@ public class UserService {
 	 */
 	public WoolVariableStore getVariableStore() {
 		return this.variableStore;
+	}
+
+	/**
+	 * Returns the {@link LoggedDialogueStore} associated with this {@link UserService}.
+	 * @return the {@link LoggedDialogueStore} associated with this {@link UserService}.
+	 */
+	public LoggedDialogueStore getLoggedDialogueStore() {
+		return loggedDialogueStore;
 	}
 
 	// ---------------------------------------------------------------------------
@@ -281,10 +288,9 @@ public class UserService {
 		logger.info("User '" + woolUser.getId() + "' cancels dialogue with Id '"
 				+ loggedDialogueId + "'.");
 		LoggedDialogue loggedDialogue =
-				LoggedDialogueStoreIO.findLoggedDialogue(woolUser.getId(),
-						loggedDialogueId);
+				loggedDialogueStore.findLoggedDialogue(loggedDialogueId);
 		if(loggedDialogue != null)
-			LoggedDialogueStoreIO.setDialogueCancelled(loggedDialogue);
+			loggedDialogueStore.setDialogueCancelled(loggedDialogue);
 		else
 			logger.warn("User '" + woolUser.getId() + "' attempted to cancel dialogue with Id '"
 					+ loggedDialogueId + "', but no such dialogue could be found.");
@@ -443,8 +449,7 @@ public class UserService {
 	}
 
 	/**
-	 * Returns the dialogue description for the specified dialogue ID and
-	 * preferred language.
+	 * Returns the dialogue description for the specified dialogue ID and preferred language.
 	 *
 	 * <p>If no dialogue with the specified ID is found, then this method
 	 * returns null.</p>
@@ -484,8 +489,7 @@ public class UserService {
 			int loggedInteractionIndex) throws WoolException, DatabaseException,
 			IOException {
 		LoggedDialogue loggedDialogue =
-				LoggedDialogueStoreIO.findLoggedDialogue(woolUser.getId(),
-				loggedDialogueId);
+				loggedDialogueStore.findLoggedDialogue(loggedDialogueId);
 		if (loggedDialogue == null) {
 			throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
 					"Logged dialogue not found");

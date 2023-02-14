@@ -22,135 +22,97 @@ package eu.woolplatform.web.service.storage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.woolplatform.web.service.Configuration;
+import eu.woolplatform.wool.execution.WoolUser;
+import eu.woolplatform.wool.model.WoolLoggedInteraction;
+import eu.woolplatform.wool.model.WoolMessageSource;
 import nl.rrd.utils.AppComponents;
 import nl.rrd.utils.exception.DatabaseException;
 import nl.rrd.utils.io.FileUtils;
 import nl.rrd.utils.json.JsonMapper;
-import eu.woolplatform.web.service.Configuration;
-import eu.woolplatform.wool.model.WoolLoggedInteraction;
-import eu.woolplatform.wool.model.WoolMessageSource;
 import org.slf4j.Logger;
-import org.springframework.util.ClassUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class LoggedDialogueStoreIO {
+/**
+ * A {@link LoggedDialogueStore} is a class that acts as the storage for {@link LoggedDialogue}
+ * objects, used in the execution of dialogues by the WOOL Web Service.
+ *
+ * <p>A {@link LoggedDialogueStore} does not maintain any data in-memory, but immediately stores
+ * any changes made to the configured storage mechanism.</p>
+ */
+public class LoggedDialogueStore {
+
+	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
+	private final WoolUser woolUser;
+	private final String dataDirectory;
 	private static final Object LOCK = new Object();
+	private AzureDataLakeStore azureDataLakeStore = null;
 
-	private static final String LOG_DIRECTORY = "logged_dialogues";
-
-	public static LoggedDialogue findLoggedDialogue(String user, String id)
-			throws DatabaseException, IOException {
-		return readLatestDialogueWithConditions(user,false,null,id);
-	}
-
-	public static LoggedDialogue findLatestOngoingDialogue(String user,
-														   String dialogueName) throws DatabaseException, IOException {
-		return readLatestDialogueWithConditions(user,true,dialogueName,null);
-	}
-
-	public static LoggedDialogue findLatestOngoingDialogue(String user) throws IOException, DatabaseException {
-		return readLatestDialogueWithConditions(user, true, null, null);
-	}
-
-	public static void createLoggedDialogue(LoggedDialogue loggedDialogue)
-			throws DatabaseException, IOException {
-
-		Logger logger = AppComponents.getLogger("LoggedDialogueStoreIO");
-		logger.info("Creating loggedDialogue. sessionId: '"+loggedDialogue.getSessionId()+"'.");
-
-		synchronized (LOCK) {
-			String id = UUID.randomUUID().toString().toLowerCase()
-					.replaceAll("-", "");
-			loggedDialogue.setId(id);
-			List<LoggedDialogue> loggedDialogues = readSession(
-					loggedDialogue.getUser(),
-					loggedDialogue.getSessionId(),
-					loggedDialogue.getSessionStartTime());
-
-			loggedDialogues.add(loggedDialogue);
-
-			saveToSession(
-					loggedDialogue.getUser(),
-					loggedDialogue.getSessionId(),
-					loggedDialogue.getSessionStartTime(),
-					loggedDialogues);
+	public LoggedDialogueStore(WoolUser woolUser, String dataDirectory) {
+		this.woolUser = woolUser;
+		this.dataDirectory = dataDirectory;
+		if(Configuration.getInstance().getAzureDataLakeEnabled()) {
+			azureDataLakeStore = new AzureDataLakeStore();
 		}
 	}
 
-	public static void addLoggedAgentInteraction(long timestamp, String speaker,
-												 LoggedDialogue loggedDialogue, String nodeId, int previousIndex,
-												 String statement) throws DatabaseException, IOException {
-		synchronized (LOCK) {
-			loggedDialogue.getInteractionList().add(new WoolLoggedInteraction(
-					timestamp, WoolMessageSource.AGENT, speaker,
-					loggedDialogue.getDialogueName(), nodeId, previousIndex,
-					statement, -1));
-			saveToSession(loggedDialogue);
-		}
-	}
-
-	public static void addLoggedUserInteraction(long timestamp, String speaker,
-												LoggedDialogue loggedDialogue, String nodeId, int previousIndex,
-												String statement, int replyId) throws DatabaseException,
-			IOException {
-		loggedDialogue.getInteractionList().add(new WoolLoggedInteraction(
-				timestamp, WoolMessageSource.USER, speaker,
-				loggedDialogue.getDialogueName(), nodeId, previousIndex,
-				statement, replyId));
-		saveToSession(loggedDialogue);
-	}
-
-	public static void setDialogueCompleted(LoggedDialogue loggedDialogue)
+	public LoggedDialogue findLoggedDialogue(String id)
 			throws DatabaseException, IOException {
-		loggedDialogue.setCompleted(true);
-		saveToSession(loggedDialogue);
+		return readLatestDialogueWithConditions(false,null,id);
 	}
 
-	public static void setDialogueCancelled(LoggedDialogue loggedDialogue)
+	public LoggedDialogue findLatestOngoingDialogue(String dialogueName)
+			throws DatabaseException, IOException {
+		return readLatestDialogueWithConditions(true,dialogueName,null);
+	}
+
+	public LoggedDialogue findLatestOngoingDialogue()
+			throws IOException, DatabaseException {
+		return readLatestDialogueWithConditions(true, null, null);
+	}
+
+	public void setDialogueCancelled(LoggedDialogue loggedDialogue)
 			throws DatabaseException, IOException {
 		loggedDialogue.setCancelled(true);
 		saveToSession(loggedDialogue);
 	}
 
-	// ---------------------------------------------
-	// ---------- New Save & Read Methods ----------
-	// ---------------------------------------------
+	// -----------------------------------------
+	// ---------- Save & Read Methods ----------
+	// -----------------------------------------
 
-	private static void saveToSession(LoggedDialogue dialogue)
+	public void saveToSession(LoggedDialogue dialogue)
 			throws DatabaseException, IOException {
 		synchronized(LOCK) {
 			List<LoggedDialogue> dialogues = readSessionWith(dialogue);
-			saveToSession(dialogue.getUser(), dialogue.getSessionId(), dialogue.getSessionStartTime(),
-					dialogues);
+			saveToSession(dialogue.getSessionId(), dialogue.getSessionStartTime(), dialogues);
 		}
 	}
 
-	private static void saveToSession(String user, String sessionId, long sessionStartTime,
+	public void saveToSession(String sessionId, long sessionStartTime,
 									  List<LoggedDialogue> dialogues) throws IOException {
 		synchronized (LOCK) {
 			String json = JsonMapper.generate(dialogues);
-			Configuration config = Configuration.getInstance();
-			File dataDir = new File(config.get(Configuration.DATA_DIR));
-			File logDir = new File(dataDir, LOG_DIRECTORY);
-			File userDir = new File(logDir, user);
+			File logDir = new File(dataDirectory);
+			File userDir = new File(logDir, woolUser.getId());
 			createDirectory(userDir);
 			File dataFile = new File(userDir, sessionStartTime + " " + sessionId + ".json");
 			FileUtils.writeFileString(dataFile, json);
+			if(Configuration.getInstance().getAzureDataLakeEnabled()) {
+				azureDataLakeStore.writeLoggedDialogueFile(woolUser.getId(),dataFile);
+			}
 		}
 	}
 
-	private static List<LoggedDialogue> readSession(String user, String sessionId,
-													long sessionStartTime)
+	private List<LoggedDialogue> readSession(String sessionId, long sessionStartTime)
 			throws DatabaseException, IOException {
 		List<LoggedDialogue> result;
 		synchronized (LOCK) {
-			Configuration config = Configuration.getInstance();
-			File dataDir = new File(config.get(Configuration.DATA_DIR));
-			File logDir = new File(dataDir, LOG_DIRECTORY);
-			File userDir = new File(logDir, user);
+			File logDir = new File(dataDirectory);
+			File userDir = new File(logDir, woolUser.getId());
 			createDirectory(userDir);
 			File dataFile = new File(userDir, sessionStartTime + " " + sessionId + ".json");
 			if (!dataFile.exists())
@@ -179,11 +141,11 @@ public class LoggedDialogueStoreIO {
 	 * @throws DatabaseException
 	 * @throws IOException
 	 */
-	private static List<LoggedDialogue> readSessionWith(LoggedDialogue loggedDialogue)
+	private List<LoggedDialogue> readSessionWith(LoggedDialogue loggedDialogue)
 			throws DatabaseException, IOException {
-		// Read all loggeddialogues in this session from file
-		List<LoggedDialogue> dialogues = readSession(loggedDialogue.getUser(),
-				loggedDialogue.getSessionId(), loggedDialogue.getSessionStartTime());
+		// Read all logged dialogues in this session from file
+		List<LoggedDialogue> dialogues = readSession(loggedDialogue.getSessionId(),
+				loggedDialogue.getSessionStartTime());
 
 		// Remove any loggedDialogue (well, it should only be 1) that has the same Id as the one
 		// we are adding.
@@ -204,9 +166,9 @@ public class LoggedDialogueStoreIO {
 	 * all the user's dialogue log files in order (newest to oldest), and return the first occurence
 	 * of a {@link LoggedDialogue} that matches all conditions.
 	 *
-	 * <p>If {@code mustBeOngoing} is {@code true} this method will only return a {@link LoggedDialogue}
-	 * for which the #isCancelled and #isCompleted parameters are both false. Otherwise, these
-	 * parameters are ignored.</p>
+	 * <p>If {@code mustBeOngoing} is {@code true} this method will only return a
+	 * {@link LoggedDialogue} for which the #isCancelled and #isCompleted parameters are both false.
+	 * Otherwise, these parameters are ignored.</p>
 	 *
 	 * <p>If a {@code dialogueName} is provided, the returned {@link LoggedDialogue} must have this
 	 * given dialogue name. If {@code null} is provided, the condition is ignored.</p>
@@ -217,7 +179,6 @@ public class LoggedDialogueStoreIO {
 	 * <p>Finally, if no {@link LoggedDialogue} is found that matches all given conditions, this
 	 * method will return {@code null}.</p>
 	 *
-	 * @param user the user id for whom to look for dialogues.
 	 * @param mustBeOngoing true if this method should only look for "ongoing" dialogues.
 	 * @param dialogueName an optional dialogue name to look for (or {@code null}).
 	 * @param id an optional id to look for (or {@code null}).
@@ -226,36 +187,22 @@ public class LoggedDialogueStoreIO {
 	 * @throws DatabaseException
 	 * @throws IOException
 	 */
-	private static LoggedDialogue readLatestDialogueWithConditions(String user,
-																   boolean mustBeOngoing,
-																   String dialogueName, String id)
+	private LoggedDialogue readLatestDialogueWithConditions(boolean mustBeOngoing,
+															String dialogueName, String id)
 			throws DatabaseException, IOException {
 
-		Logger logger = AppComponents.getLogger("LoggedDialogueStoreIO");
 		LoggedDialogue result = null;
-
-		logger.info("Finding latest ongoing dialogue for user "+user);
-
-		Configuration config = Configuration.getInstance();
 
 		File[] userLogFiles;
 
 		synchronized (LOCK) {
-			File dataDir = new File(config.get(Configuration.DATA_DIR));
-			File logDir = new File(dataDir, LOG_DIRECTORY);
-			File userDir = new File(logDir, user);
+			File logDir = new File(dataDirectory);
+			File userDir = new File(logDir, woolUser.getId());
 			createDirectory(userDir);
-
 			userLogFiles = userDir.listFiles();
 		}
 
 		Arrays.sort(userLogFiles);
-
-		logger.info("Found the following list of log files: ");
-
-		for(File f : userLogFiles) {
-			logger.info(f.getName());
-		}
 
 		for(File f : userLogFiles) {
 			List<LoggedDialogue> loggedDialogues = readSessionFile(f);
@@ -283,7 +230,7 @@ public class LoggedDialogueStoreIO {
 		return null;
 	}
 
-	private static List<LoggedDialogue> readSessionFile(File sessionFile)
+	private List<LoggedDialogue> readSessionFile(File sessionFile)
 			throws DatabaseException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		List<LoggedDialogue> result;
@@ -300,7 +247,7 @@ public class LoggedDialogueStoreIO {
 		return result;
 	}
 
-	private static void createDirectory(File directory) throws IOException {
+	private void createDirectory(File directory) throws IOException {
 		if(!directory.exists()) {
 			if(!directory.mkdirs())
 				throw new IOException("Error creating log directory: "+directory);

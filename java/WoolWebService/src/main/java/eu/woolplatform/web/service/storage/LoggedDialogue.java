@@ -28,6 +28,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class LoggedDialogue implements WoolLoggedDialogue {
@@ -66,6 +67,7 @@ public class LoggedDialogue implements WoolLoggedDialogue {
 		this.localTime = dialogueStartTime.format(formatter);
 		this.sessionId = sessionId;
 		this.sessionStartTime = sessionStartTime;
+		this.id = UUID.randomUUID().toString().toLowerCase().replaceAll("-", "");
 	}
 
 	@Override
