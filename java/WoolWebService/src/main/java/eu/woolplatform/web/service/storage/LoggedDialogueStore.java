@@ -22,7 +22,9 @@ package eu.woolplatform.web.service.storage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.Configuration;
+import eu.woolplatform.web.service.execution.UserService;
 import eu.woolplatform.wool.execution.WoolUser;
 import eu.woolplatform.wool.model.WoolLoggedInteraction;
 import eu.woolplatform.wool.model.WoolMessageSource;
@@ -31,6 +33,8 @@ import nl.rrd.utils.exception.DatabaseException;
 import nl.rrd.utils.io.FileUtils;
 import nl.rrd.utils.json.JsonMapper;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,17 +50,16 @@ import java.util.*;
 public class LoggedDialogueStore {
 
 	private Logger logger = AppComponents.getLogger(getClass().getSimpleName());
-	private final WoolUser woolUser;
-	private final String dataDirectory;
+	private UserService userService;
+	private String woolUserId;
+	private String dataDirectory;
 	private static final Object LOCK = new Object();
-	private AzureDataLakeStore azureDataLakeStore = null;
+	private LoggedDialogue latestStoredLoggedDialogue = null;
 
-	public LoggedDialogueStore(WoolUser woolUser, String dataDirectory) {
-		this.woolUser = woolUser;
+	public LoggedDialogueStore(String woolUserId, String dataDirectory, UserService userService) {
+		this.userService = userService;
+		this.woolUserId = woolUserId;
 		this.dataDirectory = dataDirectory;
-		if(Configuration.getInstance().getAzureDataLakeEnabled()) {
-			azureDataLakeStore = new AzureDataLakeStore();
-		}
 	}
 
 	public LoggedDialogue findLoggedDialogue(String id)
@@ -86,23 +89,24 @@ public class LoggedDialogueStore {
 
 	public void saveToSession(LoggedDialogue dialogue)
 			throws DatabaseException, IOException {
+		this.latestStoredLoggedDialogue = dialogue;
 		synchronized(LOCK) {
 			List<LoggedDialogue> dialogues = readSessionWith(dialogue);
 			saveToSession(dialogue.getSessionId(), dialogue.getSessionStartTime(), dialogues);
 		}
 	}
 
-	public void saveToSession(String sessionId, long sessionStartTime,
+	private void saveToSession(String sessionId, long sessionStartTime,
 									  List<LoggedDialogue> dialogues) throws IOException {
 		synchronized (LOCK) {
 			String json = JsonMapper.generate(dialogues);
 			File logDir = new File(dataDirectory);
-			File userDir = new File(logDir, woolUser.getId());
+			File userDir = new File(logDir, woolUserId);
 			createDirectory(userDir);
 			File dataFile = new File(userDir, sessionStartTime + " " + sessionId + ".json");
 			FileUtils.writeFileString(dataFile, json);
 			if(Configuration.getInstance().getAzureDataLakeEnabled()) {
-				azureDataLakeStore.writeLoggedDialogueFile(woolUser.getId(),dataFile);
+				userService.getServiceManager().getAzureDataLakeStore().writeLoggedDialogueFile(woolUserId,dataFile);
 			}
 		}
 	}
@@ -112,7 +116,7 @@ public class LoggedDialogueStore {
 		List<LoggedDialogue> result;
 		synchronized (LOCK) {
 			File logDir = new File(dataDirectory);
-			File userDir = new File(logDir, woolUser.getId());
+			File userDir = new File(logDir, woolUserId);
 			createDirectory(userDir);
 			File dataFile = new File(userDir, sessionStartTime + " " + sessionId + ".json");
 			if (!dataFile.exists())
@@ -191,13 +195,33 @@ public class LoggedDialogueStore {
 															String dialogueName, String id)
 			throws DatabaseException, IOException {
 
+		// We maintain a reference to the latest stored LoggedDialogue in memory, which
+		// is the prime candidate for any search, so we check it first.
+		if(this.latestStoredLoggedDialogue != null) {
+			boolean match = true;
+
+			if(mustBeOngoing) {
+				if(latestStoredLoggedDialogue.isCancelled() || latestStoredLoggedDialogue.isCompleted()) match = false;
+			}
+
+			if(match && dialogueName != null) {
+				if(!latestStoredLoggedDialogue.getDialogueName().equals(dialogueName)) match = false;
+			}
+
+			if(match && id != null) {
+				if(!latestStoredLoggedDialogue.getId().equals(id)) match = false;
+			}
+
+			if(match) return latestStoredLoggedDialogue;
+		}
+
 		LoggedDialogue result = null;
 
 		File[] userLogFiles;
 
 		synchronized (LOCK) {
 			File logDir = new File(dataDirectory);
-			File userDir = new File(logDir, woolUser.getId());
+			File userDir = new File(logDir, woolUserId);
 			createDirectory(userDir);
 			userLogFiles = userDir.listFiles();
 		}

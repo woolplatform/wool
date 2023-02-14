@@ -21,7 +21,7 @@ package eu.woolplatform.web.service.storage;
 
 import nl.rrd.utils.AppComponents;
 import eu.woolplatform.web.service.Configuration;
-import eu.woolplatform.web.service.execution.UserServiceManager;
+import eu.woolplatform.web.service.execution.ApplicationManager;
 import eu.woolplatform.wool.execution.WoolVariable;
 import eu.woolplatform.wool.execution.WoolVariableStore;
 import eu.woolplatform.wool.execution.WoolVariableStoreChange;
@@ -41,10 +41,10 @@ public class ExternalVariableServiceUpdater implements WoolVariableStoreOnChange
 	private final Logger logger =
 			AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
 	private final Configuration config = AppComponents.get(Configuration.class);
-	private final UserServiceManager userServiceManager;
+	private final ApplicationManager applicationManager;
 
-	public ExternalVariableServiceUpdater(UserServiceManager userServiceManager) {
-		this.userServiceManager = userServiceManager;
+	public ExternalVariableServiceUpdater(ApplicationManager applicationManager) {
+		this.applicationManager = applicationManager;
 	}
 
 	@Override
@@ -74,7 +74,7 @@ public class ExternalVariableServiceUpdater implements WoolVariableStoreOnChange
 						RestTemplate restTemplate = new RestTemplate();
 						HttpHeaders requestHeaders = new HttpHeaders();
 						requestHeaders.set("X-Auth-Token",
-							userServiceManager.getExternalVariableServiceAPIToken());
+							applicationManager.getExternalVariableServiceAPIToken());
 
 						String notifyClearedUrl = config.getExternalVariableServiceURL()
 							+ "/v" + config.getExternalVariableServiceAPIVersion()
@@ -140,7 +140,7 @@ public class ExternalVariableServiceUpdater implements WoolVariableStoreOnChange
 			HttpHeaders requestHeaders = new HttpHeaders();
 			requestHeaders.setContentType(MediaType.valueOf("application/json"));
 			requestHeaders.set("X-Auth-Token",
-					userServiceManager.getExternalVariableServiceAPIToken());
+					applicationManager.getExternalVariableServiceAPIToken());
 
 			String notifyUpdatesUrl = config.getExternalVariableServiceURL()
 					+ "/v" + config.getExternalVariableServiceAPIVersion()

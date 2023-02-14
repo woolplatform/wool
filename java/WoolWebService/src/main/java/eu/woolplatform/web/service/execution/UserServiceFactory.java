@@ -57,6 +57,6 @@ public abstract class UserServiceFactory {
 	// ----- Abstracts
 
 	public abstract UserService createUserService(String userId,
-			UserServiceManager userServiceManager)
+			ApplicationManager applicationManager)
 			throws DatabaseException, IOException;
 }

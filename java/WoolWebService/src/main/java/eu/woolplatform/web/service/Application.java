@@ -19,13 +19,12 @@
 
 package eu.woolplatform.web.service;
 
-import nl.rrd.utils.AppComponents;
 import eu.woolplatform.web.service.execution.DefaultUserServiceFactory;
 import eu.woolplatform.web.service.execution.UserServiceFactory;
-import eu.woolplatform.web.service.execution.UserServiceManager;
-import eu.woolplatform.web.service.storage.ExternalVariableServiceUpdater;
+import eu.woolplatform.web.service.execution.ApplicationManager;
 import eu.woolplatform.web.service.storage.WoolVariableStoreJSONStorageHandler;
 import eu.woolplatform.wool.parser.WoolResourceFileLoader;
+import nl.rrd.utils.AppComponents;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -58,7 +57,7 @@ ApplicationListener<ApplicationEvent> {
 	private final Logger logger =
 			AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
 	private final Configuration config;
-	private final UserServiceManager userServiceManager;
+	private final ApplicationManager applicationManager;
 	private final Long launchedTime = Instant.now().toEpochMilli();
 
 	/**
@@ -96,7 +95,7 @@ ApplicationListener<ApplicationEvent> {
 			new WoolVariableStoreJSONStorageHandler(config.getDataDir()+"/variables"));
 		UserServiceFactory.setInstance(userServiceFactory);
 
-		userServiceManager = new UserServiceManager(
+		applicationManager = new ApplicationManager(
 				new WoolResourceFileLoader("dialogues"));
 	}
 
@@ -112,8 +111,8 @@ ApplicationListener<ApplicationEvent> {
 		return launchedTime;
 	}
 
-	public UserServiceManager getServiceManager() {
-		return userServiceManager;
+	public ApplicationManager getServiceManager() {
+		return applicationManager;
 	}
 
 	@Override
@@ -134,6 +133,10 @@ ApplicationListener<ApplicationEvent> {
 			if(config.getExternalVariableServiceEnabled()) {
 				logger.info("=== External Variable Service URL: "+config.getExternalVariableServiceURL());
 				logger.info("=== External Variable Service API Version: "+config.getExternalVariableServiceAPIVersion());
+			}
+			logger.info("=== Azure Data Lake Storage Enabled: "+config.getAzureDataLakeEnabled());
+			if(config.getAzureDataLakeEnabled()) {
+				logger.info("=== TODO: Add other Azure Parameters."); //TODO: Output relevant Azure config on startup
 			}
 			logger.info("===================================================");
 		}

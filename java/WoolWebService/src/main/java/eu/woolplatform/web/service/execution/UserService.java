@@ -53,7 +53,7 @@ import java.util.*;
 public class UserService {
 
 	private final WoolUser woolUser;
-	private final UserServiceManager userServiceManager;
+	private final ApplicationManager applicationManager;
 	private final WoolVariableStore variableStore;
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 	private final LoggedDialogueStore loggedDialogueStore;
@@ -74,7 +74,7 @@ public class UserService {
 	 * {@link WoolVariableStore} instance and loads in all known variables for the user.
 	 * @param woolUser The {@link WoolUser} for which this {@link UserService} is handling the
 	 *                 interactions.
-	 * @param userServiceManager the server's {@link UserServiceManager} instance.
+	 * @param applicationManager the server's {@link ApplicationManager} instance.
 	 * @param onVarChangeListener the {@link WoolVariableStoreOnChangeListener} that will be added
 	 *                            to the {@link WoolVariableStore} instance that this
 	 *                            {@link UserService} creates.
@@ -83,13 +83,13 @@ public class UserService {
 	 *                                       notifies the external variable service if the changes
 	 *                                       made did not come from that service in the first place.
 	 */
-	public UserService(WoolUser woolUser, UserServiceManager userServiceManager,
+	public UserService(WoolUser woolUser, ApplicationManager applicationManager,
 					   WoolVariableStoreOnChangeListener onVarChangeListener,
 					   ExternalVariableServiceUpdater externalVariableServiceUpdater)
 			throws DatabaseException, IOException {
 
 		this.woolUser = woolUser;
-		this.userServiceManager = userServiceManager;
+		this.applicationManager = applicationManager;
 
 		Configuration config = AppComponents.get(Configuration.class);
 		WoolVariableStoreStorageHandler storageHandler =
@@ -109,11 +109,11 @@ public class UserService {
 
 		dialogueExecutor = new DialogueExecutor(this);
 
-		loggedDialogueStore = new LoggedDialogueStore(woolUser,config.getDataDir() +
-				"/dialogues");
+		loggedDialogueStore = new LoggedDialogueStore(woolUser.getId(),config.getDataDir() +
+				"/dialogues", this);
 
 		// create dialogueLanguageMap
-		List<WoolDialogueDescription> dialogues = userServiceManager.getDialogueDescriptions();
+		List<WoolDialogueDescription> dialogues = applicationManager.getDialogueDescriptions();
 		for (WoolDialogueDescription dialogue : dialogues) {
 			String name = dialogue.getDialogueName();
 			Map<String, WoolDialogueDescription> langMap =
@@ -153,13 +153,13 @@ public class UserService {
 	}
 	
 	/**
-	 * Returns the application's {@link UserServiceManager} that is governing this
+	 * Returns the application's {@link ApplicationManager} that is governing this
 	 * {@link UserService}.
-	 * @return the application's {@link UserServiceManager} that is governing this
+	 * @return the application's {@link ApplicationManager} that is governing this
 	 *         {@link UserService}.
 	 */
-	public UserServiceManager getServiceManager() {
-		return userServiceManager;
+	public ApplicationManager getServiceManager() {
+		return applicationManager;
 	}
 
 	/**
@@ -346,7 +346,7 @@ public class UserService {
 			RestTemplate restTemplate = new RestTemplate();
 			HttpHeaders requestHeaders = new HttpHeaders();
 			requestHeaders.setContentType(MediaType.valueOf("application/json"));
-			requestHeaders.set("X-Auth-Token", userServiceManager.getExternalVariableServiceAPIToken());
+			requestHeaders.set("X-Auth-Token", applicationManager.getExternalVariableServiceAPIToken());
 
 			String retrieveUpdatesUrl = config.getExternalVariableServiceURL()
 					+ "/v"+config.getExternalVariableServiceAPIVersion()
@@ -372,7 +372,7 @@ public class UserService {
 
 				// If call not successful, retry once after login
 				if (response.getStatusCode() != HttpStatus.OK) {
-					userServiceManager.loginToExternalVariableService();
+					applicationManager.loginToExternalVariableService();
 
 					response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST,
 							entity, WoolVariable[].class);
@@ -481,7 +481,7 @@ public class UserService {
 	 */
 	public WoolDialogue getDialogueDefinition(
 			WoolDialogueDescription dialogueDescription) throws WoolException {
-		return this.userServiceManager.getDialogueDefinition(dialogueDescription,
+		return this.applicationManager.getDialogueDefinition(dialogueDescription,
 				translationContext);
 	}
 
