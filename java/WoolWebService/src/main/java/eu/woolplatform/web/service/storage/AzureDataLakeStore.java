@@ -74,13 +74,29 @@ public class AzureDataLakeStore {
 	 */
 	public void writeLoggedDialogueFile(String user, File file) {
 		DataLakeDirectoryClient directoryClient =
-				dataLakeFileSystemClient.getDirectoryClient(config.getDirectoryNameLogs() + "/" + user);
+				dataLakeFileSystemClient.getDirectoryClient(config.getDirectoryNameDialogues() + "/" + user);
 		DataLakeFileClient fileClient = directoryClient.getFileClient(file.getName());
 		try {
 			fileClient.uploadFromFile(file.getAbsolutePath(),true);
-			logger.info("Successfully uploaded '" + file.getAbsolutePath() + "' to Azure Data Lake.");
+			logger.info("Successfully uploaded dialogue log session '" + file.getAbsolutePath() + "' to Azure Data Lake.");
 		} catch(UncheckedIOException e) {
-			logger.error("Failed to upload '"+ file.getAbsolutePath() + "' to Azure Data Lake.");
+			logger.error("Failed to upload dialogue log session '"+ file.getAbsolutePath() + "' to Azure Data Lake.");
+		}
+	}
+
+	/**
+	 * Writes an application log file to the Azure Data Lake.
+	 * @param file the log file to write.
+	 */
+	public void writeApplicationLogFile(File file) {
+		DataLakeDirectoryClient directoryClient =
+				dataLakeFileSystemClient.getDirectoryClient(config.getDirectoryNameLogs());
+		DataLakeFileClient fileClient = directoryClient.getFileClient(file.getName());
+		try {
+			fileClient.uploadFromFile(file.getAbsolutePath(),true);
+			logger.info("Successfully uploaded application log '" + file.getAbsolutePath() + "' to Azure Data Lake.");
+		} catch(UncheckedIOException e) {
+			logger.error("Failed to upload application log '"+ file.getAbsolutePath() + "' to Azure Data Lake.");
 		}
 	}
 
