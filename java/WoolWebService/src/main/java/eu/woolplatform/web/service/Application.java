@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 WOOL Foundation - Licensed under the MIT License:
+ * Copyright 2019-2023 WOOL Foundation - Licensed under the MIT License:
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,6 +19,7 @@
 
 package eu.woolplatform.web.service;
 
+import eu.woolplatform.web.service.exception.WWSConfigurationException;
 import eu.woolplatform.web.service.execution.DefaultUserServiceFactory;
 import eu.woolplatform.web.service.execution.UserServiceFactory;
 import eu.woolplatform.web.service.execution.ApplicationManager;
@@ -45,7 +46,7 @@ import java.time.Instant;
 /**
  * The main entry point for the WOOL Web Service as a Spring Boot Application.
  *
- * @author Dennis Hofs (RRD)
+ * @author Dennis Hofs
  * @author Harm op den Akker
  */
 
@@ -57,15 +58,18 @@ ApplicationListener<ApplicationEvent> {
 	private final Logger logger =
 			AppComponents.getLogger(ClassUtils.getUserClass(getClass()).getSimpleName());
 	private final Configuration config;
-	private final ApplicationManager applicationManager;
+	private ApplicationManager applicationManager = null;
 	private final Long launchedTime = Instant.now().toEpochMilli();
 
+	// -------------------------------------------------------- //
+	// -------------------- Constructor(s) -------------------- //
+	// -------------------------------------------------------- //
+
 	/**
-	 * Constructs a new application. It reads service.properties and
-	 * initializes the {@link Configuration Configuration} and the {@link
-	 * AppComponents AppComponents}.
+	 * Constructs a new application. It reads service.properties and initializes the {@link
+	 * Configuration} and the {@link ApplicationManager}.
 	 *
-	 * @throws Exception if the application can't be initialised
+	 * @throws Exception if the application can't be initialised.
 	 */
 	public Application() throws Exception {
 		// Initialize a Configuration object
@@ -95,13 +99,18 @@ ApplicationListener<ApplicationEvent> {
 			new WoolVariableStoreJSONStorageHandler(config.getDataDir()+"/variables"));
 		UserServiceFactory.setInstance(userServiceFactory);
 
-		applicationManager = new ApplicationManager(
-				new WoolResourceFileLoader("dialogues"));
+		try {
+			applicationManager = new ApplicationManager(
+					new WoolResourceFileLoader("dialogues"));
+		} catch(WWSConfigurationException e) {
+			logger.error("Unable to initialize WOOL Web Service due to configuration errors.");
+			System.exit(1);
+		}
 	}
 
-	// -----------------------------------------------------------
-	// -------------------- Getters & Setters --------------------
-	// -----------------------------------------------------------
+	// ----------------------------------------------------------- //
+	// -------------------- Getters & Setters -------------------- //
+	// ----------------------------------------------------------- //
 
 	/**
 	 * Return the UTC timestamp of when this service was first launched.
@@ -111,7 +120,12 @@ ApplicationListener<ApplicationEvent> {
 		return launchedTime;
 	}
 
-	public ApplicationManager getServiceManager() {
+	/**
+	 * Returns a pointer to the {@link ApplicationManager} that is used to manage application-wide
+	 * processes.
+	 * @return the {@link ApplicationManager} associated with this WOOL Web Service.
+	 */
+	public ApplicationManager getApplicationManager() {
 		return applicationManager;
 	}
 
@@ -143,8 +157,7 @@ ApplicationListener<ApplicationEvent> {
 	}
 
 	@Override
-	protected SpringApplicationBuilder configure(
-			SpringApplicationBuilder builder) {
+	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
 		return builder.sources(Application.class);
 	}
 

@@ -168,7 +168,7 @@ public class DialogueController {
 			String timeZone, String sessionId)
 			throws HttpException, IOException, DatabaseException {
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
-		UserService userService = application.getServiceManager().getActiveUserService(woolUserId);
+		UserService userService = application.getApplicationManager().getActiveUserService(woolUserId);
 		userService.getWoolUser().setTimeZone(timeZoneId);
 
 		// If no sessionId was provided, generate a unique one now
@@ -321,7 +321,7 @@ public class DialogueController {
 			}
 		}
 		try {
-			UserService userService = application.getServiceManager()
+			UserService userService = application.getApplicationManager()
 					.getActiveUserService(woolUserId);
 
 			ZonedDateTime eventTime = DateTimeUtils.nowMs(userService.getWoolUser().getTimeZone());
@@ -419,7 +419,7 @@ public class DialogueController {
 
 		// Update/set the WOOL User's timezone to the given value
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
-		UserService userService = application.getServiceManager().getActiveUserService(woolUserId);
+		UserService userService = application.getApplicationManager().getActiveUserService(woolUserId);
 		userService.getWoolUser().setTimeZone(timeZoneId);
 
 		// Determine the event timestamp
@@ -513,7 +513,7 @@ public class DialogueController {
 	 */
 	private Object doCancelDialogue(String woolUserId, String loggedDialogueId)
 			throws DatabaseException, IOException {
-		application.getServiceManager().getActiveUserService(woolUserId)
+		application.getApplicationManager().getActiveUserService(woolUserId)
 				.cancelDialogueSession(loggedDialogueId);
 		return null;
 	}
@@ -603,7 +603,7 @@ public class DialogueController {
 			DatabaseException, IOException {
 
 		try {
-			UserService userService = application.getServiceManager()
+			UserService userService = application.getApplicationManager()
 					.getActiveUserService(woolUserId);
 
 			// Determine the event time stamp
@@ -683,7 +683,7 @@ public class DialogueController {
 	private NullableResponse<OngoingDialoguePayload> doGetOngoingDialogue(String woolUserId)
 			throws DatabaseException, IOException {
 
-		UserService userService = application.getServiceManager()
+		UserService userService = application.getApplicationManager()
 				.getActiveUserService(woolUserId);
 
 		LoggedDialogue latestOngoingDialogue =

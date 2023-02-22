@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 WOOL Foundation - Licensed under the MIT License:
+ * Copyright 2019-2023 WOOL Foundation - Licensed under the MIT License:
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -24,6 +24,7 @@ import eu.woolplatform.web.service.UserCredentials;
 import eu.woolplatform.web.service.UserFile;
 import eu.woolplatform.web.service.controller.schema.LoginParametersPayload;
 import eu.woolplatform.web.service.controller.schema.LoginResultPayload;
+import eu.woolplatform.web.service.exception.WWSConfigurationException;
 import eu.woolplatform.web.service.storage.AzureDataLakeStore;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
@@ -61,13 +62,18 @@ public class ApplicationManager {
 	private String externalVariableServiceAPIToken;
 	private AzureDataLakeStore azureDataLakeStore = null;
 
-	// ----- Constructors
+	// ---------------------------------- //
+	// ---------- Constructors ---------- //
+	// ---------------------------------- //
 	
 	/**
 	 * Creates an instance of an {@link ApplicationManager}, that loads in a predefined list of Wool
 	 * dialogues.
+	 *
+	 * @throws WWSConfigurationException In case any part of the application could not be
+	 *                                   initialized due to an incorrectly set config parameter.
 	 */
-	public ApplicationManager(WoolFileLoader woolFileLoader) {
+	public ApplicationManager(WoolFileLoader woolFileLoader) throws WWSConfigurationException {
 		UserServiceFactory appConfig = UserServiceFactory.getInstance();
 		WoolProjectParser woolProjectParser = new WoolProjectParser(woolFileLoader);
 		WoolProjectParserResult readResult;
@@ -105,15 +111,19 @@ public class ApplicationManager {
 		if(config.getExternalVariableServiceEnabled()) {
 			try {
 				this.loginToExternalVariableService();
-			} catch (
-					Exception e) {
+			} catch (Exception e) {
 				logger.info(e.toString());
 				throw new RuntimeException(e);
 			}
 		}
 
 		if(Configuration.getInstance().getAzureDataLakeEnabled()) {
-			azureDataLakeStore = new AzureDataLakeStore();
+			try {
+				azureDataLakeStore = new AzureDataLakeStore();
+			} catch(WWSConfigurationException e) {
+				logger.error("Error configuring Azure Data Lake: " + e.getMessage());
+				throw e;
+			}
 		}
 	}
 	

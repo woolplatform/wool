@@ -23,7 +23,6 @@ import eu.woolplatform.web.service.Application;
 import eu.woolplatform.web.service.ProtocolVersion;
 import eu.woolplatform.web.service.QueryRunner;
 import eu.woolplatform.web.service.execution.UserService;
-import eu.woolplatform.wool.model.protocol.DialogueMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -109,7 +108,7 @@ public class LogController {
 
 	private Boolean doVerifyId(String woolUserId, String sessionId) throws DatabaseException {
 		// TODO: Test this method.
-		UserService userService = application.getServiceManager().getActiveUserService(woolUserId);
+		UserService userService = application.getApplicationManager().getActiveUserService(woolUserId);
 		return userService.existsSessionId(sessionId);
 	}
 

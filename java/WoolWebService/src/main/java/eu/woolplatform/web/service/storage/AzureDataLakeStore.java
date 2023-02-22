@@ -25,6 +25,7 @@ import com.azure.storage.file.datalake.*;
 import com.azure.storage.file.datalake.models.ListPathsOptions;
 import com.azure.storage.file.datalake.models.PathItem;
 import eu.woolplatform.web.service.Configuration;
+import eu.woolplatform.web.service.exception.WWSConfigurationException;
 import nl.rrd.utils.AppComponents;
 import org.slf4j.Logger;
 
@@ -36,26 +37,36 @@ public class AzureDataLakeStore {
 
 	private final Configuration config;
 	private DataLakeFileSystemClient dataLakeFileSystemClient;
+	public static final String AUTHENTICATION_METHOD_SAS = "sas-token";
+	public static final String AUTHENTICATION_METHOD_ACCOUNT_KEY = "account-key";
 
-	public AzureDataLakeStore() {
+	public AzureDataLakeStore() throws WWSConfigurationException {
 
 		config = Configuration.getInstance();
 
-		// Option 1: Using SAS Token
-		DataLakeServiceClient dataLakeServiceClient = new DataLakeServiceClientBuilder()
+		DataLakeServiceClient dataLakeServiceClient;
+		String authMethod = config.getAzureDataLakeAuthenticationMethod();
+		// Option 1: Create ServiceClient using SAS Token
+		if(authMethod.equals(AUTHENTICATION_METHOD_SAS)) {
+			dataLakeServiceClient = new DataLakeServiceClientBuilder()
 				.endpoint(config.getAzureDataLakeSASAccountUrl())
 				.sasToken(config.getAzureDataLakeSASToken())
 				.buildClient();
+		}
 
-		// Option 2: Using accountName and accountKey
-		//StorageSharedKeyCredential sharedKeyCredential =
-		//		new StorageSharedKeyCredential(config.getAzureDataLakeAccountName(),
-		//				config.getAzureDataLakeAccountKey());
+		// Option 2: Create ServiceClient using accountName and accountKey
+		else if(authMethod.equals(AUTHENTICATION_METHOD_ACCOUNT_KEY)) {
+			StorageSharedKeyCredential sharedKeyCredential =
+					new StorageSharedKeyCredential(config.getAzureDataLakeAccountName(),
+							config.getAzureDataLakeAccountKey());
 
-		//DataLakeServiceClientBuilder builder = new DataLakeServiceClientBuilder();
-		//builder.credential(sharedKeyCredential);
-		//builder.endpoint("https://" + config.getAzureDataLakeAccountName() + ".dfs.core.windows.net");
-		//DataLakeServiceClient dataLakeServiceClient = builder.buildClient();
+			DataLakeServiceClientBuilder builder = new DataLakeServiceClientBuilder();
+			builder.credential(sharedKeyCredential);
+			builder.endpoint("https://" + config.getAzureDataLakeAccountName() + ".dfs.core.windows.net");
+			dataLakeServiceClient = builder.buildClient();
+		} else {
+			throw new WWSConfigurationException("Attempting to initialize AzureDataLakeStore, but an unknown authentication method '"+authMethod+"' was configured.");
+		}
 
 		dataLakeFileSystemClient =
 				dataLakeServiceClient.getFileSystemClient(config.getAzureDataLakeFileSystemName());
