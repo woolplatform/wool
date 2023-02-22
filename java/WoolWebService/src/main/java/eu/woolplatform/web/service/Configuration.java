@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 WOOL Foundation - Licensed under the MIT License:
+ * Copyright 2019-2023 WOOL Foundation - Licensed under the MIT License:
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -31,13 +31,12 @@ import java.util.Properties;
 import nl.rrd.utils.AppComponent;
 
 /**
- * Configuration of the WOOL Web Service. This is initialized from resources
- * service.properties and deployment.properties. Known property keys are defined
- * as constants in this class.
- * 
- * @author Dennis Hofs (RRD)
- * @author Tessa Beinema
+ * Configuration of the WOOL Web Service. This is initialized from resources service.properties and
+ * deployment.properties. Known property keys are defined as constants in this class.
+ *
  * @author Harm op den Akker
+ * @author Dennis Hofs
+ * @author Tessa Beinema
  */
 @AppComponent
 public class Configuration extends LinkedHashMap<String,String> {
@@ -45,38 +44,56 @@ public class Configuration extends LinkedHashMap<String,String> {
 	@Serial
 	private static final long serialVersionUID = 1L;
 
-	// Known property keys
+	// ----------------------------------------- //
+	// ---------- Known property keys ---------- //
+	// ----------------------------------------- //
+
+	// ----- General
+
 	public static final String VERSION = "version";
 	public static final String BUILD_TIME = "buildTime";
 	public static final String BASE_URL = "baseUrl";
 	public static final String JWT_SECRET_KEY = "jwtSecretKey";
 	public static final String DATA_DIR = "dataDir";
+
+	// ----- External Variable Service
+
 	public static final String EXTERNAL_VARIABLE_SERVICE_ENABLED = "externalVariableServiceEnabled";
 	public static final String EXTERNAL_VARIABLE_SERVICE_URL = "externalVariableServiceUrl";
 	public static final String EXTERNAL_VARIABLE_SERVICE_API_VERSION = "externalVariableServiceAPIVersion";
 	public static final String EXTERNAL_VARIABLE_SERVICE_USERNAME = "externalVariableServiceUsername";
 	public static final String EXTERNAL_VARIABLE_SERVICE_PASSWORD = "externalVariableServicePassword";
-	public static final String AZURE_STORAGE_ACCOUNT_URL = "azureStorageAccountUrl";
-	public static final String AZURE_SAS_TOKEN = "azureSASToken";
-	public static final String AZURE_FILE_SYSTEM_NAME = "azureFileSystemName";
-	public static final String AZURE_STORAGE_DIRECTORY = "azureStorageDirectory";
+
+	// ----- Azure Data Lake
+
 	public static final String AZURE_DATA_LAKE_ENABLED = "azureDataLakeEnabled";
+	public static final String AZURE_DATA_LAKE_AUTHENTICATION_METHOD = "azureDataLakeAuthenticationMethod";
 	public static final String AZURE_DATA_LAKE_ACCOUNT_NAME = "azureDataLakeAccountName";
 	public static final String AZURE_DATA_LAKE_ACCOUNT_KEY = "azureDataLakeAccountKey";
+	public static final String AZURE_DATA_LAKE_SAS_ACCOUNT_URL = "azureDataLakeSASAccountUrl";
+	public static final String AZURE_DATA_LAKE_SAS_TOKEN = "azureDataLakeSASToken";
+	public static final String AZURE_DATA_LAKE_FILE_SYSTEM_NAME = "azureDataLakeFileSystemName";
 
-	// Hardcoded parameters
-	public static final String DIRECTORY_NAME_LOGS = "logs";
+	// ------------------------------------------ //
+	// ---------- Hardcoded parameters ---------- //
+	// ------------------------------------------ //
+
+	public static final String DIRECTORY_NAME_APPLICATION_LOGS = "logs";
 	public static final String DIRECTORY_NAME_DIALOGUES = "dialogues";
 	public static final String DIRECTORY_NAME_VARIABLES = "variables";
 
 	private static final Object LOCK = new Object();
 	private static Configuration instance = null;
-	
+
+	// --------------------------------------------------- //
+	// ---------- Constructors / Initialisation ---------- //
+	// --------------------------------------------------- //
+
 	/**
-	 * Returns the configuration. At startup of the service it should be
-	 * initialized with {@link #loadProperties(URL) loadProperties()}.
+	 * Returns the configuration. At startup of the service it should be initialized with
+	 * {@link #loadProperties(URL) loadProperties()}.
 	 * 
-	 * @return the configuration
+	 * @return the configuration.
 	 */
 	public static Configuration getInstance() {
 		synchronized (LOCK) {
@@ -87,24 +104,20 @@ public class Configuration extends LinkedHashMap<String,String> {
 	}
 
 	/**
-	 * This private constructor is used in {@link #getInstance()
-	 * getInstance()}.
+	 * This private constructor is used in {@link #getInstance() getInstance()}.
 	 */
-	private Configuration() {
-	}
+	private Configuration() { }
 
 	/**
-	 * Loads the resource service.properties or deployment.properties into this
-	 * configuration. This should only be called once at startup of the
-	 * service.
+	 * Loads the resource service.properties or deployment.properties into this configuration. This
+	 * should only be called once at startup of the service.
 	 * 
-	 * @param url the URL of service.properties or deployment.properties
-	 * @throws IOException if a reading error occurs
+	 * @param url the {@link URL} of a service.properties or deployment.properties file.
+	 * @throws IOException if a reading error occurs.
 	 */
 	public void loadProperties(URL url) throws IOException {
 		Properties props = new Properties();
-		try (Reader reader = new InputStreamReader(url.openStream(),
-				StandardCharsets.UTF_8)) {
+		try (Reader reader = new InputStreamReader(url.openStream(), StandardCharsets.UTF_8)) {
 			props.load(reader);
 		}
 		for (String name : props.stringPropertyNames()) {
@@ -112,12 +125,50 @@ public class Configuration extends LinkedHashMap<String,String> {
 		}
 	}
 
-	// ----- Getters:
-	// -----
-	// ----- Note that this Configuration is a LinkedHashMap, so all
-	// ----- parameters can simply be retrieved by using this.get("parameterName")
-	// ----- however, using the getters below we can add some robustness (e.g. null
-	// ----- checking).
+	// ----- Note that this Configuration is a LinkedHashMap, so all parameters can simply be
+	// ----- retrieved by using this.get("parameterName") however, using the getters below we can
+	// ----- add some robustness (e.g. null checking).
+
+	// -------------------------------------- //
+	// ---------- Getters: General ---------- //
+	// -------------------------------------- //
+
+	/**
+	 * Returns the application version identifier (e.g. "1.0.0") as a String.
+	 * @return the application version identifier (e.g. "1.0.0") as a String.
+	 */
+	public String getVersion() {
+		if(get(VERSION) == null) return "";
+		else return get(VERSION);
+	}
+
+	/**
+	 * Returns a date-time {@link String} representing the date and time that this version of the
+	 * deployed web service was built.
+	 * @return the build-time as a date-time {@link String}.
+	 */
+	public String getBuildTime() {
+		if(get(BUILD_TIME) == null) return "";
+		else return get(BUILD_TIME);
+	}
+
+	/**
+	 * Returns the configured Base URL for the WOOL Web Service.
+	 * @return the configured Base URL for the WOOL Web Service.
+	 */
+	public String getBaseUrl() {
+		if(get(BASE_URL) == null) return "";
+		else return get(BASE_URL);
+	}
+
+	/**
+	 * Returns the secret key used for encoding/decoding the JSON Web Tokens.
+	 * @return the secret key used for encoding/decoding the JSON Web Tokens.
+	 */
+	public String getJwtSecretKey() {
+		if(get(JWT_SECRET_KEY) == null) return "";
+		else return get(JWT_SECRET_KEY);
+	}
 
 	/**
 	 * Returns the location of the data directory used by the web service as a String.
@@ -127,6 +178,10 @@ public class Configuration extends LinkedHashMap<String,String> {
 		if(get(DATA_DIR) == null) return "";
 		else return get(DATA_DIR);
 	}
+
+	// --------------------------------------------------------
+	// ---------- Getters: External Variable Service ----------
+	// --------------------------------------------------------
 
 	/**
 	 * Returns whether an "External WOOL Variable Service" has been configured to be used.
@@ -143,11 +198,8 @@ public class Configuration extends LinkedHashMap<String,String> {
 	 *         configured.
 	 */
 	public String getExternalVariableServiceURL() {
-		if(containsKey(EXTERNAL_VARIABLE_SERVICE_URL)) {
-			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_URL);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
+		if(get(EXTERNAL_VARIABLE_SERVICE_URL) == null) return "";
+		else return get(EXTERNAL_VARIABLE_SERVICE_URL);
 	}
 
 	/**
@@ -157,11 +209,8 @@ public class Configuration extends LinkedHashMap<String,String> {
 	 *         incorrectly configured.
 	 */
 	public String getExternalVariableServiceAPIVersion() {
-		if(containsKey(EXTERNAL_VARIABLE_SERVICE_API_VERSION)) {
-			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_API_VERSION);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
+		if(get(EXTERNAL_VARIABLE_SERVICE_API_VERSION) == null) return "";
+		else return get(EXTERNAL_VARIABLE_SERVICE_API_VERSION);
 	}
 
 	/**
@@ -171,11 +220,8 @@ public class Configuration extends LinkedHashMap<String,String> {
 	 *         incorrectly configured.
 	 */
 	public String getExternalVariableServiceUsername() {
-		if(containsKey(EXTERNAL_VARIABLE_SERVICE_USERNAME)) {
-			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_USERNAME);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
+		if(get(EXTERNAL_VARIABLE_SERVICE_USERNAME) == null) return "";
+		else return get(EXTERNAL_VARIABLE_SERVICE_USERNAME);
 	}
 
 	/**
@@ -185,25 +231,13 @@ public class Configuration extends LinkedHashMap<String,String> {
 	 *         incorrectly configured.
 	 */
 	public String getExternalVariableServicePassword() {
-		if(containsKey(EXTERNAL_VARIABLE_SERVICE_PASSWORD)) {
-			String returnValue = get(EXTERNAL_VARIABLE_SERVICE_PASSWORD);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
+		if(get(EXTERNAL_VARIABLE_SERVICE_PASSWORD) == null) return "";
+		else return get(EXTERNAL_VARIABLE_SERVICE_PASSWORD);
 	}
 
-	/**
-	 * Returns a date-time {@link String} representing the date and time that this version
-	 * of the deployed web service was built.
-	 * @return the build-time as a date-time {@link String}.
-	 */
-	public String getBuildTime() {
-		if(containsKey(BUILD_TIME)) {
-			String returnValue = get(BUILD_TIME);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
-	}
+	// ---------------------------------------------- //
+	// ---------- Getters: Azure Data Lake ---------- //
+	// ---------------------------------------------- //
 
 	/**
 	 * Returns whether the Azure Data Lake is enabled.
@@ -214,51 +248,13 @@ public class Configuration extends LinkedHashMap<String,String> {
 	}
 
 	/**
-	 * Returns the Azure Storage Account URL, or an empty {@link String} if not configured.
-	 * @return the Azure Storage Account URL, or an empty {@link String} if not configured.
+	 * Returns the authentication method that should be used for connecting to the Azure Data Lake
+	 * as either "sas-token" or "account-key", or returns the empty string if not configured.
+	 * @return the authentication method that should be used for connecting to the Azure Data Lake.
 	 */
-	public String getAzureStorageAccountUrl() {
-		if(containsKey(AZURE_STORAGE_ACCOUNT_URL)) {
-			String returnValue = get(AZURE_STORAGE_ACCOUNT_URL);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
-	}
-
-	/**
-	 * Returns the Azure SAS Token, or an empty {@link String} if not configured.
-	 * @return the Azure SAS Token, or an empty {@link String} if not configured.
-	 */
-	public String getAzureSASToken() {
-		if(containsKey(AZURE_SAS_TOKEN)) {
-			String returnValue = get(AZURE_SAS_TOKEN);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
-	}
-
-	/**
-	 * Returns the Azure File System Name, or an empty {@link String} if not configured.
-	 * @return the Azure File System Name, or an empty {@link String} if not configured.
-	 */
-	public String getAzureFileSystemName() {
-		if(containsKey(AZURE_FILE_SYSTEM_NAME)) {
-			String returnValue = get(AZURE_FILE_SYSTEM_NAME);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
-	}
-
-	/**
-	 * Returns the Azure Storage Directory, or an empty {@link String} if not configured.
-	 * @return the Azure Storage Directory, or an empty {@link String} if not configured.
-	 */
-	public String getAzureStorageDirectory() {
-		if(containsKey(AZURE_STORAGE_DIRECTORY)) {
-			String returnValue = get(AZURE_STORAGE_DIRECTORY);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
+	public String getAzureDataLakeAuthenticationMethod() {
+		if(get(AZURE_DATA_LAKE_AUTHENTICATION_METHOD) == null) return "";
+		else return get(AZURE_DATA_LAKE_AUTHENTICATION_METHOD);
 	}
 
 	/**
@@ -266,11 +262,8 @@ public class Configuration extends LinkedHashMap<String,String> {
 	 * @return the Azure Data Lake Account Name, or an empty {@link String} if not configured.
 	 */
 	public String getAzureDataLakeAccountName() {
-		if(containsKey(AZURE_DATA_LAKE_ACCOUNT_NAME)) {
-			String returnValue = get(AZURE_DATA_LAKE_ACCOUNT_NAME);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
+		if(get(AZURE_DATA_LAKE_ACCOUNT_NAME) == null) return "";
+		else return get(AZURE_DATA_LAKE_ACCOUNT_NAME);
 	}
 
 	/**
@@ -278,21 +271,62 @@ public class Configuration extends LinkedHashMap<String,String> {
 	 * @return the Azure Data Lake Account Key, or an empty {@link String} if not configured.
 	 */
 	public String getAzureDataLakeAccountKey() {
-		if(containsKey(AZURE_DATA_LAKE_ACCOUNT_KEY)) {
-			String returnValue = get(AZURE_DATA_LAKE_ACCOUNT_KEY);
-			if(returnValue != null) return returnValue;
-		}
-		return "";
+		if(get(AZURE_DATA_LAKE_ACCOUNT_KEY) == null) return "";
+		else return get(AZURE_DATA_LAKE_ACCOUNT_KEY);
 	}
 
-	public String getDirectoryNameLogs() {
-		return DIRECTORY_NAME_LOGS;
+	/**
+	 * Returns the Azure Storage Account URL used when authenticating with the Azure Data Lake using
+	 * an SAS token, or an empty {@link String} if not configured.
+	 * @return the Azure Storage Account URL, or an empty {@link String} if not configured.
+	 */
+	public String getAzureDataLakeSASAccountUrl() {
+		if(get(AZURE_DATA_LAKE_SAS_ACCOUNT_URL) == null) return "";
+		else return get(AZURE_DATA_LAKE_SAS_ACCOUNT_URL);
 	}
 
+	/**
+	 * Returns the Azure SAS Token, or an empty {@link String} if not configured.
+	 * @return the Azure SAS Token, or an empty {@link String} if not configured.
+	 */
+	public String getAzureDataLakeSASToken() {
+		if(get(AZURE_DATA_LAKE_SAS_TOKEN) == null) return "";
+		else return get(AZURE_DATA_LAKE_SAS_TOKEN);
+	}
+
+	/**
+	 * Returns the Azure File System Name, or an empty {@link String} if not configured.
+	 * @return the Azure File System Name, or an empty {@link String} if not configured.
+	 */
+	public String getAzureDataLakeFileSystemName() {
+		if(get(AZURE_DATA_LAKE_FILE_SYSTEM_NAME) == null) return "";
+		else return get(AZURE_DATA_LAKE_FILE_SYSTEM_NAME);
+	}
+
+	// --------------------------------------------------- //
+	// ---------- Getters: Hardcoded parameters ---------- //
+	// --------------------------------------------------- //
+
+	/**
+	 * Returns the name of the folder used for storing the application logs.
+	 * @return the name of the folder used for storing the application logs.
+	 */
+	public String getDirectoryNameApplicationLogs() {
+		return DIRECTORY_NAME_APPLICATION_LOGS;
+	}
+
+	/**
+	 * Returns the name of the folder used for storing dialogue logs.
+	 * @return the name of the folder used for storing dialogue logs.
+	 */
 	public String getDirectoryNameDialogues() {
 		return DIRECTORY_NAME_DIALOGUES;
 	}
 
+	/**
+	 * Returns the name of the folder used for storing wool variable stores.
+	 * @return the name of the folder used for storing wool variable stores.
+	 */
 	public String getDirectoryNameVariables() {
 		return DIRECTORY_NAME_VARIABLES;
 	}

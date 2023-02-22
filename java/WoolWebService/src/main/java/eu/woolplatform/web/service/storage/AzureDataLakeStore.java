@@ -43,8 +43,8 @@ public class AzureDataLakeStore {
 
 		// Option 1: Using SAS Token
 		DataLakeServiceClient dataLakeServiceClient = new DataLakeServiceClientBuilder()
-				.endpoint(config.getAzureStorageAccountUrl())
-				.sasToken(config.getAzureSASToken())
+				.endpoint(config.getAzureDataLakeSASAccountUrl())
+				.sasToken(config.getAzureDataLakeSASToken())
 				.buildClient();
 
 		// Option 2: Using accountName and accountKey
@@ -58,13 +58,13 @@ public class AzureDataLakeStore {
 		//DataLakeServiceClient dataLakeServiceClient = builder.buildClient();
 
 		dataLakeFileSystemClient =
-				dataLakeServiceClient.getFileSystemClient(config.getAzureFileSystemName());
+				dataLakeServiceClient.getFileSystemClient(config.getAzureDataLakeFileSystemName());
 
 		//listFilesInDirectory(dataLakeFileSystemClient);
 
 		logger.info("Successfully initiated Azure Data Lake Client for account '" +
 				config.getAzureDataLakeAccountName() + "' and file system '" +
-				config.getAzureFileSystemName() + "'.");
+				config.getAzureDataLakeFileSystemName() + "'.");
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class AzureDataLakeStore {
 	 */
 	public void writeApplicationLogFile(File file) {
 		DataLakeDirectoryClient directoryClient =
-				dataLakeFileSystemClient.getDirectoryClient(config.getDirectoryNameLogs());
+				dataLakeFileSystemClient.getDirectoryClient(config.getDirectoryNameApplicationLogs());
 		DataLakeFileClient fileClient = directoryClient.getFileClient(file.getName());
 		try {
 			fileClient.uploadFromFile(file.getAbsolutePath(),true);

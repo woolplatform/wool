@@ -24,9 +24,9 @@ import nl.rrd.utils.exception.ParseException;
 import nl.rrd.utils.http.HttpURL;
 
 public class ServiceContext {
+
 	/**
 	 * Returns the base URL.
-	 * 
 	 * @return the base URL
 	 */
 	public static String getBaseUrl() {
@@ -36,7 +36,6 @@ public class ServiceContext {
 	
 	/**
 	 * Returns the base path.
-	 * 
 	 * @return the base path
 	 */
 	public static String getBasePath() {
@@ -45,21 +44,18 @@ public class ServiceContext {
 		try {
 			httpUrl = HttpURL.parse(url);
 		} catch (ParseException ex) {
-			throw new RuntimeException(
-					"Invalid base URL: " + url + ": " + ex.getMessage(), ex);
+			throw new RuntimeException("Invalid base URL: " + url + ": " + ex.getMessage(), ex);
 		}
 		return httpUrl.getPath();
 	}
 
 	/**
 	 * Returns the current protocol version.
-	 *
 	 * @return the current protocol version
 	 */
 	public static String getCurrentVersion() {
 		ProtocolVersion[] versions = ProtocolVersion.values();
 		return versions[versions.length - 1].versionName();
 	}
-
 
 }
