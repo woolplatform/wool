@@ -109,8 +109,7 @@ public class UserService {
 
 		dialogueExecutor = new DialogueExecutor(this);
 
-		loggedDialogueStore = new LoggedDialogueStore(woolUser.getId(),config.getDataDir() +
-				"/dialogues", this);
+		loggedDialogueStore = new LoggedDialogueStore(woolUser.getId(), this);
 
 		// create dialogueLanguageMap
 		List<WoolDialogueDescription> dialogues = applicationManager.getDialogueDescriptions();

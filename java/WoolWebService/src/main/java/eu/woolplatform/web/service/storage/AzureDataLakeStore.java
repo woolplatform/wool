@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 WOOL Foundation - Licensed under the MIT License:
+ * Copyright 2019-2023 WOOL Foundation - Licensed under the MIT License:
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -22,7 +22,6 @@ package eu.woolplatform.web.service.storage;
 import com.azure.core.http.rest.PagedIterable;
 import com.azure.storage.common.StorageSharedKeyCredential;
 import com.azure.storage.file.datalake.*;
-import com.azure.storage.file.datalake.models.ListPathsOptions;
 import com.azure.storage.file.datalake.models.PathItem;
 import eu.woolplatform.web.service.Configuration;
 import eu.woolplatform.web.service.exception.WWSConfigurationException;
@@ -30,13 +29,21 @@ import nl.rrd.utils.AppComponents;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
+/**
+ * The AzureDataLakeStore class is used for handling file transfers to and from an Azure Data Lake
+ * that can be configured to act as a back-up for the local file storage of the WOOL Web Service.
+ *
+ * @author Harm op den Akker
+ */
 public class AzureDataLakeStore {
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 
 	private final Configuration config;
-	private DataLakeFileSystemClient dataLakeFileSystemClient;
+	private final DataLakeFileSystemClient dataLakeFileSystemClient;
 	public static final String AUTHENTICATION_METHOD_SAS = "sas-token";
 	public static final String AUTHENTICATION_METHOD_ACCOUNT_KEY = "account-key";
 
@@ -62,20 +69,27 @@ public class AzureDataLakeStore {
 
 			DataLakeServiceClientBuilder builder = new DataLakeServiceClientBuilder();
 			builder.credential(sharedKeyCredential);
-			builder.endpoint("https://" + config.getAzureDataLakeAccountName() + ".dfs.core.windows.net");
+			builder.endpoint("https://" + config.getAzureDataLakeAccountName()
+					+ ".dfs.core.windows.net");
 			dataLakeServiceClient = builder.buildClient();
 		} else {
-			throw new WWSConfigurationException("Attempting to initialize AzureDataLakeStore, but an unknown authentication method '"+authMethod+"' was configured.");
+			throw new WWSConfigurationException("Attempting to initialize AzureDataLakeStore, " +
+				"but an unknown authentication method '"+authMethod+"' was configured.");
 		}
 
 		dataLakeFileSystemClient =
 				dataLakeServiceClient.getFileSystemClient(config.getAzureDataLakeFileSystemName());
 
-		//listFilesInDirectory(dataLakeFileSystemClient);
-
-		logger.info("Successfully initiated Azure Data Lake Client for account '" +
-				config.getAzureDataLakeAccountName() + "' and file system '" +
-				config.getAzureDataLakeFileSystemName() + "'.");
+		// Log a successful connection message
+		if(authMethod.equals(AUTHENTICATION_METHOD_SAS)) {
+			logger.info("Successfully initiated Azure Data Lake Client using account URL '" +
+					config.getAzureDataLakeSASAccountUrl() + "' and file system '" +
+					config.getAzureDataLakeFileSystemName() + "'.");
+		} else if(authMethod.equals(AUTHENTICATION_METHOD_ACCOUNT_KEY)) {
+			logger.info("Successfully initiated Azure Data Lake Client for account: '" +
+					config.getAzureDataLakeAccountName() + "' and file system '" +
+					config.getAzureDataLakeFileSystemName() + "'.");
+		}
 	}
 
 	/**
@@ -85,13 +99,14 @@ public class AzureDataLakeStore {
 	 */
 	public void writeLoggedDialogueFile(String user, File file) {
 		DataLakeDirectoryClient directoryClient =
-				dataLakeFileSystemClient.getDirectoryClient(config.getDirectoryNameDialogues() + "/" + user);
+				dataLakeFileSystemClient.getDirectoryClient(
+						config.getDirectoryNameDialogues() + "/" + user);
 		DataLakeFileClient fileClient = directoryClient.getFileClient(file.getName());
 		try {
 			fileClient.uploadFromFile(file.getAbsolutePath(),true);
-			logger.info("Successfully uploaded dialogue log session '" + file.getAbsolutePath() + "' to Azure Data Lake.");
 		} catch(UncheckedIOException e) {
-			logger.error("Failed to upload dialogue log session '"+ file.getAbsolutePath() + "' to Azure Data Lake.");
+			logger.error("Failed to upload dialogue log session '"
+					+ file.getAbsolutePath() + "' to Azure Data Lake.");
 		}
 	}
 
@@ -105,38 +120,48 @@ public class AzureDataLakeStore {
 		DataLakeFileClient fileClient = directoryClient.getFileClient(file.getName());
 		try {
 			fileClient.uploadFromFile(file.getAbsolutePath(),true);
-			logger.info("Successfully uploaded application log '" + file.getAbsolutePath() + "' to Azure Data Lake.");
+			logger.info("Successfully uploaded application log '" +
+					file.getAbsolutePath() + "' to Azure Data Lake.");
 		} catch(UncheckedIOException e) {
-			logger.error("Failed to upload application log '"+ file.getAbsolutePath() + "' to Azure Data Lake.");
+			logger.error("Failed to upload application log '" +
+					file.getAbsolutePath() + "' to Azure Data Lake.");
 		}
 	}
 
-	public void listFilesInDirectory(DataLakeFileSystemClient fileSystemClient){
+	/**
+	 * Populate the local dialogue log folder for the given user, identified by the
+	 * {@code woolUserId}. This method will retrieve a "recent" set of LoggedDialogue log files from
+	 * the Azure Data Lake, and saves them into the local dialogue log folder for the given user.
+	 *
+	 * @param woolUserId the id of the WOOL user for whom to look for dialogues.
+	 * @throws IOException in case of an error writing to the local files.
+	 */
+	public void populateLocalDialogueLogs(String woolUserId) throws IOException {
+		DataLakeDirectoryClient directoryClient =
+				dataLakeFileSystemClient.getDirectoryClient(
+						config.getDirectoryNameDialogues() + "/" + woolUserId);
 
-		ListPathsOptions options = new ListPathsOptions();
-		options.setPath("my-directory");
+		PagedIterable<PathItem> pathItems = directoryClient.listPaths();
 
-		PagedIterable<PathItem> pagedIterable =
-				fileSystemClient.listPaths(options, null);
+		for (PathItem pathItem : pathItems) {
+			// item.getName() returns e.g. "dialogues/user-name/{fileName}.json"
+			Path path = Paths.get(config.getDataDir() + File.separator + pathItem.getName());
+			String fileName = path.getFileName().toString();
 
-		java.util.Iterator<PathItem> iterator = pagedIterable.iterator();
+			logger.info("Found file on Azure Data Lake for user '" + woolUserId
+					+ "': " + pathItem.getName() + " (file name: '" + fileName + "').");
 
+			DataLakeFileClient fileClient =
+					dataLakeFileSystemClient.getFileClient(pathItem.getName());
 
-		PathItem item = iterator.next();
+			File localFile = new File(config.getDataDir() + File.separator +
+					config.getDirectoryNameDialogues() + File.separator +
+					woolUserId + File.separator + fileName);
 
-		while (item != null)
-		{
-			System.out.println(item.getName());
-
-
-			if (!iterator.hasNext())
-			{
-				break;
-			}
-
-			item = iterator.next();
+			OutputStream targetStream = new FileOutputStream(localFile);
+			fileClient.read(targetStream);
+			targetStream.close();
 		}
-
 	}
 
 
