@@ -185,6 +185,24 @@ public class LoggedDialogueStore {
 		return false;
 	}
 
+	public List<LoggedDialogue> readSession(String sessionId) throws DatabaseException, IOException {
+		File[] userLogFiles;
+
+		synchronized (LOCK) {
+			userLogFiles = userLogDirectory.listFiles();
+		}
+
+		if(userLogFiles == null) throw new DatabaseException("Error retrieving file listing " +
+				"from dialogue log directory for user '" + woolUserId + "'.");
+
+		for(File f : userLogFiles) {
+			if (f.getName().endsWith(sessionId + ".json")) {
+				return readSession(f);
+			}
+		}
+		return new ArrayList<>();
+	}
+
 	// -------------------------------------------------- //
 	// ---------- Private Read & Write Methods ---------- //
 	// -------------------------------------------------- //
@@ -205,20 +223,25 @@ public class LoggedDialogueStore {
 
 	private List<LoggedDialogue> readSession(String sessionId, long sessionStartTime)
 			throws DatabaseException, IOException {
+		File dataFile = new File(userLogDirectory, sessionStartTime + " " + sessionId +
+				".json");
+		return readSession(dataFile);
+	}
+
+	private List<LoggedDialogue> readSession(File sessionFile)
+			throws DatabaseException, IOException {
 		List<LoggedDialogue> result;
 		synchronized (LOCK) {
-			File dataFile = new File(userLogDirectory, sessionStartTime + " " + sessionId +
-					".json");
-			if (!dataFile.exists())
+			if (!sessionFile.exists())
 				return new ArrayList<>();
 			ObjectMapper mapper = new ObjectMapper();
 			try {
-				result = mapper.readValue(dataFile,
+				result = mapper.readValue(sessionFile,
 						new TypeReference<>() {
 						});
 			} catch (JsonProcessingException ex) {
 				throw new DatabaseException(
-						"Failed to parse logged dialogues: " + dataFile.getAbsolutePath() +
+						"Failed to parse logged dialogues: " + sessionFile.getAbsolutePath() +
 								": " + ex.getMessage(), ex);
 			}
 		}

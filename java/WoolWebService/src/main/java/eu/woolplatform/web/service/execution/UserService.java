@@ -542,4 +542,8 @@ public class UserService {
 	public boolean existsSessionId(String sessionId) throws DatabaseException {
 		return loggedDialogueStore.existsSessionId(sessionId);
 	}
+
+	public List<LoggedDialogue> getDialogueSessionLog(String sessionId) throws IOException, DatabaseException {
+		return loggedDialogueStore.readSession(sessionId);
+	}
 }
