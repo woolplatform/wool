@@ -54,14 +54,13 @@ public class DefaultUserServiceFactory extends UserServiceFactory {
 	// -------------------------------------------------------------------
 
 	@Override
-	public UserService createUserService(String userId,
-			UserServiceManager userServiceManager)
+	public UserService createUserService(String userId, ApplicationManager applicationManager)
 			throws DatabaseException, IOException {
 		return new UserService(
 				new WoolUser(userId),
-				userServiceManager,
+				applicationManager,
 				storageHandler,
-				new ExternalVariableServiceUpdater(userServiceManager));
+				new ExternalVariableServiceUpdater(applicationManager));
 	}
 
 }

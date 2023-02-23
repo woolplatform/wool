@@ -151,7 +151,7 @@ public class QueryRunner {
 					"Authentication token invalid");
 		}
 
-		UserCredentials user = application.getServiceManager().getUserCredentialsForUsername(details.getSubject());
+		UserCredentials user = application.getApplicationManager().getUserCredentialsForUsername(details.getSubject());
 		long now = System.currentTimeMillis();
 		if (user == null) {
 			logger.info("Invalid authentication token: user not found: " +

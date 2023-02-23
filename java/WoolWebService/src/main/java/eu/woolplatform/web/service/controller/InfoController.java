@@ -36,7 +36,7 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 @RestController
-@Tag(name = "4. Information", description = "End-points that provide information about the " +
+@Tag(name = "5. Information", description = "End-points that provide information about the " +
 		"running service")
 @RequestMapping(value = {"/v{version}/info", "/info"})
 public class InfoController {

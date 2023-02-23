@@ -124,7 +124,7 @@ public class VariablesController {
 	 */
 	private Map<String,Object> doGetVariables(String woolUserId, String variableNames)
 			throws Exception {
-		UserService userService = application.getServiceManager()
+		UserService userService = application.getApplicationManager()
 				.getActiveUserService(woolUserId);
 
 		WoolVariableStore woolVariableStore = userService.getVariableStore();
@@ -241,7 +241,7 @@ public class VariablesController {
 
 		// Update the WOOL User's time zone with the latest given value
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZoneString);
-		UserService userService = application.getServiceManager().getActiveUserService(woolUserId);
+		UserService userService = application.getApplicationManager().getActiveUserService(woolUserId);
 		userService.getWoolUser().setTimeZone(timeZoneId);
 
 		ZonedDateTime eventTime = DateTimeUtils.nowMs(timeZoneId);
@@ -338,7 +338,7 @@ public class VariablesController {
 
 		// Update the WOOL User's time zone with the latest given value
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZoneString);
-		UserService userService = application.getServiceManager().getActiveUserService(woolUserId);
+		UserService userService = application.getApplicationManager().getActiveUserService(woolUserId);
 		userService.getWoolUser().setTimeZone(timeZoneId);
 
 		WoolVariableStore woolVariableStore = userService.getVariableStore();

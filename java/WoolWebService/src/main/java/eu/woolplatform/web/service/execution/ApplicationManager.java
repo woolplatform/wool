@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 WOOL Foundation - Licensed under the MIT License:
+ * Copyright 2019-2023 WOOL Foundation - Licensed under the MIT License:
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -24,6 +24,8 @@ import eu.woolplatform.web.service.UserCredentials;
 import eu.woolplatform.web.service.UserFile;
 import eu.woolplatform.web.service.controller.schema.LoginParametersPayload;
 import eu.woolplatform.web.service.controller.schema.LoginResultPayload;
+import eu.woolplatform.web.service.exception.WWSConfigurationException;
+import eu.woolplatform.web.service.storage.AzureDataLakeStore;
 import eu.woolplatform.wool.exception.WoolException;
 import eu.woolplatform.wool.i18n.WoolTranslationContext;
 import eu.woolplatform.wool.model.WoolDialogue;
@@ -44,37 +46,41 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The WOOL Web Service maintains one instance of a {@link UserServiceManager}. This
- * class keeps track of the different active {@link UserService} instances that are
- * needed to serve individual user's of the WOOL Web Service.
+ * The WOOL Web Service maintains one instance of a {@link ApplicationManager}. This class keeps
+ * track of the different active {@link UserService} instances that are needed to serve individual
+ * user's of the WOOL Web Service, as well as other application wide objects.
  *
  * @author Harm op den Akker
  * @author Tessa Beinema
  */
-public class UserServiceManager {
+public class ApplicationManager {
 
 	private final Logger logger = AppComponents.getLogger(getClass().getSimpleName());
 	private final WoolProject woolProject;
 	private final List<UserService> activeUserServices = new ArrayList<>();
 	private final List<UserCredentials> userCredentials;
 	private String externalVariableServiceAPIToken;
+	private AzureDataLakeStore azureDataLakeStore = null;
 
-	// ----- Constructors
+	// ---------------------------------- //
+	// ---------- Constructors ---------- //
+	// ---------------------------------- //
 	
 	/**
-	 * Creates an instance of a {@link UserServiceManager}, that loads in a
-	 * predefined list of Wool dialogues.
+	 * Creates an instance of an {@link ApplicationManager}, that loads in a predefined list of Wool
+	 * dialogues.
+	 *
+	 * @throws WWSConfigurationException In case any part of the application could not be
+	 *                                   initialized due to an incorrectly set config parameter.
 	 */
-	public UserServiceManager(WoolFileLoader woolFileLoader) {
+	public ApplicationManager(WoolFileLoader woolFileLoader) throws WWSConfigurationException {
 		UserServiceFactory appConfig = UserServiceFactory.getInstance();
-		WoolProjectParser woolProjectParser = new WoolProjectParser(
-				woolFileLoader);
+		WoolProjectParser woolProjectParser = new WoolProjectParser(woolFileLoader);
 		WoolProjectParserResult readResult;
 		try {
 			readResult = woolProjectParser.parse();
 		} catch (IOException ex) {
-			throw new RuntimeException("Error while reading WOOL project: " +
-					ex.getMessage(), ex);
+			throw new RuntimeException("Error while reading WOOL project: " + ex.getMessage(), ex);
 		}
 		for (String path : readResult.getParseErrors().keySet()) {
 			logger.error("Failed to parse " + path + ":");
@@ -105,10 +111,18 @@ public class UserServiceManager {
 		if(config.getExternalVariableServiceEnabled()) {
 			try {
 				this.loginToExternalVariableService();
-			} catch (
-					Exception e) {
+			} catch (Exception e) {
 				logger.info(e.toString());
 				throw new RuntimeException(e);
+			}
+		}
+
+		if(Configuration.getInstance().getAzureDataLakeEnabled()) {
+			try {
+				azureDataLakeStore = new AzureDataLakeStore();
+			} catch(WWSConfigurationException e) {
+				logger.error("Error configuring Azure Data Lake: " + e.getMessage());
+				throw e;
 			}
 		}
 	}
@@ -120,16 +134,16 @@ public class UserServiceManager {
 	}
 
 	/**
-	 * Returns the list of {@link UserCredentials} available for this {@link UserServiceManager}.
-	 * @return the list of {@link UserCredentials} available for this {@link UserServiceManager}.
+	 * Returns the list of {@link UserCredentials} available for this {@link ApplicationManager}.
+	 * @return the list of {@link UserCredentials} available for this {@link ApplicationManager}.
 	 */
 	public List<UserCredentials> getUserCredentials() {
 		return userCredentials;
 	}
 
 	/**
-	 * Returns the {@link UserCredentials} object associated with the given {@code username}, or {@code null}
-	 * if no such user is known.
+	 * Returns the {@link UserCredentials} object associated with the given {@code username}, or
+	 * {@code null} if no such user is known.
 	 * @param username the username of the user to look for.
 	 * @return the {@link UserCredentials} object or {@code null}.
 	 */
@@ -139,15 +153,19 @@ public class UserServiceManager {
 		}
 		return null;
 	}
+
+	public AzureDataLakeStore getAzureDataLakeStore() {
+		return azureDataLakeStore;
+	}
 	
 	// ---------- Service Management:
 	
 	/**
-	 * Returns an active {@link UserService} object for the given {@code accountId} and {@code userId}. Retrieves
-	 * from an internal list of active {@link UserService}s, or instantiates a new {@link UserService} if no {@link UserService} is active
-	 * for the given parameters.
-	 * @param userId the identifier of the specific user that is interacting with the {@link UserService}.
-	 * @return an {@link UserService} object that can handle the communication with the user.
+	 * Returns an active {@link UserService} object for the given {@code userId}. Retrieves from an
+	 * internal list of active {@link UserService}s, or instantiates a new {@link UserService} if no
+	 * {@link UserService} is active for the given user.
+	 * @param userId the identifier of the user that is interacting with the {@link UserService}.
+	 * @return a {@link UserService} object that can handle the communication with the user.
 	 */
 	public UserService getActiveUserService(String userId) throws DatabaseException {
 		
@@ -157,13 +175,14 @@ public class UserServiceManager {
 			}
 		}
 		
-		logger.info("No active UserService for userId '" + userId + "' creating UserService instance.");
+		logger.info("No active UserService for userId '" + userId
+				+ "' creating UserService instance.");
 		
 		// Initialize new userService
-		UserServiceFactory appConfig = UserServiceFactory.getInstance();
+		UserServiceFactory userServiceFactory = UserServiceFactory.getInstance();
 		UserService newUserService;
 		try {
-			newUserService = appConfig.createUserService(userId, this);
+			newUserService = userServiceFactory.createUserService(userId, this);
 		} catch (IOException ex) {
 			String error = "Can't create userService: " + ex.getMessage();
 			logger.error(error, ex);
@@ -177,7 +196,7 @@ public class UserServiceManager {
 	
 	/**
 	 * Removes the given {@link UserService} from the set of active {@link UserService}s in
-	 * this {@link UserServiceManager}.
+	 * this {@link ApplicationManager}.
 	 * @param userService the {@link UserService} to remove.
 	 * @return {@code true} if the given was successfully removed, {@code false} if
 	 * it was not present on the list of active {@link UserService}s in the first place.
@@ -190,13 +209,14 @@ public class UserServiceManager {
 
 	public WoolDialogue getDialogueDefinition(WoolDialogueDescription woolDialogueDescription,
 			WoolTranslationContext translationContext) throws WoolException {
-		WoolDialogue dlg;
+		WoolDialogue woolDialogue;
 		if (translationContext == null)
-			dlg = woolProject.getDialogues().get(woolDialogueDescription);
+			woolDialogue = woolProject.getDialogues().get(woolDialogueDescription);
 		else
-			dlg = woolProject.getTranslatedDialogue(woolDialogueDescription, translationContext);
-		if (dlg != null)
-			return dlg;
+			woolDialogue = woolProject.getTranslatedDialogue(woolDialogueDescription,
+					translationContext);
+		if (woolDialogue != null)
+			return woolDialogue;
 		throw new WoolException(WoolException.Type.DIALOGUE_NOT_FOUND,
 			"Pre-loaded dialogue not found for dialogue '" +
 					woolDialogueDescription.getDialogueName() + "' in language '" +
