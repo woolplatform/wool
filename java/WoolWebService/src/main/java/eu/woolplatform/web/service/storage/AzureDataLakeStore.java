@@ -137,30 +137,35 @@ public class AzureDataLakeStore {
 	 * @throws IOException in case of an error writing to the local files.
 	 */
 	public void populateLocalDialogueLogs(String woolUserId) throws IOException {
+		logger.info("Populating local dialogue log folder for user '" + woolUserId + "'.");
 		DataLakeDirectoryClient directoryClient =
 				dataLakeFileSystemClient.getDirectoryClient(
 						config.getDirectoryNameDialogues() + "/" + woolUserId);
 
-		PagedIterable<PathItem> pathItems = directoryClient.listPaths();
+		// If there is a directory for the given woolUser
+		if (directoryClient.exists()) {
 
-		for (PathItem pathItem : pathItems) {
-			// item.getName() returns e.g. "dialogues/user-name/{fileName}.json"
-			Path path = Paths.get(config.getDataDir() + File.separator + pathItem.getName());
-			String fileName = path.getFileName().toString();
+			PagedIterable<PathItem> pathItems = directoryClient.listPaths();
 
-			logger.info("Found file on Azure Data Lake for user '" + woolUserId
-					+ "': " + pathItem.getName() + " (file name: '" + fileName + "').");
+			for (PathItem pathItem : pathItems) {
+				// item.getName() returns e.g. "dialogues/user-name/{fileName}.json"
+				Path path = Paths.get(config.getDataDir() + File.separator + pathItem.getName());
+				String fileName = path.getFileName().toString();
 
-			DataLakeFileClient fileClient =
-					dataLakeFileSystemClient.getFileClient(pathItem.getName());
+				logger.info("Found file on Azure Data Lake for user '" + woolUserId
+						+ "': " + pathItem.getName() + " (file name: '" + fileName + "').");
 
-			File localFile = new File(config.getDataDir() + File.separator +
-					config.getDirectoryNameDialogues() + File.separator +
-					woolUserId + File.separator + fileName);
+				DataLakeFileClient fileClient =
+						dataLakeFileSystemClient.getFileClient(pathItem.getName());
 
-			OutputStream targetStream = new FileOutputStream(localFile);
-			fileClient.read(targetStream);
-			targetStream.close();
+				File localFile = new File(config.getDataDir() + File.separator +
+						config.getDirectoryNameDialogues() + File.separator +
+						woolUserId + File.separator + fileName);
+
+				OutputStream targetStream = new FileOutputStream(localFile);
+				fileClient.read(targetStream);
+				targetStream.close();
+			}
 		}
 	}
 

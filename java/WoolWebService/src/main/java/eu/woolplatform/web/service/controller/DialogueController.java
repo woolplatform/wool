@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 WOOL Foundation - Licensed under the MIT License:
+ * Copyright 2019-2023 WOOL Foundation - Licensed under the MIT License:
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -168,7 +168,8 @@ public class DialogueController {
 			String timeZone, String sessionId)
 			throws HttpException, IOException, DatabaseException {
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
-		UserService userService = application.getApplicationManager().getActiveUserService(woolUserId);
+		UserService userService = application.getApplicationManager()
+				.getActiveUserService(woolUserId);
 		userService.getWoolUser().setTimeZone(timeZoneId);
 
 		// If no sessionId was provided, generate a unique one now
@@ -183,12 +184,13 @@ public class DialogueController {
 			if(userService.existsSessionId(sessionId)) {
 				throw new BadRequestException("The provided sessionId is already in use. When " +
 					"starting a new dialogue session with a predefined sessionId, this " +
-					"identifier has to be unique for this user ('"+woolUserId+"'.");
+					"identifier has to be unique for this user ('"+woolUserId+"').");
 			}
 		}
 
 		try {
-			ExecuteNodeResult node = userService.startDialogueSession(dialogueName, null, language, sessionId, System.currentTimeMillis());
+			ExecuteNodeResult node = userService.startDialogueSession(
+					dialogueName, null, language, sessionId, System.currentTimeMillis());
 			return DialogueMessageFactory.generateDialogueMessage(node);
 		} catch (WoolException e) {
 			throw ControllerFunctions.createHttpException(e);
@@ -394,7 +396,8 @@ public class DialogueController {
 					version, request, response, woolUserId, application);
 		} else {
 			return QueryRunner.runQuery(
-					(protocolVersion, user) -> doContinueDialogue(woolUserId, dialogueName, timeZone),
+					(protocolVersion, user) ->
+							doContinueDialogue(woolUserId, dialogueName, timeZone),
 					version, request, response, woolUserId, application);
 		}
 	}
@@ -419,7 +422,8 @@ public class DialogueController {
 
 		// Update/set the WOOL User's timezone to the given value
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZone);
-		UserService userService = application.getApplicationManager().getActiveUserService(woolUserId);
+		UserService userService = application.getApplicationManager()
+				.getActiveUserService(woolUserId);
 		userService.getWoolUser().setTimeZone(timeZoneId);
 
 		// Determine the event timestamp
@@ -494,7 +498,8 @@ public class DialogueController {
 		logger.info(logInfo);
 
 		if(woolUserId == null || woolUserId.equals("")) {
-			QueryRunner.runQuery((protocolVersion, user) -> doCancelDialogue(user, loggedDialogueId),
+			QueryRunner.runQuery((protocolVersion, user) -> doCancelDialogue(user,
+							loggedDialogueId),
 					version, request, response, woolUserId, application);
 		} else {
 			QueryRunner.runQuery((protocolVersion, user) -> doCancelDialogue(woolUserId,

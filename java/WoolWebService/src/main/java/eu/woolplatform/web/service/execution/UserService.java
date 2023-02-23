@@ -39,6 +39,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -94,7 +95,7 @@ public class UserService {
 		Configuration config = AppComponents.get(Configuration.class);
 		WoolVariableStoreStorageHandler storageHandler =
 				new WoolVariableStoreJSONStorageHandler(config.getDataDir() +
-						"/variables");
+						File.separator + config.getDirectoryNameVariables());
 		try {
 			this.variableStore = storageHandler.read(woolUser);
 		} catch (ParseException ex) {
@@ -538,9 +539,11 @@ public class UserService {
 	 * @param sessionId the sessionId {@link String} for which to check.
 	 * @return {@code true} if the sessionId is already in use, false otherwise.
 	 */
-	public boolean existsSessionId(String sessionId) {
-		//TODO: Implement.
+	public boolean existsSessionId(String sessionId) throws DatabaseException {
+		return loggedDialogueStore.existsSessionId(sessionId);
+	}
 
-		return false;
+	public List<LoggedDialogue> getDialogueSessionLog(String sessionId) throws IOException, DatabaseException {
+		return loggedDialogueStore.readSession(sessionId);
 	}
 }
