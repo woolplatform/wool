@@ -56,6 +56,10 @@ public class LoggedDialogueStore {
 	private static final Object LOCK = new Object();
 	private LoggedDialogue latestStoredLoggedDialogue = null;
 
+	// ------------------------------------ //
+	// ---------- Constructor(s) ---------- //
+	// ------------------------------------ //
+
 	/**
 	 * Creates an instance of a {@link LoggedDialogueStore} for the user identified by the given
 	 * {@code woolUserId}, with a reference to that user's {@link UserService}. Upon instantiation,
@@ -67,6 +71,8 @@ public class LoggedDialogueStore {
 	 * @throws IOException in case of an error instantiating the log folder.
 	 */
 	public LoggedDialogueStore(String woolUserId, UserService userService) throws IOException {
+		logger.info("Initializing LoggedDialogueStore for user '" + woolUserId + "'.");
+
 		this.userService = userService;
 		this.woolUserId = woolUserId;
 
@@ -80,6 +86,8 @@ public class LoggedDialogueStore {
 			if(!dialogueLogDirectory.mkdirs()) {
 				throw new IOException("Unable to create the dialogue log folder at "
 						+ dialogueLogDirectory.getAbsolutePath());
+			} else {
+				logger.info("Created dialogue log directory at: "+dialogueLogDirectory);
 			}
 		}
 
@@ -89,6 +97,7 @@ public class LoggedDialogueStore {
 		// If the folder doesn't exist, initialize it
 		if(!userLogDirectory.exists()) {
 			if(userLogDirectory.mkdirs()) {
+				logger.info("Created user's dialogue log directory at: "+userLogDirectory);
 				// The user  directory was created. In case an Azure Data Lake backup service is
 				// enabled, check if there is data to populate this directory here.
 				if(config.getAzureDataLakeEnabled()) {
@@ -111,6 +120,10 @@ public class LoggedDialogueStore {
 		}
 	}
 
+	// --------------------------------------- //
+	// ---------- Public Operations ---------- //
+	// --------------------------------------- //
+
 	public LoggedDialogue findLoggedDialogue(String id)
 			throws DatabaseException, IOException {
 		return readLatestDialogueWithConditions(false,null,id);
@@ -132,10 +145,6 @@ public class LoggedDialogueStore {
 		saveToSession(loggedDialogue);
 	}
 
-	// -----------------------------------------
-	// ---------- Save & Read Methods ----------
-	// -----------------------------------------
-
 	public void saveToSession(LoggedDialogue dialogue)
 			throws DatabaseException, IOException {
 		this.latestStoredLoggedDialogue = dialogue;
@@ -144,6 +153,41 @@ public class LoggedDialogueStore {
 			saveToSession(dialogue.getSessionId(), dialogue.getSessionStartTime(), dialogues);
 		}
 	}
+
+	/**
+	 * Checks whether the given {@code sessionId} exists for this user.
+	 * @param sessionId the sessionId for which to check.
+	 * @return true if the sessionId exists, false otherwise.
+	 */
+	public boolean existsSessionId(String sessionId) throws DatabaseException {
+		// First check whether the latest stored in-memory dialogue may be a match
+		if(latestStoredLoggedDialogue != null) {
+			if(latestStoredLoggedDialogue.getSessionId() != null) {
+				if(latestStoredLoggedDialogue.getSessionId().equals(sessionId)) return true;
+			}
+		}
+
+		// If not, check through the available files
+		File[] userLogFiles;
+
+		synchronized (LOCK) {
+			userLogFiles = userLogDirectory.listFiles();
+		}
+
+		if(userLogFiles == null) throw new DatabaseException("Error retrieving file listing " +
+				"from dialogue log directory for user '" + woolUserId + "'.");
+
+		for(File f : userLogFiles) {
+			if (f.getName().endsWith(sessionId + ".json")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// -------------------------------------------------- //
+	// ---------- Private Read & Write Methods ---------- //
+	// -------------------------------------------------- //
 
 	private void saveToSession(String sessionId, long sessionStartTime,
 									  List<LoggedDialogue> dialogues) throws IOException {
@@ -302,6 +346,14 @@ public class LoggedDialogueStore {
 		return null;
 	}
 
+	/**
+	 * Private method used to read the JSON contents of a given dialogue log session file and return
+	 * it as a List of LoggedDialogue objects.
+	 * @param sessionFile the File pointer to the dialogue log session file.
+	 * @return a List of LoggedDialogue objects.
+	 * @throws DatabaseException in case of a read error.
+	 * @throws IOException in case of a read error.
+	 */
 	private List<LoggedDialogue> readSessionFile(File sessionFile)
 			throws DatabaseException, IOException {
 		ObjectMapper mapper = new ObjectMapper();

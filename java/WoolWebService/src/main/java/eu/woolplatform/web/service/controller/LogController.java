@@ -80,7 +80,7 @@ public class LogController {
 			String sessionId,
 
 			@Parameter(description = "The user for which to check the session id (if left empty" +
-					"it is assumed to be the currently logged in user.")
+					" it is assumed to be the currently logged in user.")
 			@RequestParam(value="woolUserId", required = false)
 			String woolUserId) throws Exception {
 
