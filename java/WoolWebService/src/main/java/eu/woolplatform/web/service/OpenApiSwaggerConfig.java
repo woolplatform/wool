@@ -90,7 +90,8 @@ public class OpenApiSwaggerConfig {
 			.pathsToExclude("/v{version}/info/*",
 					"/v{version}/variables/*",
 					"/v{version}/dialogue/*",
-					"/v{version}/auth/*")
+					"/v{version}/auth/*",
+					"/v{version}/log/*")
 			//.pathsToExclude("/v{version}/**") <-- This must be a bug, because it doesn't let /variables/ come through
 			.build();
 	}

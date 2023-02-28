@@ -20,9 +20,9 @@
 package eu.woolplatform.web.service;
 
 import eu.woolplatform.web.service.exception.WWSConfigurationException;
+import eu.woolplatform.web.service.execution.ApplicationManager;
 import eu.woolplatform.web.service.execution.DefaultUserServiceFactory;
 import eu.woolplatform.web.service.execution.UserServiceFactory;
-import eu.woolplatform.web.service.execution.ApplicationManager;
 import eu.woolplatform.web.service.storage.WoolVariableStoreJSONStorageHandler;
 import eu.woolplatform.wool.parser.WoolResourceFileLoader;
 import nl.rrd.utils.AppComponents;
@@ -72,6 +72,7 @@ ApplicationListener<ApplicationEvent> {
 	 * @throws Exception if the application can't be initialised.
 	 */
 	public Application() throws Exception {
+
 		// Initialize a Configuration object
 		config = AppComponents.get(Configuration.class);
 

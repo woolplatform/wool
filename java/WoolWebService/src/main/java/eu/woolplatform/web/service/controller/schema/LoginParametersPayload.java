@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 WOOL Foundation - Licensed under the MIT License:
+ * Copyright 2019-2023 WOOL Foundation - Licensed under the MIT License:
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,

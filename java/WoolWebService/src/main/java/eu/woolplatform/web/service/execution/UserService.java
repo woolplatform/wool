@@ -158,7 +158,7 @@ public class UserService {
 	 * @return the application's {@link ApplicationManager} that is governing this
 	 *         {@link UserService}.
 	 */
-	public ApplicationManager getServiceManager() {
+	public ApplicationManager getApplicationManager() {
 		return applicationManager;
 	}
 
@@ -169,7 +169,7 @@ public class UserService {
 	 *         {@link UserService}.
 	 */
 	public WoolVariableStore getVariableStore() {
-		return this.variableStore;
+		return variableStore;
 	}
 
 	/**

@@ -76,7 +76,7 @@ public class LoggedDialogueStore {
 		this.userService = userService;
 		this.woolUserId = woolUserId;
 
-		File dialogueLogDirectory = new File(config.getDataDir() + "/"
+		File dialogueLogDirectory = new File(config.getDataDir() + File.separator
 				+ config.getDirectoryNameDialogues());
 
 		// If the application's dialogue log directory doesn't exist yet
@@ -102,7 +102,7 @@ public class LoggedDialogueStore {
 				// enabled, check if there is data to populate this directory here.
 				if(config.getAzureDataLakeEnabled()) {
 					try {
-						userService.getServiceManager().getAzureDataLakeStore().
+						userService.getApplicationManager().getAzureDataLakeStore().
 								populateLocalDialogueLogs(woolUserId);
 					} catch(IOException e) {
 						logger.error("Error populating local dialogue log folder from Azure Data " +
@@ -215,7 +215,7 @@ public class LoggedDialogueStore {
 					".json");
 			FileUtils.writeFileString(dataFile, json);
 			if(config.getAzureDataLakeEnabled()) {
-				userService.getServiceManager().getAzureDataLakeStore()
+				userService.getApplicationManager().getAzureDataLakeStore()
 						.writeLoggedDialogueFile(woolUserId,dataFile);
 			}
 		}
