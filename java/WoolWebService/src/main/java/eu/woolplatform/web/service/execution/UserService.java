@@ -544,6 +544,8 @@ public class UserService {
 	}
 
 	public List<LoggedDialogue> getDialogueSessionLog(String sessionId) throws IOException, DatabaseException {
+		logger.info("Getting dialogue log session data for user '" + woolUser.getId() +
+				"' and sessionId '" + sessionId + "'.");
 		return loggedDialogueStore.readSession(sessionId);
 	}
 }
