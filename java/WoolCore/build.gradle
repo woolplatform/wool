@@ -85,7 +85,7 @@ publishing {
 					developer {
 						id = 'hopdenakker'
 						name = 'Harm op den Akker'
-						email = 'hopdenakker@innovationsprint.eu'
+						email = 'hopdenakker@fruittreelabs.com'
 					}
 					developer {
 						id = 'tbeinema'
