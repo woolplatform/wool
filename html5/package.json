@@ -26,10 +26,10 @@
     "build2": "electron-builder"
   },
   "devDependencies": {
-    "electron": "^17.1.1",
-    "electron-builder": "^23.0.3",
+    "electron": "^24.3.0",
+    "electron-builder": "^23.6.0",
 	"cli-truncate": "2.1.0",
-    "electron-packager": "^15.2.0",
+    "electron-packager": "^17.1.1",
     "jest": "^28.1.0"
   },
   "dependencies": {
