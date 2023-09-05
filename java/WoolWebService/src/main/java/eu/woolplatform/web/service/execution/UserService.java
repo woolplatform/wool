@@ -180,6 +180,38 @@ public class UserService {
 		return loggedDialogueStore;
 	}
 
+	public static Map<String,Object> escapeHtmlMapValues(Map<?,?> map) {
+		Map<String,Object> result = new LinkedHashMap<>();
+		for (Object key : map.keySet()) {
+			result.put((String)key, escapeHtmlValue(map.get(key)));
+		}
+		return result;
+	}
+
+	public static List<Object> escapeHtmlListValues(List<?> list) {
+		List<Object> result = new ArrayList<>();
+		for (Object item : list) {
+			result.add(escapeHtmlValue(item));
+		}
+		return result;
+	}
+
+	public static String escapeHtmlStringValue(String value) {
+		return value.replaceAll("&", "&amp;")
+				.replaceAll("<", "&lt;")
+				.replaceAll(">", "&gt;");
+	}
+
+	public static Object escapeHtmlValue(Object value) {
+		if (value instanceof Map)
+			return escapeHtmlMapValues((Map<?,?>)value);
+		if (value instanceof List)
+			return escapeHtmlListValues((List<?>)value);
+		if (value instanceof String)
+			return escapeHtmlStringValue((String)value);
+		return value;
+	}
+
 	// ---------------------------------------------------------------------------
 	// -------------------- Other Methods: Dialogue Execution --------------------
 	// ---------------------------------------------------------------------------

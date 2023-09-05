@@ -254,6 +254,7 @@ public class VariablesController {
 			userService.getVariableStore().removeByName(name,true,
 					eventTime,WoolVariableStoreChange.Source.WEB_SERVICE);
 		} else {
+			value = (String)UserService.escapeHtmlValue(value);
 			userService.getVariableStore().setValue(name, value, true, eventTime,
 					WoolVariableStoreChange.Source.WEB_SERVICE);
 		}
@@ -335,6 +336,7 @@ public class VariablesController {
 					String.join(", ", invalidNames));
 			throw new BadRequestException(error);
 		}
+		woolVariables = UserService.escapeHtmlMapValues(woolVariables);
 
 		// Update the WOOL User's time zone with the latest given value
 		ZoneId timeZoneId = ControllerFunctions.parseTimeZone(timeZoneString);

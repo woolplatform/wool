@@ -322,6 +322,7 @@ public class DialogueController {
 								ex.getMessage());
 			}
 		}
+		variables = UserService.escapeHtmlMapValues(variables);
 		try {
 			UserService userService = application.getApplicationManager()
 					.getActiveUserService(woolUserId);
