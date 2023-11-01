@@ -8,12 +8,18 @@ plugins {
 
 group = 'eu.woolplatform'
 version = '2.5.0'
-sourceCompatibility = 11
-targetCompatibility = 11
-archivesBaseName = 'wool-core'
 
 repositories {
 	mavenCentral()
+}
+
+base {
+	archivesName = 'wool-core'
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {
@@ -36,7 +42,7 @@ java {
 
 distributions {
 	main {
-		distributionBaseName = archivesBaseName
+		distributionBaseName = base.archivesName.get()
 		contents {
 			from configurations.compileClasspath
 			from jar
@@ -56,7 +62,7 @@ javadoc {
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
-			artifactId = archivesBaseName
+			artifactId = base.archivesName.get()
 			from components.java
 
 			pom {

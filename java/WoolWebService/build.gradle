@@ -8,7 +8,6 @@ plugins {
 	id 'java'
 	id 'java-library'
 	id 'war'
-	id 'eclipse-wtp'
 	id 'org.springframework.boot' version '3.0.2'
 	id 'com.bmuschko.cargo' version '2.9.0'
 	id 'org.hidetake.ssh' version '2.10.1'
@@ -16,9 +15,15 @@ plugins {
 
 group = 'eu.woolplatform'
 version = '1.3.2' // run updateVersion after changing this property
-sourceCompatibility = 17
-targetCompatibility = 17
-archivesBaseName = 'wool-webservice'
+
+base {
+	archivesName = 'wool-webservice'
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
 
 configurations {
 	providedRuntime
