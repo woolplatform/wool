@@ -23,8 +23,8 @@ java {
 }
 
 dependencies {
-	api "nl.rrd:rrd-utils:3.0.0"
-	api 'com.fasterxml.jackson.module:jackson-modules-java8:2.13.4'
+	api "nl.rrd:rrd-utils:3.0.1"
+	api 'com.fasterxml.jackson.module:jackson-modules-java8:2.15.3'
 	testImplementation 'junit:junit:4.13.2'
 }
 
