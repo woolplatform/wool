@@ -1,9 +1,9 @@
 allprojects {
-    repositories {
-        mavenCentral()
-    }
+	repositories {
+		mavenCentral()
+	}
 
-	task genwrapper(type: Wrapper) {
-		gradleVersion = '7.6'
+	tasks.register('genwrapper', Wrapper) {
+		gradleVersion = '8.4'
 	}
 }
